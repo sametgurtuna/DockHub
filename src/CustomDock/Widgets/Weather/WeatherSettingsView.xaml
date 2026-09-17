@@ -1,0 +1,61 @@
+<UserControl x:Class="CustomDock.Widgets.WeatherSettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ctl="clr-namespace:CustomDock.Controls">
+    <UserControl.Resources>
+        <ctl:EnumEqualsConverter x:Key="EnumEq" />
+    </UserControl.Resources>
+    <StackPanel>
+        <ctl:SettingRow Header="Konum" Description="Otomatik mod Windows konum servisini kullanır (Ayarlar › Gizlilik › Konum).">
+            <Border Style="{StaticResource SegmentedHost}">
+                <StackPanel Orientation="Horizontal">
+                    <RadioButton Style="{StaticResource SegmentedItem}" GroupName="WeatherLocation" Content="Şehir"
+                                 IsChecked="{Binding LocationMode, Converter={StaticResource EnumEq}, ConverterParameter=City}" />
+                    <RadioButton Style="{StaticResource SegmentedItem}" GroupName="WeatherLocation" Content="Otomatik"
+                                 IsChecked="{Binding LocationMode, Converter={StaticResource EnumEq}, ConverterParameter=Auto}" />
+                </StackPanel>
+            </Border>
+        </ctl:SettingRow>
+
+        <Border Style="{StaticResource SettingCard}">
+            <StackPanel>
+                <TextBlock Text="Şehir" Style="{StaticResource SettingTitle}" />
+                <TextBlock Style="{StaticResource SettingDescription}">
+                    <Run Text="Seçili: " /><Run Text="{Binding CityName, Mode=OneWay}" FontWeight="SemiBold" />
+                </TextBlock>
+                <Grid Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="SearchBox" Tag="Şehir adı yazın (ör. Ankara, Berlin)" KeyDown="OnSearchKeyDown" />
+                    <Button Grid.Column="1" Content="Ara" Margin="8,0,0,0" Click="OnSearchClick" />
+                </Grid>
+                <TextBlock x:Name="StatusText" Style="{StaticResource SettingDescription}" Margin="0,6,0,0" Visibility="Collapsed" />
+                <ItemsControl x:Name="ResultsList" Margin="0,6,0,0">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Style="{StaticResource GhostButton}" HorizontalContentAlignment="Left" Padding="10,7"
+                                    Click="OnResultClick" Margin="0,1">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE81D;" Style="{StaticResource IconText}" FontSize="13"
+                                               Foreground="{DynamicResource TextSecondaryBrush}" />
+                                    <TextBlock Text="{Binding DisplayName}" Margin="10,0,0,0" />
+                                </StackPanel>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+
+        <ctl:SettingRow Header="Sıcaklık birimi">
+            <Border Style="{StaticResource SegmentedHost}">
+                <StackPanel Orientation="Horizontal">
+                    <RadioButton x:Name="CelsiusRadio" Style="{StaticResource SegmentedItem}" GroupName="WeatherUnit" Content="°C" />
+                    <RadioButton Style="{StaticResource SegmentedItem}" GroupName="WeatherUnit" Content="°F" IsChecked="{Binding UseFahrenheit}" />
+                </StackPanel>
+            </Border>
+        </ctl:SettingRow>
+    </StackPanel>
+</UserControl>

@@ -1,0 +1,198 @@
+---
+interface Props {
+  id: string;
+  class?: string;
+}
+const { id, class: className = '' } = Astro.props;
+
+type Petal = { a: number; l: number; w: number; o: number; fold: boolean };
+
+const layers: Array<{ angles: number[]; l: number; w: number; o: number }> = [
+  { angles: [-128, -96, -64, -32, 0, 32, 64, 96, 128], l: 560, w: 200, o: 0.32 },
+  { angles: [-110, -76, -42, -8, 26, 60, 94], l: 450, w: 168, o: 0.5 },
+  { angles: [-86, -50, -16, 18, 52, 86], l: 340, w: 132, o: 0.68 },
+  { angles: [-58, -20, 18, 56], l: 210, w: 94, o: 0.86 },
+];
+
+const petals: Petal[] = layers.flatMap((layer, li) =>
+  layer.angles.map((a, i) => ({
+    a,
+    l: layer.l * (1 + (((i * 37 + li * 11) % 9) - 4) * 0.018),
+    w: layer.w,
+    o: layer.o,
+    fold: (i + li) % 2 === 0,
+  })),
+);
+
+const petalPath = (l: number, w: number) =>
+  `M0 0 C ${-w} ${-l * 0.3}, ${-w * 0.92} ${-l * 0.8}, ${-w * 0.08} ${-l} C ${w * 0.55} ${-l * 0.9}, ${w * 0.92} ${-l * 0.44}, 0 0 Z`;
+
+const foldPath = (l: number, w: number) =>
+  `M0 0 C ${-w * 0.22} ${-l * 0.34}, ${-w * 0.56} ${-l * 0.78}, ${-w * 0.08} ${-l} C ${-w * 0.12} ${-l * 0.66}, ${w * 0.16} ${-l * 0.3}, 0 0 Z`;
+---
+
+<div class:list={['bloom', className]} aria-hidden="true">
+  <svg class="bloom-ground" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <radialGradient id={`${id}-bg`} cx="0.5" cy="0.72" r="0.78">
+        <stop offset="0" class="s-core"></stop>
+        <stop offset="1" class="s-outer"></stop>
+      </radialGradient>
+    </defs>
+    <rect width="1600" height="1000" fill={`url(#${id}-bg)`}></rect>
+  </svg>
+  <div class="bloom-glow"></div>
+  <div class="bloom-parallax">
+    <div class="bloom-breathe">
+      <svg class="bloom-flower" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <linearGradient id={`${id}-petal`} x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0" class="s-base"></stop>
+            <stop offset="0.55" class="s-mid"></stop>
+            <stop offset="1" class="s-tip"></stop>
+          </linearGradient>
+          <linearGradient id={`${id}-fold`} x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0" class="s-mid" stop-opacity="0"></stop>
+            <stop offset="0.6" class="s-tip"></stop>
+            <stop offset="1" class="s-fold"></stop>
+          </linearGradient>
+        </defs>
+        <g transform="translate(800 720)">
+          {
+            petals.map((p) => (
+              <g transform={`rotate(${p.a})`} opacity={p.o}>
+                <path class="petal" d={petalPath(p.l, p.w)} fill={`url(#${id}-petal)`} />
+                {p.fold && <path class="petal-fold" d={foldPath(p.l, p.w)} fill={`url(#${id}-fold)`} />}
+              </g>
+            ))
+          }
+        </g>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<style>
+  .bloom {
+    --bloom-outer: #01030a;
+    --bloom-core: #07296b;
+    --bloom-glow: #1d6fff;
+    --bloom-base: #041c58;
+    --bloom-mid: #1668e0;
+    --bloom-tip: #86d2ff;
+    --bloom-fold: #e2f5ff;
+    --bloom-edge: rgb(170 222 255 / 0.32);
+    --bloom-blend: screen;
+    --bloom-glow-o: 0.55;
+
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background: var(--bloom-outer);
+    transition: background-color 600ms var(--ease-out);
+  }
+
+  :global([data-theme='light']) .bloom {
+    --bloom-outer: #c9d8ee;
+    --bloom-core: #f5f9fe;
+    --bloom-glow: #a9ccff;
+    --bloom-base: #0b4db6;
+    --bloom-mid: #3a8cf0;
+    --bloom-tip: #bfe6ff;
+    --bloom-fold: #ffffff;
+    --bloom-edge: rgb(255 255 255 / 0.7);
+    --bloom-blend: normal;
+    --bloom-glow-o: 0.7;
+  }
+
+  .bloom svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+  }
+
+  .s-outer {
+    stop-color: var(--bloom-outer);
+  }
+  .s-core {
+    stop-color: var(--bloom-core);
+  }
+  .s-base {
+    stop-color: var(--bloom-base);
+  }
+  .s-mid {
+    stop-color: var(--bloom-mid);
+  }
+  .s-tip {
+    stop-color: var(--bloom-tip);
+  }
+  .s-fold {
+    stop-color: var(--bloom-fold);
+  }
+  stop {
+    transition: stop-color 600ms var(--ease-out);
+  }
+
+  .petal {
+    mix-blend-mode: var(--bloom-blend);
+    stroke: var(--bloom-edge);
+    stroke-width: 1.2;
+  }
+  .petal-fold {
+    mix-blend-mode: var(--bloom-blend);
+    opacity: 0.55;
+  }
+
+  .bloom-glow {
+    position: absolute;
+    left: 50%;
+    top: 72%;
+    width: 70%;
+    aspect-ratio: 1.9;
+    translate: -50% -50%;
+    background: radial-gradient(closest-side, var(--bloom-glow), transparent);
+    opacity: var(--bloom-glow-o);
+    filter: blur(20px);
+  }
+
+  .bloom-parallax,
+  .bloom-breathe {
+    position: absolute;
+    inset: 0;
+  }
+
+  .bloom-parallax {
+    transform: translate3d(calc(var(--px, 0) * -14px), calc(var(--py, 0) * -10px), 0);
+    transition: transform 900ms var(--ease-out);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .bloom-breathe {
+      animation: breathe 18s ease-in-out infinite alternate;
+      transform-origin: 50% 72%;
+    }
+    .bloom-glow {
+      animation: glow 9s ease-in-out infinite alternate;
+    }
+  }
+
+  @keyframes breathe {
+    from {
+      transform: scale(1) rotate(-0.6deg);
+    }
+    to {
+      transform: scale(1.045) rotate(0.8deg);
+    }
+  }
+
+  @keyframes glow {
+    from {
+      opacity: calc(var(--bloom-glow-o) * 0.75);
+    }
+    to {
+      opacity: var(--bloom-glow-o);
+    }
+  }
+</style>

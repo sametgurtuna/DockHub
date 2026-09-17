@@ -1,0 +1,154 @@
+<Window x:Class="CustomDock.Dock.DockWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ctl="clr-namespace:CustomDock.Controls"
+        xmlns:dock="clr-namespace:CustomDock.Dock"
+        Title="Custom Dock"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        ShowActivated="False"
+        Topmost="True"
+        WindowStartupLocation="Manual"
+        Left="-32000" Top="-32000" Width="800" Height="56"
+        Background="Transparent"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        FontFamily="{StaticResource UiFont}"
+        Foreground="{DynamicResource TextPrimaryBrush}"
+        TextOptions.TextFormattingMode="Display"
+        TextOptions.TextRenderingMode="Grayscale"
+        RenderOptions.BitmapScalingMode="HighQuality">
+    <Window.Resources>
+        <!-- Masaüstünü göster: sağ uçta ince çubuk -->
+        <Style x:Key="ShowDesktopButton" TargetType="Button">
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Width" Value="12" />
+            <Setter Property="Height" Value="46" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid Background="Transparent">
+                            <Border x:Name="Line" Width="3" Height="18" CornerRadius="1.5" Opacity="0.55"
+                                    Background="{DynamicResource SeparatorBrush}" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Line" Property="Height" Value="28" />
+                                <Setter TargetName="Line" Property="Opacity" Value="1" />
+                                <Setter TargetName="Line" Property="Background" Value="{DynamicResource TextSecondaryBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid x:Name="Root" Background="Transparent">
+        <!-- Bulanık arka planın üzerindeki renk katmanı -->
+        <Border x:Name="TintLayer" Background="{DynamicResource DockTintBrush}" />
+        <Border x:Name="EdgeHighlight" BorderThickness="0,1,0,0" Opacity="0.6">
+            <Border.BorderBrush>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                    <GradientStop Color="#00FFFFFF" Offset="0" />
+                    <GradientStop Color="#1FFFFFFF" Offset="0.5" />
+                    <GradientStop Color="#00FFFFFF" Offset="1" />
+                </LinearGradientBrush>
+            </Border.BorderBrush>
+        </Border>
+
+        <ctl:DockZonesPanel x:Name="Zones" Margin="5">
+            <ctl:DockZonesPanel.LayoutTransform>
+                <ScaleTransform x:Name="ContentScale" ScaleX="1" ScaleY="1" />
+            </ctl:DockZonesPanel.LayoutTransform>
+
+            <!-- Başlangıç bölgesi -->
+            <StackPanel x:Name="StartZone" Orientation="Horizontal">
+                <Button x:Name="StartButton" Style="{StaticResource DockButton}" ToolTip="Başlat"
+                        Click="OnStartClick" MouseRightButtonUp="OnStartRightClick">
+                    <ctl:WindowsLogo Width="19" Height="19" />
+                </Button>
+                <Button x:Name="SearchButton" Style="{StaticResource DockButton}" ToolTip="Ara" Content="&#xE721;" FontSize="17"
+                        Click="OnSearchClick" />
+                <Button x:Name="TaskViewButton" Style="{StaticResource DockButton}" ToolTip="Görev görünümü" Content="&#xE7C4;" FontSize="17"
+                        Click="OnTaskViewClick" />
+                <dock:SeparatorView x:Name="StartSeparator" />
+            </StackPanel>
+
+            <!-- Öğeler (kaydırılabilir) -->
+            <Grid x:Name="CenterZone" ClipToBounds="True" Background="Transparent" AllowDrop="True"
+                  DragOver="OnItemsDragOver" DragLeave="OnItemsDragLeave" Drop="OnItemsDrop">
+                <ScrollViewer x:Name="Scroller" Focusable="False" CanContentScroll="False" PanningMode="HorizontalOnly"
+                              HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled"
+                              ScrollChanged="OnScrollChanged">
+                    <StackPanel x:Name="ItemsPanel" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                Background="Transparent" />
+                </ScrollViewer>
+                <Canvas x:Name="CaretLayer" IsHitTestVisible="False">
+                    <Border x:Name="DropCaret" Width="3" Height="32" CornerRadius="1.5" Visibility="Collapsed"
+                            Background="{DynamicResource DropCaretBrush}" />
+                </Canvas>
+            </Grid>
+
+            <!-- Bitiş bölgesi -->
+            <StackPanel x:Name="EndZone" Orientation="Horizontal">
+                <Button x:Name="ScrollBackButton" Style="{StaticResource DockButton}" Width="26" FontSize="11" Content="&#xE76B;"
+                        ToolTip="Geri kaydır" Click="OnScrollBackClick" Visibility="Collapsed" />
+                <Button x:Name="ScrollForwardButton" Style="{StaticResource DockButton}" Width="26" FontSize="11" Content="&#xE76C;"
+                        ToolTip="İleri kaydır" Click="OnScrollForwardClick" Visibility="Collapsed" />
+                <dock:SeparatorView x:Name="EndSeparator" />
+
+                <ToggleButton x:Name="TrayOverflowButton" Style="{StaticResource DockButton}" Width="26" FontSize="11"
+                              Content="&#xE70E;" ToolTip="Gizli simgeleri göster" Checked="OnTrayOverflowChecked" />
+                <ItemsControl x:Name="PinnedTray" Focusable="False" VerticalAlignment="Center">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <dock:TrayIconView />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Button x:Name="ClockButton" Style="{StaticResource DockButton}" Width="Auto" Padding="9,0" Margin="2,0"
+                        FontFamily="{StaticResource UiFont}" Click="OnClockClick">
+                    <StackPanel>
+                        <TextBlock x:Name="ClockTime" HorizontalAlignment="Right" FontSize="12" LineHeight="15"
+                                   LineStackingStrategy="BlockLineHeight" Typography.NumeralAlignment="Tabular"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" />
+                        <TextBlock x:Name="ClockDate" HorizontalAlignment="Right" FontSize="12" LineHeight="15"
+                                   LineStackingStrategy="BlockLineHeight" Typography.NumeralAlignment="Tabular"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" />
+                    </StackPanel>
+                </Button>
+                <Button x:Name="ShowDesktopButton" Style="{StaticResource ShowDesktopButton}" ToolTip="Masaüstünü göster"
+                        Click="OnShowDesktopClick" />
+            </StackPanel>
+        </ctl:DockZonesPanel>
+
+        <!-- Gizli tepsi simgeleri -->
+        <Popup x:Name="TrayOverflowPopup" StaysOpen="False" AllowsTransparency="True" PopupAnimation="Fade"
+               PlacementTarget="{Binding ElementName=TrayOverflowButton}"
+               Closed="OnTrayOverflowClosed">
+            <Border Margin="8" Padding="6" CornerRadius="10" MaxWidth="200"
+                    Background="{DynamicResource PopupBrush}" BorderBrush="{DynamicResource PopupBorderBrush}" BorderThickness="1">
+                <ItemsControl x:Name="OverflowTray" Focusable="False">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal" MaxWidth="180" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <dock:TrayIconView Width="36" Height="36" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Border>
+        </Popup>
+    </Grid>
+</Window>

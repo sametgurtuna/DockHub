@@ -1,0 +1,16 @@
+<w:WidgetBase x:Class="CustomDock.Widgets.CountdownWidget"
+              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+              xmlns:w="clr-namespace:CustomDock.Widgets"
+              Cursor="Hand">
+    <StackPanel Orientation="Horizontal" MinWidth="112" Background="Transparent" MouseLeftButtonUp="OnClick">
+        <Grid Width="30" Height="30" VerticalAlignment="Center">
+            <Path x:Name="Icon" Data="M12,5 A8,8 0 1 1 11.99,5 Z M12,13 L15,10 M10,2 H14" Stretch="Uniform" Width="17" Height="19"
+                  Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+        </Grid>
+        <StackPanel Margin="8,0,0,0" VerticalAlignment="Center">
+            <TextBlock x:Name="TimeText" Style="{StaticResource ValueText}" Text="5:00" />
+            <TextBlock x:Name="LabelText" Style="{StaticResource CaptionText}" Text="Geri sayım" MaxWidth="110" />
+        </StackPanel>
+    </StackPanel>
+</w:WidgetBase>

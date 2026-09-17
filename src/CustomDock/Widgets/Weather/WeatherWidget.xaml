@@ -1,0 +1,35 @@
+<w:WidgetBase x:Class="CustomDock.Widgets.WeatherWidget"
+              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+              xmlns:w="clr-namespace:CustomDock.Widgets"
+              xmlns:ctl="clr-namespace:CustomDock.Controls"
+              Cursor="Hand">
+    <StackPanel Orientation="Horizontal" Background="Transparent" MouseLeftButtonUp="OnClick">
+        <StackPanel x:Name="CurrentBlock" Orientation="Horizontal" MinWidth="108">
+            <ctl:WeatherIcon x:Name="Icon" Width="32" Height="32" VerticalAlignment="Center" CloudBrush="{DynamicResource CloudBrush}" />
+            <StackPanel Margin="9,0,0,0" VerticalAlignment="Center">
+                <TextBlock x:Name="TempText" Style="{StaticResource ValueText}" FontSize="19" LineHeight="22" Text="--°" />
+                <TextBlock x:Name="SubText" Style="{StaticResource CaptionText}" MaxWidth="96" Text="Yükleniyor…" />
+            </StackPanel>
+        </StackPanel>
+
+        <ItemsControl x:Name="HourlyList" Margin="14,0,0,0" VerticalAlignment="Center" Focusable="False">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Width="32">
+                        <TextBlock Text="{Binding Hour}" Style="{StaticResource MicroText}" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" />
+                        <ctl:WeatherIcon Kind="{Binding Kind}" IsDay="{Binding IsDay}" Width="16" Height="16" HorizontalAlignment="Center"
+                                         CloudBrush="{DynamicResource CloudBrush}" />
+                        <TextBlock Text="{Binding Temperature}" FontSize="10.5" FontWeight="SemiBold" HorizontalAlignment="Center"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" LineHeight="12.5" LineStackingStrategy="BlockLineHeight" />
+                    </StackPanel>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </StackPanel>
+</w:WidgetBase>

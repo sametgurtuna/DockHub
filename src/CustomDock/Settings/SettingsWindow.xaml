@@ -1,0 +1,540 @@
+<Window x:Class="CustomDock.Settings.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ctl="clr-namespace:CustomDock.Controls"
+        xmlns:core="clr-namespace:CustomDock.Core"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="Custom Dock"
+        Width="1120" Height="760" MinWidth="920" MinHeight="580"
+        WindowStartupLocation="CenterScreen"
+        Icon="pack://application:,,,/CustomDock;component/Assets/CustomDock.ico"
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Foreground="{DynamicResource TextPrimaryBrush}"
+        FontFamily="{StaticResource UiFont}"
+        FontSize="13"
+        UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Display">
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="44" ResizeBorderThickness="6" GlassFrameThickness="-1"
+                            UseAeroCaptionButtons="True" CornerRadius="0" />
+    </shell:WindowChrome.WindowChrome>
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="WidgetSettingsTemplates.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <ctl:EnumEqualsConverter x:Key="EnumEq" />
+            <ctl:InverseBoolConverter x:Key="Not" />
+            <ctl:PercentConverter x:Key="Percent" />
+
+            <Style x:Key="PageTitle" TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="{StaticResource DisplayFont}" />
+                <Setter Property="FontSize" Value="28" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="Margin" Value="2,0,0,4" />
+            </Style>
+            <Style x:Key="PageSubtitle" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+                <Setter Property="Margin" Value="2,0,0,10" />
+            </Style>
+            <Style x:Key="Page" TargetType="FrameworkElement">
+                <Setter Property="Visibility" Value="Collapsed" />
+                <Setter Property="MaxWidth" Value="980" />
+                <Setter Property="HorizontalAlignment" Value="Stretch" />
+            </Style>
+            <Style x:Key="NavGlyph" TargetType="TextBlock" BasedOn="{StaticResource IconText}">
+                <Setter Property="FontSize" Value="16" />
+                <Setter Property="Width" Value="20" />
+            </Style>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid x:Name="RootGrid">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="248" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- ===================== Kenar çubuğu ===================== -->
+        <Border Background="{DynamicResource SidebarBrush}">
+            <DockPanel Margin="12,12,12,14">
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="8,4,0,22" Height="30">
+                    <Image Source="pack://application:,,,/CustomDock;component/Assets/CustomDock.ico" Width="20" Height="20"
+                           RenderOptions.BitmapScalingMode="HighQuality" VerticalAlignment="Center" />
+                    <TextBlock Text="Custom Dock" Margin="10,0,0,0" FontSize="12.5" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <StackPanel DockPanel.Dock="Bottom" Margin="8,0,0,0">
+                    <TextBlock x:Name="VersionText" Foreground="{DynamicResource TextTertiaryBrush}" FontSize="11.5" />
+                </StackPanel>
+
+                <ListBox x:Name="NavList" Style="{StaticResource PlainListBox}" ItemContainerStyle="{StaticResource NavItem}"
+                         SelectionChanged="OnNavigationChanged">
+                    <ListBoxItem Tag="general">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE713;" Style="{StaticResource NavGlyph}" />
+                            <TextBlock Text="Genel" Margin="14,0,0,0" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem Tag="taskbar">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE75B;" Style="{StaticResource NavGlyph}" />
+                            <TextBlock Text="Görev çubuğu" Margin="14,0,0,0" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem Tag="appearance">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE790;" Style="{StaticResource NavGlyph}" />
+                            <TextBlock Text="Görünüm" Margin="14,0,0,0" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem Tag="items">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE8FD;" Style="{StaticResource NavGlyph}" />
+                            <TextBlock Text="Dock öğeleri" Margin="14,0,0,0" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem Tag="gallery">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xECA5;" Style="{StaticResource NavGlyph}" />
+                            <TextBlock Text="Widget galerisi" Margin="14,0,0,0" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem Tag="about">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE946;" Style="{StaticResource NavGlyph}" />
+                            <TextBlock Text="Hakkında" Margin="14,0,0,0" />
+                        </StackPanel>
+                    </ListBoxItem>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <!-- ===================== Sayfalar ===================== -->
+        <ScrollViewer x:Name="PageScroller" Grid.Column="1" Margin="0,44,0,0" Padding="32,4,36,28" VerticalScrollBarVisibility="Auto">
+            <Grid>
+                <!-- ============ Genel ============ -->
+                <StackPanel x:Name="GeneralPage" Style="{StaticResource Page}">
+                    <TextBlock Text="Genel" Style="{StaticResource PageTitle}" />
+                    <TextBlock Text="Başlangıç, Windows görev çubuğu ve bakım." Style="{StaticResource PageSubtitle}" />
+
+                    <TextBlock Text="Windows görev çubuğu" Style="{StaticResource SectionHeader}" />
+                    <ctl:SettingRow Glyph="&#xE75B;" Header="Görev çubuğunun yerini al"
+                                    Description="Custom Dock; Başlat, arama, çalışan uygulamalar ve sistem tepsisiyle Windows görev çubuğunun yerini alır. Kapatırsanız ikisi birlikte görünür.">
+                        <Border Style="{StaticResource SegmentedHost}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Taskbar" Content="Custom Dock"
+                                             IsChecked="{Binding TaskbarMode, Converter={StaticResource EnumEq}, ConverterParameter=Replace}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Taskbar" Content="İkisi birlikte"
+                                             IsChecked="{Binding TaskbarMode, Converter={StaticResource EnumEq}, ConverterParameter=ShowBoth}" />
+                            </StackPanel>
+                        </Border>
+                    </ctl:SettingRow>
+                    <Border CornerRadius="6" Padding="14,10" Margin="0,0,0,3" Background="{DynamicResource WarningBackgroundBrush}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE946;" Style="{StaticResource IconText}" Foreground="{DynamicResource AccentOrangeBrush}" VerticalAlignment="Top" Margin="0,2,10,0" />
+                            <TextBlock TextWrapping="Wrap" MaxWidth="720"
+                                       Text="Bu ayar değişince Custom Dock kendini yeniden başlatır. Uygulama kapanınca (ya da beklenmedik şekilde sonlanırsa bir sonraki açılışta) Windows görev çubuğu otomatik olarak geri gelir." />
+                        </StackPanel>
+                    </Border>
+                    <ctl:SettingRow Glyph="&#xE740;" Header="Tam ekran uygulamalarda gizle"
+                                    Description="Oyun, video veya F11 tam ekran modunda dock gizlenir.">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding HideOnFullscreen}" />
+                    </ctl:SettingRow>
+
+                    <TextBlock Text="Başlangıç" Style="{StaticResource SectionHeader}" />
+                    <ctl:SettingRow Glyph="&#xE7E8;" Header="Windows ile başlat"
+                                    Description="Oturum açtığınızda Custom Dock otomatik olarak çalışır.">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding StartWithWindows}" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE718;" Header="Explorer'da &quot;Custom Dock'a sabitle&quot;"
+                                    Description="Bir uygulamaya ya da kısayola sağ tıklayınca dock'a sabitleme komutu çıkar. Windows 11'de &quot;Daha fazla seçenek göster&quot; altında (veya Shift + sağ tık) bulunur.">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ExplorerPinMenu}" />
+                    </ctl:SettingRow>
+
+                    <TextBlock Text="Bakım" Style="{StaticResource SectionHeader}" />
+                    <ctl:SettingRow Glyph="&#xE777;" Header="Windows görev çubuğunu geri getir"
+                                    Description="Görev çubuğu bir sorun nedeniyle görünmez kaldıysa. (Komut satırı: CustomDock.exe --restore-taskbar)">
+                        <Button Content="Geri getir" Click="OnRestoreTaskbarClick" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE72C;" Header="Custom Dock'u yeniden başlat">
+                        <Button Content="Yeniden başlat" Click="OnRestartClick" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE8B7;" Header="Ayar ve veri klasörü" x:Name="ConfigFolderRow">
+                        <Button Content="Klasörü aç" Click="OnOpenConfigFolderClick" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE7E8;" Header="Custom Dock'tan çık" Description="Windows görev çubuğu geri getirilir.">
+                        <Button Content="Çıkış" Click="OnExitClick" />
+                    </ctl:SettingRow>
+                </StackPanel>
+
+                <!-- ============ Görev çubuğu ============ -->
+                <StackPanel x:Name="TaskbarPage" Style="{StaticResource Page}">
+                    <TextBlock Text="Görev çubuğu" Style="{StaticResource PageTitle}" />
+                    <TextBlock Text="Dock'un başında ve sonunda yer alan sistem öğeleri." Style="{StaticResource PageSubtitle}" />
+
+                    <TextBlock Text="Sol taraf" Style="{StaticResource SectionHeader}" />
+                    <ctl:SettingRow Glyph="&#xE8A9;" Header="Başlat düğmesi" Description="Sağ tık: Windows yetkili kullanıcı menüsü (Win+X).">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ShowStartButton}" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE721;" Header="Ara">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ShowSearchButton}" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE7C4;" Header="Görev görünümü">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ShowTaskViewButton}" />
+                    </ctl:SettingRow>
+
+                    <TextBlock Text="Uygulamalar" Style="{StaticResource SectionHeader}" />
+                    <ctl:SettingRow Glyph="&#xE8A9;" Header="Sabitlenmemiş açık uygulamaları göster"
+                                    Description="Dock'a sabitlemediğiniz çalışan uygulamalar bir ayraçtan sonra listelenir. Sağ tıklayıp sabitleyebilir ya da sürükleyip istediğiniz yere bırakabilirsiniz.">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ShowRunningApps}" />
+                    </ctl:SettingRow>
+
+                    <TextBlock Text="Sağ taraf" Style="{StaticResource SectionHeader}" />
+                    <ctl:SettingRow Glyph="&#xE7EB;" Header="Sistem tepsisi" x:Name="TrayRow"
+                                    Description="Arka planda çalışan uygulamaların simgeleri. Yalnızca 'Custom Dock' modunda kullanılabilir.">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ShowTray}" />
+                    </ctl:SettingRow>
+                    <Border x:Name="TrayIconsCard" Style="{StaticResource SettingCard}">
+                        <StackPanel>
+                            <TextBlock Text="Her zaman görünen simgeler" Style="{StaticResource SettingTitle}" />
+                            <TextBlock Text="Kapalı olanlar ˄ düğmesinin altında toplanır." Style="{StaticResource SettingDescription}" />
+                            <ItemsControl x:Name="TrayIconList" Margin="0,8,0,0">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <Image Source="{Binding Icon}" Width="18" Height="18" Margin="0,0,12,0" />
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding Path}" FontSize="11" Foreground="{DynamicResource TextTertiaryBrush}" TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                            <CheckBox Grid.Column="2" Style="{StaticResource ToggleSwitch}" IsChecked="{Binding IsPinned, Mode=OneWay}"
+                                                      Click="OnTrayPinClick" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                    <ctl:SettingRow Glyph="&#xE823;" Header="Saat" Description="Tıklayınca takvim ve bildirimler açılır.">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ShowClock}" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE787;" Header="Tarihi göster">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ClockShowDate}" IsEnabled="{Binding ShowClock}" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE916;" Header="Saniyeleri göster">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ClockShowSeconds}" IsEnabled="{Binding ShowClock}" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE7F4;" Header="Masaüstünü göster düğmesi" Description="Dock'un en sağındaki ince çubuk.">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ShowDesktopButton}" />
+                    </ctl:SettingRow>
+                </StackPanel>
+
+                <!-- ============ Görünüm ============ -->
+                <StackPanel x:Name="AppearancePage" Style="{StaticResource Page}">
+                    <TextBlock Text="Görünüm" Style="{StaticResource PageTitle}" />
+                    <TextBlock Text="Tema, cam efekti, boyut ve yerleşim." Style="{StaticResource PageSubtitle}" />
+
+                    <TextBlock Text="Stil" Style="{StaticResource SectionHeader}" />
+                    <ctl:SettingRow Glyph="&#xE790;" Header="Tema">
+                        <Border Style="{StaticResource SegmentedHost}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Theme" Content="Koyu"
+                                             IsChecked="{Binding Theme, Converter={StaticResource EnumEq}, ConverterParameter=Dark}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Theme" Content="Açık"
+                                             IsChecked="{Binding Theme, Converter={StaticResource EnumEq}, ConverterParameter=Light}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Theme" Content="Sistem"
+                                             IsChecked="{Binding Theme, Converter={StaticResource EnumEq}, ConverterParameter=System}" />
+                            </StackPanel>
+                        </Border>
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xF570;" Header="Arka plan"
+                                    Description="Bulanık cam: arkadaki içeriği bulanıklaştırır. Acrylic: Windows dokusu ekler. Düz: bulanıklık yok.">
+                        <Border Style="{StaticResource SegmentedHost}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Backdrop" Content="Bulanık cam"
+                                             IsChecked="{Binding Backdrop, Converter={StaticResource EnumEq}, ConverterParameter=Blur}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Backdrop" Content="Acrylic"
+                                             IsChecked="{Binding Backdrop, Converter={StaticResource EnumEq}, ConverterParameter=Acrylic}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Backdrop" Content="Düz"
+                                             IsChecked="{Binding Backdrop, Converter={StaticResource EnumEq}, ConverterParameter=Solid}" />
+                            </StackPanel>
+                        </Border>
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE706;" Header="Renk yoğunluğu" Description="Camın üzerindeki renk katmanı.">
+                        <StackPanel Orientation="Horizontal">
+                            <Slider Width="200" Minimum="0" Maximum="1" SmallChange="0.05" LargeChange="0.1"
+                                    IsSnapToTickEnabled="True" TickFrequency="0.05" Value="{Binding TintOpacity}" />
+                            <TextBlock Width="48" TextAlignment="Right" VerticalAlignment="Center"
+                                       Text="{Binding TintOpacity, Converter={StaticResource Percent}}" Foreground="{DynamicResource TextSecondaryBrush}" />
+                        </StackPanel>
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE7B3;" Header="Kart vurgusu" Description="Fare üzerine gelince widget kartı hafifçe aydınlanır.">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding HoverEffect}" />
+                    </ctl:SettingRow>
+
+                    <TextBlock Text="Boyut ve biçim" Style="{StaticResource SectionHeader}" />
+                    <ctl:SettingRow Glyph="&#xE740;" Header="Boyut">
+                        <Border Style="{StaticResource SegmentedHost}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Size" Content="Küçük"
+                                             IsChecked="{Binding Size, Converter={StaticResource EnumEq}, ConverterParameter=Small}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Size" Content="Orta"
+                                             IsChecked="{Binding Size, Converter={StaticResource EnumEq}, ConverterParameter=Medium}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Size" Content="Büyük"
+                                             IsChecked="{Binding Size, Converter={StaticResource EnumEq}, ConverterParameter=Large}" />
+                            </StackPanel>
+                        </Border>
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE8A9;" Header="Biçim" Description="Yüzen: kenarlardan boşluklu, yuvarlak köşeli. Yapışık: klasik görev çubuğu.">
+                        <Border Style="{StaticResource SegmentedHost}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Layout" Content="Yüzen"
+                                             IsChecked="{Binding Layout, Converter={StaticResource EnumEq}, ConverterParameter=Floating}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Layout" Content="Yapışık"
+                                             IsChecked="{Binding Layout, Converter={StaticResource EnumEq}, ConverterParameter=Attached}" />
+                            </StackPanel>
+                        </Border>
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE8C4;" Header="Kenar boşluğu">
+                        <StackPanel Orientation="Horizontal">
+                            <Slider x:Name="MarginSlider" Width="200" Minimum="0" Maximum="24" SmallChange="1" LargeChange="2"
+                                    IsSnapToTickEnabled="True" TickFrequency="1" Value="{Binding EdgeMargin}" />
+                            <TextBlock Width="48" TextAlignment="Right" VerticalAlignment="Center"
+                                       Text="{Binding EdgeMargin, StringFormat={}{0:0} px}" Foreground="{DynamicResource TextSecondaryBrush}" />
+                        </StackPanel>
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE9A6;" Header="Genişlik">
+                        <Border Style="{StaticResource SegmentedHost}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Width" Content="Tam genişlik"
+                                             IsChecked="{Binding WidthMode, Converter={StaticResource EnumEq}, ConverterParameter=Full}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Width" Content="İçeriğe göre"
+                                             IsChecked="{Binding WidthMode, Converter={StaticResource EnumEq}, ConverterParameter=Fit}" />
+                            </StackPanel>
+                        </Border>
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE8E3;" Header="Öğe hizalaması">
+                        <Border Style="{StaticResource SegmentedHost}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Align" Content="Başta"
+                                             IsChecked="{Binding Alignment, Converter={StaticResource EnumEq}, ConverterParameter=Start}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Align" Content="Ortada"
+                                             IsChecked="{Binding Alignment, Converter={StaticResource EnumEq}, ConverterParameter=Center}" />
+                            </StackPanel>
+                        </Border>
+                    </ctl:SettingRow>
+
+                    <TextBlock Text="Konum" Style="{StaticResource SectionHeader}" />
+                    <ctl:SettingRow Glyph="&#xE8A0;" Header="Ekran kenarı">
+                        <Border Style="{StaticResource SegmentedHost}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Edge" Content="Alt"
+                                             IsChecked="{Binding Edge, Converter={StaticResource EnumEq}, ConverterParameter=Bottom}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Edge" Content="Üst"
+                                             IsChecked="{Binding Edge, Converter={StaticResource EnumEq}, ConverterParameter=Top}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Edge" Content="Sol"
+                                             IsChecked="{Binding Edge, Converter={StaticResource EnumEq}, ConverterParameter=Left}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Edge" Content="Sağ"
+                                             IsChecked="{Binding Edge, Converter={StaticResource EnumEq}, ConverterParameter=Right}" />
+                            </StackPanel>
+                        </Border>
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE7F4;" Header="Ekran" Description="Çoklu monitörde dock'un gösterileceği ekran.">
+                        <ComboBox x:Name="MonitorCombo" Width="260" DisplayMemberPath="Label" SelectionChanged="OnMonitorChanged" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE89F;" Header="Otomatik gizle"
+                                    Description="Dock, fare ekran kenarına gelene kadar gizli kalır. Kapalıyken pencereler dock'un altına girmez.">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding AutoHide}" />
+                    </ctl:SettingRow>
+                </StackPanel>
+
+                <!-- ============ Dock öğeleri ============ -->
+                <Grid x:Name="ItemsPage" Style="{StaticResource Page}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="340" />
+                        <ColumnDefinition Width="24" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.ColumnSpan="3" Text="Dock öğeleri" Style="{StaticResource PageTitle}" />
+                    <TextBlock Grid.Row="1" Grid.ColumnSpan="3" Style="{StaticResource PageSubtitle}"
+                               Text="Uygulamalar, widget'lar ve ayraçlar soldan sağa bu sırayla gösterilir. Tutamaçtan sürükleyerek (ya da doğrudan dock üzerinde) sıralayın." />
+
+                    <WrapPanel Grid.Row="2" Grid.ColumnSpan="3" Margin="0,0,0,12">
+                        <Button Style="{StaticResource AccentButton}" Margin="0,0,8,0" Click="OnAddAppClick">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE710;" Style="{StaticResource IconText}" FontSize="12" />
+                                <TextBlock Text="Uygulama ekle" Margin="8,0,0,0" />
+                            </StackPanel>
+                        </Button>
+                        <Button Margin="0,0,8,0" Click="OnOpenGalleryClick">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xECA5;" Style="{StaticResource IconText}" FontSize="12" />
+                                <TextBlock Text="Widget ekle" Margin="8,0,0,0" />
+                            </StackPanel>
+                        </Button>
+                        <Button Margin="0,0,8,0" Click="OnAddSeparatorClick">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE76F;" Style="{StaticResource IconText}" FontSize="12" />
+                                <TextBlock Text="Ayraç ekle" Margin="8,0,0,0" />
+                            </StackPanel>
+                        </Button>
+                        <Button Click="OnImportPinsClick" ToolTip="Windows görev çubuğuna sabitlenmiş uygulamaları ekler">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE896;" Style="{StaticResource IconText}" FontSize="12" />
+                                <TextBlock Text="Görev çubuğu sabitlemelerini içe aktar" Margin="8,0,0,0" />
+                            </StackPanel>
+                        </Button>
+                    </WrapPanel>
+
+                    <Border Grid.Row="3" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource SurfaceBorderBrush}"
+                            BorderThickness="1" CornerRadius="8" Padding="6" VerticalAlignment="Top">
+                        <ListBox x:Name="ItemList" Style="{StaticResource PlainListBox}" AllowDrop="True" MinHeight="120"
+                                 SelectionChanged="OnItemSelectionChanged"
+                                 PreviewMouseLeftButtonDown="OnItemListMouseDown"
+                                 PreviewMouseMove="OnItemListMouseMove"
+                                 DragOver="OnItemListDragOver"
+                                 Drop="OnItemListDrop">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem" BasedOn="{StaticResource NavItem}">
+                                    <Setter Property="Padding" Value="6,5" />
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="&#xE700;" Style="{StaticResource IconText}" FontSize="12" Width="18"
+                                                   Foreground="{DynamicResource TextTertiaryBrush}" Cursor="SizeAll" Tag="drag-handle" />
+                                        <Border Grid.Column="1" Width="30" Height="30" CornerRadius="7" Margin="4,0,10,0"
+                                                Background="{DynamicResource SubtleFillBrush}">
+                                            <Grid>
+                                                <Image Source="{Binding Icon}" Width="22" Height="22" RenderOptions.BitmapScalingMode="HighQuality" />
+                                                <Path Data="{Binding Glyph}" Stretch="Uniform" Width="15" Height="15" StrokeThickness="1.7"
+                                                      StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                                      Stroke="{Binding GlyphBrush}" />
+                                            </Grid>
+                                        </Border>
+                                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding Subtitle}" FontSize="11" Foreground="{DynamicResource TextTertiaryBrush}" TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="3" Orientation="Horizontal" Margin="4,0,0,0">
+                                            <Button Style="{StaticResource IconButton}" Content="&#xE70E;" Width="24" Height="24" FontSize="10"
+                                                    ToolTip="Yukarı" Click="OnMoveUpClick" />
+                                            <Button Style="{StaticResource IconButton}" Content="&#xE70D;" Width="24" Height="24" FontSize="10"
+                                                    ToolTip="Aşağı" Click="OnMoveDownClick" />
+                                            <Button Style="{StaticResource IconButton}" Content="&#xE711;" Width="24" Height="24" FontSize="10"
+                                                    ToolTip="Kaldır" Click="OnRemoveItemClick" />
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Border>
+
+                    <StackPanel Grid.Row="3" Grid.Column="2">
+                        <TextBlock x:Name="EmptyDetail" Text="Ayrıntıları görmek için bir öğe seçin." Foreground="{DynamicResource TextSecondaryBrush}" Margin="2,8,0,0" />
+                        <StackPanel x:Name="DetailPanel" Visibility="Collapsed">
+                            <DockPanel Margin="0,0,0,10">
+                                <Border DockPanel.Dock="Left" Width="46" Height="46" CornerRadius="12" Background="{DynamicResource SurfaceBrush}"
+                                        BorderBrush="{DynamicResource SurfaceBorderBrush}" BorderThickness="1">
+                                    <Grid>
+                                        <Image x:Name="DetailImage" Width="30" Height="30" RenderOptions.BitmapScalingMode="HighQuality" />
+                                        <Path x:Name="DetailGlyph" Stretch="Uniform" Width="22" Height="22" StrokeThickness="1.8"
+                                              StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                                    </Grid>
+                                </Border>
+                                <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock x:Name="DetailTitle" FontFamily="{StaticResource DisplayFont}" FontSize="19" FontWeight="SemiBold" />
+                                    <TextBlock x:Name="DetailSubtitle" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </DockPanel>
+
+                            <!-- Önizleme -->
+                            <Border x:Name="DetailPreviewHost" CornerRadius="16" Padding="8" HorizontalAlignment="Left" Margin="0,0,0,10"
+                                    Background="{DynamicResource GalleryBackdropBrush}" Visibility="Collapsed" IsHitTestVisible="False" />
+
+                            <!-- Uygulama -->
+                            <StackPanel x:Name="AppDetail" Visibility="Collapsed">
+                                <ctl:SettingRow Header="Görünen ad" Description="Boş bırakılırsa uygulamanın adı kullanılır.">
+                                    <TextBox x:Name="AppNameBox" Width="220" LostFocus="OnAppNameChanged" KeyDown="OnAppNameKeyDown" />
+                                </ctl:SettingRow>
+                                <ctl:SettingRow x:Name="AppPathRow" Header="Hedef">
+                                    <Button Content="Konumu aç" Click="OnOpenAppLocationClick" />
+                                </ctl:SettingRow>
+                                <ctl:SettingRow Header="Başlatma bağımsız değişkenleri">
+                                    <TextBox x:Name="AppArgsBox" Width="220" LostFocus="OnAppArgsChanged" />
+                                </ctl:SettingRow>
+                            </StackPanel>
+
+                            <!-- Widget -->
+                            <StackPanel x:Name="WidgetDetail" Visibility="Collapsed">
+                                <ctl:SettingRow Header="Görünüm" Description="Widget'ın dock'taki biçimi.">
+                                    <ComboBox x:Name="VariantCombo" Width="200" DisplayMemberPath="Name" SelectionChanged="OnVariantChanged" />
+                                </ctl:SettingRow>
+                                <ContentControl x:Name="WidgetSettingsHost" Focusable="False" />
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+
+                <!-- ============ Widget galerisi ============ -->
+                <StackPanel x:Name="GalleryPage" Style="{StaticResource Page}">
+                    <TextBlock Text="Widget galerisi" Style="{StaticResource PageTitle}" />
+                    <TextBlock Text="Bir widget'ı dock'a eklemek için yanındaki + düğmesine tıklayın. Eklenen widget'lara dock üzerinde sağ tıklayarak görünüm değiştirebilir veya ayarlarını açabilirsiniz."
+                               Style="{StaticResource PageSubtitle}" />
+                    <StackPanel x:Name="GalleryPanel" />
+                </StackPanel>
+
+                <!-- ============ Hakkında ============ -->
+                <StackPanel x:Name="AboutPage" Style="{StaticResource Page}">
+                    <TextBlock Text="Hakkında" Style="{StaticResource PageTitle}" />
+                    <Border Style="{StaticResource SettingCard}" Padding="20" Margin="0,12,0,4">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="pack://application:,,,/CustomDock;component/Assets/CustomDock.ico" Width="56" Height="56"
+                                   RenderOptions.BitmapScalingMode="HighQuality" />
+                            <StackPanel Margin="18,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="Custom Dock" FontFamily="{StaticResource DisplayFont}" FontSize="20" FontWeight="SemiBold" />
+                                <TextBlock x:Name="AboutVersion" Foreground="{DynamicResource TextSecondaryBrush}" />
+                                <TextBlock Text="Windows görev çubuğunun yerini alan, widget destekli dock." Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    <TextBlock Text="Kullanılan açık kaynak yazılımlar ve veriler" Style="{StaticResource SectionHeader}" />
+                    <ctl:SettingRow Glyph="&#xE7F4;" Header="ManagedShell" Description="Görev listesi, sistem tepsisi ve AppBar servisleri (Apache-2.0).">
+                        <Button Content="GitHub" Tag="https://github.com/cairoshell/ManagedShell" Click="OnOpenLinkClick" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE782;" Header="RetroBar" Description="Başlat menüsü ve tepsi etkileşimi yaklaşımı (Apache-2.0).">
+                        <Button Content="GitHub" Tag="https://github.com/dremin/RetroBar" Click="OnOpenLinkClick" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE753;" Header="Open-Meteo" Description="Hava durumu ve şehir arama verileri (CC BY 4.0).">
+                        <Button Content="Siteyi aç" Tag="https://open-meteo.com/" Click="OnOpenLinkClick" />
+                    </ctl:SettingRow>
+                    <TextBlock Text="İpuçları" Style="{StaticResource SectionHeader}" />
+                    <ctl:SettingRow Glyph="&#xE962;" Header="Dock'a sağ tıklayın" Description="Widget ekleme, uygulama sabitleme, konum ve otomatik gizleme." />
+                    <ctl:SettingRow Glyph="&#xE7C9;" Header="Fare tekerleği" Description="Dock taşarsa tekerlekle sağa sola kaydırın." />
+                    <ctl:SettingRow Glyph="&#xE8A7;" Header="Orta tık / Shift+tık" Description="Uygulamanın yeni bir penceresini açar." />
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</Window>

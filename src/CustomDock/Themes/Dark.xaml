@@ -1,0 +1,88 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ================= Dock ================= -->
+    <SolidColorBrush x:Key="DockTintBrush" Color="#FF1B1B20" />
+    <SolidColorBrush x:Key="DockSolidBrush" Color="#FF202024" />
+    <Color x:Key="DockBorderColor">#FF404046</Color>
+    <SolidColorBrush x:Key="DockHoverBrush" Color="#1CFFFFFF" />
+    <SolidColorBrush x:Key="DockPressedBrush" Color="#10FFFFFF" />
+    <SolidColorBrush x:Key="IndicatorBrush" Color="#B8FFFFFF" />
+    <SolidColorBrush x:Key="SeparatorBrush" Color="#2EFFFFFF" />
+    <SolidColorBrush x:Key="DropCaretBrush" Color="#FFFFFFFF" />
+
+    <!-- ================= Widget kartları ================= -->
+    <SolidColorBrush x:Key="CardBrush" Color="#B5242428" />
+    <SolidColorBrush x:Key="CardHoverBrush" Color="#CC2D2D32" />
+    <SolidColorBrush x:Key="CardBorderBrush" Color="#1CFFFFFF" />
+    <SolidColorBrush x:Key="CardHoverBorderBrush" Color="#33FFFFFF" />
+    <SolidColorBrush x:Key="GalleryBackdropBrush" Color="#FF1A1A1D" />
+
+    <LinearGradientBrush x:Key="HydrationCardBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#FF4A8DDB" Offset="0" />
+        <GradientStop Color="#FF2B63AE" Offset="1" />
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="NoteYellowBrush" Color="#FFF3CD5B" />
+    <SolidColorBrush x:Key="NoteGreenBrush" Color="#FFA3D48A" />
+    <SolidColorBrush x:Key="NoteBlueBrush" Color="#FF86BBF2" />
+    <SolidColorBrush x:Key="NotePinkBrush" Color="#FFF2848F" />
+    <SolidColorBrush x:Key="NotePurpleBrush" Color="#FFD59BEA" />
+    <SolidColorBrush x:Key="NoteOrangeBrush" Color="#FFF5A55B" />
+    <SolidColorBrush x:Key="NoteRedBrush" Color="#FFF2848F" />
+    <SolidColorBrush x:Key="NoteTextBrush" Color="#FF1C1C1E" />
+
+    <!-- ================= Metin ================= -->
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#FFF5F5F7" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#FFA1A1A6" />
+    <SolidColorBrush x:Key="TextTertiaryBrush" Color="#FF6E6E73" />
+    <SolidColorBrush x:Key="TextOnColorBrush" Color="#FFFFFFFF" />
+
+    <!-- ================= Göstergeler ================= -->
+    <SolidColorBrush x:Key="TrackBrush" Color="#2EFFFFFF" />
+    <SolidColorBrush x:Key="TickOffBrush" Color="#FF3F3F44" />
+    <SolidColorBrush x:Key="TickOnBrush" Color="#FFF2F2F4" />
+    <SolidColorBrush x:Key="SubtleFillBrush" Color="#14FFFFFF" />
+    <SolidColorBrush x:Key="SubtleFillHoverBrush" Color="#24FFFFFF" />
+    <SolidColorBrush x:Key="HoverOverlayBrush" Color="#16FFFFFF" />
+    <SolidColorBrush x:Key="PressedOverlayBrush" Color="#0C000000" />
+    <SolidColorBrush x:Key="PopupBrush" Color="#FA252529" />
+    <SolidColorBrush x:Key="PopupBorderBrush" Color="#30FFFFFF" />
+    <SolidColorBrush x:Key="ScrollThumbBrush" Color="#40FFFFFF" />
+    <SolidColorBrush x:Key="ScrollThumbHoverBrush" Color="#70FFFFFF" />
+    <SolidColorBrush x:Key="CloudBrush" Color="#FFD9DCE3" />
+
+    <!-- ================= Vurgu renkleri ================= -->
+    <SolidColorBrush x:Key="AccentGreenBrush" Color="#FF32D74B" />
+    <SolidColorBrush x:Key="AccentOrangeBrush" Color="#FFFF9F0A" />
+    <SolidColorBrush x:Key="AccentBlueBrush" Color="#FF0A84FF" />
+    <SolidColorBrush x:Key="AccentCyanBrush" Color="#FF5AC8FA" />
+    <SolidColorBrush x:Key="AccentMagentaBrush" Color="#FFD55CF5" />
+    <SolidColorBrush x:Key="AccentPinkBrush" Color="#FFFF6FB5" />
+    <SolidColorBrush x:Key="AccentPurpleBrush" Color="#FFBF5AF2" />
+    <SolidColorBrush x:Key="AccentYellowBrush" Color="#FFFFD60A" />
+    <SolidColorBrush x:Key="AccentRedBrush" Color="#FFFF453A" />
+    <SolidColorBrush x:Key="MagentaTrackBrush" Color="#4DD55CF5" />
+    <SolidColorBrush x:Key="BlueTrackBrush" Color="#4D0A84FF" />
+    <SolidColorBrush x:Key="GreenTrackBrush" Color="#4032D74B" />
+    <SolidColorBrush x:Key="OrangeTrackBrush" Color="#40FF9F0A" />
+
+    <!-- Analog saat -->
+    <SolidColorBrush x:Key="ClockFaceDayBrush" Color="#FFF2F2F4" />
+    <SolidColorBrush x:Key="ClockFaceNightBrush" Color="#FF2C2C30" />
+
+    <!-- ================= Ayarlar penceresi ================= -->
+    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#FF1F1F1F" />
+    <SolidColorBrush x:Key="SidebarBrush" Color="#00000000" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#0FFFFFFF" />
+    <SolidColorBrush x:Key="SurfaceHoverBrush" Color="#17FFFFFF" />
+    <SolidColorBrush x:Key="SurfaceBorderBrush" Color="#12FFFFFF" />
+    <SolidColorBrush x:Key="ControlBrush" Color="#FF2D2D2D" />
+    <SolidColorBrush x:Key="ControlBorderBrush" Color="#FF3C3C3C" />
+    <SolidColorBrush x:Key="AccentBrush" Color="#FF60CDFF" />
+    <SolidColorBrush x:Key="OnAccentBrush" Color="#FF000000" />
+    <SolidColorBrush x:Key="SelectionBrush" Color="#3360CDFF" />
+    <SolidColorBrush x:Key="ToggleOffBrush" Color="#FF4A4A50" />
+    <SolidColorBrush x:Key="DangerBrush" Color="#FFFF6B61" />
+    <SolidColorBrush x:Key="WarningBackgroundBrush" Color="#26FF9F0A" />
+
+</ResourceDictionary>

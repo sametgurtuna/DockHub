@@ -1,0 +1,430 @@
+---
+import MiniStage from './MiniStage.astro';
+import { icons } from '../lib/icons';
+import { appIcons } from '../lib/apps';
+
+const cursor = `<svg viewBox="0 0 18 22"><path d="M1.5 1.5v16.2l4.2-4 2.9 6.6 3-1.3-2.9-6.5h5.8z" fill="#fff" stroke="#111" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
+---
+
+<section class="section" id="ozellikler">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <h2 class="section-title">Küçük şeyler, halledildi.</h2>
+      <p class="section-lead">Bir görev çubuğundan beklediğin her şey yerinde, üstüne dock'un rahatlığı.</p>
+    </div>
+
+    <div class="bento">
+      <article class="card card-wide reveal" data-card>
+        <div class="card-copy">
+          <h3>İstediğin kenarda.</h3>
+          <p>Alt, üst, sol ya da sağ. Dikey dock'ta widget'lar kompakt kutucuğa dönüşür, kısa değeri bir bakışta okunur.</p>
+          <div class="edge-opts" aria-hidden="true">
+            <span data-edge-opt="bottom" class="on">Alt</span>
+            <span data-edge-opt="left">Sol</span>
+            <span data-edge-opt="top">Üst</span>
+            <span data-edge-opt="right">Sağ</span>
+          </div>
+        </div>
+        <div class="card-art art-tall">
+          <MiniStage
+            id="bloom-b-edge"
+            cycle="edge"
+            label="Dock sırayla alt, sol, üst ve sağ kenara geçiyor"
+            spec="start app:explorer app:browser sep w:clock:analog w:weather:current w:status:rings tray clock"
+          />
+        </div>
+      </article>
+
+      <article class="card reveal" data-card>
+        <div class="card-art">
+          <MiniStage id="bloom-b-hide" cycle="autohide" label="Otomatik gizlenen dock, imleç kenara gelince geri geliyor" spec="app:explorer app:browser sep w:clock:digital w:system:numbers">
+            <span class="mini-cursor" data-cursor set:html={cursor} />
+          </MiniStage>
+        </div>
+        <div class="card-copy">
+          <h3>Gerektiğinde çekilir.</h3>
+          <p>Otomatik gizlemede dock kenara kayar, imleç gelince döner. Oyunda, videoda ve F11'de kendiliğinden gizlenir.</p>
+        </div>
+      </article>
+
+      <article class="card reveal" data-card>
+        <div class="card-art">
+          <MiniStage id="bloom-b-pin" cycle="pin" label="Explorer sağ tık menüsünden Custom Dock'a sabitleme" spec="app:explorer app:browser app:terminal">
+            <div class="pin-menu" data-pin-menu>
+              <div class="pin-file"><span set:html={appIcons.calculator} />Hesap Makinesi.lnk</div>
+              <div class="flyout menu">
+                <div class="menu-item"><span class="mi-ic" set:html={icons.external} /><span class="mi-label">Aç</span></div>
+                <div class="menu-item pin-target"><span class="mi-ic" set:html={icons.pin} /><span class="mi-label">Custom Dock'a sabitle</span></div>
+              </div>
+            </div>
+          </MiniStage>
+        </div>
+        <div class="card-copy">
+          <h3>Explorer'dan sabitle.</h3>
+          <p>Bir .exe ya da kısayola sağ tıkla, "Custom Dock'a sabitle" de. Çalışan bir uygulamayı dock'a sürüklemek de yeter.</p>
+        </div>
+      </article>
+
+      <article class="card reveal" data-card>
+        <div class="card-art">
+          <MiniStage id="bloom-b-tray" layout="attached" label="Dock'taki sistem tepsisi ve gizli simgeler menüsü" spec="w:media:mini tray clock" class="tray-mini">
+            <div class="flyout tray-fly">
+              <div class="tray-grid">
+                <span class="tg" set:html={appIcons.music} />
+                <span class="tg" set:html={appIcons.photos} />
+                <span class="tg" set:html={appIcons.calculator} />
+                <span class="tg" set:html={appIcons.terminal} />
+              </div>
+            </div>
+          </MiniStage>
+        </div>
+        <div class="card-copy">
+          <h3>Tepsi simgelerin yerinde.</h3>
+          <p>Uygulama simgeleri dock'ta, gizli olanlar ok menüsünde. İlk açılışta Windows'taki tercihlerin içe aktarılır.</p>
+        </div>
+      </article>
+
+      <article class="card reveal" data-card>
+        <div class="card-art">
+          <MiniStage id="bloom-b-vert" edge="left" panel="weather" label="Sol kenarda dikey dock ve yanında açılmış hava durumu paneli" spec="start w:weather:current w:clock:analog w:focus w:hydration:timer" />
+        </div>
+        <div class="card-copy">
+          <h3>Dikeyde de rahat.</h3>
+          <p>Kutucuğa tıklayınca widget'ın tamamı yanda açılır. Zamanlayıcıda ve su sayacında tıklama doğrudan işi yapar.</p>
+        </div>
+      </article>
+
+      <article class="card reveal" data-card>
+        <div class="card-art">
+          <MiniStage id="bloom-b-drag" cycle="reorder" label="Dock üzerinde yer değiştiren widget'lar" spec="app:explorer sep w:weather:current w:clock:digital w:hydration:timer" />
+        </div>
+        <div class="card-copy">
+          <h3>Sürükle, bırak, sırala.</h3>
+          <p>Uygulamalar, widget'lar ve ayraçlar dock üzerinde yer değiştirir. Sığmayanlar tekerlekle yumuşakça kayar.</p>
+        </div>
+      </article>
+
+      <article class="card card-wide card-hz reveal" data-card>
+        <div class="card-copy">
+          <h3>Ekranının hızında.</h3>
+          <p>Kaydırma, gizlenme ve paneller ekranın yenileme hızında akar. 60 Hz'den yüksek ekranlarda da.</p>
+        </div>
+        <div class="hz" data-hz>
+          <div class="hz-read">
+            <span class="hz-label">Bu ekran</span>
+            <span class="hz-value"><b data-hz-value>60</b> Hz</span>
+          </div>
+          <div class="hz-tracks" aria-hidden="true">
+            <div class="hz-track"><span class="hz-name">30 Hz</span><span class="hz-rail"><i data-hz-dot="30"></i></span></div>
+            <div class="hz-track is-live"><span class="hz-name">Senin ekranın</span><span class="hz-rail"><i data-hz-dot="0"></i></span></div>
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { initMinis } from '../scripts/minis';
+  initMinis();
+
+  const hz = document.querySelector<HTMLElement>('[data-hz]');
+  if (hz) {
+    const valueEl = hz.querySelector<HTMLElement>('[data-hz-value]')!;
+    const dots = [...hz.querySelectorAll<HTMLElement>('[data-hz-dot]')];
+    let visible = false;
+    let raf = 0;
+    let last = 0;
+    const samples: number[] = [];
+    const start = performance.now();
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const loop = (t: number) => {
+      if (last) {
+        samples.push(t - last);
+        if (samples.length > 90) samples.shift();
+      }
+      last = t;
+      if (samples.length > 20) {
+        const sorted = [...samples].sort((a, b) => a - b);
+        const median = sorted[Math.floor(sorted.length / 2)];
+        const rate = 1000 / median;
+        const common = [30, 48, 50, 60, 75, 90, 100, 120, 144, 165, 170, 180, 240, 360];
+        const snap = common.reduce((a, b) => (Math.abs(b - rate) < Math.abs(a - rate) ? b : a));
+        valueEl.textContent = String(snap);
+      }
+      const p = (((t - start) / 2400) % 1 + 1) % 1;
+      const x = 0.5 - 0.5 * Math.cos(p * Math.PI * 2);
+      dots.forEach((d) => {
+        const fps = Number(d.dataset.hzDot);
+        let v = x;
+        if (fps) {
+          const step = 1000 / fps;
+          const tq = Math.floor((t - start) / step) * step;
+          const pq = ((tq / 2400) % 1 + 1) % 1;
+          v = 0.5 - 0.5 * Math.cos(pq * Math.PI * 2);
+        }
+        d.style.left = `${v * 100}%`;
+      });
+      if (visible) raf = requestAnimationFrame(loop);
+    };
+    new IntersectionObserver(([en]) => {
+      visible = en.isIntersecting;
+      cancelAnimationFrame(raf);
+      last = 0;
+      if (visible && !still) raf = requestAnimationFrame(loop);
+    }).observe(hz);
+  }
+</script>
+
+<style>
+  .bento {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .card {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    border-radius: 24px;
+    background: var(--bg-raised);
+    box-shadow: inset 0 0 0 1px var(--line);
+    overflow: hidden;
+    min-width: 0;
+  }
+  .card-wide {
+    grid-column: span 2;
+    grid-template-rows: none;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    align-items: stretch;
+  }
+  .card-copy {
+    display: grid;
+    align-content: start;
+    gap: 10px;
+    padding: 22px 26px 26px;
+  }
+  .card-wide .card-copy {
+    align-content: center;
+    padding: 36px;
+  }
+  .card h3 {
+    font-size: clamp(1.3rem, 1.9vw, 1.625rem);
+    letter-spacing: -0.025em;
+    line-height: 1.12;
+  }
+  .card p {
+    color: var(--text-2);
+    font-size: 0.975rem;
+    line-height: 1.5;
+  }
+  .card-art {
+    height: 230px;
+    padding: 12px 12px 0;
+  }
+  .card-art :global(.stage-mini) {
+    border-radius: 12px 12px 4px 4px;
+  }
+  .card-wide .card-art {
+    height: auto;
+    min-height: 330px;
+    padding: 12px 12px 12px 0;
+  }
+  .card-wide .card-art :global(.stage-mini) {
+    border-radius: 12px;
+  }
+
+  .edge-opts {
+    display: flex;
+    gap: 4px;
+    margin-top: 10px;
+    padding: 3px;
+    border-radius: 9px;
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--line);
+    justify-self: start;
+  }
+  .edge-opts span {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 560;
+    color: var(--text-3);
+    transition:
+      background-color 300ms var(--ease-out),
+      color 300ms var(--ease-out);
+  }
+  .edge-opts span:global(.on) {
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+
+  .pin-menu {
+    position: absolute;
+    z-index: 40;
+    top: 12px;
+    left: 50%;
+    translate: -50% 0;
+    display: grid;
+    gap: 6px;
+    justify-items: start;
+    transition:
+      opacity 300ms var(--ease-out),
+      translate 300ms var(--ease-out);
+  }
+  .pin-menu:global(.is-gone) {
+    opacity: 0;
+    translate: -50% 10px;
+  }
+  .pin-file {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px 4px 4px;
+    border-radius: 6px;
+    font-family: var(--font-ui);
+    font-size: 12px;
+    color: #fff;
+    background: rgb(76 194 255 / 0.28);
+    box-shadow: inset 0 0 0 1px rgb(76 194 255 / 0.5);
+  }
+  .pin-file :global(svg) {
+    width: 24px;
+    height: 24px;
+  }
+  .pin-menu :global(.flyout) {
+    position: relative;
+    animation: none;
+    margin-left: 26px;
+    max-height: none;
+    overflow: visible;
+  }
+  .pin-menu:global(.is-hot) .pin-target {
+    background: var(--popup-hover);
+    box-shadow: inset 0 0 0 1px rgb(76 194 255 / 0.5);
+  }
+
+  .tray-mini :global(.dock) {
+    justify-content: flex-end;
+  }
+  .tray-fly {
+    position: absolute;
+    right: 110px;
+    bottom: 58px;
+    animation: none;
+  }
+  .tray-fly .tray-grid {
+    grid-template-columns: repeat(2, 36px);
+  }
+  .tg {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+  }
+  .tg :global(svg) {
+    width: 20px;
+    height: 20px;
+  }
+
+  .card-hz {
+    align-items: center;
+  }
+  .hz {
+    display: grid;
+    gap: 22px;
+    padding: 30px 36px 30px 0;
+  }
+  .hz-read {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .hz-label {
+    color: var(--text-3);
+    font-weight: 600;
+    font-size: 0.9375rem;
+  }
+  .hz-value {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    color: var(--text-2);
+    font-weight: 600;
+  }
+  .hz-value b {
+    font-size: 3.25rem;
+    line-height: 1;
+    color: var(--text);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+  }
+  .hz-tracks {
+    display: grid;
+    gap: 14px;
+  }
+  .hz-track {
+    display: grid;
+    grid-template-columns: 116px 1fr;
+    align-items: center;
+    height: 48px;
+    padding: 0 16px 0 14px;
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  .hz-name {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-3);
+  }
+  .hz-rail {
+    position: relative;
+    height: 30px;
+    margin-inline: 15px;
+  }
+  .hz-rail i {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 30px;
+    height: 30px;
+    translate: -50% 0;
+    border-radius: 9px;
+    background: var(--text-3);
+  }
+  .is-live .hz-rail i {
+    background: var(--accent);
+    box-shadow: 0 6px 18px -6px rgb(76 194 255 / 0.8);
+  }
+  .is-live .hz-name {
+    color: var(--text-2);
+  }
+
+  @media (max-width: 1080px) {
+    .bento {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 720px) {
+    .bento {
+      grid-template-columns: 1fr;
+    }
+    .card-wide {
+      grid-column: auto;
+      grid-template-columns: 1fr;
+    }
+    .card-wide .card-copy {
+      padding: 24px 24px 8px;
+    }
+    .card-wide .card-art {
+      min-height: 300px;
+      padding: 12px;
+    }
+    .hz {
+      padding: 12px 24px 26px;
+    }
+  }
+</style>

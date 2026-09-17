@@ -1,0 +1,30 @@
+<w:WidgetBase x:Class="CustomDock.Widgets.NetworkWidget"
+              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+              xmlns:w="clr-namespace:CustomDock.Widgets"
+              xmlns:ctl="clr-namespace:CustomDock.Controls">
+    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Background="Transparent">
+        <Grid MinWidth="96" VerticalAlignment="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="19" />
+                <RowDefinition Height="19" />
+            </Grid.RowDefinitions>
+            <TextBlock Text="↓" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource AccentBlueBrush}" VerticalAlignment="Center" Margin="0,0,5,1" />
+            <TextBlock Grid.Column="1" VerticalAlignment="Center" FontFamily="{StaticResource DisplayFont}" Typography.NumeralAlignment="Tabular">
+                <Run x:Name="DownValue" FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Text="0" />
+                <Run x:Name="DownUnit" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Text="KB/s" />
+            </TextBlock>
+            <TextBlock Grid.Row="1" Text="↑" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource AccentPinkBrush}" VerticalAlignment="Center" Margin="0,0,5,1" />
+            <TextBlock Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" FontFamily="{StaticResource DisplayFont}" Typography.NumeralAlignment="Tabular">
+                <Run x:Name="UpValue" FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Text="0" />
+                <Run x:Name="UpUnit" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Text="KB/s" />
+            </TextBlock>
+        </Grid>
+        <ctl:Sparkline x:Name="Chart" Width="74" Height="26" Margin="12,0,0,0" VerticalAlignment="Center"
+                       PrimaryStroke="{DynamicResource AccentBlueBrush}" SecondaryStroke="{DynamicResource AccentPinkBrush}" />
+    </StackPanel>
+</w:WidgetBase>

@@ -1,0 +1,147 @@
+<w:WidgetBase x:Class="CustomDock.Widgets.NotesWidget"
+              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+              xmlns:w="clr-namespace:CustomDock.Widgets"
+              CardPadding="12,6,10,6">
+    <w:WidgetBase.Resources>
+        <!-- Not kağıdı üzerindeki yuvarlak ikon düğmesi -->
+        <Style x:Key="PaperIconButton" TargetType="Button">
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Width" Value="30" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="FontFamily" Value="{StaticResource IconFont}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="{DynamicResource NoteTextBrush}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid Background="Transparent">
+                            <Border x:Name="Bd" Background="#1F000000" CornerRadius="15" Opacity="0" />
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.75" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard HandoffBehavior="SnapshotAndReplace">
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="Opacity" To="0.6" Duration="0:0:0.12" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard HandoffBehavior="SnapshotAndReplace">
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.2" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="1" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- "‹ Geri" ve yazı boyutu gibi kağıt üzerindeki hap düğmeler -->
+        <Style x:Key="PaperPillButton" TargetType="Button">
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Foreground" Value="{DynamicResource NoteTextBrush}" />
+            <Setter Property="Background" Value="#14000000" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10" />
+                            <Border x:Name="Hover" Background="#14000000" CornerRadius="10" Opacity="0" />
+                            <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Hover" Property="Opacity" Value="1" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </w:WidgetBase.Resources>
+
+    <Grid>
+        <!-- Dock'taki kart: notun önizlemesi -->
+        <Grid x:Name="Root" Width="170" Height="34" Background="Transparent" Cursor="Hand"
+              MouseLeftButtonUp="OnCardClick">
+            <TextBlock x:Name="PreviewText" FontSize="11.5" LineHeight="14" LineStackingStrategy="BlockLineHeight"
+                       TextWrapping="Wrap" TextTrimming="CharacterEllipsis" VerticalAlignment="Top"
+                       Foreground="{DynamicResource NoteTextBrush}" />
+            <TextBlock x:Name="PlaceholderText" Text="Not yazmak için tıklayın" FontSize="11.5" VerticalAlignment="Center"
+                       Opacity="0.55" Foreground="{DynamicResource NoteTextBrush}" />
+        </Grid>
+
+        <!-- Büyük not kağıdı -->
+        <Popup x:Name="EditorPopup" StaysOpen="False" AllowsTransparency="True" Opened="OnPopupOpened" Closed="OnPopupClosed">
+            <Border x:Name="Sheet" Width="310" Margin="16" CornerRadius="18" BorderThickness="1" BorderBrush="#26000000"
+                    Background="{DynamicResource NoteYellowBrush}"
+                    TextElement.Foreground="{DynamicResource NoteTextBrush}" TextElement.FontFamily="{StaticResource UiFont}">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="26" ShadowDepth="5" Direction="270" Opacity="0.3" />
+                </Border.Effect>
+                <Grid>
+                    <!-- Not sayfası -->
+                    <Grid x:Name="NotePage" Height="270" Margin="18,12,12,16">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Style="{StaticResource PaperIconButton}" Content="&#xE711;" FontSize="11"
+                                    ToolTip="Kapat" Click="OnCloseClick" />
+                            <Button DockPanel.Dock="Right" Style="{StaticResource PaperIconButton}" Content="&#xE9E9;"
+                                    ToolTip="Özelleştir" Click="OnCustomizeClick" Margin="0,0,2,0" />
+                            <TextBlock Text="Yapışkan not" FontSize="13.5" Opacity="0.72" VerticalAlignment="Center" />
+                        </DockPanel>
+                        <TextBox x:Name="NoteBox" Grid.Row="1" Style="{StaticResource NoteTextBox}" Tag="Bir şeyler yazın…"
+                                 FontSize="20" Margin="0,12,4,0" FontFamily="{StaticResource DisplayFont}"
+                                 TextChanged="OnTextChanged" PreviewKeyDown="OnEditorKeyDown" />
+                    </Grid>
+
+                    <!-- Özelleştirme sayfası -->
+                    <StackPanel x:Name="CustomizePage" Margin="14,12,12,20" Visibility="Collapsed">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Style="{StaticResource PaperIconButton}" Content="&#xE711;" FontSize="11"
+                                    ToolTip="Kapat" Click="OnCloseClick" />
+                            <Button DockPanel.Dock="Left" Style="{StaticResource PaperPillButton}" Click="OnBackClick">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE76B;" FontFamily="{StaticResource IconFont}" FontSize="11" VerticalAlignment="Center" Margin="0,1,8,0" />
+                                    <TextBlock Text="Geri" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <TextBlock Text="Özelleştir" FontSize="14" Opacity="0.8" VerticalAlignment="Center" Margin="12,0,0,0" />
+                        </DockPanel>
+
+                        <TextBlock Text="Kağıt rengi" FontSize="14" Opacity="0.85" Margin="4,16,0,10" />
+                        <ItemsControl x:Name="SwatchList" Margin="2,0,0,0" Focusable="False">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+
+                        <TextBlock Text="Yazı boyutu" FontSize="14" Opacity="0.85" Margin="4,18,0,10" />
+                        <StackPanel x:Name="FontSizeList" Orientation="Horizontal" Margin="2,0,0,0" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Popup>
+    </Grid>
+</w:WidgetBase>

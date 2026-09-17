@@ -1,0 +1,40 @@
+# Build output
+bin/
+obj/
+publish/
+artifacts/
+out/
+
+# Visual Studio / Rider
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Windows / OS junk
+Thumbs.db
+desktop.ini
+
+# Claude Code / AI assistant files (not part of the project)
+.claude/
+.claude.json
+.claude.json.backup
+CLAUDE.md
+claude.md
+**/CLAUDE.md
+**/claude.md
+.mcp.json
+
+# AI design tool artifacts
+.impeccable/
+PRODUCT.md
+DESIGN.md
+DESIGN.json
+**/*.brief.md
+
+# Website (Astro)
+website/node_modules/
+website/dist/
+website/.astro/

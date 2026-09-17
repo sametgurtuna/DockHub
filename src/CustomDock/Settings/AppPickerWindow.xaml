@@ -1,0 +1,73 @@
+<Window x:Class="CustomDock.Settings.AppPickerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Uygulama sabitle"
+        Width="520" Height="640" MinWidth="420" MinHeight="420"
+        WindowStartupLocation="CenterScreen"
+        Icon="pack://application:,,,/CustomDock;component/Assets/CustomDock.ico"
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Foreground="{DynamicResource TextPrimaryBrush}"
+        FontFamily="{StaticResource UiFont}"
+        FontSize="13"
+        UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Display">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Uygulama sabitle" FontFamily="{StaticResource DisplayFont}" FontSize="22" FontWeight="SemiBold" />
+        <TextBox x:Name="SearchBox" Grid.Row="1" Margin="0,12,0,10" Tag="Uygulama ara…" TextChanged="OnSearchChanged"
+                 PreviewKeyDown="OnSearchKeyDown" />
+
+        <Border Grid.Row="2" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource SurfaceBorderBrush}"
+                BorderThickness="1" CornerRadius="8" Padding="4">
+            <Grid>
+                <ListBox x:Name="AppList" Style="{StaticResource PlainListBox}" MouseDoubleClick="OnListDoubleClick"
+                         VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
+                         ScrollViewer.CanContentScroll="True">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel />
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem" BasedOn="{StaticResource NavItem}">
+                            <Setter Property="Padding" Value="8,6" />
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Image Source="{Binding Icon, IsAsync=True}" Width="26" Height="26" Margin="0,0,12,0"
+                                       RenderOptions.BitmapScalingMode="HighQuality" />
+                                <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Grid.Column="2" Text="Sabitli" Foreground="{DynamicResource TextTertiaryBrush}" FontSize="11.5"
+                                           VerticalAlignment="Center" Visibility="{Binding PinnedVisibility}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <TextBlock x:Name="LoadingText" Text="Uygulamalar yükleniyor…" HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
+            </Grid>
+        </Border>
+
+        <DockPanel Grid.Row="3" Margin="0,14,0,0">
+            <Button DockPanel.Dock="Left" Content="Dosyadan ekle…" Click="OnBrowseClick" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <TextBlock x:Name="StatusText" VerticalAlignment="Center" Margin="0,0,12,0" Foreground="{DynamicResource TextSecondaryBrush}" />
+                <Button Content="Kapat" Margin="0,0,8,0" Click="OnCloseClick" />
+                <Button Style="{StaticResource AccentButton}" Content="Dock'a ekle" MinWidth="100" Click="OnAddClick" />
+            </StackPanel>
+        </DockPanel>
+    </Grid>
+</Window>

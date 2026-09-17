@@ -1,0 +1,66 @@
+<UserControl x:Class="CustomDock.Widgets.WorldClockSettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ctl="clr-namespace:CustomDock.Controls"
+             xmlns:w="clr-namespace:CustomDock.Widgets">
+    <StackPanel>
+        <Border Style="{StaticResource SettingCard}">
+            <StackPanel>
+                <TextBlock Text="Şehirler" Style="{StaticResource SettingTitle}" />
+                <TextBlock Text="Tek şehir görünümü listedeki ilk şehri gösterir. İsimleri doğrudan düzenleyebilirsiniz."
+                           Style="{StaticResource SettingDescription}" />
+
+                <ItemsControl x:Name="CityList" Margin="0,10,0,0">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,3">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox Text="{Binding Label, UpdateSourceTrigger=PropertyChanged}" LostFocus="OnLabelLostFocus" />
+                                <TextBlock Grid.Column="1" Text="{Binding TimeZoneId}" Margin="10,0" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                    <Button Style="{StaticResource IconButton}" Content="&#xE70E;" FontSize="10" ToolTip="Yukarı" Click="OnUpClick" />
+                                    <Button Style="{StaticResource IconButton}" Content="&#xE70D;" FontSize="10" ToolTip="Aşağı" Click="OnDownClick" />
+                                    <Button Style="{StaticResource IconButton}" Content="&#xE74D;" FontSize="11" ToolTip="Kaldır" Click="OnRemoveClick" />
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Border Height="1" Margin="0,12" Background="{DynamicResource SeparatorBrush}" />
+
+                <TextBlock Text="Şehir ekle" FontWeight="SemiBold" />
+                <Grid Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ComboBox x:Name="PopularCombo" ItemsSource="{x:Static w:WorldClockSettings.PopularCities}" DisplayMemberPath="Label" />
+                    <Button Grid.Column="1" Content="Ekle" Margin="8,0,0,0" Click="OnAddPopularClick" />
+                </Grid>
+
+                <TextBlock Text="veya herhangi bir saat dilimi" Margin="0,12,0,0" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" />
+                <Grid Margin="0,6,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition Width="130" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ComboBox x:Name="ZoneCombo" DisplayMemberPath="DisplayName" IsTextSearchEnabled="True" TextSearch.TextPath="DisplayName" />
+                    <TextBox x:Name="CustomLabel" Grid.Column="2" Tag="Görünen ad" />
+                    <Button Grid.Column="3" Content="Ekle" Margin="8,0,0,0" Click="OnAddZoneClick" />
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <ctl:SettingRow Header="24 saat biçimi">
+            <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding Use24Hour}" />
+        </ctl:SettingRow>
+    </StackPanel>
+</UserControl>

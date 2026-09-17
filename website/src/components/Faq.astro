@@ -1,0 +1,194 @@
+---
+import { icons } from '../lib/icons';
+import { site } from '../lib/site';
+
+const faqs = [
+  {
+    q: 'Windows görev çubuğuma ne olur?',
+    a: 'Custom Dock modunda görev çubuğu gizlenir ve otomatik gizle moduna alınır; Explorer kapatılmaz. Custom Dock kapanınca, çökünce ya da oturum kapanırken görev çubuğu eski haline döner. "İkisi birlikte" modunda ise görev çubuğuna hiç dokunulmaz.',
+  },
+  {
+    q: 'Yönetici izni gerekiyor mu?',
+    a: 'Hayır. Uygulama normal kullanıcı olarak çalışır. Yönetici olarak çalıştırmaman önerilir, çünkü yükseltilmiş bir pencereye Explorer\'dan sürükle-bırak yapılamaz.',
+  },
+  {
+    q: 'Uygulama çökerse ya da zorla kapatılırsa ne olur?',
+    a: 'Bir hata olduğunda görev çubuğu hemen geri getirilir. Görev Yöneticisi\'nden sonlandırma ya da elektrik kesintisi gibi durumlarda görev çubuğu otomatik gizli kalır, fare alt kenara gelince açılır. Bir sonraki açılışta ya da "CustomDock.exe --restore-taskbar" komutuyla orijinal durum geri yüklenir.',
+  },
+  {
+    q: 'Hangi Windows sürümlerinde çalışır?',
+    a: 'Windows 10 1809 (build 17763) ve üstünde. Yuvarlak köşeler ve Mica ayarlar penceresi için Windows 11 22H2 ve üstü önerilir. Çalıştırmak için .NET 8 Desktop Runtime gerekir.',
+  },
+  {
+    q: 'Widget nasıl eklenir, görünümü nasıl değişir?',
+    a: 'Dock\'ta boş bir alana sağ tıklayıp "Widget ekle" de ya da Ayarlar içindeki Widget galerisinde + düğmesine bas. Görünümü değiştirmek için widget\'a sağ tıklayıp Görünüm menüsünü kullan.',
+  },
+  {
+    q: 'İnternet bağlantısı kullanıyor mu?',
+    a: 'Yalnızca hava durumu için Open-Meteo\'ya ve şehir araması için onun konum servisine istek yapılır. API anahtarı ya da hesap gerekmez, başka hiçbir yere veri gönderilmez.',
+  },
+  {
+    q: 'Ayarlarım nerede saklanıyor?',
+    a: 'Tüm ayarlar ve dock öğeleri %AppData%\\CustomDock\\config.json dosyasında durur. Notlar, anımsatıcılar ve su sayacı aynı klasörün data alt klasöründedir. Dosyalar önce geçici olarak yazılıp sonra yerine taşındığı için yarıda kalan bir yazma dosyayı bozmaz.',
+  },
+  {
+    q: 'Windows 11\'in ağ, ses ve pil simgeleri görünüyor mu?',
+    a: 'Bu simgeler Explorer\'ın içindedir; dock\'ta klasik karşılıkları gösterilir. Hızlı ayarlar paneline saate ya da dock\'a sağ tıklayarak veya Win+A ile ulaşabilirsin.',
+  },
+  {
+    q: 'Birden fazla monitörde çalışır mı?',
+    a: 'Dock tek bir monitörde gösterilir ve hangi ekranda duracağını sen seçersin. Monitör başına DPI desteklenir.',
+  },
+  {
+    q: 'StartAllBack ya da ExplorerPatcher ile birlikte kullanabilir miyim?',
+    a: 'Önerilmez. Görev çubuğunu değiştiren diğer araçlar (StartAllBack, ExplorerPatcher, RetroBar gibi) Custom Dock ile aynı anda çalıştırılmamalıdır.',
+  },
+  {
+    q: 'Ücretli mi?',
+    a: 'Hayır. Custom Dock ücretsiz ve açık kaynaktır.',
+  },
+];
+---
+
+<section class="section" id="sss">
+  <div class="wrap faq">
+    <div class="faq-head reveal">
+      <h2 class="section-title">Bilmen gereken birkaç şey.</h2>
+      <p class="section-lead">Cevabını bulamadığın bir şey mi var?</p>
+      <a class="btn btn-quiet faq-cta" href={site.githubUrl}>
+        <span set:html={icons.github} />
+        GitHub'da sor
+      </a>
+    </div>
+    <div class="faq-list">
+      {
+        faqs.map((f) => (
+          <details class="qa reveal">
+            <summary>
+              <span>{f.q}</span>
+              <span class="qa-ic" set:html={icons.plus} />
+            </summary>
+            <div class="qa-body">
+              <p>{f.a}</p>
+            </div>
+          </details>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .faq {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: clamp(32px, 6vw, 96px);
+    align-items: start;
+  }
+  .faq-head {
+    display: grid;
+    gap: 16px;
+    justify-items: start;
+    position: sticky;
+    top: 100px;
+  }
+  .faq-head .section-title {
+    max-width: 10ch;
+  }
+  .faq-cta {
+    margin-top: 6px;
+    --btn-h: 44px;
+  }
+  .faq-cta span {
+    width: 18px;
+    height: 18px;
+    display: grid;
+  }
+  .faq-list {
+    border-top: 1px solid var(--line);
+  }
+  .qa {
+    border-bottom: 1px solid var(--line);
+    --reveal-y: 12px;
+  }
+  .qa summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 22px 4px;
+    cursor: pointer;
+    list-style: none;
+    font-family: var(--font-display);
+    font-size: clamp(1.0625rem, 1.5vw, 1.1875rem);
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    border-radius: 6px;
+    transition: color var(--t-fast);
+  }
+  .qa summary::-webkit-details-marker {
+    display: none;
+  }
+  .qa summary:hover {
+    color: var(--accent);
+  }
+  .qa-ic {
+    flex: none;
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--surface-hover);
+    color: var(--text-2);
+    transition:
+      rotate var(--t-slow) var(--ease-out),
+      background-color var(--t-fast),
+      color var(--t-fast);
+  }
+  .qa-ic :global(svg) {
+    width: 15px;
+    height: 15px;
+  }
+  .qa[open] .qa-ic {
+    rotate: 45deg;
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+  .qa-body {
+    padding: 0 60px 24px 4px;
+  }
+  .qa-body p {
+    color: var(--text-2);
+    max-width: 62ch;
+  }
+  .qa::details-content {
+    block-size: 0;
+    overflow: clip;
+    transition:
+      block-size 380ms var(--ease-out),
+      content-visibility 380ms allow-discrete;
+  }
+  .qa[open]::details-content {
+    block-size: auto;
+  }
+  @supports (interpolate-size: allow-keywords) {
+    :global(:root) {
+      interpolate-size: allow-keywords;
+    }
+  }
+  @media (max-width: 900px) {
+    .faq {
+      grid-template-columns: 1fr;
+    }
+    .faq-head {
+      position: static;
+    }
+    .faq-head .section-title {
+      max-width: 14ch;
+    }
+    .qa-body {
+      padding-right: 8px;
+    }
+  }
+</style>

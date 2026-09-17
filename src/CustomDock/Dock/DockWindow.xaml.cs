@@ -173,9 +173,28 @@ public partial class DockWindow : Window, IWidgetHost
     /// <summary>Tüm bağlam menüleri (öğelerin kendi doldurma işleyicilerinden sonra) dock'un dışına yerleşir.</summary>
     private void OnAnyContextMenuOpening(object sender, ContextMenuEventArgs e)
     {
+        // Tepsi simgesinin kendi ContextMenu'sü yok; bu yüzden varsayılan davranış olay ağacında yukarı
+        // doğru ilk ContextMenu'ye sahip öğeyi (Root, yani dock menüsü) bulup onu açardı. Tepsi simgesine
+        // sağ tıklanınca (gerçek sağ tık uygulamanın kendi işlemine iletilir) dock menüsünün açılmasını engelle.
+        if (FindAncestor<TrayIconView>(e.OriginalSource as DependencyObject) is not null)
+        {
+            e.Handled = true;
+            return;
+        }
         if (e.Handled) return;
         if (PopupPlacement.FindMenuOwner(e.OriginalSource as DependencyObject) is { ContextMenu: { } menu } owner)
             PopupPlacement.PlaceMenu(menu, owner, _config.Edge);
+    }
+
+    private static T? FindAncestor<T>(DependencyObject? source) where T : DependencyObject
+    {
+        for (var d = source; d is not null; d = d is Visual or System.Windows.Media.Media3D.Visual3D
+                 ? VisualTreeHelper.GetParent(d) ?? LogicalTreeHelper.GetParent(d)
+                 : LogicalTreeHelper.GetParent(d))
+        {
+            if (d is T match) return match;
+        }
+        return null;
     }
 
     private void OnContextMenuStateChanged(ContextMenu menu, bool open)
@@ -1161,6 +1180,14 @@ public partial class DockWindow : Window, IWidgetHost
 
     private void OnDockMenuOpening(object sender, ContextMenuEventArgs e)
     {
+        // Root'un kendi ContextMenu'sü var; tepsi simgesi gibi ContextMenu'sü olmayan bir alt öğeye
+        // sağ tıklanınca varsayılan davranış bu olayı en yakın sahip (Root) üzerinden başlatır. O yüzden
+        // gerçek tıklama noktasının tepsi simgesi olup olmadığını burada da kontrol etmemiz gerekir.
+        if (FindAncestor<TrayIconView>(e.OriginalSource as DependencyObject) is not null)
+        {
+            e.Handled = true;
+            return;
+        }
         var menu = Root.ContextMenu;
         menu.Items.Clear();
         menu.Items.Add(DockMenu.Item("Widget ekle…", "\uE710", () => App.Instance.ShowSettings("gallery")));
@@ -1168,6 +1195,7 @@ public partial class DockWindow : Window, IWidgetHost
         menu.Items.Add(DockMenu.Item("Ayraç ekle", "\uE76F", () => AppServices.ConfigService.AddItem(DockItem.Separator())));
         menu.Items.Add(DockMenu.Separator());
         menu.Items.Add(DockMenu.Item("Görev Yöneticisi", "\uE9D9", () => Process.Start(new ProcessStartInfo("taskmgr.exe") { UseShellExecute = true })));
+        menu.Items.Add(DockMenu.Item("Windows Ayarları", "", () => Process.Start(new ProcessStartInfo("ms-settings:") { UseShellExecute = true })));
         menu.Items.Add(DockMenu.Item("Hızlı ayarlar", "\uE9E9", () => { UpdateTrayHost(); _shell.ShowQuickSettings(); }));
         menu.Items.Add(DockMenu.Check("Otomatik gizle", _config.AutoHide, () => _config.AutoHide = !_config.AutoHide));
         menu.Items.Add(DockMenu.Check("Windows görev çubuğunu gizle", _config.TaskbarMode == TaskbarMode.Replace,

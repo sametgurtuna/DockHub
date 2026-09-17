@@ -759,7 +759,7 @@
                                            Margin="14,0,0,0" Foreground="{DynamicResource TextSecondaryBrush}" Visibility="Collapsed" />
                             </Grid>
                         </Border>
-                        <Popup x:Name="PART_Popup" Placement="Right" HorizontalOffset="6" VerticalOffset="-5" AllowsTransparency="True"
+                        <Popup x:Name="PART_Popup" Placement="Right" HorizontalOffset="0" VerticalOffset="-5" AllowsTransparency="True"
                                Focusable="False" PopupAnimation="Fade"
                                IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}">
                             <Border Background="{DynamicResource PopupBrush}" BorderBrush="{DynamicResource PopupBorderBrush}"

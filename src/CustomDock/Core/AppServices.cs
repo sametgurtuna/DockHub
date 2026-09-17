@@ -28,4 +28,6 @@ public static class AppServices
     public static ReminderService Reminders { get; } = new();
 
     public static HydrationService Hydration { get; } = new();
+
+    public static AIUsageService AIUsage { get; } = new();
 }

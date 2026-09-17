@@ -296,6 +296,24 @@ public sealed class AppButton : Grid
             menu.Items.Add(DockMenu.Separator());
             menu.Items.Add(DockMenu.Item(windows.Count > 1 ? $"Tüm pencereleri kapat ({windows.Count})" : "Pencereyi kapat", "\uE711",
                 () => { foreach (var w in windows.ToList()) w.Close(); }));
+            menu.Items.Add(DockMenu.Item(windows.Count > 1 ? "İşlemleri sonlandır" : "İşlemi sonlandır", "",
+                () => { foreach (var w in windows.ToList()) KillProcess(w); }));
+        }
+    }
+
+    /// <summary>Pencerenin ait olduğu işlemi doğrudan (kapanmayı beklemeden) sonlandırır; Görev Yöneticisi'ndeki "Görevi sonlandır" ile aynı.</summary>
+    private static void KillProcess(ApplicationWindow window)
+    {
+        try
+        {
+            NativeMethods.GetWindowThreadProcessId(window.Handle, out uint pid);
+            if (pid == 0) return;
+            using var process = Process.GetProcessById((int)pid);
+            process.Kill(true);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "İşlem sonlandırılamadı");
         }
     }
 

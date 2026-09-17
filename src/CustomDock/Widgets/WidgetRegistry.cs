@@ -69,8 +69,9 @@ public static class WidgetCategories
     public const string Media = "Medya";
     public const string System = "Sistem";
     public const string Weather = "Hava durumu";
+    public const string AI = "Yapay zeka";
 
-    public static readonly string[] Ordered = { Clocks, Reminders, Notes, Media, System, Weather };
+    public static readonly string[] Ordered = { Clocks, Reminders, Notes, Media, System, Weather, AI };
 }
 
 /// <summary>
@@ -217,6 +218,16 @@ public static class WidgetRegistry
             Variants = new[] { new WidgetVariant("current", "Güncel"), new WidgetVariant("conditions", "Durum"), new WidgetVariant("hourly", "Saatlik tahmin") },
             Factory = () => new WeatherWidget(), SettingsType = typeof(WeatherSettings),
             SettingsViewFactory = s => new WeatherSettingsView((WeatherSettings)s),
+        },
+
+        // ------------------------------------------------ Yapay zeka
+        new()
+        {
+            Id = "ai-usage", Name = "AI kullanımı", Category = WidgetCategories.AI,
+            Description = "Claude Code abonelik kullanımı: 5 saatlik ve haftalık limit (arka planda 5 dakikada bir 'claude -p /usage' ile güncellenir).",
+            IconPath = "M12,3 L14.2,9.2 L20.8,9.2 L15.5,13.1 L17.5,19.3 L12,15.6 L6.5,19.3 L8.5,13.1 L3.2,9.2 L9.8,9.2 Z", AccentKey = "AccentOrangeBrush",
+            Variants = new[] { new WidgetVariant("numbers", "Sayılar"), new WidgetVariant("rings", "Halkalar"), new WidgetVariant("bars", "Çubuklar") },
+            Factory = () => new AIUsageWidget(),
         },
     };
 

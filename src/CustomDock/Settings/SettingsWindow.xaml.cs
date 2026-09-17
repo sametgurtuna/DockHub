@@ -425,7 +425,7 @@ public partial class SettingsWindow : Window
             added++;
         }
         if (added > 0) _config.NotifyItemsChanged();
-        MessageBox.Show(this, added > 0 ? $"{added} uygulama eklendi." : "Eklenecek yeni sabitleme bulunamadı.", "Custom Dock",
+        MessageBox.Show(this, added > 0 ? $"{added} uygulama eklendi." : "Eklenecek yeni sabitleme bulunamadı.", "DockHub",
             MessageBoxButton.OK, MessageBoxImage.Information);
     }
 

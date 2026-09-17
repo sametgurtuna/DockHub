@@ -8,10 +8,10 @@ namespace CustomDock.Core;
 /// </summary>
 public sealed class SingleInstance : IDisposable
 {
-    private const string MutexName = @"Local\CustomDock.SingleInstance.5B1E7C1A";
-    private const string EventName = @"Local\CustomDock.Activate.5B1E7C1A";
-    private const string ExitEventName = @"Local\CustomDock.Exit.5B1E7C1A";
-    private const string PinEventName = @"Local\CustomDock.Pin.5B1E7C1A";
+    private const string MutexName = @"Local\DockHub.SingleInstance.5B1E7C1A";
+    private const string EventName = @"Local\DockHub.Activate.5B1E7C1A";
+    private const string ExitEventName = @"Local\DockHub.Exit.5B1E7C1A";
+    private const string PinEventName = @"Local\DockHub.Pin.5B1E7C1A";
 
     private readonly Mutex _mutex = new(false, MutexName);
     private EventWaitHandle? _event;
@@ -89,7 +89,7 @@ public sealed class SingleInstance : IDisposable
         })
         {
             IsBackground = true,
-            Name = "CustomDock.SingleInstance",
+            Name = "DockHub.SingleInstance",
         };
         thread.Start();
     }

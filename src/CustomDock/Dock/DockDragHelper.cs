@@ -10,8 +10,8 @@ namespace CustomDock.Dock;
 /// <summary>Dock öğelerini sürükleyerek yeniden sıralamak için ortak sürükleme başlatıcısı.</summary>
 public static class DockDragHelper
 {
-    public const string ItemFormat = "CustomDock.ItemId";
-    public const string RunningAppFormat = "CustomDock.AppKey";
+    public const string ItemFormat = "DockHub.ItemId";
+    public const string RunningAppFormat = "DockHub.AppKey";
 
     private static FrameworkElement? _source;
     private static Point _start;

@@ -38,7 +38,7 @@ public static class ThemeManager
 
         var dictionary = new ResourceDictionary
         {
-            Source = new Uri($"pack://application:,,,/CustomDock;component/Themes/{(dark ? "Dark" : "Light")}.xaml"),
+            Source = new Uri($"pack://application:,,,/DockHub;component/Themes/{(dark ? "Dark" : "Light")}.xaml"),
         };
         ApplyAccent(dictionary, dark);
 

@@ -4,10 +4,10 @@
         xmlns:ctl="clr-namespace:CustomDock.Controls"
         xmlns:core="clr-namespace:CustomDock.Core"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
-        Title="Custom Dock"
+        Title="DockHub"
         Width="1120" Height="760" MinWidth="920" MinHeight="580"
         WindowStartupLocation="CenterScreen"
-        Icon="pack://application:,,,/CustomDock;component/Assets/CustomDock.ico"
+        Icon="pack://application:,,,/DockHub;component/Assets/DockHub.ico"
         Background="{DynamicResource WindowBackgroundBrush}"
         Foreground="{DynamicResource TextPrimaryBrush}"
         FontFamily="{StaticResource UiFont}"
@@ -60,9 +60,9 @@
         <Border Background="{DynamicResource SidebarBrush}">
             <DockPanel Margin="12,12,12,14">
                 <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="8,4,0,22" Height="30">
-                    <Image Source="pack://application:,,,/CustomDock;component/Assets/CustomDock.ico" Width="20" Height="20"
+                    <Image Source="pack://application:,,,/DockHub;component/Assets/DockHub.ico" Width="20" Height="20"
                            RenderOptions.BitmapScalingMode="HighQuality" VerticalAlignment="Center" />
-                    <TextBlock Text="Custom Dock" Margin="10,0,0,0" FontSize="12.5" VerticalAlignment="Center" />
+                    <TextBlock Text="DockHub" Margin="10,0,0,0" FontSize="12.5" VerticalAlignment="Center" />
                 </StackPanel>
 
                 <StackPanel DockPanel.Dock="Bottom" Margin="8,0,0,0">
@@ -121,10 +121,10 @@
 
                     <TextBlock Text="Windows görev çubuğu" Style="{StaticResource SectionHeader}" />
                     <ctl:SettingRow Glyph="&#xE75B;" Header="Görev çubuğunun yerini al"
-                                    Description="Custom Dock; Başlat, arama, çalışan uygulamalar ve sistem tepsisiyle Windows görev çubuğunun yerini alır. Kapatırsanız ikisi birlikte görünür.">
+                                    Description="DockHub; Başlat, arama, çalışan uygulamalar ve sistem tepsisiyle Windows görev çubuğunun yerini alır. Kapatırsanız ikisi birlikte görünür.">
                         <Border Style="{StaticResource SegmentedHost}">
                             <StackPanel Orientation="Horizontal">
-                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Taskbar" Content="Custom Dock"
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Taskbar" Content="DockHub"
                                              IsChecked="{Binding TaskbarMode, Converter={StaticResource EnumEq}, ConverterParameter=Replace}" />
                                 <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Taskbar" Content="İkisi birlikte"
                                              IsChecked="{Binding TaskbarMode, Converter={StaticResource EnumEq}, ConverterParameter=ShowBoth}" />
@@ -135,7 +135,7 @@
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE946;" Style="{StaticResource IconText}" Foreground="{DynamicResource AccentOrangeBrush}" VerticalAlignment="Top" Margin="0,2,10,0" />
                             <TextBlock TextWrapping="Wrap" MaxWidth="720"
-                                       Text="Bu ayar değişince Custom Dock kendini yeniden başlatır. Uygulama kapanınca (ya da beklenmedik şekilde sonlanırsa bir sonraki açılışta) Windows görev çubuğu otomatik olarak geri gelir." />
+                                       Text="Bu ayar değişince DockHub kendini yeniden başlatır. Uygulama kapanınca (ya da beklenmedik şekilde sonlanırsa bir sonraki açılışta) Windows görev çubuğu otomatik olarak geri gelir." />
                         </StackPanel>
                     </Border>
                     <ctl:SettingRow Glyph="&#xE740;" Header="Tam ekran uygulamalarda gizle"
@@ -145,26 +145,26 @@
 
                     <TextBlock Text="Başlangıç" Style="{StaticResource SectionHeader}" />
                     <ctl:SettingRow Glyph="&#xE7E8;" Header="Windows ile başlat"
-                                    Description="Oturum açtığınızda Custom Dock otomatik olarak çalışır.">
+                                    Description="Oturum açtığınızda DockHub otomatik olarak çalışır.">
                         <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding StartWithWindows}" />
                     </ctl:SettingRow>
-                    <ctl:SettingRow Glyph="&#xE718;" Header="Explorer'da &quot;Custom Dock'a sabitle&quot;"
+                    <ctl:SettingRow Glyph="&#xE718;" Header="Explorer'da &quot;DockHub'a sabitle&quot;"
                                     Description="Bir uygulamaya ya da kısayola sağ tıklayınca dock'a sabitleme komutu çıkar. Windows 11'de &quot;Daha fazla seçenek göster&quot; altında (veya Shift + sağ tık) bulunur.">
                         <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ExplorerPinMenu}" />
                     </ctl:SettingRow>
 
                     <TextBlock Text="Bakım" Style="{StaticResource SectionHeader}" />
                     <ctl:SettingRow Glyph="&#xE777;" Header="Windows görev çubuğunu geri getir"
-                                    Description="Görev çubuğu bir sorun nedeniyle görünmez kaldıysa. (Komut satırı: CustomDock.exe --restore-taskbar)">
+                                    Description="Görev çubuğu bir sorun nedeniyle görünmez kaldıysa. (Komut satırı: DockHub.exe --restore-taskbar)">
                         <Button Content="Geri getir" Click="OnRestoreTaskbarClick" />
                     </ctl:SettingRow>
-                    <ctl:SettingRow Glyph="&#xE72C;" Header="Custom Dock'u yeniden başlat">
+                    <ctl:SettingRow Glyph="&#xE72C;" Header="DockHub'ı yeniden başlat">
                         <Button Content="Yeniden başlat" Click="OnRestartClick" />
                     </ctl:SettingRow>
                     <ctl:SettingRow Glyph="&#xE8B7;" Header="Ayar ve veri klasörü" x:Name="ConfigFolderRow">
                         <Button Content="Klasörü aç" Click="OnOpenConfigFolderClick" />
                     </ctl:SettingRow>
-                    <ctl:SettingRow Glyph="&#xE7E8;" Header="Custom Dock'tan çık" Description="Windows görev çubuğu geri getirilir.">
+                    <ctl:SettingRow Glyph="&#xE7E8;" Header="DockHub'dan çık" Description="Windows görev çubuğu geri getirilir.">
                         <Button Content="Çıkış" Click="OnExitClick" />
                     </ctl:SettingRow>
                 </StackPanel>
@@ -193,7 +193,7 @@
 
                     <TextBlock Text="Sağ taraf" Style="{StaticResource SectionHeader}" />
                     <ctl:SettingRow Glyph="&#xE7EB;" Header="Sistem tepsisi" x:Name="TrayRow"
-                                    Description="Arka planda çalışan uygulamaların simgeleri. Yalnızca 'Custom Dock' modunda kullanılabilir.">
+                                    Description="Arka planda çalışan uygulamaların simgeleri. Yalnızca 'DockHub' modunda kullanılabilir.">
                         <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ShowTray}" />
                     </ctl:SettingRow>
                     <Border x:Name="TrayIconsCard" Style="{StaticResource SettingCard}">
@@ -510,10 +510,10 @@
                     <TextBlock Text="Hakkında" Style="{StaticResource PageTitle}" />
                     <Border Style="{StaticResource SettingCard}" Padding="20" Margin="0,12,0,4">
                         <StackPanel Orientation="Horizontal">
-                            <Image Source="pack://application:,,,/CustomDock;component/Assets/CustomDock.ico" Width="56" Height="56"
+                            <Image Source="pack://application:,,,/DockHub;component/Assets/DockHub.ico" Width="56" Height="56"
                                    RenderOptions.BitmapScalingMode="HighQuality" />
                             <StackPanel Margin="18,0,0,0" VerticalAlignment="Center">
-                                <TextBlock Text="Custom Dock" FontFamily="{StaticResource DisplayFont}" FontSize="20" FontWeight="SemiBold" />
+                                <TextBlock Text="DockHub" FontFamily="{StaticResource DisplayFont}" FontSize="20" FontWeight="SemiBold" />
                                 <TextBlock x:Name="AboutVersion" Foreground="{DynamicResource TextSecondaryBrush}" />
                                 <TextBlock Text="Windows görev çubuğunun yerini alan, widget destekli dock." Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0" />
                             </StackPanel>

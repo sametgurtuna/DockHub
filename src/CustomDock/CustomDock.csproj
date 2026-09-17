@@ -12,12 +12,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <RootNamespace>CustomDock</RootNamespace>
-    <AssemblyName>CustomDock</AssemblyName>
+    <AssemblyName>DockHub</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <ApplicationIcon>Assets\CustomDock.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\DockHub.ico</ApplicationIcon>
     <Version>2.0.0</Version>
-    <Product>Custom Dock</Product>
-    <Company>CustomDock</Company>
+    <Product>DockHub</Product>
+    <Company>DockHub</Company>
     <Copyright>© 2026</Copyright>
     <SatelliteResourceLanguages>en;tr</SatelliteResourceLanguages>
     <!-- DPI farkındalığı WPF için app.manifest üzerinden (PerMonitorV2) ayarlanır. -->
@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Assets\CustomDock.ico" />
+    <Resource Include="Assets\DockHub.ico" />
   </ItemGroup>
 
   <ItemGroup>

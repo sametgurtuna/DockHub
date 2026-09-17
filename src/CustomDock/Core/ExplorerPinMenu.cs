@@ -4,8 +4,8 @@ using Microsoft.Win32;
 namespace CustomDock.Core;
 
 /// <summary>
-/// Explorer'da .exe ve kısayollara sağ tıklayınca çıkan "Custom Dock'a sabitle" komutu (HKCU, yönetici izni gerekmez).
-/// Komut <c>CustomDock.exe --pin "dosya"</c> çalıştırır; açık olan örnek öğeyi sabitlenmiş uygulamaların sonuna ekler.
+/// Explorer'da .exe ve kısayollara sağ tıklayınca çıkan "DockHub'a sabitle" komutu (HKCU, yönetici izni gerekmez).
+/// Komut <c>DockHub.exe --pin "dosya"</c> çalıştırır; açık olan örnek öğeyi sabitlenmiş uygulamaların sonuna ekler.
 /// </summary>
 /// <remarks>
 /// Windows 11'in yeni kısa menüsü yalnızca paketlenmiş (imzalı) uygulamaların komutlarını gösterir;
@@ -14,7 +14,8 @@ namespace CustomDock.Core;
 public static class ExplorerPinMenu
 {
     public const string PinArgument = "--pin";
-    private const string VerbName = "CustomDock.Pin";
+    private const string VerbName = "DockHub.Pin";
+    private const string LegacyVerbName = "CustomDock.Pin";
     private static readonly string[] FileClasses = { "exefile", "lnkfile" };
 
     private static string Command => $"\"{Environment.ProcessPath}\" {PinArgument} \"%1\"";
@@ -26,6 +27,14 @@ public static class ExplorerPinMenu
             bool changed = false;
             foreach (var fileClass in FileClasses)
             {
+                string legacyPath = $@"Software\Classes\{fileClass}\shell\{LegacyVerbName}";
+                if (Registry.CurrentUser.OpenSubKey(legacyPath) is { } legacy)
+                {
+                    legacy.Dispose();
+                    Registry.CurrentUser.DeleteSubKeyTree(legacyPath, throwOnMissingSubKey: false);
+                    changed = true;
+                }
+
                 string keyPath = $@"Software\Classes\{fileClass}\shell\{VerbName}";
                 if (enabled)
                 {

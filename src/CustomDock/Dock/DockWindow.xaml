@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ctl="clr-namespace:CustomDock.Controls"
         xmlns:dock="clr-namespace:CustomDock.Dock"
-        Title="Custom Dock"
+        Title="DockHub"
         WindowStyle="None"
         ResizeMode="NoResize"
         ShowInTaskbar="False"

@@ -39,7 +39,7 @@ public partial class App : Application
         base.OnStartup(e);
         AppPaths.EnsureCreated();
 
-        // Acil durum: "CustomDock.exe --restore-taskbar"
+        // Acil durum: "DockHub.exe --restore-taskbar"
         if (e.Args.Any(a => a.Equals("--restore-taskbar", StringComparison.OrdinalIgnoreCase)))
         {
             TaskbarController.ForceShow();
@@ -47,7 +47,7 @@ public partial class App : Application
             return;
         }
 
-        // "CustomDock.exe --pin <dosya>": Explorer sağ tık menüsünden sabitleme
+        // "DockHub.exe --pin <dosya>": Explorer sağ tık menüsünden sabitleme
         if (PinArgumentPath(e.Args) is { } pinPath)
             ExplorerPinMenu.Enqueue(pinPath);
 
@@ -55,7 +55,7 @@ public partial class App : Application
         bool exitRequested = e.Args.Any(a => a.Equals("--exit", StringComparison.OrdinalIgnoreCase));
         if (exitRequested)
         {
-            // "CustomDock.exe --exit": çalışan örneği düzgünce kapatır.
+            // "DockHub.exe --exit": çalışan örneği düzgünce kapatır.
             if (!_singleInstance.TryAcquire())
                 SingleInstance.SignalExit();
             Shutdown();
@@ -109,7 +109,7 @@ public partial class App : Application
         if (config.IsFirstRun)
             ShowSettings("gallery");
 
-        Log.Info($"Custom Dock başlatıldı (v{typeof(App).Assembly.GetName().Version}, mod: {config.TaskbarMode}).");
+        Log.Info($"DockHub başlatıldı (v{typeof(App).Assembly.GetName().Version}, mod: {config.TaskbarMode}).");
     }
 
     private void StartShell()
@@ -327,6 +327,6 @@ public partial class App : Application
 
         _tray?.Dispose();
         _singleInstance?.Dispose();
-        Log.Info("Custom Dock kapatıldı.");
+        Log.Info("DockHub kapatıldı.");
     }
 }

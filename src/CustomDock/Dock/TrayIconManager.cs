@@ -31,7 +31,7 @@ public sealed class TrayIconManager : IDisposable
 
         _icon = new Forms.NotifyIcon
         {
-            Text = "Custom Dock",
+            Text = "DockHub",
             Icon = LoadIcon(),
             ContextMenuStrip = _menu,
             Visible = true,
@@ -50,7 +50,7 @@ public sealed class TrayIconManager : IDisposable
     {
         try
         {
-            var info = Application.GetResourceStream(new Uri("pack://application:,,,/CustomDock;component/Assets/CustomDock.ico"));
+            var info = Application.GetResourceStream(new Uri("pack://application:,,,/DockHub;component/Assets/DockHub.ico"));
             if (info is not null)
             {
                 using var stream = info.Stream;

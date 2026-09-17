@@ -4,7 +4,7 @@
         Title="Uygulama sabitle"
         Width="520" Height="640" MinWidth="420" MinHeight="420"
         WindowStartupLocation="CenterScreen"
-        Icon="pack://application:,,,/CustomDock;component/Assets/CustomDock.ico"
+        Icon="pack://application:,,,/DockHub;component/Assets/DockHub.ico"
         Background="{DynamicResource WindowBackgroundBrush}"
         Foreground="{DynamicResource TextPrimaryBrush}"
         FontFamily="{StaticResource UiFont}"

@@ -23,7 +23,7 @@ public sealed class SpaceReserver : AppBarWindow
         Background = Brushes.Transparent;
         ShowInTaskbar = false;
         ShowActivated = false;
-        Title = "Custom Dock Space";
+        Title = "DockHub Space";
         Width = 1;
         Height = 1;
         Left = screen.Bounds.Left;

@@ -1180,7 +1180,7 @@ public partial class DockWindow : Window, IWidgetHost
             DockMenu.Check("Sağ", _config.Edge == DockEdge.Right, () => _config.Edge = DockEdge.Right),
         }));
         menu.Items.Add(DockMenu.Separator());
-        menu.Items.Add(DockMenu.Item("Custom Dock ayarları…", "\uE713", () => App.Instance.ShowSettings()));
+        menu.Items.Add(DockMenu.Item("DockHub ayarları…", "\uE713", () => App.Instance.ShowSettings()));
         menu.Items.Add(DockMenu.Item("Çıkış", "\uE7E8", () => App.Instance.ExitApplication()));
     }
 

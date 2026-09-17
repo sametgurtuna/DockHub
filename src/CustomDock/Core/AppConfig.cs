@@ -7,7 +7,7 @@ public enum DockEdge { Bottom, Top, Left, Right }
 
 public enum TaskbarMode
 {
-    /// <summary>Custom Dock, Windows görev çubuğunun yerini tamamen alır (görev çubuğu gizlenir).</summary>
+    /// <summary>DockHub, Windows görev çubuğunun yerini tamamen alır (görev çubuğu gizlenir).</summary>
     Replace,
     /// <summary>Windows görev çubuğu da görünür kalır.</summary>
     ShowBoth,
@@ -47,7 +47,7 @@ public enum DockAlignment { Start, Center }
 
 public enum DockItemKind { App, Widget, Separator }
 
-/// <summary>%AppData%\CustomDock\config.json içeriği.</summary>
+/// <summary>%AppData%\DockHub\config.json içeriği.</summary>
 public sealed class AppConfig : ObservableObject
 {
     public const int CurrentVersion = 2;
@@ -57,7 +57,7 @@ public sealed class AppConfig : ObservableObject
     private string? _monitorDevice;
     private bool _autoHide;
     private bool _hideOnFullscreen = true;
-    private bool _startWithWindows;
+    private bool _startWithWindows = true;
     private ThemePreference _theme = ThemePreference.Dark;
     private BackdropKind _backdrop = BackdropKind.Blur;
     private double _tintOpacity = 0.55;
@@ -89,7 +89,7 @@ public sealed class AppConfig : ObservableObject
 
     private bool _explorerPinMenu = true;
 
-    /// <summary>Explorer'da .exe/.lnk sağ tık menüsüne "Custom Dock'a sabitle" ekler.</summary>
+    /// <summary>Explorer'da .exe/.lnk sağ tık menüsüne "DockHub'a sabitle" ekler.</summary>
     public bool ExplorerPinMenu { get => _explorerPinMenu; set => Set(ref _explorerPinMenu, value); }
 
     public bool ShowStartButton { get => _showStartButton; set => Set(ref _showStartButton, value); }

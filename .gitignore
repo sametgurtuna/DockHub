@@ -34,7 +34,8 @@ DESIGN.md
 DESIGN.json
 **/*.brief.md
 
-# Website (Astro)
-website/node_modules/
-website/dist/
-website/.astro/
+# Website (lives in its own repository: dockhub-website)
+website/
+
+# Installer output
+installer/Output/

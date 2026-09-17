@@ -32,6 +32,8 @@ public sealed class ConfigService
         if (firstRun)
         {
             Config.Items = DefaultItems.Create();
+            if (StartupManager.InstallerChoice() is { } startWithWindows)
+                Config.StartWithWindows = startWithWindows;
         }
         else if (Config.Version < AppConfig.CurrentVersion)
         {
@@ -134,7 +136,7 @@ public sealed class ConfigService
         config.Widgets = null;
         config.WidgetSettings = null;
         config.ReserveSpace = null;
-        // Kullanıcı Custom Dock'un görev çubuğunun yerini almasını istiyor.
+        // Kullanıcı DockHub'ın görev çubuğunun yerini almasını istiyor.
         config.TaskbarMode = TaskbarMode.Replace;
         if (config.Backdrop == BackdropKind.Acrylic) config.Backdrop = BackdropKind.Blur;
         // v1 çok yer kaplıyordu: Windows görev çubuğu kalınlığında (48 DIP) küçük dock ile başla.

@@ -1,8 +1,8 @@
-# Uygulama ikonunu (Assets\CustomDock.ico) üretir. PowerShell 7+ (Windows) gerektirir.
+# Uygulama ikonunu (Assets\DockHub.ico) üretir. PowerShell 7+ (Windows) gerektirir.
 # Kullanım: pwsh tools/generate-icon.ps1
 Add-Type -AssemblyName System.Drawing
 
-$out = Join-Path $PSScriptRoot '..\src\CustomDock\Assets\CustomDock.ico'
+$out = Join-Path $PSScriptRoot '..\src\CustomDock\Assets\DockHub.ico'
 New-Item -ItemType Directory -Force (Split-Path $out) | Out-Null
 
 function New-RoundedPath([single]$x, [single]$y, [single]$w, [single]$h, [single]$r) {

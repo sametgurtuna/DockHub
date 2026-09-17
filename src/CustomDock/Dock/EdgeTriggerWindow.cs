@@ -29,7 +29,7 @@ public sealed class EdgeTriggerWindow : Window
         Height = 1;
         Left = -32000;
         Top = -32000;
-        Title = "CustomDock Edge";
+        Title = "DockHub Edge";
 
         _hwnd = new WindowInteropHelper(this).EnsureHandle();
         WindowEffects.MakeToolWindow(_hwnd, noActivate: true);

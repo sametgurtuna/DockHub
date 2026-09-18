@@ -213,6 +213,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
         print("  zamanIlerlemesi   : \(oranlar.joined(separator: "  "))")
+        let ag = NetworkStore.shared.sample
+        print("  ag                : indirme \(NetworkMetrics.format(ag.downBytesPerSec))  yukleme \(NetworkMetrics.format(ag.upBytesPerSec))  toplamIn=\(ag.totalDown)")
+        if let dk = DiskInfo.usage(), dk.total > 0 {
+            print("  disk              : \(dk.used / 1_073_741_824) GB / \(dk.total / 1_073_741_824) GB = %\(String(format: "%.1f", Double(dk.used) / Double(dk.total) * 100))")
+        }
+        let au = AudioStore.shared
+        print("  ses               : aygit=\(au.aygitlar.first(where: { $0.isDefault })?.name ?? "-")  seviye=%\(Int((au.seviye * 100).rounded()))  sessiz=\(au.sessiz)  aygitSayisi=\(au.aygitlar.count)")
+        print("  cevreBirimPili    : \(PeripheralStore.shared.cihazlar.isEmpty ? "cihaz yok" : PeripheralStore.shared.cihazlar.map { "\($0.name) %\($0.percent)" }.joined(separator: ", "))")
         let b = BatteryMonitor.shared.state
         print("  pil               : " + (b.hasBattery
               ? "%\(b.percent)  sarj=\(b.isCharging)  fis=\(b.isPluggedIn)  kalan=\(b.minutesRemaining.map{String($0)+" dk"} ?? "bilinmiyor")"

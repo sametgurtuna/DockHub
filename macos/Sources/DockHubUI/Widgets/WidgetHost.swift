@@ -23,6 +23,10 @@ struct WidgetHost: View {
         case "hydration":     HydrationWidget(item: item, style: style, model: model)
         case "reminders":     RemindersWidget(item: item, style: style, model: model)
         case "sticky-note":   StickyNoteWidget(item: item, style: style, model: model)
+        case "network":        NetworkWidget(item: item, style: style)
+        case "status":         StatusWidget(item: item, style: style)
+        case "audio":          AudioWidget(item: item, style: style)
+        case "device-battery": DeviceBatteryWidget(item: item, style: style)
         default:       unknown
         }
     }

@@ -54,6 +54,18 @@ public enum WidgetRegistry {
                                     WidgetVariant("count", "Sayı")]),
         WidgetDefinition(id: "sticky-note", name: "Yapışkan not", category: "Notlar",
                          variants: [WidgetVariant("single", "Tek")]),
+        WidgetDefinition(id: "network", name: "Ağ", category: "Sistem",
+                         variants: [WidgetVariant("numbers", "Yalnızca sayı"),
+                                    WidgetVariant("graph", "Grafikli")]),
+        WidgetDefinition(id: "status", name: "Durum", category: "Sistem",
+                         variants: [WidgetVariant("rings", "Halkalar"),
+                                    WidgetVariant("percent", "Yüzde")]),
+        WidgetDefinition(id: "audio", name: "Ses aygıtı", category: "Medya",
+                         variants: [WidgetVariant("compact", "Kompakt"),
+                                    WidgetVariant("slider", "Çubuklu")]),
+        WidgetDefinition(id: "device-battery", name: "Aygıt pilleri", category: "Sistem",
+                         variants: [WidgetVariant("single", "Tek aygıt"),
+                                    WidgetVariant("multi", "Çoklu aygıt")]),
     ]
 
     public static func find(_ id: String?) -> WidgetDefinition? {

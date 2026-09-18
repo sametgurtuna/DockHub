@@ -214,30 +214,38 @@ public sealed class DeviceBatteryService
 
             // Strateji 1: Cloud II Wireless donanım el sıkışması ve Overlapped ReadFile ile gerçek pil okuma
             HidInterop.HidD_SetNumInputBuffers(handle, 64);
-            IntPtr readEv = HidInterop.CreateEvent(IntPtr.Zero, false, false, null);
-            var readOl = new HidInterop.OVERLAPPED { hEvent = readEv };
+            byte[] rep6 = new byte[62];
+            rep6[0] = 6;
+            HidInterop.HidD_GetInputReport(handle, rep6, 62);
 
             byte[] rawBuf = new byte[128];
             GCHandle pin = GCHandle.Alloc(rawBuf, GCHandleType.Pinned);
             IntPtr pBuf = pin.AddrOfPinnedObject();
 
+            IntPtr readEv = HidInterop.CreateEvent(IntPtr.Zero, true, false, null);
             try
             {
-                // Dongle'ı tetikle: Input Report 6 sorgusu (HyperX protokolü el sıkışması)
-                byte[] rep6 = new byte[62];
-                rep6[0] = 6;
-                HidInterop.HidD_GetInputReport(handle, rep6, 62);
-
-                for (int attempt = 0; attempt < 3; attempt++)
+                for (int attempt = 0; attempt < 8; attempt++)
                 {
+                    HidInterop.ResetEvent(readEv);
+                    var readOl = new HidInterop.OVERLAPPED { hEvent = readEv };
+
                     bool rOk = HidInterop.ReadFile(handle, pBuf, 62, out uint bytesRead, ref readOl);
                     int rErr = Marshal.GetLastWin32Error();
+
                     if (!rOk && rErr == 997) // ERROR_IO_PENDING
                     {
-                        if (!HidInterop.GetOverlappedResultEx(handle, ref readOl, out bytesRead, 120, false))
+                        uint waitRes = HidInterop.WaitForSingleObject(readEv, 400);
+                        if (waitRes == 0) // WAIT_OBJECT_0
                         {
-                            // Cihaz yanıt vermiyorsa (kulaklık kapalı), beklemeden çık
-                            break;
+                            HidInterop.GetOverlappedResult(handle, ref readOl, out bytesRead, false);
+                        }
+                        else
+                        {
+                            // Zaman aşımı: bekleyen I/O'yu iptal et ve tamamlanmasını bekle
+                            HidInterop.CancelIoEx(handle, ref readOl);
+                            HidInterop.GetOverlappedResult(handle, ref readOl, out _, true);
+                            continue;
                         }
                     }
                     else if (rOk && bytesRead == 0)
@@ -248,10 +256,11 @@ public sealed class DeviceBatteryService
                     if (bytesRead > 0 && rawBuf[0] == 0x0B && rawBuf[2] == 0xBB && rawBuf[3] == 0x02)
                     {
                         int level = rawBuf[7];
-                        if (level > 0 && level <= 100)
+                        if (level >= 0 && level <= 100)
                         {
                             battery = level;
                             isCharging = rawBuf[4] == 1 || rawBuf[4] == 2;
+                            Log.Info($"HyperX pil okundu: {devName} -> %{battery} (Şarj: {isCharging})");
                             break;
                         }
                     }
@@ -289,7 +298,7 @@ public sealed class DeviceBatteryService
                 }
             }
 
-            if (battery > 0 && battery <= 100)
+            if (battery >= 0 && battery <= 100)
             {
                 s_lastKnownBattery[pid] = (battery, isCharging);
                 return new BatteryDeviceInfo($"hyperx-{pid:X4}", devName, battery, isCharging, true);

@@ -111,6 +111,21 @@ public final class DockPanel {
         panel.orderFrontRegardless()
     }
 
+    /// Ekran duzeni degistiginde konumu yeniden hesaplar.
+    /// Sistem Dock'u gizlendiginde visibleFrame buyur; cozunurluk degisiminde
+    /// ve monitor takilip cikarildiginda da ayni yol calisir.
+    /// ONEMLI: bu bildirimi beklemek yerine ana is parcacigini uyutmak ise
+    /// yaramaz - AppKit bildirim isleyemedigi icin NSScreen eski degeri doner.
+    @discardableResult
+    public func reposition(config: AppConfig) -> Bool {
+        let screen = ScreenPlacement.screen(named: config.monitorDevice) ?? NSScreen.screens[0]
+        let yeni = ScreenPlacement.geometry(for: config, on: screen)
+        guard yeni.frame != geometry.frame else { return false }
+        geometry = yeni
+        panel.setFrame(yeni.frame, display: true, animate: false)
+        return true
+    }
+
     public func observation() -> [String: String] {
         let f = panel.frame
         let apps = model.items.filter { $0.kind == .app }

@@ -21,11 +21,30 @@ public enum ScreenPlacement {
     /// Icerige gore genislik (widthMode == .fit) icin iskelet degeri.
     public static let fitExtent: CGFloat = 420
 
+    /// Dock'un yerlesecegi alan.
+    ///
+    /// OLCULMUS BULGU: sistem Dock'u otomatik gizlemeye alindiginda macOS
+    /// `visibleFrame`i BUYUTMUYOR - rezerve alan oldugu gibi kaliyor. Iki ayri
+    /// surecte, fare ekranin ortasindayken 10 saniye boyunca olculdu:
+    /// autohide 0 iken de 1 iken de visibleFrame.minY = 65.
+    /// Bu yuzden Replace modunda visibleFrame'e GUVENILMEZ; ekranin gercek
+    /// kenarina yaslaniriz. Menu cubugu yine korunur (ust sinir visibleFrame'den).
+    public static func usableArea(for config: AppConfig, on screen: NSScreen) -> CGRect {
+        let full = screen.frame
+        let visible = screen.visibleFrame
+        switch config.taskbarMode {
+        case .replace:
+            // Yatayda tam genislik, altta gercek kenar, ustte menu cubugunun altI
+            return CGRect(x: full.minX, y: full.minY,
+                          width: full.width, height: visible.maxY - full.minY)
+        case .showBoth:
+            // Sistem Dock'u duruyor; onun ustune oturmayalim
+            return visible
+        }
+    }
+
     public static func geometry(for config: AppConfig, on screen: NSScreen) -> DockGeometry {
-        // visibleFrame kullaniliyor: sistem Dock'u ve menu cubugunun disinda kalan
-        // alan. ag-reserved-space karsiliksiz oldugu icin (d-yok-cikarma) burada
-        // alan rezerve etmiyoruz, yalnizca mevcut kullanilabilir alani okuyoruz.
-        let area = screen.visibleFrame
+        let area = usableArea(for: config, on: screen)
         let thickness = CGFloat(config.size.thickness)
         let margin = config.layout == .floating ? CGFloat(config.clampedEdgeMargin) : 0
         let radius: CGFloat = config.layout == .floating ? 12 : 0

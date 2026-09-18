@@ -8,6 +8,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var dock: DockPanel?
     private var configService: ConfigService?
     private var themeObserver: NSObjectProtocol?
+    private var screenObserver: NSObjectProtocol?
 
     private var verifyMode: Bool { CommandLine.arguments.contains("--verify") }
 
@@ -48,8 +49,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Onceki ayar session.json'a yazilir ve cikista geri yuklenir.
         if service.config.taskbarMode == .replace {
             SystemDock.hideAndRemember()
-            // Dock yeniden baslarken visibleFrame degisiyor; olcmeden once beklenir.
-            Thread.sleep(forTimeInterval: 0.8)
+            // Beklemiyoruz: Dock yeniden baslayinca ekran duzeni degisir ve
+            // asagidaki didChangeScreenParameters gozlemcisi konumu duzeltir.
         } else {
             // Replace'ten ShowBoth'a gecildiyse birakilmis ayar geri yuklenir.
             _ = SystemDock.restore()
@@ -58,6 +59,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let panel = DockPanel(config: service.config, items: service.config.items)
         dock = panel
         panel.show()
+
+        // Ekran duzeni degisimi: Dock gizlenmesi, cozunurluk, monitor takma/cikarma
+        screenObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didChangeScreenParametersNotification,
+            object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self, let dock = self.dock, let cfg = self.configService?.config else { return }
+                if dock.reposition(config: cfg) {
+                    Log.info("Ekran duzeni degisti, dock yeniden konumlandi")
+                }
+            }
+        }
 
         themeObserver = Appearance.observeSystemTheme {
             Log.info("Sistem temasi degisti")
@@ -115,6 +128,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                   + "\(running ? "[calisiyor]" : "")")
         }
         let ok = panel.panel.isVisible && panel.panel.occlusionState.contains(.visible)
+        if let sc = NSScreen.main {
+            print("  ekranVisibleFrame : y=\(Int(sc.visibleFrame.minY)) h=\(Int(sc.visibleFrame.height))"
+                  + "  (tam ekran h=\(Int(sc.frame.height)))")
+        }
+        let b = BatteryMonitor.shared.state
+        print("  pil               : " + (b.hasBattery
+              ? "%\(b.percent)  sarj=\(b.isCharging)  fis=\(b.isPluggedIn)  kalan=\(b.minutesRemaining.map{String($0)+" dk"} ?? "bilinmiyor")"
+              : "pil yok"))
+        if let w = WeatherStore.shared.reading {
+            print("  hava              : \(String(format: "%.1f", w.temperatureC))C  kod=\(w.weatherCode)  \(w.description)  yer=\(w.place ?? "-")")
+        } else {
+            print("  hava              : okunmadi -> \(WeatherStore.shared.hata ?? "yukleniyor")")
+        }
         let s = SystemMonitor.shared.sample
         print("  sistemOlcumu      : CPU %\(String(format: "%.1f", s.cpuPercent))"
               + "  RAM %\(String(format: "%.1f", s.memoryPercent))"

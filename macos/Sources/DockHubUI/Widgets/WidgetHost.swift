@@ -10,7 +10,9 @@ struct WidgetHost: View {
     var body: some View {
         switch item.widget {
         case "clock":  ClockWidget(item: item, style: style)
-        case "system": SystemWidget(item: item, style: style)
+        case "system":  SystemWidget(item: item, style: style)
+        case "battery": BatteryWidget(item: item, style: style)
+        case "weather": WeatherWidget(item: item, style: style)
         default:       unknown
         }
     }

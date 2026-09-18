@@ -126,9 +126,32 @@ materyalleri koşulsuz kullanılabilir.
   **aktifken** etkili), veya kullanıcı düzeyinde
   `defaults write com.apple.dock autohide -bool true` + `killall Dock`
 - **Neden kısmi:** Sistem Dock'u devralınmaz, yalnız gizlenir. `presentationOptions`
-  uygulama arkaya düşünce etkisini yitirir; `defaults` yolu Dock'u yeniden başlatır
-  ve kullanıcının kalıcı ayarını değiştirir — çıkışta geri alınması gerekir
-  (Windows'taki `session.json` + `--restore-taskbar` mantığının karşılığı).
+  uygulama arkaya düşünce etkisini yitirir (biz `.accessory` olduğumuz için hiç işe
+  yaramaz); `defaults` yolu Dock'u yeniden başlatır ve kullanıcının kalıcı ayarını
+  değiştirir — çıkışta geri alınması gerekir (Windows'taki `session.json` +
+  `--restore-taskbar` mantığının karşılığı, bizde `--restore-dock`).
+
+> **Ölçülmüş bulgu — `visibleFrame` otomatik gizlemede büyümüyor.**
+> Yaygın varsayım "Dock'u otomatik gizlemeye alırsan `NSScreen.visibleFrame`
+> genişler" şeklinde. Bu makinede ölçtük ve **doğru çıkmadı**:
+>
+> | Durum | `visibleFrame.minY` | Altta rezerve |
+> |---|---|---|
+> | `autohide 0` | 65 | 65pt |
+> | `autohide 1` | 65 | 65pt |
+>
+> İki ayrı süreçte, `killall Dock` sonrası 3 saniye beklenerek, fare ekranın
+> ortasındayken (y=595/1080) 10 saniye boyunca 2 saniyede bir örneklendi — değer
+> hiç değişmedi. Yani Dock gizli olsa da macOS o alanı hâlâ "kullanılamaz"
+> sayıyor.
+>
+> **Sonuç:** Replace modunda `visibleFrame`'e güvenilemez. Dock'umuz
+> `screen.frame` ile ekranın **gerçek** alt kenarına yaslanır; üst sınır için
+> `visibleFrame.maxY` kullanılır ki menü çubuğu korunsun. ShowBoth modunda ise
+> `visibleFrame` doğru olan: sistem Dock'unun üstüne oturmamak isteriz.
+> Uygulaması: `ScreenPlacement.usableArea(for:on:)`.
+>
+> Ölçülen fark: ShowBoth'ta dock `y=71`, Replace'te `y=6`.
 
 ### `ag-running-apps` — Açık pencere listesi ve pencere denetimi
 - **Windows:** ManagedShell task service + `SetForegroundWindow` / `ShowWindow`

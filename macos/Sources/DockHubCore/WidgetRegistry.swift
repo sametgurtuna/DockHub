@@ -25,6 +25,12 @@ public enum WidgetRegistry {
         WidgetDefinition(id: "system", name: "Sistem", category: "Sistem",
                          variants: [WidgetVariant("numbers", "Sayılar"),
                                     WidgetVariant("rings", "Halkalar")]),
+        WidgetDefinition(id: "battery", name: "Pil", category: "Sistem",
+                         variants: [WidgetVariant("percent", "Yüzde"),
+                                    WidgetVariant("icon", "Yalnızca ikon")]),
+        WidgetDefinition(id: "weather", name: "Hava durumu", category: "Hava",
+                         variants: [WidgetVariant("current", "Anlık"),
+                                    WidgetVariant("condition", "Durum")]),
     ]
 
     public static func find(_ id: String?) -> WidgetDefinition? {

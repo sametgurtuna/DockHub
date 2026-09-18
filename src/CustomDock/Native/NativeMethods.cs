@@ -456,4 +456,49 @@ internal static class NativeMethods
             CloseHandle(handle);
         }
     }
+
+    // ------------------------------------------------------------------ Çöp Kutusu (Recycle Bin)
+
+    public const uint FO_DELETE = 0x0003;
+    public const ushort FOF_ALLOWUNDO = 0x0040;
+    public const ushort FOF_NOCONFIRMATION = 0x0010;
+    public const ushort FOF_SILENT = 0x0004;
+    public const ushort FOF_NOERRORUI = 0x0400;
+
+    public const uint SHERB_NOCONFIRMATION = 0x00000001;
+    public const uint SHERB_NOPROGRESSUI = 0x00000002;
+    public const uint SHERB_NOSOUND = 0x00000004;
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct SHQUERYRBINFO
+    {
+        public int cbSize;
+        public long i64Size;
+        public long i64NumItems;
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    public struct SHFILEOPSTRUCT
+    {
+        public IntPtr hwnd;
+        public uint wFunc;
+        [MarshalAs(UnmanagedType.LPWStr)]
+        public string pFrom;
+        [MarshalAs(UnmanagedType.LPWStr)]
+        public string? pTo;
+        public ushort fFlags;
+        public bool fAnyOperationsAborted;
+        public IntPtr hNameMappings;
+        [MarshalAs(UnmanagedType.LPWStr)]
+        public string? lpszProgressTitle;
+    }
+
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    public static extern int SHQueryRecycleBin(string? pszRootPath, ref SHQUERYRBINFO pSHQueryRBInfo);
+
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    public static extern int SHEmptyRecycleBin(IntPtr hwnd, string? pszRootPath, uint dwFlags);
+
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    public static extern int SHFileOperation(ref SHFILEOPSTRUCT lpFileOp);
 }

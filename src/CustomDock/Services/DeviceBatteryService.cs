@@ -1,0 +1,300 @@
+using System.Runtime.InteropServices;
+using System.Windows;
+using CustomDock.Core;
+using CustomDock.Native;
+using Windows.Devices.Enumeration;
+
+namespace CustomDock.Services;
+
+public sealed record BatteryDeviceInfo(string Id, string Name, int BatteryPercent, bool IsCharging, bool IsWirelessDongle)
+{
+    public string FormattedPercent => $"{BatteryPercent}%";
+
+    public bool IsHeadset => Name.Contains("cloud", StringComparison.OrdinalIgnoreCase)
+        || Name.Contains("headset", StringComparison.OrdinalIgnoreCase)
+        || Name.Contains("kulaklık", StringComparison.OrdinalIgnoreCase)
+        || Name.Contains("headphone", StringComparison.OrdinalIgnoreCase)
+        || Name.Contains("buds", StringComparison.OrdinalIgnoreCase);
+
+    public bool IsMouse => Name.Contains("mouse", StringComparison.OrdinalIgnoreCase)
+        || Name.Contains("fare", StringComparison.OrdinalIgnoreCase);
+
+    public bool IsKeyboard => Name.Contains("keyboard", StringComparison.OrdinalIgnoreCase)
+        || Name.Contains("klavye", StringComparison.OrdinalIgnoreCase);
+}
+
+public sealed class DeviceBatteryService
+{
+    private const string BluetoothProtocolId = "{e0cbf06c-cdb3-4642-a93e-05a9c0ef2567}";
+    private const string BatteryPropertyKey = "{104EA319-6EE2-4701-BD47-8DDBF425BBE5} 2";
+
+    private readonly System.Windows.Threading.DispatcherTimer _timer;
+
+    public DeviceBatteryService()
+    {
+        _timer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(30),
+        };
+        _timer.Tick += (_, _) => Refresh();
+        _timer.Start();
+
+        // İlk tarama
+        Refresh();
+    }
+
+    public IReadOnlyList<BatteryDeviceInfo> Devices { get; private set; } = Array.Empty<BatteryDeviceInfo>();
+
+    public BatteryDeviceInfo? PrimaryDevice => Devices.FirstOrDefault();
+
+    public event EventHandler? Updated;
+
+    public async void Refresh()
+    {
+        try
+        {
+            var list = new List<BatteryDeviceInfo>();
+
+            // 1. HyperX Cloud II Wireless ve 2.4 GHz USB Dongle taraması
+            var dongleDevices = await Task.Run(ScanUsbDongles);
+            list.AddRange(dongleDevices);
+
+            // 2. Windows Bluetooth bağlı aygıtları taraması
+            var btDevices = await ScanBluetoothDevicesAsync();
+            list.AddRange(btDevices);
+
+            Devices = list;
+            Application.Current?.Dispatcher.BeginInvoke(() => Updated?.Invoke(this, EventArgs.Empty));
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Aygıt pilleri taranamadı");
+        }
+    }
+
+    private static async Task<List<BatteryDeviceInfo>> ScanBluetoothDevicesAsync()
+    {
+        var result = new List<BatteryDeviceInfo>();
+        try
+        {
+            string aqs = $"System.Devices.Aep.ProtocolId:=\"{BluetoothProtocolId}\" AND System.Devices.Aep.IsConnected:=System.StructuredQueryType.Boolean#True";
+            var properties = new[] { "System.ItemNameDisplay", "System.Devices.Aep.IsConnected", BatteryPropertyKey };
+            var collection = await DeviceInformation.FindAllAsync(aqs, properties);
+
+            foreach (var dev in collection)
+            {
+                if (dev.Properties.TryGetValue(BatteryPropertyKey, out var val) && val is not null)
+                {
+                    int percent = Convert.ToInt32(val);
+                    if (percent >= 0 && percent <= 100)
+                    {
+                        string name = string.IsNullOrWhiteSpace(dev.Name) ? "Bluetooth Aygıtı" : dev.Name;
+                        result.Add(new BatteryDeviceInfo(dev.Id, name, percent, false, false));
+                    }
+                }
+            }
+        }
+        catch { }
+        return result;
+    }
+
+    /// <summary>HyperX Cloud II Wireless ve benzeri 2.4GHz RF USB Dongle aygıtlarını HID üzerinden tarar.</summary>
+    private static List<BatteryDeviceInfo> ScanUsbDongles()
+    {
+        var result = new List<BatteryDeviceInfo>();
+
+        try
+        {
+            HidInterop.HidD_GetHidGuid(out var hidGuid);
+            IntPtr devInfo = HidInterop.SetupDiGetClassDevs(ref hidGuid, IntPtr.Zero, IntPtr.Zero, HidInterop.DIGCF_PRESENT | HidInterop.DIGCF_DEVICEINTERFACE);
+            if (devInfo == IntPtr.Zero || devInfo == new IntPtr(-1)) return result;
+
+            try
+            {
+                var ifData = new HidInterop.SP_DEVICE_INTERFACE_DATA();
+                ifData.cbSize = Marshal.SizeOf(ifData);
+                uint index = 0;
+
+                while (HidInterop.SetupDiEnumDeviceInterfaces(devInfo, IntPtr.Zero, ref hidGuid, index++, ref ifData))
+                {
+                    int reqSize = 0;
+                    HidInterop.SetupDiGetDeviceInterfaceDetail(devInfo, ref ifData, IntPtr.Zero, 0, ref reqSize, IntPtr.Zero);
+                    if (reqSize <= 0) continue;
+
+                    IntPtr detailData = Marshal.AllocHGlobal(reqSize);
+                    try
+                    {
+                        // x64'te SP_DEVICE_INTERFACE_DETAIL_DATA cbSize = 8 (x86'da 5 veya 6)
+                        Marshal.WriteInt32(detailData, IntPtr.Size == 8 ? 8 : 4 + Marshal.SystemDefaultCharSize);
+                        if (HidInterop.SetupDiGetDeviceInterfaceDetail(devInfo, ref ifData, detailData, reqSize, ref reqSize, IntPtr.Zero))
+                        {
+                            IntPtr pDevicePath = new IntPtr(detailData.ToInt64() + 4);
+                            string? devicePath = Marshal.PtrToStringAuto(pDevicePath);
+                            if (string.IsNullOrEmpty(devicePath)) continue;
+
+                            var dev = CheckHyperXDevice(devicePath);
+                            if (dev is not null && !result.Any(d => d.Id == dev.Id))
+                            {
+                                result.Add(dev);
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(detailData);
+                    }
+                }
+            }
+            finally
+            {
+                HidInterop.SetupDiDestroyDeviceInfoList(devInfo);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "USB Dongle HID taraması sırasında hata");
+        }
+
+        return result;
+    }
+
+    private static readonly Dictionary<ushort, (int Battery, bool IsCharging)> s_lastKnownBattery = new();
+
+    private static BatteryDeviceInfo? CheckHyperXDevice(string devicePath)
+    {
+        string pathLower = devicePath.ToLowerInvariant();
+        if (pathLower.Contains("col01") || pathLower.Contains("col02")) return null;
+
+        IntPtr handle = HidInterop.CreateFile(devicePath,
+            HidInterop.GENERIC_READ | HidInterop.GENERIC_WRITE,
+            HidInterop.FILE_SHARE_READ | HidInterop.FILE_SHARE_WRITE,
+            IntPtr.Zero,
+            HidInterop.OPEN_EXISTING,
+            HidInterop.FILE_FLAG_OVERLAPPED,
+            IntPtr.Zero);
+
+        if (handle == IntPtr.Zero || handle == new IntPtr(-1)) return null;
+
+        try
+        {
+            var attrs = new HidInterop.HIDD_ATTRIBUTES();
+            attrs.Size = Marshal.SizeOf(attrs);
+            if (!HidInterop.HidD_GetAttributes(handle, ref attrs)) return null;
+
+            ushort vid = attrs.VendorID;
+            ushort pid = attrs.ProductID;
+
+            bool isHyperX = vid == 0x0951 || vid == 0x03F0;
+            if (!isHyperX) return null;
+
+            string devName = pid switch
+            {
+                0x1718 => "HyperX Cloud II Wireless",
+                0x018B => "HyperX Cloud II Wireless",
+                0x017B => "HyperX Cloud II Wireless",
+                0x0b92 or 0x16EA or 0x16EB or 0x0D93 or 0x0696 => "HyperX Cloud II Wireless",
+                0x0186 => "HyperX Cloud Core Wireless",
+                0x0188 => "HyperX Cloud Alpha Wireless",
+                0x0914 or 0x0185 => "HyperX Cloud Flight",
+                _ => $"HyperX Kulaklık ({pid:X4})",
+            };
+
+            int battery = -1;
+            bool isCharging = false;
+
+            // Strateji 1: Cloud II Wireless donanım el sıkışması ve Overlapped ReadFile ile gerçek pil okuma
+            HidInterop.HidD_SetNumInputBuffers(handle, 64);
+            IntPtr readEv = HidInterop.CreateEvent(IntPtr.Zero, false, false, null);
+            var readOl = new HidInterop.OVERLAPPED { hEvent = readEv };
+
+            byte[] rawBuf = new byte[128];
+            GCHandle pin = GCHandle.Alloc(rawBuf, GCHandleType.Pinned);
+            IntPtr pBuf = pin.AddrOfPinnedObject();
+
+            try
+            {
+                // Dongle'ı tetikle: Input Report 6 sorgusu (HyperX protokolü el sıkışması)
+                byte[] rep6 = new byte[62];
+                rep6[0] = 6;
+                HidInterop.HidD_GetInputReport(handle, rep6, 62);
+
+                for (int attempt = 0; attempt < 6; attempt++)
+                {
+                    bool rOk = HidInterop.ReadFile(handle, pBuf, 62, out uint bytesRead, ref readOl);
+                    int rErr = Marshal.GetLastWin32Error();
+                    if (!rOk && rErr == 997) // ERROR_IO_PENDING
+                    {
+                        HidInterop.GetOverlappedResultEx(handle, ref readOl, out bytesRead, 600, false);
+                    }
+                    else if (rOk && bytesRead == 0)
+                    {
+                        bytesRead = 62;
+                    }
+
+                    if (bytesRead > 0 && rawBuf[0] == 0x0B && rawBuf[2] == 0xBB && rawBuf[3] == 0x02)
+                    {
+                        int level = rawBuf[7];
+                        if (level > 0 && level <= 100)
+                        {
+                            battery = level;
+                            isCharging = rawBuf[4] == 1 || rawBuf[4] == 2;
+                            break;
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                pin.Free();
+                HidInterop.CloseHandle(readEv);
+            }
+
+            // Strateji 2: Report ID 0x21 (Feature Report destekleyen Cloud Flight / Alpha vb. modeller için)
+            if (battery < 0)
+            {
+                byte[] report = new byte[32];
+                report[0] = 0x21;
+                report[1] = 0xbb;
+                report[2] = 0x0b;
+
+                HidInterop.HidD_SetFeature(handle, report, report.Length);
+                byte[] response = new byte[32];
+                response[0] = 0x21;
+                if (HidInterop.HidD_GetFeature(handle, response, response.Length))
+                {
+                    for (int offset = 2; offset < Math.Min(20, response.Length); offset++)
+                    {
+                        if (response[offset] > 0 && response[offset] <= 100)
+                        {
+                            battery = response[offset];
+                            if (offset + 1 < response.Length)
+                                isCharging = response[offset + 1] == 1 || response[offset + 1] == 2;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (battery > 0 && battery <= 100)
+            {
+                s_lastKnownBattery[pid] = (battery, isCharging);
+                return new BatteryDeviceInfo($"hyperx-{pid:X4}", devName, battery, isCharging, true);
+            }
+            else if (s_lastKnownBattery.TryGetValue(pid, out var cached))
+            {
+                return new BatteryDeviceInfo($"hyperx-{pid:X4}", devName, cached.Battery, cached.IsCharging, true);
+            }
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, $"CheckHyperXDevice hatası: {devicePath}");
+            return null;
+        }
+        finally
+        {
+            HidInterop.CloseHandle(handle);
+        }
+    }
+}

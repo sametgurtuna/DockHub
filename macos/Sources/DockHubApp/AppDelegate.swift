@@ -9,6 +9,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var configService: ConfigService?
     private var themeObserver: NSObjectProtocol?
     private var screenObserver: NSObjectProtocol?
+    private var signalSources: [DispatchSourceSignal] = []
 
     private var verifyMode: Bool { CommandLine.arguments.contains("--verify") }
 
@@ -55,6 +56,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             // Replace'ten ShowBoth'a gecildiyse birakilmis ayar geri yuklenir.
             _ = SystemDock.restore()
         }
+
+        installSignalHandlers()
 
         let panel = DockPanel(config: service.config, items: service.config.items)
         dock = panel
@@ -151,6 +154,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Normal cikista sistem Dock ayari geri yuklenir (d-dock-geri-yukleme).
     func applicationWillTerminate(_ notification: Notification) {
         _ = SystemDock.restore()
+    }
+
+    /// OLCULMUS EKSIK: pkill/kill (SIGTERM) AppKit'in applicationWillTerminate
+    /// cagrisini TETIKLEMEZ; surec temiz kapanmadan olur ve Dock ayari gizli kalir.
+    /// Bu gozlemle eklendi: sinyali yakalayip once ayari geri yukluyoruz.
+    /// SIGKILL (kill -9) ve elektrik kesintisi hala yakalanamaz; o durumda
+    /// --restore-dock veya bir sonraki normal kosum devreye girer.
+    private func installSignalHandlers() {
+        for sig in [SIGTERM, SIGINT, SIGHUP] {
+            signal(sig, SIG_IGN)                       // varsayilan olumu kapat
+            let src = DispatchSource.makeSignalSource(signal: sig, queue: .main)
+            src.setEventHandler {
+                MainActor.assumeIsolated {
+                    Log.info("Sinyal alindi (\(sig)); Dock ayari geri yukleniyor")
+                    _ = SystemDock.restore()
+                    exit(0)
+                }
+            }
+            src.resume()
+            signalSources.append(src)
+        }
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ s: NSApplication) -> Bool { false }

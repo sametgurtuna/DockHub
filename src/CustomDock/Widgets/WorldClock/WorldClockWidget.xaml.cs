@@ -3,8 +3,10 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Globalization;
 using System.Windows;
+using System.Windows.Input;
 using CustomDock.Core;
 using CustomDock.Controls;
+using CustomDock.Dock;
 
 namespace CustomDock.Widgets;
 
@@ -124,6 +126,7 @@ public partial class WorldClockWidget : WidgetBase
     {
         InitializeComponent();
         Layout_multi.ItemsSource = _items;
+        ClockPopup.Closed += (_, _) => UpdateTickSubscription();
     }
 
     protected override void OnAttached()
@@ -139,6 +142,8 @@ public partial class WorldClockWidget : WidgetBase
         _settings.PropertyChanged -= OnSettingsChanged;
         _settings.Cities.CollectionChanged -= OnCitiesChanged;
         AppServices.Clock.MinuteTick -= OnTick;
+        AppServices.Clock.SecondTick -= OnTick;
+        _secondTickSubscribed = false;
     }
 
     protected override void OnVariantChanged()
@@ -151,7 +156,97 @@ public partial class WorldClockWidget : WidgetBase
 
     private void OnCitiesChanged(object? sender, NotifyCollectionChangedEventArgs e) => Rebuild();
 
-    private void OnTick(object? sender, DateTime e) => Update();
+    private void OnTick(object? sender, DateTime e)
+    {
+        Update();
+        if (ClockPopup.IsOpen)
+            RenderPopup();
+    }
+
+    private void OnWidgetMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (DockDragHelper.JustDragged) return;
+        ToggleClockPopup();
+        e.Handled = true;
+    }
+
+    public override bool OnCompactClick()
+    {
+        ToggleClockPopup();
+        return true;
+    }
+
+    private void ToggleClockPopup()
+    {
+        if (ClockPopup.IsOpen)
+        {
+            ClockPopup.IsOpen = false;
+            return;
+        }
+
+        RenderPopup();
+        OpenPopup(ClockPopup);
+        UpdateTickSubscription();
+    }
+
+    private void RenderPopup()
+    {
+        var first = _items.FirstOrDefault();
+        var zone = first?.Zone ?? TimeZoneInfo.Local;
+        var nowUtc = DateTime.UtcNow;
+        var cityTime = TimeZoneInfo.ConvertTimeFromUtc(nowUtc, zone);
+        var culture = CultureInfo.CurrentCulture;
+
+        PopupClockTime.Text = _settings.Use24Hour ? cityTime.ToString("HH:mm:ss", culture) : cityTime.ToString("hh:mm:ss", culture);
+        PopupClockDate.Text = cityTime.ToString("dddd, MMMM d", culture);
+
+        var offset = zone.GetUtcOffset(cityTime);
+        string gmt = $"GMT{(offset >= TimeSpan.Zero ? "+" : "-")}{Math.Abs(offset.Hours):D2}:{Math.Abs(offset.Minutes):D2}";
+        string cityName = first?.Label ?? GetLocalCityName();
+        PopupClockZone.Text = $"{cityName} · {gmt}";
+    }
+
+    private void OnPopupCloseClick(object sender, RoutedEventArgs e)
+    {
+        ClockPopup.IsOpen = false;
+    }
+
+    private static string GetLocalCityName()
+    {
+        var local = TimeZoneInfo.Local;
+        string displayName = local.DisplayName;
+        int closeParen = displayName.IndexOf(')');
+        if (closeParen >= 0 && closeParen < displayName.Length - 1)
+        {
+            string c = displayName[(closeParen + 1)..].Trim();
+            int comma = c.IndexOf(',');
+            if (comma > 0) c = c[..comma].Trim();
+            if (!string.IsNullOrWhiteSpace(c)) return c;
+        }
+        string name = local.StandardName;
+        if (name.EndsWith(" Standard Time", StringComparison.OrdinalIgnoreCase))
+            name = name[..^14].Trim();
+        return string.IsNullOrWhiteSpace(name) ? "Local" : name;
+    }
+
+    private bool _secondTickSubscribed;
+
+    private void UpdateTickSubscription()
+    {
+        bool shouldSecondTick = ClockPopup.IsOpen;
+        if (shouldSecondTick == _secondTickSubscribed) return;
+        _secondTickSubscribed = shouldSecondTick;
+        if (shouldSecondTick)
+        {
+            AppServices.Clock.MinuteTick -= OnTick;
+            AppServices.Clock.SecondTick += OnTick;
+        }
+        else
+        {
+            AppServices.Clock.SecondTick -= OnTick;
+            AppServices.Clock.MinuteTick += OnTick;
+        }
+    }
 
     private void Rebuild()
     {

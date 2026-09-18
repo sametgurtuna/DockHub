@@ -48,7 +48,9 @@ public sealed class DockMagnifier : IDisposable
 
         foreach (var child in _host.Children)
         {
-            if (child is not FrameworkElement { Visibility: Visibility.Visible } element || element is SeparatorView)
+            // Dalga (büyütme) efekti yalnızca uygulama ikonlarına (AppButton) uygulanır.
+            // Geniş widget kartları büyütüldüğünde yanındaki öğelerin üzerine taşmasını ve iç içe geçmesini önler.
+            if (child is not AppButton { Visibility: Visibility.Visible } element)
                 continue;
 
             double size = vertical ? element.ActualHeight : element.ActualWidth;
@@ -85,7 +87,7 @@ public sealed class DockMagnifier : IDisposable
         _active = false;
         foreach (var child in _host.Children)
         {
-            if (child is not FrameworkElement { RenderTransform: TransformGroup { Children: [ScaleTransform scale, _] } })
+            if (child is not AppButton { RenderTransform: TransformGroup { Children: [ScaleTransform scale, _] } })
                 continue;
             Motion.Scale(scale, 1, 200);
         }

@@ -3,7 +3,7 @@
               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
               xmlns:w="clr-namespace:CustomDock.Widgets"
               xmlns:ctl="clr-namespace:CustomDock.Controls">
-    <Grid Background="Transparent">
+    <Grid Background="Transparent" Cursor="Hand" MouseLeftButtonUp="OnWidgetMouseLeftButtonUp">
         <!-- Tek şehir -->
         <StackPanel x:Name="Layout_single" Orientation="Horizontal" MinWidth="118">
             <ctl:AnalogClock x:Name="SingleClock" Width="30" Height="30" VerticalAlignment="Center"
@@ -36,5 +36,43 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
+
+        <!-- Saat Popup'ı (Görsel 1 tasarımı) -->
+        <Popup x:Name="ClockPopup" StaysOpen="False" AllowsTransparency="True" PopupAnimation="None" Placement="Top">
+            <Border CornerRadius="16" Padding="20,14" BorderThickness="1" Margin="8" Width="260"
+                    Background="{DynamicResource PopupBrush}" BorderBrush="{DynamicResource PopupBorderBrush}">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="20" ShadowDepth="4" Opacity="0.4" Direction="270" />
+                </Border.Effect>
+                <StackPanel>
+                    <!-- Başlık ve Kapat Butonu -->
+                    <Grid Margin="0,0,0,8">
+                        <TextBlock Text="Clock" FontSize="12.5" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" FontFamily="{StaticResource UiFont}"
+                                   VerticalAlignment="Center" />
+                        <Button Style="{StaticResource CardIconButton}" Width="24" Height="24"
+                                HorizontalAlignment="Right" Click="OnPopupCloseClick" Cursor="Hand">
+                            <TextBlock Text="&#xE8BB;" FontFamily="{StaticResource IconFont}" FontSize="10"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" />
+                        </Button>
+                    </Grid>
+
+                    <!-- Büyük Canlı Dijital Saat -->
+                    <TextBlock x:Name="PopupClockTime" Text="18:26:48" FontSize="38" FontWeight="Bold"
+                               HorizontalAlignment="Center" Foreground="{DynamicResource TextPrimaryBrush}"
+                               FontFamily="{StaticResource UiFont}" Margin="0,6,0,6" />
+
+                    <!-- Tarih -->
+                    <TextBlock x:Name="PopupClockDate" Text="Friday, September 18" FontSize="13.5"
+                               HorizontalAlignment="Center" Foreground="{DynamicResource TextPrimaryBrush}"
+                               FontFamily="{StaticResource UiFont}" Margin="0,0,0,6" />
+
+                    <!-- Konum / Saat Dilimi -->
+                    <TextBlock x:Name="PopupClockZone" Text="Istanbul · GMT+03:00" FontSize="12"
+                               HorizontalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"
+                               FontFamily="{StaticResource UiFont}" Margin="0,0,0,4" />
+                </StackPanel>
+            </Border>
+        </Popup>
     </Grid>
 </w:WidgetBase>

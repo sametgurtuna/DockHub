@@ -27,6 +27,11 @@ struct WidgetHost: View {
         case "status":         StatusWidget(item: item, style: style)
         case "audio":          AudioWidget(item: item, style: style)
         case "device-battery": DeviceBatteryWidget(item: item, style: style)
+        case "trash":          TrashWidget(item: item, style: style)
+        case "now-playing":    NowPlayingWidget(item: item, style: style)
+        case "ai-usage":       AIUsageWidget(item: item, style: style)
+        case "shortcut":       ShortcutWidget(item: item, style: style)
+        case "airdrop":        AirDropWidget(item: item, style: style)
         default:       unknown
         }
     }

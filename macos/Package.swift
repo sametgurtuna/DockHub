@@ -13,6 +13,6 @@ let package = Package(
         .target(name: "DockHubUI", dependencies: ["DockHubCore", "DockHubPlatform"]),
         // Executable: yalniz baglama.
         .executableTarget(name: "DockHubApp", dependencies: ["DockHubUI"]),
-        .testTarget(name: "DockHubCoreTests", dependencies: ["DockHubCore"]),
+        .testTarget(name: "DockHubCoreTests", dependencies: ["DockHubCore", "DockHubPlatform"]),
     ]
 )

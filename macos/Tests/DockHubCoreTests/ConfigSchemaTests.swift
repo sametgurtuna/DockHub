@@ -1,5 +1,6 @@
 import XCTest
 @testable import DockHubCore
+@testable import DockHubPlatform
 
 /// Windows config.json semasiyla uyumu sinar (MIMARI.md bolum 3).
 final class ConfigSchemaTests: XCTestCase {
@@ -124,5 +125,39 @@ final class ReminderLogicTests: XCTestCase {
         XCTAssertNil(ReminderLogic.parseTime("abc"))
         XCTAssertNil(ReminderLogic.parseTime("12"))
         XCTAssertEqual(ReminderLogic.parseTime("18:30")?.hour, 18)
+    }
+}
+
+/// claude CLI /usage ciktisinin ayristirilmasi.
+/// Windows surumundeki regex'lerin ayni davrandigini sinar.
+final class AIUsageParseTests: XCTestCase {
+    func testTipikCiktiAyristirilir() throws {
+        let metin = """
+        Claude Code usage
+
+        Current session: 45% used, resets 3pm (in 2 hours)
+        Current week: 12% used, resets Monday (in 4 days)
+        """
+        let u = try XCTUnwrap(AIUsageService.parse(metin))
+        XCTAssertEqual(u.sessionPercent, 45)
+        XCTAssertEqual(u.sessionResets, "3pm")
+        XCTAssertEqual(u.weekPercent, 12)
+        XCTAssertEqual(u.weekResets, "Monday")
+    }
+
+    func testBuyukKucukHarfFarkEtmez() throws {
+        let u = try XCTUnwrap(AIUsageService.parse("CURRENT SESSION: 7% USED, RESETS noon"))
+        XCTAssertEqual(u.sessionPercent, 7)
+    }
+
+    func testYalnizHaftaVarsaOturumSifir() throws {
+        let u = try XCTUnwrap(AIUsageService.parse("Current week: 88% used, resets Sunday"))
+        XCTAssertEqual(u.weekPercent, 88)
+        XCTAssertEqual(u.sessionPercent, 0)
+    }
+
+    func testIlgisizCiktiNilDoner() {
+        XCTAssertNil(AIUsageService.parse("command not found: claude"))
+        XCTAssertNil(AIUsageService.parse(""))
     }
 }

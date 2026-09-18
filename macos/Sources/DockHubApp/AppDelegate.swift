@@ -213,6 +213,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
         print("  zamanIlerlemesi   : \(oranlar.joined(separator: "  "))")
+        let cop = TrashStore.shared.state
+        print("  copKutusu         : " + (cop.accessible ? "\(cop.itemCount) oge  \(cop.totalBytes) bayt" : "OKUNAMADI (Tam Disk Erisimi gerekiyor)"))
+        switch NowPlayingStore.shared.sonuc {
+        case .calan(let n): print("  calanMedya        : \(n.app) - \(n.title) / \(n.artist)")
+        case .hicbiriCalmiyor: print("  calanMedya        : hicbiri calmiyor")
+        case .izinYok(let m): print("  calanMedya        : izin yok (\(m))")
+        }
+        switch AIUsageStore.shared.sonuc {
+        case .veri(let u): print("  aiKullanimi       : oturum %\(u.sessionPercent) (\(u.sessionResets))  hafta %\(u.weekPercent) (\(u.weekResets))")
+        case .cliYok: print("  aiKullanimi       : claude CLI bulunamadi")
+        case .okunamadi(let m): print("  aiKullanimi       : okunamadi (\(m))")
+        }
         let ag = NetworkStore.shared.sample
         print("  ag                : indirme \(NetworkMetrics.format(ag.downBytesPerSec))  yukleme \(NetworkMetrics.format(ag.upBytesPerSec))  toplamIn=\(ag.totalDown)")
         if let dk = DiskInfo.usage(), dk.total > 0 {

@@ -66,6 +66,22 @@ public enum WidgetRegistry {
         WidgetDefinition(id: "device-battery", name: "Aygıt pilleri", category: "Sistem",
                          variants: [WidgetVariant("single", "Tek aygıt"),
                                     WidgetVariant("multi", "Çoklu aygıt")]),
+        WidgetDefinition(id: "trash", name: "Çöp kutusu", category: "Sistem",
+                         variants: [WidgetVariant("icon", "Yalnızca ikon"),
+                                    WidgetVariant("details", "Detaylı")]),
+        WidgetDefinition(id: "now-playing", name: "Çalan medya", category: "Medya",
+                         variants: [WidgetVariant("full", "Tam"),
+                                    WidgetVariant("compact", "Kompakt"),
+                                    WidgetVariant("mini", "Mini")]),
+        WidgetDefinition(id: "ai-usage", name: "AI kullanımı", category: "Sistem",
+                         variants: [WidgetVariant("bars", "Çubuklar"),
+                                    WidgetVariant("rings", "Halkalar")]),
+        // Parite disi ekler: Windows surumunde karsiliklari yok (origin: ek)
+        WidgetDefinition(id: "shortcut", name: "Kısayol", category: "Ekler",
+                         variants: [WidgetVariant("single", "Tek")]),
+        WidgetDefinition(id: "airdrop", name: "AirDrop", category: "Ekler",
+                         variants: [WidgetVariant("full", "Tam"),
+                                    WidgetVariant("icon", "Yalnızca ikon")]),
     ]
 
     public static func find(_ id: String?) -> WidgetDefinition? {

@@ -72,6 +72,7 @@ public static class ExplorerPinMenu
 
     // ------------------------------------------------------------------ Sabitleme istekleri (örnekler arası)
 
+    private const string MutexName = @"Local\DockHub.PinQueue.Mutex";
     private static string QueueFile => Path.Combine(AppPaths.Root, "pin-requests.txt");
 
     /// <summary>İkinci örnek: isteği kuyruğa yazar; çalışan örnek sinyal ile okur.</summary>
@@ -79,7 +80,29 @@ public static class ExplorerPinMenu
     {
         try
         {
-            File.AppendAllLines(QueueFile, new[] { Path.GetFullPath(path) });
+            using var mutex = new Mutex(false, MutexName);
+            bool acquired = false;
+            try
+            {
+                acquired = mutex.WaitOne(TimeSpan.FromSeconds(3));
+            }
+            catch (AbandonedMutexException)
+            {
+                acquired = true;
+            }
+
+            if (acquired)
+            {
+                try
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(QueueFile)!);
+                    File.AppendAllLines(QueueFile, new[] { Path.GetFullPath(path) });
+                }
+                finally
+                {
+                    mutex.ReleaseMutex();
+                }
+            }
         }
         catch (Exception ex)
         {
@@ -92,10 +115,35 @@ public static class ExplorerPinMenu
     {
         try
         {
-            if (!File.Exists(QueueFile)) return new List<string>();
-            var lines = File.ReadAllLines(QueueFile).Where(l => !string.IsNullOrWhiteSpace(l)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-            File.Delete(QueueFile);
-            return lines;
+            using var mutex = new Mutex(false, MutexName);
+            bool acquired = false;
+            try
+            {
+                acquired = mutex.WaitOne(TimeSpan.FromSeconds(3));
+            }
+            catch (AbandonedMutexException)
+            {
+                acquired = true;
+            }
+
+            if (acquired)
+            {
+                try
+                {
+                    if (!File.Exists(QueueFile)) return new List<string>();
+                    var lines = File.ReadAllLines(QueueFile)
+                        .Where(l => !string.IsNullOrWhiteSpace(l))
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .ToList();
+                    File.Delete(QueueFile);
+                    return lines;
+                }
+                finally
+                {
+                    mutex.ReleaseMutex();
+                }
+            }
+            return new List<string>();
         }
         catch (Exception ex)
         {

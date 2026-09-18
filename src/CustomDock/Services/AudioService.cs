@@ -174,6 +174,8 @@ public sealed class AudioService : IMMNotificationClient, IAudioEndpointVolumeCa
             for (int i = 0; i < count; i++)
             {
                 if (enumerator.GetSession(i, out var session) != 0) continue;
+                bool keepVolumeControl = false;
+                ISimpleAudioVolume? vol = null;
                 try
                 {
                     session.GetState(out var state);
@@ -205,7 +207,6 @@ public sealed class AudioService : IMMNotificationClient, IAudioEndpointVolumeCa
                     if (string.IsNullOrWhiteSpace(displayName)) continue;
 
                     // ISimpleAudioVolume al
-                    ISimpleAudioVolume? vol = null;
                     if (session is ISimpleAudioVolume sav) vol = sav;
 
                     float volume = 1f;
@@ -220,8 +221,17 @@ public sealed class AudioService : IMMNotificationClient, IAudioEndpointVolumeCa
                     {
                         VolumeControl = vol,
                     });
+                    keepVolumeControl = true;
                 }
                 catch { }
+                finally
+                {
+                    if (!keepVolumeControl && vol is not null)
+                    {
+                        try { Marshal.ReleaseComObject(vol); } catch { }
+                    }
+                    try { Marshal.ReleaseComObject(session); } catch { }
+                }
             }
             Marshal.ReleaseComObject(enumerator);
             Marshal.ReleaseComObject(mgr);

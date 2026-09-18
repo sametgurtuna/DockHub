@@ -27,6 +27,7 @@ public sealed class SystemMonitorService
     private ulong _lastIdle, _lastKernel, _lastUser;
     private double _diskPercent;
     private DateTime _lastDiskSample = DateTime.MinValue;
+    private bool _diskSampling;
 
     public SystemMonitorService()
     {
@@ -84,20 +85,7 @@ public sealed class SystemMonitorService
             ramPercent = usedGb / totalGb * 100.0;
         }
 
-        if (DateTime.UtcNow - _lastDiskSample > DiskInterval)
-        {
-            _lastDiskSample = DateTime.UtcNow;
-            try
-            {
-                var drive = new DriveInfo(Path.GetPathRoot(Environment.SystemDirectory) ?? "C:\\");
-                if (drive.IsReady && drive.TotalSize > 0)
-                    _diskPercent = (1 - (double)drive.AvailableFreeSpace / drive.TotalSize) * 100;
-            }
-            catch
-            {
-                // yoksay
-            }
-        }
+        CheckDiskSample();
 
         double? battery = null;
         bool charging = false;
@@ -111,5 +99,29 @@ public sealed class SystemMonitorService
 
         Current = new SystemStats(cpu, ramPercent, usedGb, totalGb, _diskPercent, battery, charging);
         _updated?.Invoke(this, Current);
+    }
+
+    private void CheckDiskSample()
+    {
+        if (_diskSampling || DateTime.UtcNow - _lastDiskSample <= DiskInterval) return;
+        _lastDiskSample = DateTime.UtcNow;
+        _diskSampling = true;
+
+        Task.Run(() =>
+        {
+            try
+            {
+                var drive = new DriveInfo(Path.GetPathRoot(Environment.SystemDirectory) ?? "C:\\");
+                if (drive.IsReady && drive.TotalSize > 0)
+                {
+                    _diskPercent = (1 - (double)drive.AvailableFreeSpace / drive.TotalSize) * 100;
+                }
+            }
+            catch { }
+            finally
+            {
+                _diskSampling = false;
+            }
+        });
     }
 }

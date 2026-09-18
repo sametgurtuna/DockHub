@@ -21,13 +21,15 @@ public sealed class ReminderStore
 /// Hatırlatıcıları saklar ve zamanı gelince toast bildirimi gösterir.
 /// Sabit aralıklı yoklama yerine en yakın hatırlatıcıya kurulan tek seferlik zamanlayıcı kullanır.
 /// </summary>
-public sealed class ReminderService
+public sealed class ReminderService : IDisposable
 {
     private const string StoreName = "reminders";
     private static readonly TimeSpan MaxWait = TimeSpan.FromMinutes(15);
 
     private readonly DispatcherTimer _timer = new(DispatcherPriority.Normal);
     private readonly Dictionary<string, string> _recentlyFired = new();
+    private EventHandler? _timeChangedHandler;
+    private PowerModeChangedEventHandler? _powerModeChangedHandler;
     private bool _started;
 
     public ReminderService()
@@ -47,11 +49,13 @@ public sealed class ReminderService
             Items.Add(item);
 
         var dispatcher = _timer.Dispatcher;
-        SystemEvents.TimeChanged += (_, _) => dispatcher.BeginInvoke(Schedule);
-        SystemEvents.PowerModeChanged += (_, e) =>
+        _timeChangedHandler = (_, _) => dispatcher.BeginInvoke(Schedule);
+        _powerModeChangedHandler = (_, e) =>
         {
             if (e.Mode == PowerModes.Resume) dispatcher.BeginInvoke(FireDue);
         };
+        SystemEvents.TimeChanged += _timeChangedHandler;
+        SystemEvents.PowerModeChanged += _powerModeChangedHandler;
 
         // Uygulama kapalıyken zamanı geçenler
         var missed = Items.Where(r => r.Due <= DateTime.Now).ToList();
@@ -130,4 +134,19 @@ public sealed class ReminderService
     }
 
     private void Save() => JsonStore.SaveData(StoreName, new ReminderStore { Items = Items.ToList() });
+
+    public void Dispose()
+    {
+        _timer.Stop();
+        if (_timeChangedHandler is not null)
+        {
+            SystemEvents.TimeChanged -= _timeChangedHandler;
+            _timeChangedHandler = null;
+        }
+        if (_powerModeChangedHandler is not null)
+        {
+            SystemEvents.PowerModeChanged -= _powerModeChangedHandler;
+            _powerModeChangedHandler = null;
+        }
+    }
 }

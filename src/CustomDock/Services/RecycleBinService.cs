@@ -68,8 +68,8 @@ public sealed class RecycleBinService
     {
         try
         {
-            // SHERB_NOCONFIRMATION (onay penceresi açılmaz, ses çalar)
-            NativeMethods.SHEmptyRecycleBin(IntPtr.Zero, null, NativeMethods.SHERB_NOCONFIRMATION);
+            // Kullanıcı onay iletişim kutusunu Windows açar (0: standart onay ve ses).
+            NativeMethods.SHEmptyRecycleBin(IntPtr.Zero, null, 0);
             Refresh();
         }
         catch (Exception ex)

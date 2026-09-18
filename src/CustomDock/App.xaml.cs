@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Markup;
 using CustomDock.Core;
 using CustomDock.Dock;
+using CustomDock.Services;
 using CustomDock.Settings;
 using CustomDock.Shell;
 using Microsoft.Win32;
@@ -22,6 +23,7 @@ public partial class App : Application
     private AppPickerWindow? _appPicker;
     private bool _cleanedUp;
     private static bool _taskbarTouched;
+    private System.Collections.Specialized.NotifyCollectionChangedEventHandler? _trayIconsChangedHandler;
 
     public static App Instance => (App)Current;
 
@@ -123,7 +125,8 @@ public partial class App : Application
         {
             if (config.PinnedTrayIcons is null)
                 TrayPreferences.ImportWindowsPromotedIcons(tray);
-            tray.TrayIcons.CollectionChanged += (_, _) => TrayPreferences.ApplyNewIcons(tray);
+            _trayIconsChangedHandler = (_, _) => TrayPreferences.ApplyNewIcons(tray);
+            tray.TrayIcons.CollectionChanged += _trayIconsChangedHandler;
         }
     }
 
@@ -318,7 +321,16 @@ public partial class App : Application
             _appPicker?.Close();
             _dock?.CloseDock();
             AppServices.ConfigService.SaveNow();
+            if (_shell?.Tray is { } shellTray && _trayIconsChangedHandler is not null)
+            {
+                shellTray.TrayIcons.CollectionChanged -= _trayIconsChangedHandler;
+                _trayIconsChangedHandler = null;
+            }
             _shell?.Dispose();
+            AppServices.Reminders.Dispose();
+            AppServices.Audio.Dispose();
+            AppServices.Clock.Dispose();
+            NotificationService.Cleanup();
         }
         catch (Exception ex)
         {

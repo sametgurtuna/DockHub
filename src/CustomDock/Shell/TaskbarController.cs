@@ -27,6 +27,7 @@ public sealed class TaskbarController : IDisposable
     private readonly Func<IntPtr> _ownTrayProvider;
     private readonly Func<bool> _launcherVisible;
     private readonly DispatcherTimer _monitor;
+    private readonly EventHandler _onTick;
     private int _originalState;
     private int _visibleTicks;
 
@@ -34,8 +35,9 @@ public sealed class TaskbarController : IDisposable
     {
         _ownTrayProvider = ownTrayProvider;
         _launcherVisible = launcherVisible;
+        _onTick = (_, _) => Enforce();
         _monitor = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(250) };
-        _monitor.Tick += (_, _) => Enforce();
+        _monitor.Tick += _onTick;
     }
 
     public bool IsHidden { get; private set; }
@@ -91,14 +93,7 @@ public sealed class TaskbarController : IDisposable
         if (!IsHidden) return;
 
         var tray = ExplorerTray;
-        bool anyVisible = tray != IntPtr.Zero && IsWindowVisible(tray);
-        if (!anyVisible)
-        {
-            foreach (var secondary in FindSecondaryTrays())
-            {
-                if (IsWindowVisible(secondary)) { anyVisible = true; break; }
-            }
-        }
+        bool anyVisible = (tray != IntPtr.Zero && IsWindowVisible(tray)) || AnySecondaryTrayVisible();
 
         if (!anyVisible)
         {
@@ -122,15 +117,14 @@ public sealed class TaskbarController : IDisposable
         SetVisible(tray, false);
     }
 
-    private static List<IntPtr> FindSecondaryTrays()
+    private static bool AnySecondaryTrayVisible()
     {
-        var list = new List<IntPtr>();
-        EnumWindows((hwnd, _) =>
+        IntPtr secondary = IntPtr.Zero;
+        while ((secondary = FindWindowEx(IntPtr.Zero, secondary, "Shell_SecondaryTrayWnd", null)) != IntPtr.Zero)
         {
-            if (GetClassName(hwnd) == "Shell_SecondaryTrayWnd") list.Add(hwnd);
-            return true;
-        }, IntPtr.Zero);
-        return list;
+            if (IsWindowVisible(secondary)) return true;
+        }
+        return false;
     }
 
     private static void SetVisible(IntPtr tray, bool visible)
@@ -138,8 +132,12 @@ public sealed class TaskbarController : IDisposable
         uint flags = SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | (visible ? SWP_SHOWWINDOW : SWP_HIDEWINDOW);
         if (tray != IntPtr.Zero)
             SetWindowPos(tray, visible ? IntPtr.Zero : HWND_BOTTOM, 0, 0, 0, 0, visible ? flags | SWP_NOZORDER : flags);
-        foreach (var secondary in FindSecondaryTrays())
+
+        IntPtr secondary = IntPtr.Zero;
+        while ((secondary = FindWindowEx(IntPtr.Zero, secondary, "Shell_SecondaryTrayWnd", null)) != IntPtr.Zero)
+        {
             SetWindowPos(secondary, visible ? IntPtr.Zero : HWND_BOTTOM, 0, 0, 0, 0, visible ? flags | SWP_NOZORDER : flags);
+        }
     }
 
     // ------------------------------------------------------------------ Çökme kurtarma (ManagedShell başlamadan önce çalışır)
@@ -193,7 +191,11 @@ public sealed class TaskbarController : IDisposable
             SendMessage(tray, WM_COMMAND, new IntPtr(407), IntPtr.Zero);
     }
 
-    public void Dispose() => Restore();
+    public void Dispose()
+    {
+        Restore();
+        _monitor.Tick -= _onTick;
+    }
 }
 
 /// <summary>Çökme güvenliği için oturum durumu (session.json).</summary>

@@ -83,6 +83,7 @@ public sealed class TrayIconManager : IDisposable
     public void Dispose()
     {
         _icon.Visible = false;
+        try { _icon.Icon?.Dispose(); } catch { }
         _icon.Dispose();
         _menu.Dispose();
     }

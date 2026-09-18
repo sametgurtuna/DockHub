@@ -49,14 +49,18 @@ public sealed class DeviceBatteryService
 
     public event EventHandler? Updated;
 
-    public async void Refresh()
+    private bool _isRefreshing;
+
+    public Task RefreshAsync() => Task.Run(async () =>
     {
+        if (_isRefreshing) return;
+        _isRefreshing = true;
         try
         {
             var list = new List<BatteryDeviceInfo>();
 
             // 1. HyperX Cloud II Wireless ve 2.4 GHz USB Dongle taraması
-            var dongleDevices = await Task.Run(ScanUsbDongles);
+            var dongleDevices = ScanUsbDongles();
             list.AddRange(dongleDevices);
 
             // 2. Windows Bluetooth bağlı aygıtları taraması
@@ -70,7 +74,13 @@ public sealed class DeviceBatteryService
         {
             Log.Error(ex, "Aygıt pilleri taranamadı");
         }
-    }
+        finally
+        {
+            _isRefreshing = false;
+        }
+    });
+
+    public void Refresh() => _ = RefreshAsync();
 
     private static async Task<List<BatteryDeviceInfo>> ScanBluetoothDevicesAsync()
     {
@@ -218,13 +228,17 @@ public sealed class DeviceBatteryService
                 rep6[0] = 6;
                 HidInterop.HidD_GetInputReport(handle, rep6, 62);
 
-                for (int attempt = 0; attempt < 6; attempt++)
+                for (int attempt = 0; attempt < 3; attempt++)
                 {
                     bool rOk = HidInterop.ReadFile(handle, pBuf, 62, out uint bytesRead, ref readOl);
                     int rErr = Marshal.GetLastWin32Error();
                     if (!rOk && rErr == 997) // ERROR_IO_PENDING
                     {
-                        HidInterop.GetOverlappedResultEx(handle, ref readOl, out bytesRead, 600, false);
+                        if (!HidInterop.GetOverlappedResultEx(handle, ref readOl, out bytesRead, 120, false))
+                        {
+                            // Cihaz yanıt vermiyorsa (kulaklık kapalı), beklemeden çık
+                            break;
+                        }
                     }
                     else if (rOk && bytesRead == 0)
                     {

@@ -115,7 +115,9 @@ public partial class AudioWidget : WidgetBase
             // Mixer penceresi açıkken tekerlek mikser içeriğini kaydırsın, dock ses adımını tetiklemesin
             return;
         }
-        AppServices.Audio.StepVolume(e.Delta > 0 ? 0.02f : -0.02f);
+        float step = (float)Math.Round(e.Delta / 120.0 * 0.02, 3);
+        if (Math.Abs(step) < 0.01f) step = e.Delta > 0 ? 0.01f : -0.01f;
+        AppServices.Audio.StepVolume(step);
         e.Handled = true;
     }
 

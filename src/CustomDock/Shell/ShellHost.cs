@@ -19,6 +19,7 @@ public sealed class ShellHost : IDisposable
 {
     private readonly AppVisibilityHelper _appVisibility;
     private readonly DispatcherTimer _launcherPoller;
+    private readonly EventHandler _launcherTickHandler;
     private bool _launcherVisible;
 
     public ShellHost(bool replaceTaskbar, IEnumerable<string>? pinnedTrayIcons)
@@ -52,8 +53,9 @@ public sealed class ShellHost : IDisposable
         Taskbar = new TaskbarController(() => Manager.NotificationArea?.Handle ?? IntPtr.Zero, () => _launcherVisible);
         RunningApps = new RunningAppsService(Manager);
 
+        _launcherTickHandler = (_, _) => PollLauncher();
         _launcherPoller = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(200) };
-        _launcherPoller.Tick += (_, _) => PollLauncher();
+        _launcherPoller.Tick += _launcherTickHandler;
         _launcherPoller.Start();
     }
 
@@ -150,7 +152,8 @@ public sealed class ShellHost : IDisposable
     public void Dispose()
     {
         _launcherPoller.Stop();
-        Taskbar.Restore();
+        _launcherPoller.Tick -= _launcherTickHandler;
+        Taskbar.Dispose();
         RunningApps.Dispose();
         try
         {

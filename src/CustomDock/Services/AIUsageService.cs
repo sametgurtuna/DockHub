@@ -34,6 +34,7 @@ public sealed class AIUsageService
     private readonly DispatcherTimer _timer = new(DispatcherPriority.Background);
     private EventHandler<AIUsageData>? _updated;
     private bool _refreshing;
+    private int _consecutiveErrors;
 
     public AIUsageService()
     {
@@ -69,6 +70,13 @@ public sealed class AIUsageService
         _refreshing = true;
         try
         {
+            if (!IsClaudeExecutablePresent())
+            {
+                Error = "Claude CLI bulunamadı";
+                _timer.Interval = TimeSpan.FromHours(1);
+                return;
+            }
+
             var output = await RunClaudeUsageAsync().ConfigureAwait(true);
             if (!string.IsNullOrWhiteSpace(output))
             {
@@ -77,28 +85,64 @@ public sealed class AIUsageService
                 {
                     // Süreç çalıştı ama beklenen satırlar bulunamadı (ör. "claude" bulunamadı, giriş gerekiyor).
                     Error = output.Length > 160 ? output[..160].Trim() + "…" : output.Trim();
+                    ApplyBackoff();
                 }
                 else
                 {
                     Current = parsed;
                     Error = null;
+                    _consecutiveErrors = 0;
+                    _timer.Interval = PollInterval;
                 }
             }
             else
             {
                 Error = "Yanıt alınamadı";
+                ApplyBackoff();
             }
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Claude kullanım bilgisi alınamadı");
             Error = ex.Message;
+            ApplyBackoff();
         }
         finally
         {
             _refreshing = false;
+            _updated?.Invoke(this, Current);
         }
-        _updated?.Invoke(this, Current);
+    }
+
+    private void ApplyBackoff()
+    {
+        _consecutiveErrors++;
+        _timer.Interval = _consecutiveErrors switch
+        {
+            1 => TimeSpan.FromMinutes(10),
+            2 => TimeSpan.FromMinutes(20),
+            _ => TimeSpan.FromHours(1),
+        };
+    }
+
+    private static bool IsClaudeExecutablePresent()
+    {
+        var augmentedPath = BuildAugmentedPath();
+        var extensions = new[] { ".cmd", ".exe", ".bat", "" };
+        foreach (var dir in augmentedPath.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            try
+            {
+                if (!Directory.Exists(dir)) continue;
+                foreach (var ext in extensions)
+                {
+                    if (File.Exists(Path.Combine(dir, "claude" + ext)))
+                        return true;
+                }
+            }
+            catch { /* erişim izinleri vb. */ }
+        }
+        return false;
     }
 
     /// <summary>"claude -p /usage" komutunu tamamen gizli (pencere göstermeden) çalıştırır ve çıktısını döner.</summary>

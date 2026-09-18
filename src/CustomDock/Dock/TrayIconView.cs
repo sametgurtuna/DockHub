@@ -81,12 +81,17 @@ public sealed class TrayIconView : Border
         // Shell_NotifyIconGetRect için ikon konumu
         var location = PointToScreen(new Point(0, 0));
         double scale = source.CompositionTarget.TransformToDevice.M11;
+        int left = (int)Math.Round(location.X);
+        int top = (int)Math.Round(location.Y);
+        int width = (int)Math.Round(ActualWidth * scale);
+        int height = (int)Math.Round(ActualHeight * scale);
+
         icon.Placement = new ManagedShell.Interop.NativeMethods.Rect
         {
-            Top = (int)location.Y,
-            Left = (int)location.X,
-            Bottom = (int)(ActualHeight * scale),
-            Right = (int)(ActualWidth * scale),
+            Left = left,
+            Top = top,
+            Right = left + width,
+            Bottom = top + height,
         };
         icon.IconMouseEnter(MouseHelper.GetCursorPositionParam());
     }

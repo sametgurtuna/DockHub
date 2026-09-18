@@ -48,12 +48,7 @@ struct DockItemView: View {
 
     // ---- Widget: neredeyse gorunmez arka planli yuvarlak kutucuk
     private var widgetPill: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "square.dashed")
-                .font(.system(size: style.iconSize * 0.5, weight: .medium))
-            Text(item.widget ?? "widget")
-                .font(.system(size: max(9, style.height * 0.23), weight: .medium))
-        }
+        WidgetHost(item: item, style: style)
         .padding(.horizontal, style.gap * 1.6)
         .frame(height: style.itemHeight)
         .background(

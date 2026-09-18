@@ -20,6 +20,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // --restore-dock: uygulama calismasa da sistem Dock ayarini geri yukler.
+        // Windows surumundeki --restore-taskbar acil cikisinin karsiligi.
+        if CommandLine.arguments.contains("--restore-dock") {
+            let geri = SystemDock.restore()
+            print(geri ? "Sistem Dock ayari geri yuklendi."
+                       : "Geri yuklenecek kayit yok (session.json bos veya biz hic degistirmedik).")
+            NSApp.terminate(nil)
+            return
+        }
+
         let service = ConfigService()
         configService = service
         Log.info("Yapilandirma: \(service.url.path)")
@@ -31,6 +41,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 try? service.update { $0.items = defaults }
                 Log.info("Varsayilan \(defaults.count) uygulama eklendi")
             }
+        }
+
+        // taskbarMode Replace ise sistem Dock'u gizlenir ve bosalan kenar kullanilir.
+        // Bu bir DEVRALMA degildir; fare kenara gidince Apple'in Dock'u yine belirir.
+        // Onceki ayar session.json'a yazilir ve cikista geri yuklenir.
+        if service.config.taskbarMode == .replace {
+            SystemDock.hideAndRemember()
+            // Dock yeniden baslarken visibleFrame degisiyor; olcmeden once beklenir.
+            Thread.sleep(forTimeInterval: 0.8)
+        } else {
+            // Replace'ten ShowBoth'a gecildiyse birakilmis ayar geri yuklenir.
+            _ = SystemDock.restore()
         }
 
         let panel = DockPanel(config: service.config, items: service.config.items)
@@ -68,7 +90,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         if verifyMode {
             Task { @MainActor in
-                try? await Task.sleep(for: .milliseconds(1500))
+                // CPU yuzdesi iki olcum arasindaki farktan cikar; bir tik bekleniyor.
+                try? await Task.sleep(for: .seconds(4))
                 self.printObservation(service: service, panel: panel)
                 NSApp.terminate(nil)
             }
@@ -92,7 +115,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                   + "\(running ? "[calisiyor]" : "")")
         }
         let ok = panel.panel.isVisible && panel.panel.occlusionState.contains(.visible)
+        let s = SystemMonitor.shared.sample
+        print("  sistemOlcumu      : CPU %\(String(format: "%.1f", s.cpuPercent))"
+              + "  RAM %\(String(format: "%.1f", s.memoryPercent))"
+              + "  (\(s.memoryUsedBytes / 1_048_576) MB / \(s.memoryTotalBytes / 1_048_576) MB)")
         print("  SONUC             : \(ok ? "DOCK EKRANDA" : "DOCK GORUNMUYOR")")
+    }
+
+    /// Normal cikista sistem Dock ayari geri yuklenir (d-dock-geri-yukleme).
+    func applicationWillTerminate(_ notification: Notification) {
+        _ = SystemDock.restore()
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ s: NSApplication) -> Bool { false }

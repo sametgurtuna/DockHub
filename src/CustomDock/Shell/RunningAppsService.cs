@@ -99,10 +99,33 @@ public sealed class AppGroup : ObservableObject
             Title = first.Title;
         }
 
-        if (Icon is null || ExecutablePath is null)
+        if (Icon is null)
         {
-            var windowIcon = first.Icon;
+            var windowIcon = first.Icon ?? ShellIcons.GetWindowIcon(first.Handle);
             if (windowIcon is not null) Icon = windowIcon;
+        }
+
+        if (Icon is null)
+        {
+            Icon = ShellIcons.GetDefaultAppIcon();
+            _ = Task.Delay(350).ContinueWith(_ =>
+            {
+                Application.Current?.Dispatcher.BeginInvoke(() =>
+                {
+                    if (Windows.Count > 0)
+                    {
+                        var w = Windows.FirstOrDefault();
+                        if (w is not null)
+                        {
+                            var reloaded = (ExecutablePath is { } p ? ShellIcons.GetIcon(p, 96) : null)
+                                ?? w.Icon
+                                ?? ShellIcons.GetWindowIcon(w.Handle);
+                            if (reloaded is not null)
+                                Icon = reloaded;
+                        }
+                    }
+                });
+            });
         }
     }
 }
@@ -112,7 +135,7 @@ public sealed class RunningAppsService : IDisposable
 {
     private static readonly HashSet<string> WatchedProperties = new()
     {
-        "State", "Icon", "OverlayIcon", "ProgressState", "ProgressValue", "Title", "Category",
+        "State", "Icon", "OverlayIcon", "ProgressState", "ProgressValue", "Title", "Category", "WinFileName", "ProcId",
     };
 
     private readonly ICollectionView _view;

@@ -20,6 +20,13 @@ public static class AppKeys
             return "aumid:" + aumid.ToLowerInvariant();
 
         string? exe = SafeGet(() => window.WinFileName);
+        if (string.IsNullOrEmpty(exe))
+        {
+            uint pid = SafeGet(() => window.ProcId) ?? 0;
+            if (pid == 0) NativeMethods.GetWindowThreadProcessId(window.Handle, out pid);
+            if (pid != 0) exe = NativeMethods.GetProcessPath(pid);
+        }
+
         if (!string.IsNullOrEmpty(exe))
             return "exe:" + exe.ToLowerInvariant();
 

@@ -10,6 +10,8 @@ public static class Log
 
     public static void Info(string message) => Write("INFO", message);
 
+    public static void Warn(string message) => Write("WARN", message);
+
     public static void Error(Exception ex, string context) => Write("ERROR", $"{context}: {ex}");
 
     public static void Write(string level, string message)

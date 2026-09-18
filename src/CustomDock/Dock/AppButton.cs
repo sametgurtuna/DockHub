@@ -296,25 +296,70 @@ public sealed class AppButton : Grid
             menu.Items.Add(DockMenu.Separator());
             menu.Items.Add(DockMenu.Item(windows.Count > 1 ? $"Tüm pencereleri kapat ({windows.Count})" : "Pencereyi kapat", "\uE711",
                 () => { foreach (var w in windows.ToList()) w.Close(); }));
-            menu.Items.Add(DockMenu.Item(windows.Count > 1 ? "İşlemleri sonlandır" : "İşlemi sonlandır", "",
-                () => { foreach (var w in windows.ToList()) KillProcess(w); }));
+            menu.Items.Add(DockMenu.Item(windows.Count > 1 ? "İşlemleri sonlandır" : "İşlemi sonlandır", "\uE9CE",
+                () => TerminateWindows(windows.ToList())));
         }
     }
 
-    /// <summary>Pencerenin ait olduğu işlemi doğrudan (kapanmayı beklemeden) sonlandırır; Görev Yöneticisi'ndeki "Görevi sonlandır" ile aynı.</summary>
-    private static void KillProcess(ApplicationWindow window)
+    /// <summary>Pencerelerin ait olduğu işlemleri anında ve zorla sonlandırır (Görev Yöneticisi "Görevi Sonlandır" gibi).</summary>
+    private static void TerminateWindows(IReadOnlyList<ApplicationWindow> windows)
     {
-        try
+        foreach (var w in windows)
         {
-            NativeMethods.GetWindowThreadProcessId(window.Handle, out uint pid);
-            if (pid == 0) return;
-            using var process = Process.GetProcessById((int)pid);
-            process.Kill(true);
+            try
+            {
+                if (w.Handle != IntPtr.Zero)
+                    NativeMethods.EndTask(w.Handle, false, true);
+            }
+            catch { /* yoksay */ }
         }
-        catch (Exception ex)
+
+        var pids = new HashSet<uint>();
+        foreach (var w in windows)
         {
-            Log.Error(ex, "İşlem sonlandırılamadı");
+            uint pid = w.ProcId ?? 0;
+            if (pid == 0)
+                NativeMethods.GetWindowThreadProcessId(w.Handle, out pid);
+
+            if (pid > 4 && pid != (uint)Environment.ProcessId)
+            {
+                pids.Add(pid);
+            }
         }
+
+        _ = Task.Run(() =>
+        {
+            foreach (uint pid in pids)
+            {
+                try
+                {
+                    using var process = Process.GetProcessById((int)pid);
+                    if (process.ProcessName.Equals("explorer", StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    process.Kill(true);
+                }
+                catch (Exception ex)
+                {
+                    Log.Warn($"Süreç {pid} doğrudan sonlandırılamadı, taskkill deneniyor: {ex.Message}");
+                    try
+                    {
+                        using var p = Process.Start(new ProcessStartInfo
+                        {
+                            FileName = "taskkill",
+                            Arguments = $"/F /T /PID {pid}",
+                            CreateNoWindow = true,
+                            UseShellExecute = false,
+                        });
+                        p?.WaitForExit(1000);
+                    }
+                    catch (Exception taskKillEx)
+                    {
+                        Log.Error(taskKillEx, $"taskkill PID {pid} için başarısız oldu");
+                    }
+                }
+            }
+        });
     }
 
     public void Detach()

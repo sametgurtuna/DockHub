@@ -200,7 +200,7 @@ public sealed class MediaService
             var bitmap = new BitmapImage();
             bitmap.BeginInit();
             bitmap.CacheOption = BitmapCacheOption.OnLoad;
-            bitmap.DecodePixelWidth = 128;
+            bitmap.DecodePixelWidth = 512;
             bitmap.StreamSource = memory;
             bitmap.EndInit();
             bitmap.Freeze();
@@ -242,6 +242,14 @@ public sealed class MediaService
     public async Task PreviousAsync()
     {
         if (_session is not null) await Try(() => _session.TrySkipPreviousAsync().AsTask());
+    }
+
+    public async Task SeekAsync(TimeSpan position)
+    {
+        if (_session is not null)
+        {
+            await Try(() => _session.TryChangePlaybackPositionAsync(position.Ticks).AsTask());
+        }
     }
 
     private static async Task Try(Func<Task<bool>> action)

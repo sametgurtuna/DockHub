@@ -9,7 +9,7 @@
             <Setter Property="FontSize" Value="11" />
         </Style>
     </w:WidgetBase.Resources>
-    <Grid>
+    <Grid Cursor="Hand" Background="Transparent" MouseLeftButtonUp="OnWidgetMouseLeftButtonUp">
         <!-- Tam -->
         <Grid x:Name="Layout_full" Width="252">
             <Grid.ColumnDefinitions>
@@ -72,5 +72,105 @@
         <!-- Mini -->
         <Button x:Name="Layout_mini" Style="{StaticResource MediaButton}" Width="30" Height="30" FontSize="16"
                 Content="&#xE768;" Click="OnPlayPauseClick" />
+
+        <!-- Medya Oynatıcı Popup'ı (Görsel 3 tasarımı) -->
+        <Popup x:Name="MediaPopup" StaysOpen="False" AllowsTransparency="True" PopupAnimation="None" Placement="Top">
+            <Border CornerRadius="16" Padding="18,14" BorderThickness="1" Margin="8" Width="280"
+                    Background="{DynamicResource PopupBrush}" BorderBrush="{DynamicResource PopupBorderBrush}">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="20" ShadowDepth="4" Opacity="0.4" Direction="270" />
+                </Border.Effect>
+                <StackPanel>
+                    <!-- Başlık ve Butonlar -->
+                    <Grid Margin="0,0,0,6">
+                        <TextBlock Text="Now Playing" FontSize="13" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" FontFamily="{StaticResource UiFont}"
+                                   VerticalAlignment="Center" />
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{StaticResource CardIconButton}" Width="24" Height="24" Margin="0,0,4,0"
+                                    Cursor="Hand" ToolTip="Ses Ayarları" Click="OnPopupMixerClick">
+                                <TextBlock Text="&#xE9E9;" FontFamily="{StaticResource IconFont}" FontSize="12"
+                                           Foreground="{DynamicResource TextSecondaryBrush}" />
+                            </Button>
+                            <Button Style="{StaticResource CardIconButton}" Width="24" Height="24"
+                                    Cursor="Hand" Click="OnPopupCloseClick">
+                                <TextBlock Text="&#xE8BB;" FontFamily="{StaticResource IconFont}" FontSize="10"
+                                           Foreground="{DynamicResource TextSecondaryBrush}" />
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Albüm Kapağı Görseli -->
+                    <Border x:Name="PopupArtBorder" Width="148" Height="148" CornerRadius="12"
+                            Background="{DynamicResource SubtleFillBrush}" HorizontalAlignment="Center"
+                            Margin="0,8,0,10" ClipToBounds="True">
+                        <Grid>
+                            <TextBlock x:Name="PopupArtGlyph" Text="&#xE8D6;" Style="{StaticResource IconText}"
+                                       FontSize="42" Foreground="{DynamicResource AccentPinkBrush}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <Image x:Name="PopupArtImage" Stretch="UniformToFill" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Şarkı Adı ve Sanatçı -->
+                    <TextBlock x:Name="PopupTitle" Text="Şu an çalan yok" FontSize="15" FontWeight="Bold"
+                               HorizontalAlignment="Center" TextAlignment="Center"
+                               Foreground="{DynamicResource TextPrimaryBrush}" FontFamily="{StaticResource UiFont}"
+                               TextTrimming="CharacterEllipsis" Margin="4,0,4,2" />
+                    <TextBlock x:Name="PopupArtist" Text="Bir oynatıcı başlatın" FontSize="12.5"
+                               HorizontalAlignment="Center" TextAlignment="Center"
+                               Foreground="{DynamicResource TextSecondaryBrush}" FontFamily="{StaticResource UiFont}"
+                               TextTrimming="CharacterEllipsis" Margin="4,0,4,10" />
+
+                    <!-- İlerleme Çubuğu ve Süreler -->
+                    <Grid Margin="0,2,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="PopupPosition" Style="{StaticResource MicroText}" Text="0:00"
+                                   VerticalAlignment="Center" Margin="0,0,6,0" Typography.NumeralAlignment="Tabular" />
+                        <Slider x:Name="PopupSeekSlider" Grid.Column="1" Minimum="0" Maximum="100"
+                                Height="18" VerticalAlignment="Center" IsMoveToPointEnabled="True"
+                                PreviewMouseDown="OnSeekSliderMouseDown" PreviewMouseUp="OnSeekSliderMouseUp" />
+                        <TextBlock x:Name="PopupDuration" Grid.Column="2" Style="{StaticResource MicroText}" Text="0:00"
+                                   VerticalAlignment="Center" Margin="6,0,0,0" Typography.NumeralAlignment="Tabular" />
+                    </Grid>
+
+                    <!-- Oynatma Kontrolleri -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,6,0,8">
+                        <Button x:Name="PopupPrev" Style="{StaticResource MediaButton}" Width="34" Height="34"
+                                Content="&#xE892;" FontSize="14" Margin="0,0,14,0" Click="OnPreviousClick" />
+                        <Button x:Name="PopupPlay" Style="{StaticResource MediaButton}" Width="42" Height="42"
+                                Content="&#xE768;" FontSize="17" Click="OnPlayPauseClick" />
+                        <Button x:Name="PopupNext" Style="{StaticResource MediaButton}" Width="34" Height="34"
+                                Content="&#xE893;" FontSize="14" Margin="14,0,0,0" Click="OnNextClick" />
+                    </StackPanel>
+
+                    <!-- Ses Seviyesi Çubuğu -->
+                    <Grid Margin="6,2,6,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="&#xE74F;" FontFamily="{StaticResource IconFont}" FontSize="12"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <Slider x:Name="PopupVolumeSlider" Grid.Column="1" Minimum="0" Maximum="100"
+                                Height="18" VerticalAlignment="Center" IsMoveToPointEnabled="True"
+                                ValueChanged="OnPopupVolumeChanged" />
+                        <TextBlock Text="&#xE767;" FontFamily="{StaticResource IconFont}" FontSize="12"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="8,0,0,0" />
+                    </Grid>
+
+                    <!-- Alt Bilgi / Kaynak -->
+                    <TextBlock x:Name="PopupFooter" Text="" FontSize="11"
+                               HorizontalAlignment="Center" TextAlignment="Center"
+                               Foreground="{DynamicResource TextSecondaryBrush}" FontFamily="{StaticResource UiFont}"
+                               TextTrimming="CharacterEllipsis" Margin="4,8,4,0" />
+                </StackPanel>
+            </Border>
+        </Popup>
     </Grid>
 </w:WidgetBase>

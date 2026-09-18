@@ -30,4 +30,10 @@ public static class AppServices
     public static HydrationService Hydration { get; } = new();
 
     public static AIUsageService AIUsage { get; } = new();
+
+    public static AudioService Audio { get; } = new();
+
+    public static RecycleBinService RecycleBin { get; } = new();
+
+    public static DeviceBatteryService DeviceBattery { get; } = new();
 }

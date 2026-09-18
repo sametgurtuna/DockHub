@@ -78,6 +78,8 @@ public partial class DockWindow : Window, IWidgetHost
             new RoutedEventHandler((s, _) => s_current?.OnContextMenuStateChanged((ContextMenu)s, open: false)));
     }
 
+
+
     public DockWindow(AppConfig config, ShellHost shell)
     {
         s_current = this;
@@ -101,6 +103,7 @@ public partial class DockWindow : Window, IWidgetHost
         Deactivated += OnDeactivated;
         PreviewMouseWheel += OnPreviewMouseWheel;
 
+        AddHandler(PreviewMouseLeftButtonDownEvent, new MouseButtonEventHandler(OnPreviewMouseLeftButtonDownAnywhere), handledEventsToo: true);
         AddHandler(ContextMenuOpeningEvent, new ContextMenuEventHandler(OnAnyContextMenuOpening), handledEventsToo: true);
         Root.ContextMenu = new ContextMenu();
         Root.ContextMenuOpening += OnDockMenuOpening;
@@ -197,15 +200,27 @@ public partial class DockWindow : Window, IWidgetHost
         return null;
     }
 
+    private void OnPreviewMouseLeftButtonDownAnywhere(object sender, MouseButtonEventArgs e)
+    {
+        if (_openMenus.Count > 0)
+        {
+            var menus = _openMenus.ToList();
+            foreach (var menu in menus)
+                menu.IsOpen = false;
+        }
+    }
+
     private void OnContextMenuStateChanged(ContextMenu menu, bool open)
     {
         if (open)
         {
-            if (menu.PlacementTarget is DependencyObject target && GetWindow(target) == this && _openMenus.Add(menu))
-                BeginInteraction();
+            _openMenus.Add(menu);
+            GlobalPopupDismissHook.RegisterMenu(menu);
+            BeginInteraction();
         }
         else if (_openMenus.Remove(menu))
         {
+            GlobalPopupDismissHook.UnregisterMenu(menu);
             EndInteraction();
         }
     }
@@ -659,9 +674,14 @@ public partial class DockWindow : Window, IWidgetHost
 
     private void OnPreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
+        // Menü veya açılır pencere (mikser, takvim vb.) açıkken dock'u yatay kaydırma
+        if (GlobalPopupDismissHook.HasActivePopupsOrMenus) return;
+
         for (var d = e.OriginalSource as DependencyObject; d is not null; d = VisualTreeHelper.GetParent(d))
         {
             if (d is TextBox { IsKeyboardFocusWithin: true } box && box.ExtentHeight > box.ViewportHeight) return;
+            // Ses widget'ı fare tekerleğini kendisi kullanır (ses seviyesi ayarı)
+            if (d is Widgets.AudioWidget) return;
             if (ReferenceEquals(d, Scroller)) break;
         }
 
@@ -1167,6 +1187,7 @@ public partial class DockWindow : Window, IWidgetHost
             _ => (PlacementMode.Top, -60.0, -10.0),
         };
         BeginInteraction();
+        GlobalPopupDismissHook.RegisterPopup(TrayOverflowPopup);
         TrayOverflowPopup.IsOpen = true;
     }
 

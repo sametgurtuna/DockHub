@@ -229,6 +229,32 @@ public static class WidgetRegistry
             Variants = new[] { new WidgetVariant("numbers", "Sayılar"), new WidgetVariant("rings", "Halkalar"), new WidgetVariant("bars", "Çubuklar") },
             Factory = () => new AIUsageWidget(),
         },
+
+        // ------------------------------------------------ Ses ve Donanım
+        new()
+        {
+            Id = "audio", Name = "Ses aygıtı", Category = WidgetCategories.Media,
+            Description = "Kulaklık ve hoparlör arasında hızlı geçiş, fare tekerleğiyle ses ayarı ve sessize alma.",
+            IconPath = "M12,3 A9,9 0 0 0 3,12 V18 A3,3 0 0 0 6,21 H7 A2,2 0 0 0 9,19 V15 A2,2 0 0 0 7,13 H5 V12 A7,7 0 0 1 19,12 V13 H17 A2,2 0 0 0 15,15 V19 A2,2 0 0 0 17,21 H18 A3,3 0 0 0 21,18 V12 A9,9 0 0 0 12,3 Z", AccentKey = "AccentCyanBrush",
+            Variants = new[] { new WidgetVariant("compact", "Kompakt"), new WidgetVariant("slider", "Çubuklu") },
+            Factory = () => new AudioWidget(),
+        },
+        new()
+        {
+            Id = "recycle-bin", Name = "Çöp kutusu", Category = WidgetCategories.System,
+            Description = "macOS tarzı çöp kutusu. Dosya sürükleyip bırakarak silin, tıklayarak açın veya sağ tıkla boşaltın.",
+            IconPath = "M8,5 H16 M3,6 H21 M5,6 V19 A2,2 0 0 0 7,21 H17 A2,2 0 0 0 19,19 V6 M10,10 V17 M14,10 V17", AccentKey = "AccentBlueBrush",
+            Variants = new[] { new WidgetVariant("icon", "Yalnızca ikon"), new WidgetVariant("details", "Detaylı") },
+            Factory = () => new RecycleBinWidget(),
+        },
+        new()
+        {
+            Id = "battery-devices", Name = "Aygıt pilleri", Category = WidgetCategories.System,
+            Description = "HyperX Cloud II Wireless USB dongle ve bağlı Bluetooth kulaklık, fare ve klavyelerin pil seviyeleri.",
+            IconPath = "M4,7 H18 A2,2 0 0 1 20,9 V15 A2,2 0 0 1 18,17 H4 A2,2 0 0 1 2,15 V9 A2,2 0 0 1 4,7 Z M20,11 H22 V13 H20 Z", AccentKey = "AccentGreenBrush",
+            Variants = new[] { new WidgetVariant("single", "Tek aygıt"), new WidgetVariant("multi", "Çoklu aygıt") },
+            Factory = () => new BatteryDevicesWidget(),
+        },
     };
 
     public static WidgetDescriptor? Find(string? id)

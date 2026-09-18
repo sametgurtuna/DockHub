@@ -205,10 +205,31 @@ public abstract class WidgetBase : UserControl
             layout.Visibility = layout.Name == "Layout_" + Variant ? Visibility.Visible : Visibility.Collapsed;
     }
 
+    private DateTime _lastPopupClosedAt = DateTime.MinValue;
+
+    /// <summary>Popup'ı açar veya açıksa kapatır (toggle).</summary>
+    protected void TogglePopup(Popup popup, UIElement? target = null)
+    {
+        if (popup.IsOpen)
+        {
+            popup.IsOpen = false;
+            return;
+        }
+        OpenPopup(popup, target);
+    }
+
     /// <summary>Popup'ı dock kenarına göre doğru yönde açar ve açık kaldığı sürece otomatik gizlemeyi engeller.</summary>
     protected void OpenPopup(Popup popup, UIElement? target = null)
     {
-        if (popup.IsOpen) return;
+        if (popup.IsOpen)
+        {
+            popup.IsOpen = false;
+            return;
+        }
+
+        // Tıklama ile dışarı tıklama kancası yeni kapatmışsa tekrar açılmasını engelle (toggle hissi)
+        if (DateTime.UtcNow - _lastPopupClosedAt < TimeSpan.FromMilliseconds(250))
+            return;
 
         if (IsCompact && CompactAnchor is not null)
         {
@@ -227,9 +248,11 @@ public abstract class WidgetBase : UserControl
         void OnClosed(object? sender, EventArgs e)
         {
             popup.Closed -= OnClosed;
+            _lastPopupClosedAt = DateTime.UtcNow;
             Host.EndInteraction();
         }
         popup.Closed += OnClosed;
+        Dock.GlobalPopupDismissHook.RegisterPopup(popup);
         popup.IsOpen = true;
     }
 

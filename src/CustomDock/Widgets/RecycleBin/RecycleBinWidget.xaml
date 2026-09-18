@@ -1,0 +1,28 @@
+<w:WidgetBase x:Class="CustomDock.Widgets.RecycleBinWidget"
+              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+              xmlns:w="clr-namespace:CustomDock.Widgets"
+              Cursor="Hand"
+              AllowDrop="True"
+              Background="Transparent">
+    <Grid Background="Transparent">
+        <!-- İkon Görünümü (macOS Tarzı Sade) -->
+        <Border x:Name="Layout_icon" Width="36" Height="36" CornerRadius="18"
+                Background="{DynamicResource SurfaceLightBrush}" VerticalAlignment="Center" HorizontalAlignment="Center">
+            <Path x:Name="IconOnlyPath" Width="17" Height="17" Stretch="Uniform"
+                  Fill="{DynamicResource AccentBlueBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+        </Border>
+
+        <!-- Detaylı Görünüm (İkon + Başlık + Öğe Sayısı ve Boyut) -->
+        <StackPanel x:Name="Layout_details" Orientation="Horizontal" VerticalAlignment="Center">
+            <Border Width="28" Height="28" CornerRadius="14" Background="{DynamicResource SurfaceLightBrush}" Margin="0,0,8,0">
+                <Path x:Name="DetailsIconPath" Width="14" Height="14" Stretch="Uniform"
+                      Fill="{DynamicResource AccentBlueBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <StackPanel VerticalAlignment="Center" MaxWidth="110">
+                <TextBlock Text="Çöp Kutusu" Style="{StaticResource TitleText}" FontSize="12" />
+                <TextBlock x:Name="DetailsSubText" Style="{StaticResource CaptionText}" Text="Boş" />
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</w:WidgetBase>

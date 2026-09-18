@@ -10,8 +10,13 @@
             <StackPanel.RenderTransform>
                 <ScaleTransform x:Name="TimerScale" />
             </StackPanel.RenderTransform>
-            <TextBlock x:Name="TimerText" Style="{StaticResource ValueText}" FontSize="19" LineHeight="22" HorizontalAlignment="Center"
-                       Foreground="{DynamicResource TextOnColorBrush}" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Path Data="M12,2 C12,2 5,10 5,15 A7,7 0 0 0 19,15 C19,10 12,2 12,2 Z"
+                      Stretch="Uniform" Width="11" Height="14"
+                      Fill="{DynamicResource TextOnColorBrush}" Margin="0,1,6,0" VerticalAlignment="Center" />
+                <TextBlock x:Name="TimerText" Style="{StaticResource ValueText}" FontSize="19" LineHeight="22"
+                           VerticalAlignment="Center" Foreground="{DynamicResource TextOnColorBrush}" />
+            </StackPanel>
             <TextBlock x:Name="TimerCaption" Style="{StaticResource CaptionText}" HorizontalAlignment="Center"
                        Foreground="#D9FFFFFF" />
         </StackPanel>

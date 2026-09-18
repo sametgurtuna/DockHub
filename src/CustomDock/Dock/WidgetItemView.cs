@@ -41,6 +41,26 @@ public sealed class WidgetItemView : WidgetCard
             .AddValueChanged(widget, OnWidgetVisibilityChanged);
         Visibility = widget.Visibility;
         ApplyAppearance();
+        if (widget.AllowDrop)
+        {
+            AllowDrop = true;
+            DragOver += (_, e) =>
+            {
+                if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                {
+                    e.Effects = DragDropEffects.Move;
+                    e.Handled = true;
+                }
+            };
+            Drop += (_, e) =>
+            {
+                if (e.Data.GetData(DataFormats.FileDrop) is string[] files && files.Length > 0)
+                {
+                    AppServices.RecycleBin.SendToRecycleBin(files);
+                    e.Handled = true;
+                }
+            };
+        }
         DockDragHelper.Attach(this, () => new DataObject(DockDragHelper.ItemFormat, item.Id));
         Loaded += OnFirstLoaded;
     }
@@ -167,6 +187,7 @@ public sealed class WidgetItemView : WidgetCard
         Motion.PopIn((FrameworkElement)_flyout.Child, PopupPlacement.EnterOffset(_host.Edge));
         _flyoutInteraction = true;
         _host.BeginInteraction();
+        GlobalPopupDismissHook.RegisterPopup(_flyout);
         _flyout.IsOpen = true;
     }
 

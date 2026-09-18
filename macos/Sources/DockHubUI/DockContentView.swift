@@ -1,43 +1,46 @@
 import SwiftUI
 import DockHubCore
 
-/// Iskelet icerik: gercek oge/widget yerlesimi sonraki gorevlerin isi.
-/// Simdilik yapilandirmadan okunan degerleri gosterir ki konum/boyut/tema
-/// gercekten uygulandigi gorulebilsin.
+/// Dock'un icerigi: ogeler kenara gore yatay veya dikey dizilir.
 public struct DockContentView: View {
-    let config: AppConfig
-    let screenName: String
+    @ObservedObject var model: DockModel
+    let style: DockStyle
 
-    public init(config: AppConfig, screenName: String) {
-        self.config = config
-        self.screenName = screenName
+    public init(model: DockModel, style: DockStyle) {
+        self.model = model
+        self.style = style
     }
 
     public var body: some View {
-        let vertical = config.edge.isVertical
         Group {
-            if vertical {
-                VStack(spacing: 8) { badges }
+            if model.config.edge.isVertical {
+                VStack(spacing: style.gap) { content }
             } else {
-                HStack(spacing: 12) { badges }
+                HStack(spacing: style.gap) { content }
             }
         }
-        .padding(vertical ? .vertical : .horizontal, 12)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .foregroundStyle(.primary)
+        .padding(style.padding)
+        .frame(maxWidth: .infinity, maxHeight: .infinity,
+               alignment: alignment)
     }
 
-    @ViewBuilder private var badges: some View {
-        Image(systemName: "square.grid.2x2.fill")
-            .font(.system(size: 18, weight: .semibold))
-            .foregroundStyle(Color(nsColor: .controlAccentColor))
-        if !config.edge.isVertical {
-            Text("DockHub").font(.headline)
-            Divider().frame(height: 18)
-            Text("\(config.edge.rawValue) · \(config.size.rawValue) · \(config.layout.rawValue)")
-                .font(.caption).monospaced()
-            Text(screenName).font(.caption2).foregroundStyle(.secondary)
-            Spacer(minLength: 0)
+    private var alignment: Alignment {
+        switch (model.config.edge.isVertical, model.config.alignment) {
+        case (false, .center): .center
+        case (false, .start):  .leading
+        case (true, .center):  .center
+        case (true, .start):   .top
+        }
+    }
+
+    @ViewBuilder private var content: some View {
+        ForEach(model.items) { item in
+            DockItemView(item: item,
+                         style: style,
+                         isRunning: item.path.map { model.runningPaths.contains($0) } ?? false,
+                         hoverEffect: model.config.hoverEffect) {
+                model.activate(item)
+            }
         }
     }
 }

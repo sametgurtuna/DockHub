@@ -7,6 +7,7 @@ import DockHubPlatform
 struct DockItemView: View {
     let item: DockItem
     let style: DockStyle
+    @ObservedObject var model: DockModel
     let isRunning: Bool
     let hoverEffect: Bool
     let onTap: () -> Void
@@ -48,7 +49,7 @@ struct DockItemView: View {
 
     // ---- Widget: neredeyse gorunmez arka planli yuvarlak kutucuk
     private var widgetPill: some View {
-        WidgetHost(item: item, style: style)
+        WidgetHost(item: item, style: style, model: model)
         .padding(.horizontal, style.gap * 1.6)
         .frame(height: style.itemHeight)
         .background(

@@ -11,11 +11,13 @@ public final class DockModel: ObservableObject {
     @Published public private(set) var runningPaths: Set<String> = []
 
     public let config: AppConfig
+    private let service: ConfigService?
     private let observers = ObserverBag()
 
-    public init(config: AppConfig, items: [DockItem]) {
+    public init(config: AppConfig, items: [DockItem], service: ConfigService? = nil) {
         self.config = config
         self.items = items
+        self.service = service
         refreshRunning()
 
         let nc = NSWorkspace.shared.notificationCenter
@@ -33,6 +35,25 @@ public final class DockModel: ObservableObject {
             if let p = item.path, AppCatalog.isRunning(appAt: p) { paths.insert(p) }
         }
         runningPaths = paths
+    }
+
+    /// Bir widget kopyasinin ayarini kalici olarak gunceller.
+    /// Ayar config.json icindeki o ogenin settings alanina yazilir; her kopya
+    /// kendi ayarini tasidigi icin digerleri etkilenmez.
+    public func setSetting(_ itemId: String, _ key: String, _ value: JSONValue) {
+        guard let service else { return }
+        do {
+            try service.update { cfg in
+                guard let i = cfg.items.firstIndex(where: { $0.id == itemId }) else { return }
+                var dict: [String: JSONValue]
+                if case .object(let d)? = cfg.items[i].settings { dict = d } else { dict = [:] }
+                dict[key] = value
+                cfg.items[i].settings = .object(dict)
+            }
+            items = service.config.items          // gorunumler tazelensin
+        } catch {
+            Log.error("Widget ayari kaydedilemedi: \(itemId).\(key)", error)
+        }
     }
 
     public func activate(_ item: DockItem) {

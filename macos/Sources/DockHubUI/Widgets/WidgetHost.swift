@@ -6,6 +6,7 @@ import DockHubCore
 struct WidgetHost: View {
     let item: DockItem
     let style: DockStyle
+    @ObservedObject var model: DockModel
 
     var body: some View {
         switch item.widget {
@@ -13,6 +14,15 @@ struct WidgetHost: View {
         case "system":  SystemWidget(item: item, style: style)
         case "battery": BatteryWidget(item: item, style: style)
         case "weather": WeatherWidget(item: item, style: style)
+        case "world-clock":   WorldClockWidget(item: item, style: style)
+        case "stopwatch":     StopwatchWidget(item: item, style: style)
+        case "focus":         FocusWidget(item: item, style: style)
+        case "countdown":     CountdownWidget(item: item, style: style)
+        case "alarm":         AlarmWidget(item: item, style: style)
+        case "time-progress": TimeProgressWidget(item: item, style: style)
+        case "hydration":     HydrationWidget(item: item, style: style, model: model)
+        case "reminders":     RemindersWidget(item: item, style: style, model: model)
+        case "sticky-note":   StickyNoteWidget(item: item, style: style, model: model)
         default:       unknown
         }
     }

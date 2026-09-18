@@ -14,13 +14,13 @@ public final class DockPanel {
     public private(set) var geometry: DockGeometry
     public let style: DockStyle
 
-    public init(config: AppConfig, items: [DockItem]) {
+    public init(config: AppConfig, items: [DockItem], service: ConfigService? = nil) {
         let screen = ScreenPlacement.screen(named: config.monitorDevice) ?? NSScreen.screens[0]
         self.geometry = ScreenPlacement.geometry(for: config, on: screen)
         // Dikey dock'ta "kalinlik" genisliktir; stil her zaman kalinliktan turer.
         let thickness = config.edge.isVertical ? geometry.frame.width : geometry.frame.height
         self.style = DockStyle(height: thickness)
-        self.model = DockModel(config: config, items: items)
+        self.model = DockModel(config: config, items: items, service: service)
 
         panel = NSPanel(contentRect: geometry.frame,
                         styleMask: [.nonactivatingPanel, .borderless],

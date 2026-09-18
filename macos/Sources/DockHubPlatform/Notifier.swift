@@ -68,6 +68,26 @@ public enum Notifier {
             .add(UNNotificationRequest(identifier: id, content: content, trigger: trigger))
     }
 
+    /// Belirli bir saatte (gerekirse her gun tekrar) bildirim planlar.
+    /// Alarm icin: UNCalendarNotificationTrigger, tekrar isini sistem yapar.
+    public static func planlaSaat(saat: Int, dakika: Int, tekrar: Bool,
+                                  baslik: String, metin: String, id: String) {
+        guard kullanilabilir else { return }
+        var comps = DateComponents()
+        comps.hour = saat
+        comps.minute = dakika
+
+        let content = UNMutableNotificationContent()
+        content.title = baslik
+        content.body = metin
+        content.sound = .defaultCritical
+        content.interruptionLevel = .timeSensitive      // kapatilana kadar kalsin
+
+        let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: tekrar)
+        UNUserNotificationCenter.current()
+            .add(UNNotificationRequest(identifier: id, content: content, trigger: trigger))
+    }
+
     public static func iptal(id: String) {
         guard kullanilabilir else { return }
         UNUserNotificationCenter.current()

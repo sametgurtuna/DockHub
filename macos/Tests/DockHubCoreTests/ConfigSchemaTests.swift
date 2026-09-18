@@ -86,3 +86,43 @@ final class ConfigSchemaTests: XCTestCase {
         try? FileManager.default.removeItem(at: tmp)
     }
 }
+
+/// Hatirlatici siralama ve "sonraki" secimi (ReminderLogic).
+final class ReminderLogicTests: XCTestCase {
+    private let liste = [
+        Reminder(text: "İlaç", hour: 21, minute: 0),
+        Reminder(text: "Toplantı", hour: 14, minute: 0),
+        Reminder(text: "Spor", hour: 18, minute: 30),
+    ]
+
+    func testSaateGoreSiralanir() {
+        XCTAssertEqual(ReminderLogic.sorted(liste).map(\.text),
+                       ["Toplantı", "Spor", "İlaç"])
+    }
+
+    func testSonrakiDogruSecilir() {
+        // 17:47 -> bir sonraki 18:30 Spor
+        XCTAssertEqual(ReminderLogic.next(from: liste, nowMinutes: 17 * 60 + 47)?.text, "Spor")
+        // 13:00 -> ilk sira Toplanti
+        XCTAssertEqual(ReminderLogic.next(from: liste, nowMinutes: 13 * 60)?.text, "Toplantı")
+        // 20:00 -> Ilac
+        XCTAssertEqual(ReminderLogic.next(from: liste, nowMinutes: 20 * 60)?.text, "İlaç")
+    }
+
+    func testGunSonundaBastakiDoner() {
+        // 23:30 -> bugun kalan yok, yarinki ilk (Toplanti) gosterilir
+        XCTAssertEqual(ReminderLogic.next(from: liste, nowMinutes: 23 * 60 + 30)?.text, "Toplantı")
+    }
+
+    func testBosListeNilDoner() {
+        XCTAssertNil(ReminderLogic.next(from: [], nowMinutes: 600))
+    }
+
+    func testGecersizSaatReddedilir() {
+        XCTAssertNil(ReminderLogic.parseTime("25:00"))
+        XCTAssertNil(ReminderLogic.parseTime("12:70"))
+        XCTAssertNil(ReminderLogic.parseTime("abc"))
+        XCTAssertNil(ReminderLogic.parseTime("12"))
+        XCTAssertEqual(ReminderLogic.parseTime("18:30")?.hour, 18)
+    }
+}

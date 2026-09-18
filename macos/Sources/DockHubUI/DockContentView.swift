@@ -37,6 +37,7 @@ public struct DockContentView: View {
         ForEach(model.items) { item in
             DockItemView(item: item,
                          style: style,
+                         model: model,
                          isRunning: item.path.map { model.runningPaths.contains($0) } ?? false,
                          hoverEffect: model.config.hoverEffect) {
                 model.activate(item)

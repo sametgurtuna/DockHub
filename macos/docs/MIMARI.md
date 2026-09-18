@@ -174,6 +174,23 @@ cp Resources/Info.plist "$APP/Contents/Info.plist"
 | `LSMinimumSystemVersion` | `27.0` | `d-macos-hedefi-v2` |
 | `NSLocationWhenInUseUsageDescription` | metin | `ag-geolocation`, olmadan konum isteği reddedilir |
 
+## 4b. Upstream v0.3.0 modül sınırlarını bozuyor mu?
+
+Hayır. `76e0cb9` ile gelen üç widget mevcut dört modüle sorunsuz yerleşiyor:
+
+| Yeni yetenek | Windows kaynağı | macOS modülü | Neden |
+|---|---|---|---|
+| Ses aygıtı | `Native/AudioInterop.cs`, `Services/AudioService.cs` | `DockHubPlatform` | CoreAudio sarmalayıcısı, `AudioController` protokolü |
+| Çöp kutusu | `Services/RecycleBinService.cs` | `DockHubPlatform` | `~/.Trash` erişimi; boşaltma için `TrashEmptier` protokolü — Otomasyon izni yoksa "yok sayan" uygulama devreye girer |
+| Aygıt pilleri | `Native/HidInterop.cs`, `Services/DeviceBatteryService.cs` | `DockHubPlatform` | IORegistry ve IOHIDManager iki ayrı uygulama, tek protokol arkasında |
+
+Üçü de bölüm 2'deki **protokol katmanı** kuralını doğruluyor: `ag-trash` ve
+`ag-hid-battery` `partial` olduğu için izin reddedildiğinde devreye girecek
+daraltılmış uygulamaya ihtiyaç var; `DockHubUI` bu ayrımdan habersiz kalıyor.
+
+Widget veri modelleri (`AudioDevice`, `TrashState`, `DeviceBattery`)
+`DockHubCore`'a, görünümleri `DockHubUI`'ye gider. Yeni modül gerekmiyor.
+
 ## 5. T2'den devreden dört konu
 
 | Konu | Karar | Gerekçe |

@@ -2,7 +2,7 @@
 
 Windows sürümündeki her platform çağrısının macOS karşılığı. Kaynak: `src/CustomDock/`
 altındaki gerçek kod ve [PARITE-ENVANTERI.md](PARITE-ENVANTERI.md).
-Orvant kaydındaki karşılığı: `T2-API-HARITA` görevi, 20 `api_gap` nesnesi.
+Orvant kaydındaki karşılığı: `T2-API-HARITA` görevi, 23 `api_gap` nesnesi.
 
 **Hedef sürüm:** macOS 27.0, karar `d-macos-hedefi-v2` (önceki `d-macos-hedefi` yanlış sürüm bilgisiyle verilmişti, superseded). Geriye dönük uyum yolu
 yazılmaz, bu yüzden `SMAppService`, `CADisplayLink` ve güncel `NSVisualEffectView`
@@ -12,13 +12,16 @@ materyalleri koşulsuz kullanılabilir.
 
 | Durum | Anlamı | Sayı |
 |---|---|---|
-| `mapped` | Genel API ile birebir karşılık var, ek izin gerekmez. | 11 |
-| `partial` | Karşılık var ama izin, farklı etkileşim veya kapsam daralması gerekiyor. | 7 |
+| `mapped` | Genel API ile birebir karşılık var, ek izin gerekmez. | 12 |
+| `partial` | Karşılık var ama izin, farklı etkileşim veya kapsam daralması gerekiyor. | 9 |
 | `none` | Genel API ile karşılık yok. | 2 |
+
+> Upstream `76e0cb9` (v0.3.0) üç yeni çağrı grubu getirdi: Core Audio, HID pil
+> raporu ve Recycle Bin. Üçü de aşağıda ilgili bölümlerde haritalandı.
 
 ---
 
-## `mapped` — birebir karşılığı olanlar (11)
+## `mapped` — birebir karşılığı olanlar (12)
 
 ### `ag-window-layer` — Pencere katmanı ve her zaman üstte
 - **Windows:** WPF `Window.Topmost` + `WS_EX_TOOLWINDOW` + `SetWindowPos` (`Native/NativeMethods.cs`)
@@ -101,9 +104,21 @@ materyalleri koşulsuz kullanılabilir.
   `app.manifest` PerMonitorV2 uğraşının macOS'ta karşılığı **gerekmiyor** — bu bir
   sadeleşme, kayıp değil.
 
+### `ag-audio-devices` — Ses aygıtı sayımı ve ses denetimi
+- **Windows:** Core Audio COM — `IMMDeviceEnumerator`, `IMMDevice`,
+  `IAudioEndpointVolume` (`Native/AudioInterop.cs`)
+- **macOS:** `CoreAudio` — `AudioObjectGetPropertyData` ile
+  `kAudioHardwarePropertyDevices` (aygıt listesi),
+  `kAudioHardwarePropertyDefaultOutputDevice` (**yazılabilir** — kulaklık/hoparlör
+  geçişi), `kAudioDevicePropertyVolumeScalar`, `kAudioDevicePropertyMute`,
+  `AudioObjectAddPropertyListener` (değişim bildirimi)
+- **Not:** Genel C API, izin gerektirmez. Varsayılan çıkış aygıtını değiştirmek
+  Windows'taki `IPolicyConfig` gibi belgelenmemiş bir arayüz gerektirmiyor —
+  macOS'ta bu desteklenen bir işlem.
+
 ---
 
-## `partial` — kısmi karşılığı olanlar (7)
+## `partial` — kısmi karşılığı olanlar (9)
 
 ### `ag-taskbar-takeover` — Kabuk görev çubuğunu devralma
 - **Windows:** `Shell_TrayWnd` gizleme + taskman penceresi devri (ManagedShell, `Shell/TaskbarController.cs`)
@@ -166,6 +181,32 @@ materyalleri koşulsuz kullanılabilir.
 - **Neden kısmi:** Kendi makinenizde imzasız çalıştırmak mümkün. Başkasına dağıtım
   için **ücretli Apple Developer hesabı** şart, yoksa Gatekeeper açılışı engeller.
   Windows'ta böyle bir zorunluluk yoktu — bu yeni bir maliyet kalemi.
+
+### `ag-trash` — Çöp kutusu sorgulama ve boşaltma
+- **Windows:** `SHQueryRecycleBin` (öğe sayısı, boyut), `SHEmptyRecycleBin`
+  (`Services/RecycleBinService.cs`)
+- **macOS:**
+  - Sorgula: `FileManager.contentsOfDirectory(at:)` ile `~/.Trash`
+  - Öğe taşı: `FileManager.trashItem(at:resultingItemURL:)` — sürükle-bırak silmenin karşılığı
+  - Aç: `NSWorkspace.shared.open(~/.Trash)`
+  - **Boşalt: genel API yok.** `FileManager.removeItem` ile elle silinebilir
+    (birimler arası `.Trash` klasörlerini kaçırır) veya AppleScript
+    `tell application "Finder" to empty trash` (**Otomasyon izni**)
+- **Neden kısmi:** Dört alt davranıştan üçü genel API ile karşılanıyor, boşaltma
+  karşılanmıyor. Ayrıca `~/.Trash` dışındaki birim çöp kutuları
+  (`/Volumes/X/.Trashes/uid`) ayrıca taranmalı.
+
+### `ag-hid-battery` — HID aygıt pil seviyesi
+- **Windows:** `hid.dll` (`HidD_GetHidGuid`, rapor okuma) + `setupapi.dll`
+  (`SetupDiGetClassDevs`, `SetupDiEnumDeviceInterfaces`) (`Native/HidInterop.cs`)
+- **macOS:** iki ayrı yol
+  - Bluetooth çevre birimleri: IORegistry'de `AppleDeviceManagementHIDEventService`
+    girdisinin `BatteryPercent` özelliği (`IORegistryEntrySearchCFProperty`) — izinsiz
+  - Satıcıya özel USB dongle: `IOHIDManager` (`IOHIDManagerCreate`,
+    `IOHIDDeviceGetProperty`, `IOHIDDeviceGetReport`) — **Girdi İzleme izni** ister
+- **Neden kısmi:** Bluetooth tarafı izinsiz ve güvenilir; HyperX gibi satıcıya özel
+  dongle'lar izin ve aygıt başına protokol çalışması gerektiriyor. Windows'ta da
+  aygıt başına iş var, ama izin zorunluluğu macOS'a özgü.
 
 ---
 

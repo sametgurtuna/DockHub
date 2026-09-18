@@ -1,8 +1,9 @@
 # DockHub macOS — Parite Envanteri
 
-Bu belge, DockHub'ın Windows sürümündeki (v2.2.0) her yetenek grubunu macOS'taki
+Bu belge, DockHub'ın Windows sürümündeki (v2.2.0 + upstream v0.3.0 widget'ları)
+her yetenek grubunu macOS'taki
 karşılığına göre sınıflandırır. Kaynak: `README.md` ve `src/CustomDock/` altındaki
-gerçek kod. Orvant kaydındaki karşılığı: `T1-ENVANTER` görevi, 29 `parity_call` nesnesi.
+gerçek kod. Orvant kaydındaki karşılığı: `T1-ENVANTER` görevi, 32 `parity_call` nesnesi.
 
 ## Ölçütler
 
@@ -28,10 +29,14 @@ Sınıflandırma iki kayıtlı ölçüte dayanır:
 
 | Karar | Sayı | Oran |
 |---|---|---|
-| `var` | 18 | %62 |
-| `uyarla` | 9 | %31 |
-| `yok` | 2 | %7 |
-| **Toplam** | **29** | |
+| `var` | 19 | %59 |
+| `uyarla` | 11 | %34 |
+| `yok` | 2 | %6 |
+| **Toplam** | **32** | |
+
+> Upstream `76e0cb9` (v0.3.0) üç yeni widget getirdi: **Ses aygıtı**, **Çöp kutusu**,
+> **Aygıt pilleri**. Envanter 29'dan 32 yetenek grubuna çıktı; üçü de aşağıda
+> bölüm 3'ün sonunda, gerçek interop kodu okunarak sınıflandırıldı.
 
 ---
 
@@ -134,7 +139,7 @@ Yüksek yenileme hızı (ProMotion 120 Hz) desteklenir. Windows'taki
 
 ---
 
-## 3. Widget grubu (7 yetenek)
+## 3. Widget grubu (10 yetenek)
 
 ### `wf-widget-host` — Widget mimarisi → **var**
 Çok örnekli widget, örnek başına ayar, layout seçimi ve panel açma tamamen kendi
@@ -176,6 +181,51 @@ Hepsi genel API, izin gerektirmez. Windows'un `PerformanceCounter` yaklaşımın
 Open-Meteo HTTP API platformdan bağımsız (`URLSession`). Konum:
 `CoreLocation` / `CLLocationManager` (konum izni). Windows'taki
 `Windows.Devices.Geolocation` karşılığı birebir.
+
+
+### `wf-widget-audio` — Ses aygıtı widget'ı → **var**
+Windows'ta Core Audio COM: `IMMDeviceEnumerator` ile aygıt sayımı, `IMMDevice` ile
+varsayılan aygıt, `IAudioEndpointVolume` ile ses ve sessize alma
+(`Native/AudioInterop.cs`). macOS'ta **CoreAudio** birebir karşılık veriyor:
+`AudioObjectGetPropertyData` ile `kAudioHardwarePropertyDevices` aygıt listesi,
+`kAudioHardwarePropertyDefaultOutputDevice` **yazılabilir** (kulaklık/hoparlör
+geçişi budur), `kAudioDevicePropertyVolumeScalar` ve `kAudioDevicePropertyMute`.
+Hepsi genel C API, izin gerektirmez. Kompakt ve çubuklu layout salt UI işi.
+
+### `wf-widget-recyclebin` — Çöp kutusu widget'ı → **uyarla**
+Windows'ta `SHQueryRecycleBin` (öğe sayısı ve boyut) ve `SHEmptyRecycleBin`
+(`Services/RecycleBinService.cs`). macOS'ta parça parça:
+
+| Alt davranış | macOS karşılığı | Durum |
+|---|---|---|
+| Çöp kutusunu sorgula | `FileManager.contentsOfDirectory(at: ~/.Trash)` + boyut | var |
+| Sürükle-bırak ile sil | `FileManager.trashItem(at:resultingItemURL:)` | var |
+| Tıklayınca aç | `NSWorkspace.shared.open(~/.Trash)` | var |
+| **Sağ tıkla boşalt** | **genel API yok** | eksik |
+
+Boşaltmanın genel karşılığı yok. İki yol var: `FileManager.removeItem` ile içeriği
+elle silmek (Finder'ın semantiğini taklit eder ama birimler arası `.Trash`
+klasörlerini kaçırır) veya AppleScript `tell application "Finder" to empty trash`
+(Otomasyon izni ister). Bu yüzden `uyarla`.
+
+Not: Windows sürümündeki widget açıklaması bu özelliği zaten **"macOS tarzı çöp
+kutusu"** diye tanımlıyor — yani davranış macOS'tan ilham almış, geri taşınması doğal.
+
+### `wf-widget-devicebattery` — Aygıt pilleri widget'ı → **uyarla**
+Windows'ta `hid.dll` (`HidD_GetHidGuid`, rapor okuma) ve `setupapi.dll`
+(`SetupDiGetClassDevs`, `SetupDiEnumDeviceInterfaces`) ile HID aygıtları sayılıp
+pil raporu okunuyor (`Native/HidInterop.cs`). macOS'ta iki ayrı yol gerekiyor:
+
+- **Bluetooth çevre birimleri** (fare, klavye, kulaklık): IORegistry üzerinden
+  `AppleDeviceManagementHIDEventService` girdisindeki `BatteryPercent` özelliği
+  okunur. İzin gerektirmez, güvenilir çalışır.
+- **Satıcıya özel USB dongle'lar** (HyperX Cloud II Wireless gibi): `IOHIDManager`
+  ile aygıt açılıp satıcıya özel HID raporu okunur. Bu **Girdi İzleme (Input
+  Monitoring) izni** ister ve her aygıt için ayrı protokol çalışması gerektirir —
+  Windows tarafında da öyle, ama izin zorunluluğu macOS'a özgü.
+
+Bluetooth tarafı `var` düzeyinde, dongle tarafı ek izin ve aygıt başına iş
+gerektirdiği için grup bütünüyle `uyarla`.
 
 ---
 

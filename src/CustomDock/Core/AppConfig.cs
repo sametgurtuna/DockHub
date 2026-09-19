@@ -45,7 +45,7 @@ public enum DockWidthMode
 
 public enum DockAlignment { Start, Center }
 
-public enum DockItemKind { App, Widget, Separator }
+public enum DockItemKind { App, Widget, Separator, Group }
 
 /// <summary>%AppData%\DockHub\config.json content.</summary>
 public sealed class AppConfig : ObservableObject
@@ -202,6 +202,18 @@ public sealed class DockItem : ObservableObject
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public JsonObject? Settings { get; set; }
 
+    // ---- Group
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? GroupName { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? GroupAccent { get; set; }
+
+    /// <summary>Child items inside a group folder.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public List<DockItem>? Children { get; set; }
+
     public static string NewId() => Guid.NewGuid().ToString("N")[..10];
 
     public static DockItem App(string path, string? name = null) => new() { Kind = DockItemKind.App, Path = path, Name = name };
@@ -209,6 +221,9 @@ public sealed class DockItem : ObservableObject
     public static DockItem ForWidget(string widget, string? variant = null) => new() { Kind = DockItemKind.Widget, Widget = widget, Variant = variant };
 
     public static DockItem Separator() => new() { Kind = DockItemKind.Separator };
+
+    public static DockItem Group(string name, List<DockItem>? children = null)
+        => new() { Kind = DockItemKind.Group, GroupName = name, GroupAccent = "AccentBlueBrush", Children = children ?? new() };
 }
 
 public sealed class LegacyWidgetEntry

@@ -52,6 +52,10 @@ public partial class DockWindow
                 case AppButton appButton:
                     appButton.Margin = vertical ? new Thickness(0, 1, 0, 1) : new Thickness(1, 0, 1, 0);
                     break;
+                case GroupItemView groupView:
+                    groupView.Margin = vertical ? new Thickness(0, 1, 0, 1) : new Thickness(1, 0, 1, 0);
+                    groupView.RefreshIcons();
+                    break;
             }
             ItemsPanel.Children.Add(view);
         }
@@ -115,6 +119,10 @@ public partial class DockWindow
                     return view;
                 case DockItemKind.Separator:
                     return new SeparatorView(item, IsVertical);
+                case DockItemKind.Group:
+                    var groupView = new GroupItemView(item, this);
+                    DockDragHelper.Attach(groupView, () => new DataObject(DockDragHelper.ItemFormat, item.Id));
+                    return groupView;
             }
         }
         catch (Exception ex)
@@ -134,6 +142,9 @@ public partial class DockWindow
                 break;
             case AppButton app:
                 app.Detach();
+                break;
+            case GroupItemView group:
+                group.Detach();
                 break;
         }
     }

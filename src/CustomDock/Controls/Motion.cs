@@ -91,4 +91,31 @@ public static class Motion
         element.BeginAnimation(UIElement.OpacityProperty,
             new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(milliseconds * 0.75)) { EasingFunction = EaseOut });
     }
+
+    /// <summary>
+    /// Fan-out animation: items appear one by one with staggered delay,
+    /// sliding from center and scaling up with spring easing.
+    /// </summary>
+    public static void FanOut(FrameworkElement element, Vector offset, int index, int staggerMs = 50, int durationMs = 300)
+    {
+        element.Opacity = 0;
+        var (scale, translate) = GetItemTransform(element);
+        scale.ScaleX = scale.ScaleY = 0.3;
+        translate.X = -offset.X;
+        translate.Y = -offset.Y;
+
+        var delay = TimeSpan.FromMilliseconds(index * staggerMs);
+        var duration = TimeSpan.FromMilliseconds(durationMs);
+
+        var scaleAnim = new DoubleAnimation(1, duration) { EasingFunction = Spring, BeginTime = delay };
+        var slideX = new DoubleAnimation(0, duration) { EasingFunction = Spring, BeginTime = delay };
+        var slideY = new DoubleAnimation(0, duration) { EasingFunction = Spring, BeginTime = delay };
+        var fadeIn = new DoubleAnimation(1, TimeSpan.FromMilliseconds(durationMs * 0.5)) { EasingFunction = EaseOut, BeginTime = delay };
+
+        scale.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnim);
+        scale.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnim);
+        translate.BeginAnimation(TranslateTransform.XProperty, slideX);
+        translate.BeginAnimation(TranslateTransform.YProperty, slideY);
+        element.BeginAnimation(UIElement.OpacityProperty, fadeIn);
+    }
 }

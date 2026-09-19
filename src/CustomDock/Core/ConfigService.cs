@@ -146,7 +146,15 @@ public sealed class ConfigService
 
     // ------------------------------------------------------------------ Items
 
-    public DockItem? FindItem(string id) => Config.Items.FirstOrDefault(i => i.Id == id);
+    public DockItem? FindItem(string id) =>
+        Config.Items.FirstOrDefault(i => i.Id == id)
+        ?? Config.Items.Where(i => i.Kind == DockItemKind.Group)
+            .SelectMany(g => g.Children ?? Enumerable.Empty<DockItem>())
+            .FirstOrDefault(i => i.Id == id);
+
+    /// <summary>Finds the group that contains the given item id.</summary>
+    public DockItem? FindParentGroup(string itemId) =>
+        Config.Items.FirstOrDefault(g => g.Kind == DockItemKind.Group && g.Children?.Any(c => c.Id == itemId) == true);
 
     public void AddItem(DockItem item, int index = -1)
     {
@@ -157,10 +165,25 @@ public sealed class ConfigService
 
     public void RemoveItem(string id)
     {
+        // Try top-level first
         if (Config.Items.RemoveAll(i => i.Id == id) > 0)
         {
             _itemSettings.Remove(id);
             Config.NotifyItemsChanged();
+            return;
+        }
+        // Try inside groups
+        foreach (var group in Config.Items.Where(i => i.Kind == DockItemKind.Group))
+        {
+            if (group.Children?.RemoveAll(i => i.Id == id) > 0)
+            {
+                _itemSettings.Remove(id);
+                // Auto-delete empty groups
+                if (group.Children.Count == 0)
+                    Config.Items.RemoveAll(i => i.Id == group.Id);
+                Config.NotifyItemsChanged();
+                return;
+            }
         }
     }
 
@@ -168,7 +191,21 @@ public sealed class ConfigService
     public void MoveItem(string id, int newIndex)
     {
         int oldIndex = Config.Items.FindIndex(i => i.Id == id);
-        if (oldIndex < 0) return;
+        if (oldIndex < 0)
+        {
+            // Item might be inside a group -- pull it out to top level
+            var parentGroup = FindParentGroup(id);
+            if (parentGroup is null) return;
+            var child = parentGroup.Children!.FirstOrDefault(c => c.Id == id);
+            if (child is null) return;
+            parentGroup.Children!.Remove(child);
+            if (parentGroup.Children.Count == 0)
+                Config.Items.RemoveAll(i => i.Id == parentGroup.Id);
+            newIndex = Math.Clamp(newIndex, 0, Config.Items.Count);
+            Config.Items.Insert(newIndex, child);
+            Config.NotifyItemsChanged();
+            return;
+        }
         var item = Config.Items[oldIndex];
         Config.Items.RemoveAt(oldIndex);
         if (newIndex > oldIndex) newIndex--;
@@ -180,6 +217,54 @@ public sealed class ConfigService
     public void ReplaceItems(IEnumerable<DockItem> items)
     {
         Config.Items = items.ToList();
+        Config.NotifyItemsChanged();
+    }
+
+    // ------------------------------------------------------------------ Group operations
+
+    /// <summary>Adds an item to an existing group.</summary>
+    public void AddToGroup(string groupId, DockItem item, int index = -1)
+    {
+        var group = Config.Items.FirstOrDefault(g => g.Id == groupId && g.Kind == DockItemKind.Group);
+        if (group is null) return;
+        group.Children ??= new List<DockItem>();
+        if (index < 0 || index > group.Children.Count) group.Children.Add(item);
+        else group.Children.Insert(index, item);
+        Config.NotifyItemsChanged();
+    }
+
+    /// <summary>Creates a new group from two existing top-level items at the position of the first one.</summary>
+    public DockItem CreateGroupFromItems(string name, string itemId1, string itemId2)
+    {
+        int idx1 = Config.Items.FindIndex(i => i.Id == itemId1);
+        int idx2 = Config.Items.FindIndex(i => i.Id == itemId2);
+        if (idx1 < 0 || idx2 < 0) return DockItem.Group(name);
+
+        var item1 = Config.Items[idx1];
+        var item2 = Config.Items[idx2];
+        int insertAt = Math.Min(idx1, idx2);
+
+        Config.Items.Remove(item1);
+        Config.Items.Remove(item2);
+
+        var group = DockItem.Group(name, new List<DockItem> { item1, item2 });
+        insertAt = Math.Clamp(insertAt, 0, Config.Items.Count);
+        Config.Items.Insert(insertAt, group);
+        Config.NotifyItemsChanged();
+        return group;
+    }
+
+    /// <summary>Dissolves a group, moving all children back to the dock at the group's position.</summary>
+    public void UngroupAll(string groupId)
+    {
+        int index = Config.Items.FindIndex(i => i.Id == groupId);
+        if (index < 0) return;
+        var group = Config.Items[index];
+        if (group.Kind != DockItemKind.Group) return;
+        Config.Items.RemoveAt(index);
+        var children = group.Children ?? new List<DockItem>();
+        for (int i = 0; i < children.Count; i++)
+            Config.Items.Insert(index + i, children[i]);
         Config.NotifyItemsChanged();
     }
 

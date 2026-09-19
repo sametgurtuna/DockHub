@@ -122,7 +122,7 @@ public sealed class GeniePopupHost : Grid
 
         _camera = new OrthographicCamera
         {
-            LookDirection = new Vector3D(0, 0, -1),
+            LookDirection = new Vector3D(0, 0, 1),
             UpDirection = new Vector3D(0, -1, 0),
         };
 
@@ -203,7 +203,7 @@ public sealed class GeniePopupHost : Grid
         _model.Material = mat;
         _model.BackMaterial = mat;
 
-        _camera.Position = new Point3D(w / 2.0, h / 2.0, 1000);
+        _camera.Position = new Point3D(w / 2.0, h / 2.0, -1000);
         _camera.Width = w;
         _viewport.Width = w;
         _viewport.Height = h;
@@ -266,7 +266,7 @@ public sealed class GeniePopupHost : Grid
         _model.Material = mat;
         _model.BackMaterial = mat;
 
-        _camera.Position = new Point3D(w / 2.0, h / 2.0, 1000);
+        _camera.Position = new Point3D(w / 2.0, h / 2.0, -1000);
         _camera.Width = w;
         _viewport.Width = w;
         _viewport.Height = h;

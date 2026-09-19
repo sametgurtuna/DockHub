@@ -61,21 +61,21 @@ public partial class DockWindow
         AnimateShifts(positionsBefore);
     }
 
-    /// <summary>Yeniden sıralama/ekleme/kaldırmadan önce mevcut öğelerin ItemsPanel içindeki konumunu kaydeder.</summary>
+    /// <summary>Records positions of existing items within ItemsPanel prior to reordering/adding/removing.</summary>
     private Dictionary<FrameworkElement, Point> CapturePositions()
     {
         var positions = new Dictionary<FrameworkElement, Point>();
         foreach (FrameworkElement element in ItemsPanel.Children)
         {
             try { positions[element] = element.TranslatePoint(new Point(0, 0), ItemsPanel); }
-            catch (InvalidOperationException) { /* henüz düzenlenmemiş */ }
+            catch (InvalidOperationException) { /* not yet laid out */ }
         }
         return positions;
     }
 
     /// <summary>
-    /// Konum değiştiren öğeleri (aynı örnek, farklı sıra) eskisinden yenisine doğru kaydırarak taşır;
-    /// yeni eklenenler (Motion.Appear ile) zaten kendi giriş animasyonuna sahip, burada dokunulmaz.
+    /// Slides items that changed positions (same instance, different order) from old to new position;
+    /// newly added items (via Motion.Appear) already have their own entrance animation and are skipped here.
     /// </summary>
     private void AnimateShifts(Dictionary<FrameworkElement, Point> before)
     {
@@ -119,7 +119,7 @@ public partial class DockWindow
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"Dock öğesi oluşturulamadı: {item.Kind} {item.Widget ?? item.Path}");
+            Log.Error(ex, $"Failed to create dock item: {item.Kind} {item.Widget ?? item.Path}");
         }
         return null;
     }
@@ -146,7 +146,7 @@ public partial class DockWindow
         return key;
     }
 
-    /// <summary>Sabitlenmiş düğmelere pencere gruplarını bağlar; sabitlenmemiş çalışan uygulamaları sona ekler.</summary>
+    /// <summary>Binds window groups to pinned buttons; appends unpinned running apps to the end.</summary>
     private void RefreshRunningApps()
     {
         if (_closing) return;
@@ -169,7 +169,7 @@ public partial class DockWindow
             _runningViews.Remove(key);
         }
 
-        // Kuyruk kısmını (ayraç + çalışan uygulamalar) yeniden kur
+        // Rebuild the tail section (separator + running apps)
         int itemCount = _config.Items.Count(i => _itemViews.ContainsKey(i.Id));
         while (ItemsPanel.Children.Count > itemCount)
             ItemsPanel.Children.RemoveAt(ItemsPanel.Children.Count - 1);

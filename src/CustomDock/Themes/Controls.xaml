@@ -51,7 +51,7 @@
         <Setter Property="HorizontalAlignment" Value="Center" />
     </Style>
 
-    <!-- ================= Widget kartı ================= -->
+    <!-- ================= Widget Card ================= -->
     <Style TargetType="ctl:WidgetCard">
         <Setter Property="Focusable" Value="False" />
         <Setter Property="Height" Value="46" />
@@ -107,7 +107,7 @@
         </Setter>
     </Style>
 
-    <!-- ================= Dock düğmesi ================= -->
+    <!-- ================= Dock Button ================= -->
     <Style x:Key="DockButton" TargetType="ButtonBase">
         <Setter Property="Focusable" Value="False" />
         <Setter Property="Background" Value="Transparent" />
@@ -187,7 +187,7 @@
         </Setter>
     </Style>
 
-    <!-- Widget içindeki küçük yuvarlak ikon düğmesi -->
+    <!-- Small round icon button inside widget -->
     <Style x:Key="CardIconButton" TargetType="Button">
         <Setter Property="Focusable" Value="False" />
         <Setter Property="Background" Value="Transparent" />
@@ -268,7 +268,7 @@
         <Setter Property="Foreground" Value="{DynamicResource OnAccentBrush}" />
     </Style>
 
-    <!-- Dock içinde kullanılan yuvarlak ikon butonu -->
+    <!-- Round icon button used inside dock -->
     <Style x:Key="IconButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />
@@ -280,7 +280,7 @@
         <Setter Property="FontSize" Value="12" />
     </Style>
 
-    <!-- Hafif dolgulu küçük "hap" butonu -->
+    <!-- Subtle filled small pill button -->
     <Style x:Key="PillButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
         <Setter Property="Background" Value="{DynamicResource SubtleFillBrush}" />
         <Setter Property="BorderThickness" Value="0" />
@@ -289,7 +289,7 @@
         <Setter Property="ctl:Ui.CornerRadius" Value="9" />
     </Style>
 
-    <!-- İçeriği olduğu gibi gösteren, sadece hover katmanı olan buton -->
+    <!-- Button showing raw content with hover layer only -->
     <Style x:Key="GhostButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />
@@ -393,7 +393,7 @@
         </Setter>
     </Style>
 
-    <!-- ================= Segmentli seçici (RadioButton) ================= -->
+    <!-- ================= Segmented selector (RadioButton) ================= -->
     <Style x:Key="SegmentedItem" TargetType="RadioButton">
         <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
         <Setter Property="FontSize" Value="12.5" />
@@ -872,7 +872,7 @@
         </Setter>
     </Style>
 
-    <!-- ================= Ayar satırı kartı ================= -->
+    <!-- ================= Setting row card ================= -->
     <Style x:Key="SettingCard" TargetType="Border">
         <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource SurfaceBorderBrush}" />
@@ -927,7 +927,7 @@
         </Setter>
     </Style>
 
-    <!-- Yapışkan not widget'ı için çerçevesiz metin kutusu -->
+    <!-- Borderless text box for sticky note widget -->
     <Style x:Key="NoteTextBox" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />

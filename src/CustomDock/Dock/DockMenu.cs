@@ -2,7 +2,7 @@ using System.Windows.Controls;
 
 namespace CustomDock.Dock;
 
-/// <summary>Sağ tık menüsü öğeleri için kısayollar.</summary>
+/// <summary>Shortcuts for context menu items.</summary>
 public static class DockMenu
 {
     public static MenuItem Item(string header, string? glyph, Action action, bool enabled = true)

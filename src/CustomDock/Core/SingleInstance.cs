@@ -3,8 +3,8 @@ using System.Windows.Threading;
 namespace CustomDock.Core;
 
 /// <summary>
-/// Tek örnek kontrolü. İkinci örnek açılırsa mevcut örneğe "ayarları göster" sinyali gönderir;
-/// "--exit" ile açılırsa mevcut örneği düzgünce kapatır (görev çubuğu geri gelir).
+/// Single-instance control. If a second instance is launched, signals the running instance to show settings;
+/// if launched with "--exit", gracefully closes the running instance (restores taskbar).
 /// </summary>
 public sealed class SingleInstance : IDisposable
 {
@@ -27,7 +27,7 @@ public sealed class SingleInstance : IDisposable
         }
         catch (AbandonedMutexException)
         {
-            // Önceki örnek çökmüş; sahiplik bize geçti.
+            // Previous instance crashed; ownership transferred to us.
             _owned = true;
         }
 
@@ -84,7 +84,7 @@ public sealed class SingleInstance : IDisposable
             }
             catch (ObjectDisposedException)
             {
-                // kapanış
+                // shutdown
             }
         })
         {
@@ -98,7 +98,7 @@ public sealed class SingleInstance : IDisposable
     {
         if (_owned)
         {
-            try { _mutex.ReleaseMutex(); } catch { /* yoksay */ }
+            try { _mutex.ReleaseMutex(); } catch { /* ignore */ }
         }
         _mutex.Dispose();
         _event?.Dispose();

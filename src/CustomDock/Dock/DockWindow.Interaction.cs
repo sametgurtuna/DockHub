@@ -82,7 +82,7 @@ public partial class DockWindow
             while (sw.Elapsed < duration)
             {
                 double t = sw.Elapsed.TotalMilliseconds / duration.TotalMilliseconds;
-                // Açılış: uzun yavaşlama (ease-out quint); kapanış: hızlanarak çıkış
+                // Open: slow deceleration (ease-out quint); close: accelerating exit
                 double eased = show ? 1 - Math.Pow(1 - t, 5) : t * t * t;
                 int x = (int)Math.Round(from.Left + (to.Left - from.Left) * eased);
                 int y = (int)Math.Round(from.Top + (to.Top - from.Top) * eased);
@@ -100,7 +100,7 @@ public partial class DockWindow
         }
     }
 
-    /// <summary>Bir sonraki ekran karesini bekler (animasyonu ekran yenilemesiyle eşzamanlar).</summary>
+    /// <summary>Waits for the next screen frame (synchronizes animation with display refresh).</summary>
     private static Task NextFrame()
     {
         var tcs = new TaskCompletionSource();
@@ -177,7 +177,7 @@ public partial class DockWindow
         _trigger.Place(rect);
     }
 
-    // ------------------------------------------------------------------ Kaydırma
+    // ------------------------------------------------------------------ Scrolling
 
     private double ScrollOffset => IsVertical ? Scroller.VerticalOffset : Scroller.HorizontalOffset;
 
@@ -187,13 +187,13 @@ public partial class DockWindow
 
     private void OnPreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
-        // Menü veya açılır pencere (mikser, takvim vb.) açıkken dock'u yatay kaydırma
+        // Do not scroll dock horizontally when menu or popup (mixer, calendar, etc.) is open
         if (GlobalPopupDismissHook.HasActivePopupsOrMenus) return;
 
         for (var d = e.OriginalSource as DependencyObject; d is not null; d = VisualTreeHelper.GetParent(d))
         {
             if (d is TextBox { IsKeyboardFocusWithin: true } box && box.ExtentHeight > box.ViewportHeight) return;
-            // Ses widget'ı fare tekerleğini kendisi kullanır (ses seviyesi ayarı)
+            // Audio widget uses mouse wheel for itself (volume adjustment)
             if (d is Widgets.AudioWidget) return;
             if (ReferenceEquals(d, Scroller)) break;
         }
@@ -217,13 +217,13 @@ public partial class DockWindow
     {
         var time = ((RenderingEventArgs)e).RenderingTime;
         double dt = _lastScrollFrame == TimeSpan.Zero ? 1 / 60.0 : (time - _lastScrollFrame).TotalSeconds;
-        if (dt <= 0) return; // aynı kare için ikinci çağrı
+        if (dt <= 0) return; // second call for same frame
         _lastScrollFrame = time;
         dt = Math.Min(dt, 0.05);
 
         double current = ScrollOffset;
         double diff = _scrollTarget - current;
-        // Kritik sönümlü yaklaşım: ~120 ms'de hedefe yerleşir
+        // Critically damped approach: settles into target in ~120 ms
         double next = Math.Abs(diff) < 0.5 ? _scrollTarget : current + diff * (1 - Math.Exp(-dt * 18));
 
         if (IsVertical) Scroller.ScrollToVerticalOffset(next);
@@ -255,7 +255,7 @@ public partial class DockWindow
         UpdateFadeMask();
     }
 
-    /// <summary>Kaydırılabilir içerikte kenarları yumuşakça soldurur.</summary>
+    /// <summary>Softly fades edges for scrollable content.</summary>
     private void UpdateFadeMask()
     {
         double length = IsVertical ? Scroller.ActualHeight : Scroller.ActualWidth;
@@ -281,7 +281,7 @@ public partial class DockWindow
         Scroller.OpacityMask = brush;
     }
 
-    // ------------------------------------------------------------------ Bağlam menüleri & Tıklama
+    // ------------------------------------------------------------------ Context Menus & Click
 
     private void OnAnyContextMenuOpening(object sender, ContextMenuEventArgs e)
     {

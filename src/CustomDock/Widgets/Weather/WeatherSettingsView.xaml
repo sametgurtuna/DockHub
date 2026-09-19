@@ -6,12 +6,12 @@
         <ctl:EnumEqualsConverter x:Key="EnumEq" />
     </UserControl.Resources>
     <StackPanel>
-        <ctl:SettingRow Header="Konum" Description="Otomatik mod Windows konum servisini kullanır (Ayarlar › Gizlilik › Konum).">
+        <ctl:SettingRow Header="Location" Description="Auto mode uses Windows location service (Settings › Privacy › Location).">
             <Border Style="{StaticResource SegmentedHost}">
                 <StackPanel Orientation="Horizontal">
-                    <RadioButton Style="{StaticResource SegmentedItem}" GroupName="WeatherLocation" Content="Şehir"
+                    <RadioButton Style="{StaticResource SegmentedItem}" GroupName="WeatherLocation" Content="City"
                                  IsChecked="{Binding LocationMode, Converter={StaticResource EnumEq}, ConverterParameter=City}" />
-                    <RadioButton Style="{StaticResource SegmentedItem}" GroupName="WeatherLocation" Content="Otomatik"
+                    <RadioButton Style="{StaticResource SegmentedItem}" GroupName="WeatherLocation" Content="Auto"
                                  IsChecked="{Binding LocationMode, Converter={StaticResource EnumEq}, ConverterParameter=Auto}" />
                 </StackPanel>
             </Border>
@@ -19,17 +19,17 @@
 
         <Border Style="{StaticResource SettingCard}">
             <StackPanel>
-                <TextBlock Text="Şehir" Style="{StaticResource SettingTitle}" />
+                <TextBlock Text="City" Style="{StaticResource SettingTitle}" />
                 <TextBlock Style="{StaticResource SettingDescription}">
-                    <Run Text="Seçili: " /><Run Text="{Binding CityName, Mode=OneWay}" FontWeight="SemiBold" />
+                    <Run Text="Selected: " /><Run Text="{Binding CityName, Mode=OneWay}" FontWeight="SemiBold" />
                 </TextBlock>
                 <Grid Margin="0,10,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <TextBox x:Name="SearchBox" Tag="Şehir adı yazın (ör. Ankara, Berlin)" KeyDown="OnSearchKeyDown" />
-                    <Button Grid.Column="1" Content="Ara" Margin="8,0,0,0" Click="OnSearchClick" />
+                    <TextBox x:Name="SearchBox" Tag="Enter city name (e.g. London, Berlin)" KeyDown="OnSearchKeyDown" />
+                    <Button Grid.Column="1" Content="Search" Margin="8,0,0,0" Click="OnSearchClick" />
                 </Grid>
                 <TextBlock x:Name="StatusText" Style="{StaticResource SettingDescription}" Margin="0,6,0,0" Visibility="Collapsed" />
                 <ItemsControl x:Name="ResultsList" Margin="0,6,0,0">
@@ -49,7 +49,7 @@
             </StackPanel>
         </Border>
 
-        <ctl:SettingRow Header="Sıcaklık birimi">
+        <ctl:SettingRow Header="Temperature unit">
             <Border Style="{StaticResource SegmentedHost}">
                 <StackPanel Orientation="Horizontal">
                     <RadioButton x:Name="CelsiusRadio" Style="{StaticResource SegmentedItem}" GroupName="WeatherUnit" Content="°C" />

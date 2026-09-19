@@ -1,4 +1,4 @@
-﻿; DockHub installer (Inno Setup 6)
+; DockHub installer (Inno Setup 6)
 ; Build with installer\build.ps1, which publishes the app and passes the version and source folder.
 
 #define MyAppName "DockHub"
@@ -7,7 +7,7 @@
 #define MyAppURL "https://github.com/sametgurtuna/DockHub"
 
 #ifndef MyAppVersion
-  #define MyAppVersion "2.2.0"
+  #define MyAppVersion "0.4.0"
 #endif
 
 #ifndef SourceDir

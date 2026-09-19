@@ -11,7 +11,7 @@ using CustomDock.Dock;
 
 namespace CustomDock.Widgets;
 
-/// <remarks>Pink eski sürümlerden kalmadır; yüklenince Red'e çevrilir.</remarks>
+/// <remarks>Pink is legacy; converted to Red upon loading.</remarks>
 public enum NoteColor { Yellow, Green, Blue, Pink, Purple, Orange, Red }
 
 public enum NoteWidth { Narrow, Normal, Wide }
@@ -22,39 +22,39 @@ public sealed class NotesSettings : ObservableObject
     private NoteWidth _width = NoteWidth.Normal;
     private NoteColor _color = NoteColor.Yellow;
 
-    /// <summary>Not kağıdındaki yazı boyutu.</summary>
-    public double FontSize { get => _fontSize; set => Set(ref _fontSize, value < 14 ? 20 : Math.Min(value, 28)); } // <14: eski kart yazı boyutu
+    /// <summary>Font size on note sheet.</summary>
+    public double FontSize { get => _fontSize; set => Set(ref _fontSize, value < 14 ? 20 : Math.Min(value, 28)); } // <14: old card font size
 
-    /// <summary>Dock'taki kartın genişliği.</summary>
+    /// <summary>Card width on the dock.</summary>
     public NoteWidth Width { get => _width; set => Set(ref _width, value); }
 
     public NoteColor Color { get => _color; set => Set(ref _color, value == NoteColor.Pink ? NoteColor.Red : value); }
 
     public static IReadOnlyList<Option<NoteWidth>> WidthOptions { get; } = new List<Option<NoteWidth>>
     {
-        new(NoteWidth.Narrow, "Dar"),
+        new(NoteWidth.Narrow, "Narrow"),
         new(NoteWidth.Normal, "Normal"),
-        new(NoteWidth.Wide, "Geniş"),
+        new(NoteWidth.Wide, "Wide"),
     };
 
     public static IReadOnlyList<Option<NoteColor>> ColorOptions { get; } = new List<Option<NoteColor>>
     {
-        new(NoteColor.Yellow, "Sarı"),
-        new(NoteColor.Orange, "Turuncu"),
-        new(NoteColor.Red, "Kırmızı"),
-        new(NoteColor.Purple, "Mor"),
-        new(NoteColor.Blue, "Mavi"),
-        new(NoteColor.Green, "Yeşil"),
+        new(NoteColor.Yellow, "Yellow"),
+        new(NoteColor.Orange, "Orange"),
+        new(NoteColor.Red, "Red"),
+        new(NoteColor.Purple, "Purple"),
+        new(NoteColor.Blue, "Blue"),
+        new(NoteColor.Green, "Green"),
     };
 
     public static IReadOnlyList<Option<double>> FontSizeOptions { get; } = new List<Option<double>>
     {
-        new(16, "Küçük"),
-        new(20, "Orta"),
-        new(26, "Büyük"),
+        new(16, "Small"),
+        new(20, "Medium"),
+        new(26, "Large"),
     };
 
-    /// <summary>Renk seçicideki canlı renkler (kağıt rengi temadaki Note…Brush kaynağıdır).</summary>
+    /// <summary>Vibrant colors in the palette (paper background is Note…Brush theme resource).</summary>
     public static System.Windows.Media.Color SwatchColor(NoteColor color) => color switch
     {
         NoteColor.Orange => System.Windows.Media.Color.FromRgb(0xFF, 0x92, 0x30),
@@ -73,8 +73,8 @@ public sealed class NoteData
 }
 
 /// <summary>
-/// Yapışkan not: dock'ta notun önizlemesi; tıklanınca büyük not kağıdı açılır.
-/// Kağıttaki "Özelleştir" sayfasından renk ve yazı boyutu seçilir. Metin kendiliğinden kaydedilir.
+/// Sticky note: preview on the dock; opens larger note sheet on click.
+/// Colors and font sizes can be customized from the "Customize" page. Text autosaves.
 /// </summary>
 public partial class NotesWidget : WidgetBase
 {
@@ -99,7 +99,7 @@ public partial class NotesWidget : WidgetBase
         _settings.PropertyChanged += OnSettingsChanged;
 
         _loading = true;
-        NoteBox.Text = IsPreview ? "Yayına al.\nYürüyüşe çık." : JsonStore.LoadData<NoteData>(StateKey).Text;
+        NoteBox.Text = IsPreview ? "Release update.\nGo for a walk." : JsonStore.LoadData<NoteData>(StateKey).Text;
         _loading = false;
         NoteBox.IsReadOnly = IsPreview;
         Root.Cursor = IsPreview ? null : Cursors.Hand;
@@ -152,7 +152,7 @@ public partial class NotesWidget : WidgetBase
         PlaceholderText.Visibility = text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    // ------------------------------------------------------------------ Özelleştirme sayfası
+    // ------------------------------------------------------------------ Customize page
 
     private void BuildCustomizePage()
     {
@@ -239,12 +239,12 @@ public partial class NotesWidget : WidgetBase
 
     private void OnCloseClick(object sender, RoutedEventArgs e) => EditorPopup.IsOpen = false;
 
-    // ------------------------------------------------------------------ Not kağıdı
+    // ------------------------------------------------------------------ Note sheet
 
     private void OnCardClick(object sender, MouseButtonEventArgs e)
     {
         if (IsPreview || DockDragHelper.JustDragged) return;
-        // StaysOpen=false kağıt karta basıldığı anda kapanır; aynı tıklama onu yeniden açmasın.
+        // StaysOpen=false closes when card is clicked; don't let the same click reopen it.
         if (DateTime.UtcNow - _closedAt < TimeSpan.FromMilliseconds(250)) return;
         OpenEditor();
     }
@@ -317,9 +317,9 @@ public partial class NotesWidget : WidgetBase
 
     public override void AddContextMenuItems(ItemCollection items)
     {
-        items.Add(DockMenu.Item("Notu aç", "\uE70F", OpenEditor, !IsPreview));
-        items.Add(DockMenu.Submenu("Renk", "\uE790",
+        items.Add(DockMenu.Item("Open note", "\uE70F", OpenEditor, !IsPreview));
+        items.Add(DockMenu.Submenu("Color", "\uE790",
             NotesSettings.ColorOptions.Select(o => DockMenu.Check(o.Label, _settings.Color == o.Value, () => _settings.Color = o.Value))));
-        items.Add(DockMenu.Item("Notu temizle", "\uE894", () => NoteBox.Clear(), NoteBox.Text.Length > 0));
+        items.Add(DockMenu.Item("Clear note", "\uE894", () => NoteBox.Clear(), NoteBox.Text.Length > 0));
     }
 }

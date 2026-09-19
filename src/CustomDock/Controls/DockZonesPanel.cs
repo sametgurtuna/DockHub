@@ -4,8 +4,8 @@ using System.Windows.Controls;
 namespace CustomDock.Controls;
 
 /// <summary>
-/// Üç çocuklu yerleşim: ilk çocuk başta, son çocuk sonda, ortadaki kalan alanı doldurur.
-/// Yönelim yatay (alt/üst dock) veya dikey (sol/sağ dock) olabilir.
+/// Three-child layout: first child at start, last child at end, center fills remaining space.
+/// Orientation can be horizontal (bottom/top dock) or vertical (left/right dock).
 /// </summary>
 public sealed class DockZonesPanel : Panel
 {

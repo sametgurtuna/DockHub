@@ -22,12 +22,12 @@ using static CustomDock.Native.NativeMethods;
 namespace CustomDock.Dock;
 
 /// <summary>
-/// Windows görev çubuğunun yerini alan dock.
-/// Yerleşim: [Başlat · Ara · Görev görünümü] [öğeler + çalışan uygulamalar (kaydırılabilir)] [oklar · tepsi · saat · masaüstü]
+/// Dock that replaces the Windows taskbar.
+/// Layout: [Start · Search · Task view] [items + running apps (scrollable)] [arrows · tray · clock · desktop]
 /// </summary>
 public partial class DockWindow : Window, IWidgetHost
 {
-    /// <summary>Orta boyuttaki çubuk kalınlığı (DIP). İçerik 46 DIP + 5 DIP kenar boşluğu.</summary>
+    /// <summary>Base bar thickness in DIP (content 46 DIP + 5 DIP margins).</summary>
     private const double BaseThickness = 56;
     private const int TriggerThickness = 2;
     private static readonly TimeSpan ShowDuration = TimeSpan.FromMilliseconds(260);
@@ -73,7 +73,7 @@ public partial class DockWindow : Window, IWidgetHost
 
     static DockWindow()
     {
-        // Opened/Closed her zaman çift gelir: dock içindeki bağlam menüleri açıkken otomatik gizleme durur.
+        // Opened/Closed always arrive in pairs: auto-hide pauses while dock context menus are open.
         EventManager.RegisterClassHandler(typeof(ContextMenu), ContextMenu.OpenedEvent,
             new RoutedEventHandler((s, _) => s_current?.OnContextMenuStateChanged((ContextMenu)s, open: true)));
         EventManager.RegisterClassHandler(typeof(ContextMenu), ContextMenu.ClosedEvent,
@@ -133,7 +133,7 @@ public partial class DockWindow : Window, IWidgetHost
             ((INotifyCollectionChanged)tray.UnpinnedIcons).CollectionChanged += _unpinnedIconsChangedHandler;
         }
 
-        // macOS Dock'undaki gibi imlece yakın öğelerin hafifçe büyüdüğü "dalga" efekti.
+        // Wave effect where items near the cursor scale up slightly, similar to macOS Dock.
         _magnifier = new DockMagnifier(ItemsPanel, () => IsVertical);
     }
 
@@ -159,7 +159,7 @@ public partial class DockWindow : Window, IWidgetHost
         ScheduleAutoHide();
     }
 
-    /// <summary>Metin girişi için dock'u geçici olarak etkinleştirilebilir yapar.</summary>
+    /// <summary>Temporarily makes the dock activatable for text input.</summary>
     public void ActivateForInput()
     {
         if (_hwnd == IntPtr.Zero) return;
@@ -179,7 +179,7 @@ public partial class DockWindow : Window, IWidgetHost
         ScheduleAutoHide();
     }
 
-    // ------------------------------------------------------------------ Başlatma / ayarlar
+    // ------------------------------------------------------------------ Initialization / settings
 
     public void Start()
     {
@@ -208,13 +208,13 @@ public partial class DockWindow : Window, IWidgetHost
             // Fallback: Ctrl + Alt + D
             success = RegisterHotKey(_hwnd, HOTKEY_DOCK_TOGGLE, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, 0x44 /* D */);
             if (success)
-                Log.Info("DockHub kısayolu kaydedildi: Ctrl+Alt+D");
+                Log.Info("DockHub shortcut registered: Ctrl+Alt+D");
             else
-                Log.Warn("DockHub global kısayolu kaydedilemedi.");
+                Log.Warn("Failed to register DockHub global shortcut.");
         }
         else
         {
-            Log.Info("DockHub kısayolu kaydedildi: Win+Alt+D");
+            Log.Info("DockHub shortcut registered: Win+Alt+D");
         }
         _hotkeyRegistered = success;
     }
@@ -271,7 +271,7 @@ public partial class DockWindow : Window, IWidgetHost
         return IntPtr.Zero;
     }
 
-    /// <summary>Konfigürasyondaki tüm dock ayarlarını uygular.</summary>
+    /// <summary>Applies all dock settings from configuration.</summary>
     public void ApplySettings()
     {
         if (_hwnd == IntPtr.Zero || _closing) return;
@@ -294,7 +294,7 @@ public partial class DockWindow : Window, IWidgetHost
         QueueReposition();
     }
 
-    // ------------------------------------------------------------------ Saat
+    // ------------------------------------------------------------------ Clock
 
     private void SubscribeClock()
     {
@@ -315,7 +315,7 @@ public partial class DockWindow : Window, IWidgetHost
         ClockButton.ToolTip = now.ToString("D", culture);
     }
 
-    // ------------------------------------------------------------------ Düğmeler
+    // ------------------------------------------------------------------ Buttons
 
     private void OnStartClick(object sender, RoutedEventArgs e)
     {
@@ -351,13 +351,13 @@ public partial class DockWindow : Window, IWidgetHost
         UpdateTrayHost();
         var menu = ClockButton.ContextMenu;
         menu.Items.Clear();
-        menu.Items.Add(DockMenu.Item("Bildirim merkezi", "\uE91C", _shell.ShowNotificationCenter));
-        menu.Items.Add(DockMenu.Item("Hızlı ayarlar", "\uE9E9", _shell.ShowQuickSettings));
+        menu.Items.Add(DockMenu.Item("Notification center", "\uE91C", _shell.ShowNotificationCenter));
+        menu.Items.Add(DockMenu.Item("Quick settings", "\uE9E9", _shell.ShowQuickSettings));
         menu.Items.Add(DockMenu.Separator());
-        menu.Items.Add(DockMenu.Item("Tarih ve saati ayarla", "\uE787",
+        menu.Items.Add(DockMenu.Item("Adjust date and time", "\uE787",
             () => Process.Start(new ProcessStartInfo("ms-settings:dateandtime") { UseShellExecute = true })));
-        menu.Items.Add(DockMenu.Check("Saniyeleri göster", _config.ClockShowSeconds, () => _config.ClockShowSeconds = !_config.ClockShowSeconds));
-        menu.Items.Add(DockMenu.Check("Tarihi göster", _config.ClockShowDate, () => _config.ClockShowDate = !_config.ClockShowDate));
+        menu.Items.Add(DockMenu.Check("Show seconds", _config.ClockShowSeconds, () => _config.ClockShowSeconds = !_config.ClockShowSeconds));
+        menu.Items.Add(DockMenu.Check("Show date", _config.ClockShowDate, () => _config.ClockShowDate = !_config.ClockShowDate));
     }
 
     private void OnTrayOverflowChecked(object sender, RoutedEventArgs e)
@@ -381,13 +381,12 @@ public partial class DockWindow : Window, IWidgetHost
         EndInteraction();
     }
 
-    // ------------------------------------------------------------------ Dock menüsü
+    // ------------------------------------------------------------------ Dock menu
 
     private void OnDockMenuOpening(object sender, ContextMenuEventArgs e)
     {
-        // Root'un kendi ContextMenu'sü var; tepsi simgesi gibi ContextMenu'sü olmayan bir alt öğeye
-        // sağ tıklanınca varsayılan davranış bu olayı en yakın sahip (Root) üzerinden başlatır. O yüzden
-        // gerçek tıklama noktasının tepsi simgesi olup olmadığını burada da kontrol etmemiz gerekir.
+        // Root has its own ContextMenu; when right-clicking a child element without a ContextMenu (like a tray icon),
+        // default behavior raises this event on the nearest owner (Root). We must check if original source is a tray icon.
         if (FindAncestor<TrayIconView>(e.OriginalSource as DependencyObject) is not null)
         {
             e.Handled = true;
@@ -395,29 +394,29 @@ public partial class DockWindow : Window, IWidgetHost
         }
         var menu = Root.ContextMenu;
         menu.Items.Clear();
-        menu.Items.Add(DockMenu.Item("Widget ekle…", "\uE710", () => App.Instance.ShowSettings("gallery")));
-        menu.Items.Add(DockMenu.Item("Uygulama sabitle…", "\uE718", () => App.Instance.ShowAppPicker()));
-        menu.Items.Add(DockMenu.Item("Ayraç ekle", "\uE76F", () => AppServices.ConfigService.AddItem(DockItem.Separator())));
+        menu.Items.Add(DockMenu.Item("Add widget…", "\uE710", () => App.Instance.ShowSettings("gallery")));
+        menu.Items.Add(DockMenu.Item("Pin application…", "\uE718", () => App.Instance.ShowAppPicker()));
+        menu.Items.Add(DockMenu.Item("Add separator", "\uE76F", () => AppServices.ConfigService.AddItem(DockItem.Separator())));
         menu.Items.Add(DockMenu.Separator());
-        menu.Items.Add(DockMenu.Item("Görev Yöneticisi", "\uE9D9", () => Process.Start(new ProcessStartInfo("taskmgr.exe") { UseShellExecute = true })));
-        menu.Items.Add(DockMenu.Item("Windows Ayarları", "", () => Process.Start(new ProcessStartInfo("ms-settings:") { UseShellExecute = true })));
-        menu.Items.Add(DockMenu.Item("Hızlı ayarlar", "\uE9E9", () => { UpdateTrayHost(); _shell.ShowQuickSettings(); }));
-        menu.Items.Add(DockMenu.Check("Otomatik gizle", _config.AutoHide, () => _config.AutoHide = !_config.AutoHide));
-        menu.Items.Add(DockMenu.Check("Windows görev çubuğunu gizle", _config.TaskbarMode == TaskbarMode.Replace,
+        menu.Items.Add(DockMenu.Item("Task Manager", "\uE9D9", () => Process.Start(new ProcessStartInfo("taskmgr.exe") { UseShellExecute = true })));
+        menu.Items.Add(DockMenu.Item("Windows Settings", "", () => Process.Start(new ProcessStartInfo("ms-settings:") { UseShellExecute = true })));
+        menu.Items.Add(DockMenu.Item("Quick settings", "\uE9E9", () => { UpdateTrayHost(); _shell.ShowQuickSettings(); }));
+        menu.Items.Add(DockMenu.Check("Auto-hide", _config.AutoHide, () => _config.AutoHide = !_config.AutoHide));
+        menu.Items.Add(DockMenu.Check("Hide Windows taskbar", _config.TaskbarMode == TaskbarMode.Replace,
             () => _config.TaskbarMode = _config.TaskbarMode == TaskbarMode.Replace ? TaskbarMode.ShowBoth : TaskbarMode.Replace));
-        menu.Items.Add(DockMenu.Submenu("Konum", "\uE8A0", new[]
+        menu.Items.Add(DockMenu.Submenu("Position", "\uE8A0", new[]
         {
-            DockMenu.Check("Alt", _config.Edge == DockEdge.Bottom, () => _config.Edge = DockEdge.Bottom),
-            DockMenu.Check("Üst", _config.Edge == DockEdge.Top, () => _config.Edge = DockEdge.Top),
-            DockMenu.Check("Sol", _config.Edge == DockEdge.Left, () => _config.Edge = DockEdge.Left),
-            DockMenu.Check("Sağ", _config.Edge == DockEdge.Right, () => _config.Edge = DockEdge.Right),
+            DockMenu.Check("Bottom", _config.Edge == DockEdge.Bottom, () => _config.Edge = DockEdge.Bottom),
+            DockMenu.Check("Top", _config.Edge == DockEdge.Top, () => _config.Edge = DockEdge.Top),
+            DockMenu.Check("Left", _config.Edge == DockEdge.Left, () => _config.Edge = DockEdge.Left),
+            DockMenu.Check("Right", _config.Edge == DockEdge.Right, () => _config.Edge = DockEdge.Right),
         }));
         menu.Items.Add(DockMenu.Separator());
-        menu.Items.Add(DockMenu.Item("DockHub ayarları…", "\uE713", () => App.Instance.ShowSettings()));
-        menu.Items.Add(DockMenu.Item("Çıkış", "\uE7E8", () => App.Instance.ExitApplication()));
+        menu.Items.Add(DockMenu.Item("DockHub settings…", "\uE713", () => App.Instance.ShowSettings()));
+        menu.Items.Add(DockMenu.Item("Exit", "\uE7E8", () => App.Instance.ExitApplication()));
     }
 
-    // ------------------------------------------------------------------ Kapanış
+    // ------------------------------------------------------------------ Shutdown
 
     public void CloseDock()
     {

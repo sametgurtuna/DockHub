@@ -5,14 +5,14 @@ using System.Windows.Media.Animation;
 
 namespace CustomDock.Controls;
 
-/// <summary>Ortasında metin gösterebilen dairesel ilerleme göstergesi (OnRender ile hafif çizim).</summary>
+/// <summary>Circular progress gauge that can display text in its center (lightweight rendering via OnRender).</summary>
 public sealed class RingGauge : FrameworkElement
 {
     public static readonly DependencyProperty ValueProperty = DependencyProperty.Register(
         nameof(Value), typeof(double), typeof(RingGauge),
         new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.AffectsRender, OnValueChanged));
 
-    /// <summary>Animasyonlu, gerçekte çizilen değer.</summary>
+    /// <summary>Animated, currently rendered value.</summary>
     private static readonly DependencyProperty DisplayValueProperty = DependencyProperty.Register(
         "DisplayValue", typeof(double), typeof(RingGauge),
         new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.AffectsRender));
@@ -62,7 +62,7 @@ public sealed class RingGauge : FrameworkElement
         var gauge = (RingGauge)d;
         if (!gauge.IsVisible)
         {
-            // Görünmezken animasyon saatini çalıştırma (gereksiz render döngüsü).
+            // Do not run animation clock when invisible (avoids unnecessary render loop).
             gauge.BeginAnimation(DisplayValueProperty, null);
             gauge.SetValue(DisplayValueProperty, (double)e.NewValue);
             return;
@@ -91,8 +91,8 @@ public sealed class RingGauge : FrameworkElement
         double fraction = Maximum <= 0 ? 0 : Math.Clamp((double)GetValue(DisplayValueProperty) / Maximum, 0, 1);
         if (fraction > 0.0005)
         {
-            // Başlangıç (0 derece/tepe) her zaman aynı noktada olduğu için yuvarlak uç orada sabit bir çıkıntı gibi görünür;
-            // yalnızca ilerleyen ucu (mevcut değer) yuvarlat, başlangıcı düz kes.
+            // Start (0 deg / top) is always in the same place so a round cap would look like a static protrusion;
+            // only round the moving end (current value), keep the start flat.
             var pen = new Pen(Fill, thickness) { StartLineCap = PenLineCap.Flat, EndLineCap = PenLineCap.Round };
             if (fraction >= 0.9999)
             {

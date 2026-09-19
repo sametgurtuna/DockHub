@@ -18,8 +18,8 @@ public sealed class ReminderStore
 }
 
 /// <summary>
-/// Hatırlatıcıları saklar ve zamanı gelince toast bildirimi gösterir.
-/// Sabit aralıklı yoklama yerine en yakın hatırlatıcıya kurulan tek seferlik zamanlayıcı kullanır.
+/// Stores reminders and shows toast notifications when due.
+/// Uses a one-shot timer targeting the nearest reminder instead of polling.
 /// </summary>
 public sealed class ReminderService : IDisposable
 {
@@ -37,7 +37,7 @@ public sealed class ReminderService : IDisposable
         _timer.Tick += (_, _) => FireDue();
     }
 
-    /// <summary>Tarihe göre sıralı bekleyen hatırlatıcılar.</summary>
+    /// <summary>Pending reminders sorted chronologically.</summary>
     public ObservableCollection<Reminder> Items { get; } = new();
 
     public void Start()
@@ -57,7 +57,7 @@ public sealed class ReminderService : IDisposable
         SystemEvents.TimeChanged += _timeChangedHandler;
         SystemEvents.PowerModeChanged += _powerModeChangedHandler;
 
-        // Uygulama kapalıyken zamanı geçenler
+        // Reminders that passed while the app was closed
         var missed = Items.Where(r => r.Due <= DateTime.Now).ToList();
         if (missed.Count > 0)
         {
@@ -65,8 +65,8 @@ public sealed class ReminderService : IDisposable
             Save();
             var body = missed.Count == 1
                 ? $"{missed[0].Text} ({missed[0].Due:g})"
-                : string.Join("\n", missed.Take(4).Select(r => $"• {r.Text}")) + (missed.Count > 4 ? $"\n+{missed.Count - 4} daha" : "");
-            AppServices.Notifications.Show(missed.Count == 1 ? "Kaçırılan hatırlatıcı" : $"{missed.Count} kaçırılan hatırlatıcı", body);
+                : string.Join("\n", missed.Take(4).Select(r => $"• {r.Text}")) + (missed.Count > 4 ? $"\n+{missed.Count - 4} more" : "");
+            AppServices.Notifications.Show(missed.Count == 1 ? "Missed reminder" : $"{missed.Count} missed reminders", body);
         }
 
         Schedule();
@@ -110,11 +110,11 @@ public sealed class ReminderService : IDisposable
             Items.Remove(reminder);
             _recentlyFired[reminder.Id] = reminder.Text;
             AppServices.Notifications.Show(
-                "Hatırlatıcı",
+                "Reminder",
                 reminder.Text,
                 tag: "reminder-" + reminder.Id[..8],
-                new ToastAction("10 dk ertele", NotificationService.ActionReminderSnooze, reminder.Id),
-                new ToastAction("Tamam", NotificationService.ActionReminderDone, reminder.Id));
+                new ToastAction("Snooze 10m", NotificationService.ActionReminderSnooze, reminder.Id),
+                new ToastAction("Done", NotificationService.ActionReminderDone, reminder.Id));
         }
 
         if (due.Count > 0) Save();
@@ -128,7 +128,7 @@ public sealed class ReminderService : IDisposable
 
         var wait = Items[0].Due - DateTime.Now;
         if (wait < TimeSpan.FromMilliseconds(200)) wait = TimeSpan.FromMilliseconds(200);
-        if (wait > MaxWait) wait = MaxWait; // uyku / saat değişimine karşı periyodik yeniden değerlendirme
+        if (wait > MaxWait) wait = MaxWait; // periodic re-evaluation against sleep / system clock change
         _timer.Interval = wait;
         _timer.Start();
     }

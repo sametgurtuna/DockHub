@@ -173,7 +173,7 @@ public struct INPUT
 {
     public uint type;
     public KEYBDINPUT ki;
-    // INPUT birliğinin en büyük üyesi (MOUSEINPUT) için dolgu
+    // Padding for largest member of INPUT union (MOUSEINPUT)
     private readonly long _padding;
 }
 
@@ -209,7 +209,7 @@ internal static class NativeMethods
     public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
     public delegate bool MonitorEnumProc(IntPtr hMonitor, IntPtr hdc, ref RECT rect, IntPtr data);
 
-    // --- Pencere stilleri ---
+    // --- Window styles ---
     public const int GWL_STYLE = -16;
     public const int GWL_EXSTYLE = -20;
     public const long WS_CAPTION = 0x00C00000L;
@@ -253,7 +253,7 @@ internal static class NativeMethods
     public static bool IsCloaked(IntPtr hwnd)
         => DwmGetWindowAttribute(hwnd, DWMWA_CLOAKED, out int cloaked, sizeof(int)) == 0 && cloaked != 0;
 
-    /// <summary>Birincil ekranın yenileme hızı (Hz).</summary>
+    /// <summary>Primary display refresh rate (Hz).</summary>
     public static int GetRefreshRate()
     {
         var hdc = GetDC(IntPtr.Zero);
@@ -261,7 +261,7 @@ internal static class NativeMethods
         finally { if (hdc != IntPtr.Zero) ReleaseDC(IntPtr.Zero, hdc); }
     }
 
-    // --- Mesajlar ---
+    // --- Messages ---
     public const int WM_SETTINGCHANGE = 0x001A;
     public const int WM_DISPLAYCHANGE = 0x007E;
     public const int WM_MOUSEACTIVATE = 0x0021;
@@ -283,7 +283,7 @@ internal static class NativeMethods
     public const int ABE_RIGHT = 2;
     public const int ABE_BOTTOM = 3;
 
-    // --- Monitör ---
+    // --- Monitor ---
     public const uint MONITOR_DEFAULTTONEAREST = 2;
     public const uint MONITOR_DEFAULTTOPRIMARY = 1;
     public const uint MONITORINFOF_PRIMARY = 1;
@@ -295,7 +295,7 @@ internal static class NativeMethods
     public const int DWMWA_SYSTEMBACKDROP_TYPE = 38;
     public const int DWMWA_MICA_EFFECT = 1029;
 
-    // --- Proses ---
+    // --- Process ---
     public const uint PROCESS_QUERY_LIMITED_INFORMATION = 0x1000;
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
@@ -539,7 +539,7 @@ internal static class NativeMethods
         }
     }
 
-    // ------------------------------------------------------------------ Çöp Kutusu (Recycle Bin)
+    // ------------------------------------------------------------------ Recycle Bin
 
     public const uint FO_DELETE = 0x0003;
     public const ushort FOF_ALLOWUNDO = 0x0040;

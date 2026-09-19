@@ -10,17 +10,17 @@ namespace CustomDock.Widgets;
 
 public partial class RecycleBinWidget : WidgetBase
 {
-    // Gerçekçi çöp kutusu ikonları (macOS tarzı kapaklı sepet)
-    // Boş: Kapaklı çöp kutusu gövdesi, kapak ve kulp, alt kısım ayrıntılı
+    // Realistic recycle bin icons (macOS style basket)
+    // Empty: Bin body with lid, handle, detailed bottom
     private const string EmptyIconPath =
-        "M9.5,4 H14.5 M7,6 H17 L16.2,20 A1,1 0 0 1 15.2,21 H8.8 A1,1 0 0 1 7.8,20 Z " + // Gövde
-        "M10,9 V18 M14,9 V18 M12,9 V18 " + // Çizgiler
-        "M6,6 H18 M10,4 V6 M14,4 V6"; // Kapak ve kulp
+        "M9.5,4 H14.5 M7,6 H17 L16.2,20 A1,1 0 0 1 15.2,21 H8.8 A1,1 0 0 1 7.8,20 Z " + // Body
+        "M10,9 V18 M14,9 V18 M12,9 V18 " + // Lines
+        "M6,6 H18 M10,4 V6 M14,4 V6"; // Lid and handle
     private const string FullIconPath =
-        "M9.5,4 H14.5 M7,6 H17 L16.2,20 A1,1 0 0 1 15.2,21 H8.8 A1,1 0 0 1 7.8,20 Z " + // Gövde
-        "M10,10 V18 M14,10 V18 M12,10 V18 " + // Çizgiler
-        "M6,6 H18 M10,4 V6 M14,4 V6 " + // Kapak ve kulp
-        "M9,3 C9.3,1.5 10.5,1.5 11,2.5 M12,1.5 C12.5,1 14,1 14.5,3 M8.5,3.5 L10,5 M15,3 L13.5,5"; // Buruşuk kağıtlar
+        "M9.5,4 H14.5 M7,6 H17 L16.2,20 A1,1 0 0 1 15.2,21 H8.8 A1,1 0 0 1 7.8,20 Z " + // Body
+        "M10,10 V18 M14,10 V18 M12,10 V18 " + // Lines
+        "M6,6 H18 M10,4 V6 M14,4 V6 " + // Lid and handle
+        "M9,3 C9.3,1.5 10.5,1.5 11,2.5 M12,1.5 C12.5,1 14,1 14.5,3 M8.5,3.5 L10,5 M15,3 L13.5,5"; // Crumpled papers
 
     private static readonly Geometry EmptyGeometry = Geometry.Parse(EmptyIconPath);
     private static readonly Geometry FullGeometry = Geometry.Parse(FullIconPath);
@@ -67,11 +67,11 @@ public partial class RecycleBinWidget : WidgetBase
 
         DetailsIconPath.Data = geometry;
         DetailsIconPath.SetResourceReference(System.Windows.Shapes.Path.FillProperty, brushKey);
-        DetailsSubText.Text = empty ? "Boş" : $"{info.ItemCount} öğe · {info.FormattedSize}";
+        DetailsSubText.Text = empty ? "Empty" : $"{info.ItemCount} items · {info.FormattedSize}";
 
         ToolTip = empty
-            ? "Çöp Kutusu (Boş)"
-            : $"Çöp Kutusu: {info.ItemCount} öğe, {info.FormattedSize}";
+            ? "Recycle Bin (Empty)"
+            : $"Recycle Bin: {info.ItemCount} items, {info.FormattedSize}";
 
         RefreshCompact();
     }
@@ -128,8 +128,8 @@ public partial class RecycleBinWidget : WidgetBase
     {
         AppServices.RecycleBin.Refresh();
         var info = AppServices.RecycleBin.Current;
-        items.Add(DockMenu.Item("Çöp Kutusunu Aç", "\uE838", () => AppServices.RecycleBin.Open()));
-        items.Add(DockMenu.Item("Çöp Kutusunu Boşalt", "\uE74D", () => AppServices.RecycleBin.Empty(),
+        items.Add(DockMenu.Item("Open Recycle Bin", "\uE838", () => AppServices.RecycleBin.Open()));
+        items.Add(DockMenu.Item("Empty Recycle Bin", "\uE74D", () => AppServices.RecycleBin.Empty(),
             enabled: !info.IsEmpty));
     }
 }

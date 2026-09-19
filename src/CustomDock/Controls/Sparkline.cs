@@ -3,7 +3,7 @@ using System.Windows.Media;
 
 namespace CustomDock.Controls;
 
-/// <summary>İki serili küçük çizgi grafik (indirme düz, yükleme kesik çizgi).</summary>
+/// <summary>Small two-series line chart (download solid, upload dashed line).</summary>
 public sealed class Sparkline : FrameworkElement
 {
     public static readonly DependencyProperty PrimaryStrokeProperty = DependencyProperty.Register(

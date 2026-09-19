@@ -4,7 +4,7 @@ using System.Windows.Data;
 
 namespace CustomDock.Controls;
 
-/// <summary>Enum değerini RadioButton.IsChecked'e bağlamak için: ConverterParameter = enum adı.</summary>
+/// <summary>Binds an enum value to RadioButton.IsChecked: ConverterParameter = enum name.</summary>
 public sealed class EnumEqualsConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
@@ -30,7 +30,7 @@ public sealed class NullToCollapsedConverter : IValueConverter
         => throw new NotSupportedException();
 }
 
-/// <summary>Tema kaynak anahtarını (ör. "AccentBlueBrush") fırçaya çevirir.</summary>
+/// <summary>Converts theme resource key (e.g. "AccentBlueBrush") to a brush.</summary>
 public sealed class ResourceKeyToBrushConverter : IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
@@ -40,11 +40,11 @@ public sealed class ResourceKeyToBrushConverter : IValueConverter
         => throw new NotSupportedException();
 }
 
-/// <summary>0-1 aralığındaki değeri yüzdeye (0-100) çevirir; slider'larda kullanılır.</summary>
+/// <summary>Converts a 0-1 value to percentage (0-100); used in sliders.</summary>
 public sealed class PercentConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-        => value is double d ? $"%{Math.Round(d * 100)}" : "";
+        => value is double d ? $"{Math.Round(d * 100)}%" : "";
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         => throw new NotSupportedException();

@@ -19,7 +19,7 @@ public sealed class AlarmSettings : ObservableObject
 
     public bool Enabled { get => _enabled; set => Set(ref _enabled, value); }
 
-    /// <summary>"SS:DD" biçiminde saat.</summary>
+    /// <summary>Time in "HH:mm" format.</summary>
     public string Time { get => _time; set => Set(ref _time, value); }
 
     public bool RepeatDaily { get => _repeatDaily; set => Set(ref _repeatDaily, value); }
@@ -36,7 +36,7 @@ public sealed class AlarmSettings : ObservableObject
     }
 }
 
-/// <summary>Saatli alarm; zamanı gelince bildirim gösterir.</summary>
+/// <summary>Clock alarm; shows notification when due.</summary>
 public partial class AlarmWidget : WidgetBase
 {
     private readonly DispatcherTimer _timer = new(DispatcherPriority.Normal);
@@ -77,7 +77,7 @@ public partial class AlarmWidget : WidgetBase
         _timer.Stop();
         if (IsPreview || _settings.NextOccurrence(DateTime.Now) is not { } next) return;
         var wait = next - DateTime.Now;
-        // Uyku / saat değişikliklerine karşı en fazla 10 dakikada bir yeniden değerlendir.
+        // Re-evaluate at most every 10 minutes against sleep / time changes.
         _timer.Interval = wait > TimeSpan.FromMinutes(10) ? TimeSpan.FromMinutes(10) : wait < TimeSpan.FromSeconds(1) ? TimeSpan.FromSeconds(1) : wait;
         _timer.Start();
     }
@@ -92,11 +92,11 @@ public partial class AlarmWidget : WidgetBase
             {
                 AppServices.Notifications.ShowAlarm(
                     string.IsNullOrWhiteSpace(_settings.Label) ? "Alarm" : _settings.Label,
-                    $"Saat {_settings.Time}",
+                    _settings.Time,
                     "alarm-" + Item.Id);
                 if (!_settings.RepeatDaily)
                     _settings.Enabled = false;
-                // Aynı dakikada tekrar çalmasın
+                // Avoid re-triggering in the same minute
                 _timer.Stop();
                 _timer.Interval = TimeSpan.FromMinutes(2);
                 _timer.Start();
@@ -112,16 +112,16 @@ public partial class AlarmWidget : WidgetBase
         TitleText.Text = next is null ? "Alarm" : _settings.Time;
         if (next is null)
         {
-            SubText.Text = "Saat ayarlayın";
+            SubText.Text = "Set time";
         }
         else
         {
-            string day = next.Value.Date == DateTime.Today ? "Bugün" : "Yarın";
-            string label = string.IsNullOrWhiteSpace(_settings.Label) ? (_settings.RepeatDaily ? "Her gün" : day) : _settings.Label;
-            SubText.Text = _settings.RepeatDaily && !string.IsNullOrWhiteSpace(_settings.Label) ? $"{label} · her gün" : label;
+            string day = next.Value.Date == DateTime.Today ? "Today" : "Tomorrow";
+            string label = string.IsNullOrWhiteSpace(_settings.Label) ? (_settings.RepeatDaily ? "Every day" : day) : _settings.Label;
+            SubText.Text = _settings.RepeatDaily && !string.IsNullOrWhiteSpace(_settings.Label) ? $"{label} · daily" : label;
         }
         Bell.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, next is null ? "TextSecondaryBrush" : "AccentOrangeBrush");
-        ToolTip = next is null ? "Alarm kurmak için tıklayın" : $"Sonraki: {next.Value:dddd HH:mm}";
+        ToolTip = next is null ? "Click to set alarm" : $"Next: {next.Value:dddd HH:mm}";
         RefreshCompact();
     }
 
@@ -170,7 +170,7 @@ public partial class AlarmWidget : WidgetBase
     {
         if (!TimeInput.TryParse(TimeBox.Text, out var time))
         {
-            ErrorText.Text = "Saati SS:DD biçiminde girin.";
+            ErrorText.Text = "Enter time in HH:mm format.";
             return;
         }
         _settings.Time = $"{time.Hours:00}:{time.Minutes:00}";
@@ -188,15 +188,15 @@ public partial class AlarmWidget : WidgetBase
 
     public override void AddContextMenuItems(ItemCollection items)
     {
-        items.Add(DockMenu.Item("Alarmı düzenle…", "\uE70F", OpenEditor));
-        items.Add(DockMenu.Check("Alarm açık", _settings.Enabled, () => _settings.Enabled = !_settings.Enabled));
-        items.Add(DockMenu.Check("Her gün tekrarla", _settings.RepeatDaily, () => _settings.RepeatDaily = !_settings.RepeatDaily));
+        items.Add(DockMenu.Item("Edit alarm…", "\uE70F", OpenEditor));
+        items.Add(DockMenu.Check("Alarm enabled", _settings.Enabled, () => _settings.Enabled = !_settings.Enabled));
+        items.Add(DockMenu.Check("Repeat daily", _settings.RepeatDaily, () => _settings.RepeatDaily = !_settings.RepeatDaily));
     }
 }
 
 public static class TimeInput
 {
-    /// <summary>"14:30", "14.30", "1430", "9" gibi girdileri kabul eder.</summary>
+    /// <summary>Accepts inputs like "14:30", "14.30", "1430", "9".</summary>
     public static bool TryParse(string? input, out TimeSpan time)
     {
         time = default;

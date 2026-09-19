@@ -48,8 +48,8 @@ public partial class SettingsWindow : Window
         };
 
         var version = typeof(SettingsWindow).Assembly.GetName().Version?.ToString(3) ?? "1.0.0";
-        VersionText.Text = $"Sürüm {version}";
-        AboutVersion.Text = $"Sürüm {version} · .NET {Environment.Version.ToString(2)} · WPF";
+        VersionText.Text = $"Version {version}";
+        AboutVersion.Text = $"Version {version} · .NET {Environment.Version.ToString(2)} · WPF";
         ConfigFolderRow.Description = AppPaths.Root;
 
         LoadMonitors();
@@ -95,7 +95,7 @@ public partial class SettingsWindow : Window
         }
     }
 
-    // ------------------------------------------------------------------ Navigasyon
+    // ------------------------------------------------------------------ Navigation
 
     public void NavigateTo(string page, string? itemId = null)
     {
@@ -125,7 +125,7 @@ public partial class SettingsWindow : Window
         if (tag == "taskbar") LoadTray();
     }
 
-    // ------------------------------------------------------------------ Genel
+    // ------------------------------------------------------------------ General
 
     private void OnRestoreTaskbarClick(object sender, RoutedEventArgs e)
     {
@@ -146,7 +146,7 @@ public partial class SettingsWindow : Window
             Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
     }
 
-    // ------------------------------------------------------------------ Görev çubuğu
+    // ------------------------------------------------------------------ Taskbar
 
     private void LoadTray()
     {
@@ -170,14 +170,14 @@ public partial class SettingsWindow : Window
         TrayPreferences.Save(tray);
     }
 
-    // ------------------------------------------------------------------ Monitör
+    // ------------------------------------------------------------------ Monitor
 
     private void LoadMonitors()
     {
-        var options = new List<MonitorOption> { new("Birincil ekran (otomatik)", null) };
+        var options = new List<MonitorOption> { new("Primary display (automatic)", null) };
         options.AddRange(MonitorHelper.GetAll().Select(m => new MonitorOption(m.DisplayName, m.DeviceName)));
         if (_config.MonitorDevice is { } saved && options.All(o => o.Device != saved))
-            options.Add(new MonitorOption($"{saved} (bağlı değil)", saved));
+            options.Add(new MonitorOption($"{saved} (disconnected)", saved));
 
         MonitorCombo.ItemsSource = options;
         MonitorCombo.SelectedItem = options.FirstOrDefault(o => o.Device == _config.MonitorDevice) ?? options[0];

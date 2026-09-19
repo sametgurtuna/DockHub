@@ -7,12 +7,12 @@ using MsShellHelper = ManagedShell.Common.Helpers.ShellHelper;
 
 namespace CustomDock.Services;
 
-/// <summary>Uygulama başlatma ve görev çubuğu tıklama davranışları.</summary>
+/// <summary>Application launch and taskbar click behaviors.</summary>
 public static class AppLauncher
 {
     /// <summary>
-    /// Görev çubuğu davranışı: pencere yoksa başlat; tek pencere etkinse küçült, değilse öne getir;
-    /// birden fazla pencerede sıradakine geç.
+    /// Taskbar behavior: if no window, launch; if single window is active, minimize, otherwise bring to front;
+    /// if multiple windows, cycle to next.
     /// </summary>
     public static void Activate(DockItem? item, AppGroup? group)
     {
@@ -68,8 +68,8 @@ public static class AppLauncher
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"Uygulama başlatılamadı: {path}");
-            AppServices.Notifications.Show("Uygulama açılamadı", $"{Path.GetFileName(path)}\n{ex.Message}");
+            Log.Error(ex, $"Failed to launch application: {path}");
+            AppServices.Notifications.Show("Could not launch app", $"{Path.GetFileName(path)}\n{ex.Message}");
         }
     }
 
@@ -81,7 +81,7 @@ public static class AppLauncher
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"Yönetici olarak başlatılamadı: {path}");
+            Log.Error(ex, $"Failed to run as administrator: {path}");
         }
     }
 
@@ -95,17 +95,17 @@ public static class AppLauncher
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Dosya konumu açılamadı");
+            Log.Error(ex, "Failed to open file location");
         }
     }
 
-    /// <summary>Çalışan bir pencereden sabitlenebilir yol üretir.</summary>
+    /// <summary>Produces a pinnable path from a running window.</summary>
     public static string? PinnablePath(AppGroup group)
     {
         if (group.ExecutablePath is { } exe) return exe;
         if (AppKeys.AppIdOf(group.Key) is { } aumid)
         {
-            // AUMID küçük harfe çevrilmiş olabilir; pencereden özgün hâlini al.
+            // AUMID may have been lowercased; get the original case from the window.
             var original = group.Windows.Select(w => w.AppUserModelID).FirstOrDefault(a => !string.IsNullOrEmpty(a)) ?? aumid;
             return AppKeys.AppsFolderPrefix + original;
         }

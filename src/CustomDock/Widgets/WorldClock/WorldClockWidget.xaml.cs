@@ -16,7 +16,7 @@ public sealed class WorldCity : ObservableObject
 
     public string Label { get => _label; set => Set(ref _label, value); }
 
-    /// <summary>Windows saat dilimi kimliği (ör. "Tokyo Standard Time") veya IANA kimliği.</summary>
+    /// <summary>Windows time zone ID (e.g. "Tokyo Standard Time") or IANA ID.</summary>
     public string TimeZoneId { get; set; } = "UTC";
 }
 
@@ -26,32 +26,32 @@ public sealed class WorldClockSettings : ObservableObject
 
     public ObservableCollection<WorldCity> Cities { get; set; } = new()
     {
-        new WorldCity { Label = "Londra", TimeZoneId = "GMT Standard Time" },
+        new WorldCity { Label = "London", TimeZoneId = "GMT Standard Time" },
         new WorldCity { Label = "New York", TimeZoneId = "Eastern Standard Time" },
         new WorldCity { Label = "Tokyo", TimeZoneId = "Tokyo Standard Time" },
     };
 
     public bool Use24Hour { get => _use24Hour; set => Set(ref _use24Hour, value); }
 
-    /// <summary>Şehir listesi değiştiğinde çağrılır (koleksiyon değişiklikleri PropertyChanged üretmez).</summary>
+    /// <summary>Called when cities list changes (collection changes do not trigger PropertyChanged).</summary>
     public void NotifyCitiesChanged() => OnPropertyChanged(nameof(Cities));
 
     public static IReadOnlyList<Option<string>> PopularCities { get; } = new List<Option<string>>
     {
-        new("Turkey Standard Time", "İstanbul"),
-        new("GMT Standard Time", "Londra"),
+        new("Turkey Standard Time", "Istanbul"),
+        new("GMT Standard Time", "London"),
         new("W. Europe Standard Time", "Berlin"),
         new("Romance Standard Time", "Paris"),
         new("W. Europe Standard Time", "Amsterdam"),
-        new("Russian Standard Time", "Moskova"),
-        new("Azerbaijan Standard Time", "Bakü"),
+        new("Russian Standard Time", "Moscow"),
+        new("Azerbaijan Standard Time", "Baku"),
         new("Arabian Standard Time", "Dubai"),
-        new("India Standard Time", "Yeni Delhi"),
-        new("Singapore Standard Time", "Singapur"),
-        new("China Standard Time", "Pekin"),
+        new("India Standard Time", "New Delhi"),
+        new("Singapore Standard Time", "Singapore"),
+        new("China Standard Time", "Beijing"),
         new("Tokyo Standard Time", "Tokyo"),
-        new("Korea Standard Time", "Seul"),
-        new("AUS Eastern Standard Time", "Sidney"),
+        new("Korea Standard Time", "Seoul"),
+        new("AUS Eastern Standard Time", "Sydney"),
         new("E. South America Standard Time", "São Paulo"),
         new("Eastern Standard Time", "New York"),
         new("Eastern Standard Time", "Toronto"),
@@ -68,7 +68,7 @@ public sealed class WorldClockSettings : ObservableObject
     }
 }
 
-/// <summary>Widget'ta gösterilen tek bir şehir.</summary>
+/// <summary>A single city displayed in the widget.</summary>
 public sealed class WorldClockItem : ObservableObject
 {
     private DateTime _time;
@@ -98,7 +98,7 @@ public sealed class WorldClockItem : ObservableObject
         if (Zone is null)
         {
             TimeText = "--:--";
-            Details = $"{City.Label}: saat dilimi bulunamadı ({City.TimeZoneId})";
+            Details = $"{City.Label}: timezone not found ({City.TimeZoneId})";
             return;
         }
 
@@ -108,15 +108,15 @@ public sealed class WorldClockItem : ObservableObject
         TimeText = use24Hour ? local.ToString("H:mm", culture) : local.ToString("h:mm tt", culture);
 
         var diff = Zone.GetUtcOffset(utcNow) - TimeZoneInfo.Local.GetUtcOffset(utcNow);
-        string offset = diff == TimeSpan.Zero ? "yerel saatle aynı"
-            : $"{(diff > TimeSpan.Zero ? "+" : "−")}{Math.Abs(diff.TotalHours):0.##} sa";
+        string offset = diff == TimeSpan.Zero ? "same as local time"
+            : $"{(diff > TimeSpan.Zero ? "+" : "−")}{Math.Abs(diff.TotalHours):0.##} hr";
         int dayDiff = (local.Date - DateTime.Now.Date).Days;
-        string day = dayDiff switch { > 0 => " · yarın", < 0 => " · dün", _ => "" };
+        string day = dayDiff switch { > 0 => " · tomorrow", < 0 => " · yesterday", _ => "" };
         Details = $"{City.Label} — {local.ToString("dddd HH:mm", culture)}\n{offset}{day}";
     }
 }
 
-/// <summary>Bir veya birden fazla şehrin saati.</summary>
+/// <summary>Clock for one or more cities.</summary>
 public partial class WorldClockWidget : WidgetBase
 {
     private readonly ObservableCollection<WorldClockItem> _items = new();
@@ -265,13 +265,13 @@ public partial class WorldClockWidget : WidgetBase
 
         if (Variant != "single")
         {
-            ToolTip = _items.Count == 0 ? "Şehir ekleyin" : string.Join("\n\n", _items.Select(i => i.Details));
+            ToolTip = _items.Count == 0 ? "Add a city" : string.Join("\n\n", _items.Select(i => i.Details));
             RefreshCompact();
             return;
         }
         var first = _items.FirstOrDefault();
         SingleTime.Text = first?.TimeText ?? "--:--";
-        SingleCity.Text = first?.Label ?? "Şehir ekleyin";
+        SingleCity.Text = first?.Label ?? "Add a city";
         SingleClock.Time = first?.Time ?? DateTime.Now;
         ToolTip = first?.Details;
         Layout_single.Visibility = Visibility.Visible;

@@ -14,7 +14,7 @@ using static CustomDock.Native.NativeMethods;
 namespace CustomDock.Dock;
 
 /// <summary>
-/// Açık uygulama pencereleri için canlı DWM önizleme penceresi (Taskbar Live Thumbnail Preview).
+/// Live DWM thumbnail preview window for open application windows (Taskbar Live Thumbnail Preview).
 /// </summary>
 public sealed class WindowPreviewWindow : Window
 {
@@ -72,7 +72,7 @@ public sealed class WindowPreviewWindow : Window
         _container.SetResourceReference(Border.BackgroundProperty, "PopupBrush");
         _container.SetResourceReference(Border.BorderBrushProperty, "PopupBorderBrush");
 
-        // Gölge efekti
+        // Shadow effect
         _container.Effect = new System.Windows.Media.Effects.DropShadowEffect
         {
             BlurRadius = 18,
@@ -163,7 +163,7 @@ public sealed class WindowPreviewWindow : Window
             }
             catch
             {
-                // Görsel ağaçtan ayrıldıysa yoksay
+                // Ignore if detached from visual tree
             }
         }
 
@@ -176,7 +176,7 @@ public sealed class WindowPreviewWindow : Window
         _previewItems.Clear();
         _cardsPanel.Children.Clear();
 
-        // En fazla 8 pencereyi yan yana göster
+        // Show at most 8 windows side by side
         foreach (var window in windows.Take(8))
         {
             var w = window;
@@ -195,7 +195,7 @@ public sealed class WindowPreviewWindow : Window
             cardGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(28) });
             cardGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
 
-            // 1. Başlık satırı (İkon + Başlık + Kapat butonu)
+            // 1. Header row (Icon + Title + Close button)
             var headerGrid = new Grid { Margin = new Thickness(4, 2, 4, 2) };
             headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(20) });
             headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -213,7 +213,7 @@ public sealed class WindowPreviewWindow : Window
 
             var titleText = new TextBlock
             {
-                Text = string.IsNullOrWhiteSpace(w.Title) ? "Pencere" : w.Title,
+                Text = string.IsNullOrWhiteSpace(w.Title) ? "Window" : w.Title,
                 FontSize = 11,
                 FontWeight = FontWeights.Medium,
                 TextTrimming = TextTrimming.CharacterEllipsis,
@@ -223,7 +223,7 @@ public sealed class WindowPreviewWindow : Window
             titleText.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimaryBrush");
             Grid.SetColumn(titleText, 1);
 
-            // Kapatma düğmesi (✕)
+            // Close button (✕)
             var closeBtn = new Button
             {
                 Content = "\uE711",
@@ -232,7 +232,7 @@ public sealed class WindowPreviewWindow : Window
                 Width = 20,
                 Height = 20,
                 Style = Application.Current.TryFindResource("DockButton") as Style,
-                ToolTip = "Kapat",
+                ToolTip = "Close",
                 HorizontalAlignment = HorizontalAlignment.Right,
                 VerticalAlignment = VerticalAlignment.Center,
                 Padding = new Thickness(0),
@@ -241,7 +241,7 @@ public sealed class WindowPreviewWindow : Window
             {
                 e.Handled = true;
                 w.Close();
-                // 150ms sonra grubu tekrar kontrol et
+                // Check group again after 150ms
                 Dispatcher.BeginInvoke(DispatcherPriority.Background, () =>
                 {
                     if (_currentGroup is not null && _currentButton is not null)
@@ -261,7 +261,7 @@ public sealed class WindowPreviewWindow : Window
             headerGrid.Children.Add(closeBtn);
             Grid.SetRow(headerGrid, 0);
 
-            // 2. Canlı Önizleme Yuvası (DWM Thumbnail Host)
+            // 2. Live Preview Host (DWM Thumbnail Host)
             var thumbHost = new Border
             {
                 Width = ThumbWidth,
@@ -278,7 +278,7 @@ public sealed class WindowPreviewWindow : Window
             cardGrid.Children.Add(thumbHost);
             card.Child = cardGrid;
 
-            // Hover efekti
+            // Hover effect
             card.MouseEnter += (_, _) =>
             {
                 card.SetResourceReference(Border.BackgroundProperty, "DockHoverBrush");
@@ -288,7 +288,7 @@ public sealed class WindowPreviewWindow : Window
                 card.Background = Brushes.Transparent;
             };
 
-            // Tıklayınca pencereyi öne getir
+            // Bring window to front on click
             card.MouseLeftButtonUp += (s, e) =>
             {
                 e.Handled = true;
@@ -345,7 +345,7 @@ public sealed class WindowPreviewWindow : Window
                 break;
         }
 
-        // Ekran sınırlarına sığdır
+        // Clamp to screen bounds
         if (targetX < workLeft + 6) targetX = workLeft + 6;
         if (targetX + previewW > workRight - 6) targetX = workRight - previewW - 6;
         if (targetY < workTop + 6) targetY = workTop + 6;
@@ -420,7 +420,7 @@ public sealed class WindowPreviewWindow : Window
             }
             catch
             {
-                // Tekil pencere küçük resmi alınamazsa devam et
+                // Continue if single window thumbnail cannot be acquired
             }
         }
     }

@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace CustomDock.Core;
 
-/// <summary>JSON dosyalarını atomik olarak okur/yazar.</summary>
+/// <summary>Reads/writes JSON files atomically.</summary>
 public static class JsonStore
 {
     public static readonly JsonSerializerOptions Options = new()
@@ -25,7 +25,7 @@ public static class JsonStore
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"JSON okunamadı: {path}");
+            Log.Error(ex, $"Failed to read JSON: {path}");
             TryBackupCorrupt(path);
         }
         return new T();
@@ -42,7 +42,7 @@ public static class JsonStore
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"JSON yazılamadı: {path}");
+            Log.Error(ex, $"Failed to write JSON: {path}");
         }
     }
 
@@ -60,7 +60,7 @@ public static class JsonStore
         }
         catch
         {
-            // yoksay
+            // ignore
         }
     }
 }

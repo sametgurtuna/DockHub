@@ -10,13 +10,13 @@ using static CustomDock.Native.NativeMethods;
 
 namespace CustomDock.Native;
 
-/// <summary>Yüksek çözünürlüklü kabuk ikonları ve kısayol (.lnk) bilgileri.</summary>
+/// <summary>High-resolution shell icons and shortcut (.lnk) information.</summary>
 public static class ShellIcons
 {
     private static readonly Dictionary<string, ImageSource?> IconCache = new(StringComparer.OrdinalIgnoreCase);
     private static readonly Dictionary<string, (string? Target, string? AppId)> LinkCache = new(StringComparer.OrdinalIgnoreCase);
 
-    /// <summary>Dosya, klasör, kısayol veya "shell:AppsFolder\AUMID" için ikon (piksel boyutu).</summary>
+    /// <summary>Icon (pixel size) for a file, folder, shortcut, or "shell:AppsFolder\AUMID".</summary>
     public static ImageSource? GetIcon(string path, int sizePx = 96)
     {
         if (string.IsNullOrWhiteSpace(path)) return null;
@@ -40,12 +40,12 @@ public static class ShellIcons
                         image = bs;
                     }
                 }
-                catch { /* yoksay */ }
+                catch { /* ignore */ }
             }
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"İkon alınamadı: {path}");
+            Log.Error(ex, $"Failed to retrieve icon: {path}");
         }
 
         if (image is not null)
@@ -54,7 +54,7 @@ public static class ShellIcons
         return image;
     }
 
-    /// <summary>Pencere tutamacından (HWND) ikon çeker (WM_GETICON ve pencere sınıfı üzerinden).</summary>
+    /// <summary>Retrieves icon from window handle (HWND) via WM_GETICON and window class.</summary>
     public static ImageSource? GetWindowIcon(IntPtr hwnd)
     {
         if (hwnd == IntPtr.Zero) return null;
@@ -79,14 +79,14 @@ public static class ShellIcons
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Pencere ikonu alınamadı");
+            Log.Error(ex, "Failed to retrieve window icon");
         }
         return null;
     }
 
     private static ImageSource? s_defaultAppIcon;
 
-    /// <summary>İkonu bulunamayan özel uygulamalar için şık varsayılan uygulama ikonu.</summary>
+    /// <summary>Elegant default application icon for custom apps whose icons cannot be found.</summary>
     public static ImageSource GetDefaultAppIcon()
     {
         if (s_defaultAppIcon is not null) return s_defaultAppIcon;
@@ -146,7 +146,7 @@ public static class ShellIcons
         }
     }
 
-    /// <summary>Alfa kanalını koruyarak HBITMAP → BitmapSource.</summary>
+    /// <summary>Preserves alpha channel when converting HBITMAP -> BitmapSource.</summary>
     private static BitmapSource? BitmapFromHBitmap(IntPtr hbitmap)
     {
         var dib = new DIBSECTION();
@@ -202,7 +202,7 @@ public static class ShellIcons
         }
     }
 
-    /// <summary>Kısayolun hedef yolu ve AppUserModelID'si.</summary>
+    /// <summary>Target path and AppUserModelID of shortcut.</summary>
     public static (string? Target, string? AppId) ReadShortcut(string lnkPath)
     {
         if (LinkCache.TryGetValue(lnkPath, out var cached)) return cached;
@@ -237,7 +237,7 @@ public static class ShellIcons
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"Kısayol okunamadı: {lnkPath}");
+            Log.Error(ex, $"Failed to read shortcut: {lnkPath}");
         }
         finally
         {

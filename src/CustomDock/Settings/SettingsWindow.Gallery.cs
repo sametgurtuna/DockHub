@@ -8,7 +8,7 @@ using CustomDock.Widgets;
 
 namespace CustomDock.Settings;
 
-/// <summary>Galeri önizlemeleri için sahte dock ortamı.</summary>
+/// <summary>Mock dock host environment for gallery previews.</summary>
 internal sealed class PreviewHost : IWidgetHost
 {
     public PreviewHost(Window window) => Window = window;
@@ -76,7 +76,7 @@ public partial class SettingsWindow
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"Galeri önizlemesi oluşturulamadı: {descriptor.Id}");
+            Log.Error(ex, $"Failed to create gallery preview: {descriptor.Id}");
             preview = new TextBlock { Text = descriptor.Name };
         }
 
@@ -103,7 +103,7 @@ public partial class SettingsWindow
         {
             Content = "\uE710",
             Style = (Style)FindResource("IconButton"),
-            ToolTip = "Dock'a ekle",
+            ToolTip = "Add to dock",
             Width = 28,
             Height = 28,
         };
@@ -125,7 +125,7 @@ public partial class SettingsWindow
         var tile = new StackPanel { Margin = new Thickness(0, 0, 18, 18), MinWidth = 150 };
         tile.Children.Add(stage);
         tile.Children.Add(footer);
-        // Alt satır önizleme genişliğini izlesin
+        // Match footer width to preview width
         footer.SetBinding(WidthProperty, new System.Windows.Data.Binding(nameof(ActualWidth)) { Source = stage });
         return tile;
     }

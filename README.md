@@ -31,7 +31,7 @@ No admin rights. Your original taskbar always comes back.
 <br>
 
 > [!NOTE]
-> The screenshots in this README are rendered from the [interactive web demo](https://sametgurtuna.github.io/dockhub-website/), which recreates DockHub's interface in the browser. The app's interface is currently in Turkish.
+> The screenshots in this README are rendered from the [interactive web demo](https://sametgurtuna.github.io/dockhub-website/), which recreates DockHub's interface in the browser.
 
 ## Contents
 

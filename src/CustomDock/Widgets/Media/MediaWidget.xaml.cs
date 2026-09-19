@@ -13,11 +13,11 @@ public sealed class MediaSettings : ObservableObject
 {
     private bool _hideWhenIdle;
 
-    /// <summary>Hiçbir medya oturumu yokken widget'ı dock'tan gizler.</summary>
+    /// <summary>Hides widget from the dock when there is no active media session.</summary>
     public bool HideWhenIdle { get => _hideWhenIdle; set => Set(ref _hideWhenIdle, value); }
 }
 
-/// <summary>Windows SMTC üzerinden şu an çalan medya ve oynatma kontrolleri.</summary>
+/// <summary>Now playing media and playback controls via Windows SMTC.</summary>
 public partial class MediaWidget : WidgetBase
 {
     private MediaSettings _settings = new();
@@ -81,19 +81,19 @@ public partial class MediaWidget : WidgetBase
         var state = Media.Current;
         Visibility = _settings.HideWhenIdle && !state.HasSession && !IsPreview ? Visibility.Collapsed : Visibility.Visible;
 
-        string title = !state.HasSession ? "Şu an çalan yok" : string.IsNullOrWhiteSpace(state.Title) ? "Bilinmeyen parça" : state.Title;
-        string artist = !state.HasSession ? "Bir oynatıcı başlatın" : string.IsNullOrWhiteSpace(state.Artist) ? state.SourceApp : state.Artist;
+        string title = !state.HasSession ? "Nothing playing" : string.IsNullOrWhiteSpace(state.Title) ? "Unknown track" : state.Title;
+        string artist = !state.HasSession ? "Start a media player" : string.IsNullOrWhiteSpace(state.Artist) ? state.SourceApp : state.Artist;
         FullTitle.Text = CompactTitle.Text = title;
         FullArtist.Text = CompactArtist.Text = artist;
 
         ToolTip = !state.HasSession
-            ? "Spotify, YouTube Music veya SMTC destekleyen bir oynatıcıda müzik başlatın."
+            ? "Play media in Spotify, YouTube Music, or any SMTC-supported player."
             : string.Join("\n", new[]
             {
                 state.Title,
                 state.Artist,
-                string.IsNullOrWhiteSpace(state.Album) ? null : $"Albüm: {state.Album}",
-                string.IsNullOrWhiteSpace(state.SourceApp) ? null : $"Kaynak: {state.SourceApp}",
+                string.IsNullOrWhiteSpace(state.Album) ? null : $"Album: {state.Album}",
+                string.IsNullOrWhiteSpace(state.SourceApp) ? null : $"Source: {state.SourceApp}",
             }.Where(s => !string.IsNullOrWhiteSpace(s)));
 
         SetArt(FullArt, FullArtGlyph, state.Thumbnail);
@@ -167,8 +167,8 @@ public partial class MediaWidget : WidgetBase
     private void RenderPopup()
     {
         var state = Media.Current;
-        string title = !state.HasSession ? "Şu an çalan yok" : string.IsNullOrWhiteSpace(state.Title) ? "Bilinmeyen parça" : state.Title;
-        string artist = !state.HasSession ? "Bir oynatıcı başlatın" : string.IsNullOrWhiteSpace(state.Artist) ? state.SourceApp : state.Artist;
+        string title = !state.HasSession ? "Nothing playing" : string.IsNullOrWhiteSpace(state.Title) ? "Unknown track" : state.Title;
+        string artist = !state.HasSession ? "Start a media player" : string.IsNullOrWhiteSpace(state.Artist) ? state.SourceApp : state.Artist;
 
         PopupTitle.Text = title;
         PopupArtist.Text = artist;
@@ -332,10 +332,10 @@ public partial class MediaWidget : WidgetBase
     public override void AddContextMenuItems(ItemCollection items)
     {
         var state = Media.Current;
-        items.Add(DockMenu.Item(state.IsPlaying ? "Duraklat" : "Oynat", state.IsPlaying ? "\uE769" : "\uE768",
+        items.Add(DockMenu.Item(state.IsPlaying ? "Pause" : "Play", state.IsPlaying ? "\uE769" : "\uE768",
             () => _ = Media.PlayPauseAsync(), state.HasSession));
-        items.Add(DockMenu.Item("Sonraki", "\uE893", () => _ = Media.NextAsync(), state.CanNext));
-        items.Add(DockMenu.Item("Önceki", "\uE892", () => _ = Media.PreviousAsync(), state.CanPrevious));
-        items.Add(DockMenu.Check("Çalan yokken gizle", _settings.HideWhenIdle, () => _settings.HideWhenIdle = !_settings.HideWhenIdle));
+        items.Add(DockMenu.Item("Next", "\uE893", () => _ = Media.NextAsync(), state.CanNext));
+        items.Add(DockMenu.Item("Previous", "\uE892", () => _ = Media.PreviousAsync(), state.CanPrevious));
+        items.Add(DockMenu.Check("Hide when idle", _settings.HideWhenIdle, () => _settings.HideWhenIdle = !_settings.HideWhenIdle));
     }
 }

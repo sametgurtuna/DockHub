@@ -7,9 +7,9 @@ using ManagedShell.AppBar;
 namespace CustomDock.Dock;
 
 /// <summary>
-/// Görünmez ve tıklamaları geçiren AppBar penceresi. Ekran kenarında dock için yer ayırır;
-/// böylece büyütülmüş pencereler dock'un altına girmez. Dock penceresi bu alanın içine yerleşir.
-/// (Dock'un bulanık arka planı pencere bölgesini yok saydığı için yüzen kenar boşlukları ayrı pencereyle çözülür.)
+/// Invisible and click-through AppBar window. Reserves space for dock at the screen edge
+/// so maximized windows do not go under the dock. The dock window positions itself within this area.
+/// (Because dock's blur background ignores window regions, floating margins are solved with a separate window.)
 /// </summary>
 public sealed class SpaceReserver : AppBarWindow
 {
@@ -30,7 +30,7 @@ public sealed class SpaceReserver : AppBarWindow
         Top = screen.Bounds.Top;
     }
 
-    /// <summary>Ayrılan dikdörtgen (fiziksel piksel) değiştiğinde tetiklenir.</summary>
+    /// <summary>Fired when the reserved rectangle (physical pixels) changes.</summary>
     public event Action? RectChanged;
 
     public RECT Rect => new(WindowRect.Left, WindowRect.Top, WindowRect.Right, WindowRect.Bottom);

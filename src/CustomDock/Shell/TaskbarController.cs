@@ -7,12 +7,12 @@ using static CustomDock.Native.NativeMethods;
 namespace CustomDock.Shell;
 
 /// <summary>
-/// Explorer görev çubuğunu gizler ve geri getirir.
+/// Hides and restores the Explorer taskbar.
 /// <list type="bullet">
-/// <item>Görev çubuğu "otomatik gizle" durumuna alınır (çalışma alanı serbest kalır) ve pencereleri gizlenir.</item>
-/// <item>Explorer görev çubuğunu kendiliğinden gösterirse (Explorer yeniden başlatma, ayar değişikliği) tekrar gizlenir;
-///       ancak Başlat / Arama / Hızlı ayarlar açıkken beklenir, aksi halde bu menüler açılamaz.</item>
-/// <item>Orijinal durum session.json'a yazılır; uygulama çökse bile sonraki açılışta geri yüklenir.</item>
+/// <item>Taskbar is put into "auto-hide" state (work area is freed) and its windows are hidden.</item>
+/// <item>If Explorer unhides taskbar on its own (Explorer restart, setting change), it is hidden again;
+///       however, when Start / Search / Quick settings are open it waits, otherwise those menus cannot open.</item>
+/// <item>Original state is saved to session.json; restored on next launch even if application crashes.</item>
 /// </list>
 /// </summary>
 public sealed class TaskbarController : IDisposable
@@ -50,7 +50,7 @@ public sealed class TaskbarController : IDisposable
         var tray = ExplorerTray;
         if (tray == IntPtr.Zero)
         {
-            Log.Info("Explorer görev çubuğu bulunamadı.");
+            Log.Info("Explorer taskbar not found.");
             return;
         }
 
@@ -61,7 +61,7 @@ public sealed class TaskbarController : IDisposable
         SetVisible(tray, false);
         IsHidden = true;
         _monitor.Start();
-        Log.Info($"Windows görev çubuğu gizlendi (orijinal durum {_originalState}).");
+        Log.Info($"Windows taskbar hidden (original state {_originalState}).");
     }
 
     public void Restore()
@@ -74,7 +74,7 @@ public sealed class TaskbarController : IDisposable
                 SetState(tray, _originalState);
             SetVisible(tray, true);
             SessionState.Clear();
-            Log.Info("Windows görev çubuğu geri getirildi.");
+            Log.Info("Windows taskbar restored.");
         }
 
         try
@@ -84,7 +84,7 @@ public sealed class TaskbarController : IDisposable
         }
         catch
         {
-            // kapanış
+            // shutdown
         }
     }
 
@@ -101,14 +101,14 @@ public sealed class TaskbarController : IDisposable
             return;
         }
 
-        // Başlat / Arama / hızlı ayarlar açılırken Explorer görev çubuğunu gösterir; araya girme.
+        // Explorer shows taskbar when Start / Search / quick settings open; do not intervene.
         if (_launcherVisible() || ShellFlyoutClasses.Contains(GetClassName(GetForegroundWindow())))
         {
             _visibleTicks = 0;
             return;
         }
 
-        // Kısa bir tolerans: menü açılışının ilk anlarında da bekle.
+        // Short tolerance: wait during initial moments of menu opening as well.
         if (++_visibleTicks < 2) return;
 
         _visibleTicks = 0;
@@ -140,18 +140,18 @@ public sealed class TaskbarController : IDisposable
         }
     }
 
-    // ------------------------------------------------------------------ Çökme kurtarma (ManagedShell başlamadan önce çalışır)
+    // ------------------------------------------------------------------ Crash recovery (runs before ManagedShell starts)
 
-    /// <summary>Önceki oturum görev çubuğu gizliyken kapandıysa geri yükler.</summary>
+    /// <summary>Restores taskbar if previous session closed while hidden.</summary>
     public static void RecoverFromPreviousSession()
     {
         var session = SessionState.Load();
         if (!session.TaskbarHidden) return;
-        Log.Info("Önceki oturumdan kalan gizli görev çubuğu geri yükleniyor.");
+        Log.Info("Restoring hidden taskbar from previous session.");
         ForceRestore(session.OriginalTaskbarState);
     }
 
-    /// <summary>Acil durum: görev çubuğunu her koşulda görünür yapar.</summary>
+    /// <summary>Emergency: makes taskbar visible under all conditions.</summary>
     public static void ForceShow()
     {
         var session = SessionState.Load();
@@ -166,8 +166,8 @@ public sealed class TaskbarController : IDisposable
         SetVisible(tray, true);
         SessionState.Clear();
 
-        // Uygulamalar tepsi ikonlarını Explorer'a yeniden kaydetsin (normal kapanışta ManagedShell bunu yapar;
-        // çökmeden sonra ikonlar kaybolmasın).
+        // Tell applications to re-register their tray icons with Explorer (ManagedShell does this on clean exit;
+        // prevent icons from being lost after a crash).
         SendNotifyMessage(HWND_BROADCAST, RegisterWindowMessage("TaskbarCreated"), IntPtr.Zero, IntPtr.Zero);
     }
 
@@ -183,7 +183,7 @@ public sealed class TaskbarController : IDisposable
         SHAppBarMessage(ABM_SETSTATE, ref data);
     }
 
-    /// <summary>Explorer görev çubuğuna "masaüstünü göster" komutunu gönderir.</summary>
+    /// <summary>Sends "show desktop" command to Explorer taskbar.</summary>
     public void ToggleDesktop()
     {
         var tray = ExplorerTray;
@@ -198,7 +198,7 @@ public sealed class TaskbarController : IDisposable
     }
 }
 
-/// <summary>Çökme güvenliği için oturum durumu (session.json).</summary>
+/// <summary>Session state for crash safety (session.json).</summary>
 public sealed class SessionState
 {
     public bool TaskbarHidden { get; set; }
@@ -211,6 +211,6 @@ public sealed class SessionState
 
     public static void Clear()
     {
-        try { File.Delete(AppPaths.SessionFile); } catch { /* yoksay */ }
+        try { File.Delete(AppPaths.SessionFile); } catch { /* ignore */ }
     }
 }

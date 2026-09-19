@@ -11,7 +11,7 @@
     <SolidColorBrush x:Key="SeparatorBrush" Color="#24000000" />
     <SolidColorBrush x:Key="DropCaretBrush" Color="#FF1D1D1F" />
 
-    <!-- ================= Widget kartları ================= -->
+    <!-- ================= Widget Cards ================= -->
     <SolidColorBrush x:Key="CardBrush" Color="#D6FFFFFF" />
     <SolidColorBrush x:Key="CardHoverBrush" Color="#F2FFFFFF" />
     <SolidColorBrush x:Key="CardBorderBrush" Color="#14000000" />
@@ -31,13 +31,13 @@
     <SolidColorBrush x:Key="NoteRedBrush" Color="#FFF59AA4" />
     <SolidColorBrush x:Key="NoteTextBrush" Color="#FF1C1C1E" />
 
-    <!-- ================= Metin ================= -->
+    <!-- ================= Text ================= -->
     <SolidColorBrush x:Key="TextPrimaryBrush" Color="#FF1D1D1F" />
     <SolidColorBrush x:Key="TextSecondaryBrush" Color="#FF6E6E73" />
     <SolidColorBrush x:Key="TextTertiaryBrush" Color="#FFA1A1A6" />
     <SolidColorBrush x:Key="TextOnColorBrush" Color="#FFFFFFFF" />
 
-    <!-- ================= Göstergeler ================= -->
+    <!-- ================= Indicators ================= -->
     <SolidColorBrush x:Key="TrackBrush" Color="#1F000000" />
     <SolidColorBrush x:Key="TickOffBrush" Color="#FFD6D6DB" />
     <SolidColorBrush x:Key="TickOnBrush" Color="#FF2C2C2E" />
@@ -51,7 +51,7 @@
     <SolidColorBrush x:Key="ScrollThumbHoverBrush" Color="#5C000000" />
     <SolidColorBrush x:Key="CloudBrush" Color="#FFA9B2BF" />
 
-    <!-- ================= Vurgu renkleri ================= -->
+    <!-- ================= Accent Colors ================= -->
     <SolidColorBrush x:Key="AccentGreenBrush" Color="#FF28B446" />
     <SolidColorBrush x:Key="AccentOrangeBrush" Color="#FFF58A00" />
     <SolidColorBrush x:Key="AccentBlueBrush" Color="#FF007AFF" />
@@ -66,11 +66,11 @@
     <SolidColorBrush x:Key="GreenTrackBrush" Color="#3328B446" />
     <SolidColorBrush x:Key="OrangeTrackBrush" Color="#33F58A00" />
 
-    <!-- Analog saat -->
+    <!-- Analog Clock -->
     <SolidColorBrush x:Key="ClockFaceDayBrush" Color="#FFFFFFFF" />
     <SolidColorBrush x:Key="ClockFaceNightBrush" Color="#FF2C2C30" />
 
-    <!-- ================= Ayarlar penceresi ================= -->
+    <!-- ================= Settings Window ================= -->
     <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#FFF3F3F3" />
     <SolidColorBrush x:Key="SidebarBrush" Color="#00FFFFFF" />
     <SolidColorBrush x:Key="SurfaceBrush" Color="#B3FFFFFF" />

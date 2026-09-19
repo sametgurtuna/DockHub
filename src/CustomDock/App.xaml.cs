@@ -29,11 +29,11 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
-        // XAML bağlamalarındaki tarih/sayı biçimleri sistem dilini kullansın (varsayılan en-US).
+        // Date and number formats in XAML bindings should follow system culture (defaults to en-US).
         FrameworkElement.LanguageProperty.OverrideMetadata(typeof(FrameworkElement),
             new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(CultureInfo.CurrentCulture.IetfLanguageTag)));
 
-        // WPF animasyonları varsayılan 60 FPS'e sınırlıdır; yüksek yenileme hızlı ekranlarda akıcı olsun.
+        // WPF animations are capped at 60 FPS by default; keep smooth on high refresh rate displays.
         System.Windows.Media.Animation.Timeline.DesiredFrameRateProperty.OverrideMetadata(
             typeof(System.Windows.Media.Animation.Timeline),
             new FrameworkPropertyMetadata { DefaultValue = Math.Clamp(Native.NativeMethods.GetRefreshRate(), 60, 240) });
@@ -41,7 +41,7 @@ public partial class App : Application
         base.OnStartup(e);
         AppPaths.EnsureCreated();
 
-        // Acil durum: "DockHub.exe --restore-taskbar"
+        // Emergency recovery: "DockHub.exe --restore-taskbar"
         if (e.Args.Any(a => a.Equals("--restore-taskbar", StringComparison.OrdinalIgnoreCase)))
         {
             TaskbarController.ForceShow();
@@ -49,7 +49,7 @@ public partial class App : Application
             return;
         }
 
-        // "DockHub.exe --pin <dosya>": Explorer sağ tık menüsünden sabitleme
+        // "DockHub.exe --pin <file>": Explorer right-click pin integration
         if (PinArgumentPath(e.Args) is { } pinPath)
             ExplorerPinMenu.Enqueue(pinPath);
 
@@ -57,7 +57,7 @@ public partial class App : Application
         bool exitRequested = e.Args.Any(a => a.Equals("--exit", StringComparison.OrdinalIgnoreCase));
         if (exitRequested)
         {
-            // "DockHub.exe --exit": çalışan örneği düzgünce kapatır.
+            // "DockHub.exe --exit": cleanly closes the running instance.
             if (!_singleInstance.TryAcquire())
                 SingleInstance.SignalExit();
             Shutdown();
@@ -66,7 +66,7 @@ public partial class App : Application
 
         if (!_singleInstance.TryAcquire())
         {
-            // Toast tıklamasıyla açılan ikinci örnek sessizce kapanır; aksi halde mevcut örnek ayarları gösterir.
+            // Second instance triggered by toast click closes silently; otherwise show settings of running instance.
             if (PinArgumentPath(e.Args) is not null)
                 SingleInstance.SignalPin();
             else if (!e.Args.Any(a => a.Contains("ToastActivated", StringComparison.OrdinalIgnoreCase)))
@@ -78,7 +78,7 @@ public partial class App : Application
         _running = true;
         RegisterCrashHandlers();
 
-        // Önceki oturum görev çubuğu gizliyken çöktüyse geri getir (ManagedShell başlamadan önce!).
+        // If the previous session crashed while taskbar was hidden, restore it before ManagedShell starts.
         TaskbarController.RecoverFromPreviousSession();
 
         System.Windows.Forms.Application.EnableVisualStyles();
@@ -88,7 +88,7 @@ public partial class App : Application
         ThemeManager.Apply(config.Theme);
 
         if (config.StartWithWindows != StartupManager.IsEnabled())
-            StartupManager.Set(config.StartWithWindows); // exe taşındıysa yolu da günceller
+            StartupManager.Set(config.StartWithWindows); // Also updates path if exe was moved
         ExplorerPinMenu.Set(config.ExplorerPinMenu);
 
         StartShell();
@@ -111,7 +111,7 @@ public partial class App : Application
         if (config.IsFirstRun)
             ShowSettings("gallery");
 
-        Log.Info($"DockHub başlatıldı (v{typeof(App).Assembly.GetName().Version}, mod: {config.TaskbarMode}).");
+        Log.Info($"DockHub started (v{typeof(App).Assembly.GetName().Version}, mode: {config.TaskbarMode}).");
     }
 
     private void StartShell()
@@ -134,14 +134,14 @@ public partial class App : Application
     {
         DispatcherUnhandledException += (_, args) =>
         {
-            Log.Error(args.Exception, "İşlenmeyen UI hatası");
-            args.Handled = true; // Tek bir widget hatası tüm dock'u kapatmasın.
+            Log.Error(args.Exception, "Unhandled UI exception");
+            args.Handled = true; // Prevent single widget error from taking down the entire dock.
         };
 
         AppDomain.CurrentDomain.UnhandledException += (_, args) =>
         {
             if (args.ExceptionObject is Exception ex)
-                Log.Error(ex, "Kritik hata");
+                Log.Error(ex, "Fatal exception");
             SafeRestoreTaskbar();
         };
 
@@ -149,12 +149,12 @@ public partial class App : Application
 
         TaskScheduler.UnobservedTaskException += (_, args) =>
         {
-            Log.Error(args.Exception, "Gözlenmeyen görev hatası");
+            Log.Error(args.Exception, "Unobserved task exception");
             args.SetObserved();
         };
     }
 
-    /// <summary>Kullanıcı görev çubuksuz kalmasın: her çıkış yolunda çağrılır.</summary>
+    /// <summary>Ensures the user is never left without a taskbar: called on all exit paths.</summary>
     private static void SafeRestoreTaskbar()
     {
         if (!_taskbarTouched) return;
@@ -164,7 +164,7 @@ public partial class App : Application
         }
         catch
         {
-            // Son çare: bir sonraki açılışta session.json üzerinden geri yüklenir.
+            // Last resort: will be restored via session.json on next launch.
         }
     }
 
@@ -192,7 +192,7 @@ public partial class App : Application
                 ThemeManager.Apply(config.Theme);
                 break;
             case nameof(AppConfig.TaskbarMode):
-                // Sistem tepsisi yalnızca görev çubuğunun yerini alırken devralınır; kabuk servislerini yeniden kur.
+                // System tray is only taken over when replacing taskbar; reinitialize shell services.
                 AppServices.ConfigService.SaveNow();
                 RestartApplication();
                 break;
@@ -216,7 +216,7 @@ public partial class App : Application
         return index >= 0 && index + 1 < args.Length && !string.IsNullOrWhiteSpace(args[index + 1]) ? args[index + 1] : null;
     }
 
-    /// <summary>Explorer'dan gelen "sabitle" isteklerini sabitlenmiş uygulamaların sonuna ekler.</summary>
+    /// <summary>Appends "pin" requests from Explorer to the end of pinned applications.</summary>
     private void ProcessPinRequests()
     {
         var requests = ExplorerPinMenu.Dequeue();
@@ -233,15 +233,15 @@ public partial class App : Application
         {
             if (!File.Exists(path)) continue;
             var item = DockItem.App(path);
-            if (!pinnedKeys.Add(AppKeys.ForItem(item))) continue; // zaten sabitli
+            if (!pinnedKeys.Add(AppKeys.ForItem(item))) continue; // already pinned
             service.AddItem(item, DockItemsIndex.EndOfApps());
             added++;
         }
 
         _dock?.Reveal();
         if (added == 0)
-            _tray?.ShowBalloon(AppInfo.Name, "Bu uygulama zaten sabitlenmiş.");
-        Log.Info($"Explorer'dan {added} uygulama sabitlendi.");
+            _tray?.ShowBalloon(AppInfo.Name, "This application is already pinned.");
+        Log.Info($"{added} application(s) pinned from Explorer.");
     }
 
     public void ShowSettings(string? page = null, string? itemId = null)
@@ -276,7 +276,7 @@ public partial class App : Application
 
     public void RestartApplication()
     {
-        Log.Info("Uygulama yeniden başlatılıyor.");
+        Log.Info("Restarting application.");
         Cleanup();
         _singleInstance?.Dispose();
         _singleInstance = null;
@@ -286,7 +286,7 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Yeniden başlatılamadı");
+            Log.Error(ex, "Failed to restart");
         }
         Shutdown();
     }
@@ -309,7 +309,7 @@ public partial class App : Application
         _cleanedUp = true;
         if (!_running)
         {
-            // İkinci örnek / --exit / --restore-taskbar: kapatılacak bir şey yok.
+            // Second instance / --exit / --restore-taskbar: nothing to clean up.
             _singleInstance?.Dispose();
             return;
         }
@@ -334,11 +334,11 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Kapanış sırasında hata");
+            Log.Error(ex, "Error during shutdown");
         }
 
         _tray?.Dispose();
         _singleInstance?.Dispose();
-        Log.Info("DockHub kapatıldı.");
+        Log.Info("DockHub shut down.");
     }
 }

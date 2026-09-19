@@ -7,9 +7,9 @@ public enum DockEdge { Bottom, Top, Left, Right }
 
 public enum TaskbarMode
 {
-    /// <summary>DockHub, Windows görev çubuğunun yerini tamamen alır (görev çubuğu gizlenir).</summary>
+    /// <summary>DockHub replaces the Windows taskbar completely (taskbar is hidden).</summary>
     Replace,
-    /// <summary>Windows görev çubuğu da görünür kalır.</summary>
+    /// <summary>Windows taskbar also remains visible.</summary>
     ShowBoth,
 }
 
@@ -17,11 +17,11 @@ public enum ThemePreference { Dark, Light, System }
 
 public enum BackdropKind
 {
-    /// <summary>Bulanık cam (pasif pencerede de çalışır, akıcıdır).</summary>
+    /// <summary>Blurred glass (runs on inactive windows too, fluid).</summary>
     Blur,
-    /// <summary>Windows Acrylic dokusu (gren + ton).</summary>
+    /// <summary>Windows Acrylic texture (grain + tint).</summary>
     Acrylic,
-    /// <summary>Bulanıklık yok, düz renk.</summary>
+    /// <summary>No blur, solid color.</summary>
     Solid,
 }
 
@@ -29,17 +29,17 @@ public enum DockSize { Small, Medium, Large }
 
 public enum DockLayout
 {
-    /// <summary>Kenarlardan boşluklu, yuvarlak köşeli yüzen çubuk.</summary>
+    /// <summary>Floating bar with margins and rounded corners.</summary>
     Floating,
-    /// <summary>Ekran kenarına yapışık, klasik görev çubuğu.</summary>
+    /// <summary>Classic taskbar attached to screen edge.</summary>
     Attached,
 }
 
 public enum DockWidthMode
 {
-    /// <summary>Ekran genişliği boyunca.</summary>
+    /// <summary>Spans full screen width.</summary>
     Full,
-    /// <summary>İçerik kadar, ortalanmış.</summary>
+    /// <summary>Fits content width, centered.</summary>
     Fit,
 }
 
@@ -47,7 +47,7 @@ public enum DockAlignment { Start, Center }
 
 public enum DockItemKind { App, Widget, Separator }
 
-/// <summary>%AppData%\DockHub\config.json içeriği.</summary>
+/// <summary>%AppData%\DockHub\config.json content.</summary>
 public sealed class AppConfig : ObservableObject
 {
     public const int CurrentVersion = 2;
@@ -79,7 +79,7 @@ public sealed class AppConfig : ObservableObject
 
     public int Version { get; set; } = CurrentVersion;
 
-    // ---------------- Genel / görev çubuğu
+    // ---------------- General / Taskbar
 
     public TaskbarMode TaskbarMode { get => _taskbarMode; set => Set(ref _taskbarMode, value); }
 
@@ -89,7 +89,7 @@ public sealed class AppConfig : ObservableObject
 
     private bool _explorerPinMenu = true;
 
-    /// <summary>Explorer'da .exe/.lnk sağ tık menüsüne "DockHub'a sabitle" ekler.</summary>
+    /// <summary>Adds "Pin to DockHub" to Explorer .exe/.lnk right-click context menu.</summary>
     public bool ExplorerPinMenu { get => _explorerPinMenu; set => Set(ref _explorerPinMenu, value); }
 
     public bool ShowStartButton { get => _showStartButton; set => Set(ref _showStartButton, value); }
@@ -98,7 +98,7 @@ public sealed class AppConfig : ObservableObject
 
     public bool ShowTaskViewButton { get => _showTaskViewButton; set => Set(ref _showTaskViewButton, value); }
 
-    /// <summary>Sabitlenmemiş çalışan uygulamaları dock'un sonunda gösterir.</summary>
+    /// <summary>Shows unpinned running apps at the end of the dock.</summary>
     public bool ShowRunningApps { get => _showRunningApps; set => Set(ref _showRunningApps, value); }
 
     public bool ShowTray { get => _showTray; set => Set(ref _showTray, value); }
@@ -111,17 +111,17 @@ public sealed class AppConfig : ObservableObject
 
     public bool ShowDesktopButton { get => _showDesktopButton; set => Set(ref _showDesktopButton, value); }
 
-    /// <summary>Her zaman dock'ta görünen tepsi ikonlarının kimlikleri (null = Windows ayarlarından içe aktar).</summary>
+    /// <summary>IDs of tray icons that are always shown in the dock (null = import from Windows settings).</summary>
     public List<string>? PinnedTrayIcons { get; set; }
 
-    /// <summary>Daha önce görülen tepsi ikonları (yenileri Windows ayarlarına göre bir kez sabitlenir).</summary>
+    /// <summary>Previously seen tray icons (new ones are pinned once based on Windows settings).</summary>
     public List<string> KnownTrayIcons { get; set; } = new();
 
-    // ---------------- Görünüm / yerleşim
+    // ---------------- Appearance / Layout
 
     public DockEdge Edge { get => _edge; set => Set(ref _edge, value); }
 
-    /// <summary>Monitör aygıt adı (ör. \\.\DISPLAY2). null = birincil ekran.</summary>
+    /// <summary>Monitor device name (e.g. \\.\DISPLAY2). null = primary monitor.</summary>
     public string? MonitorDevice { get => _monitorDevice; set => Set(ref _monitorDevice, value); }
 
     public bool AutoHide { get => _autoHide; set => Set(ref _autoHide, value); }
@@ -144,12 +144,12 @@ public sealed class AppConfig : ObservableObject
 
     public bool HoverEffect { get => _hoverEffect; set => Set(ref _hoverEffect, value); }
 
-    // ---------------- Öğeler
+    // ---------------- Items
 
-    /// <summary>Dock'taki öğeler (uygulama, widget, ayraç), soldan sağa.</summary>
+    /// <summary>Dock items (app, widget, separator), from left to right.</summary>
     public List<DockItem> Items { get; set; } = new();
 
-    // ---------------- v1 uyumluluğu (yalnızca okunur, taşıma sonrası yazılmaz)
+    // ---------------- v1 compatibility (read-only, not written back after migration)
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public List<LegacyWidgetEntry>? Widgets { get; set; }
@@ -163,13 +163,13 @@ public sealed class AppConfig : ObservableObject
     [JsonIgnore]
     public bool IsFirstRun { get; set; }
 
-    /// <summary>Öğe listesi değiştiğinde (ekleme, silme, sıralama) tetiklenir.</summary>
+    /// <summary>Fired when the items list changes (add, remove, reorder).</summary>
     public event EventHandler? ItemsChanged;
 
     public void NotifyItemsChanged() => ItemsChanged?.Invoke(this, EventArgs.Empty);
 }
 
-/// <summary>Dock'taki tek bir öğe.</summary>
+/// <summary>Represents a single dock item.</summary>
 public sealed class DockItem : ObservableObject
 {
     private string? _variant;
@@ -179,9 +179,9 @@ public sealed class DockItem : ObservableObject
 
     public DockItemKind Kind { get; set; }
 
-    // ---- Uygulama
+    // ---- App
 
-    /// <summary>.exe, .lnk, klasör, URI veya shell:AppsFolder\AUMID.</summary>
+    /// <summary>.exe, .lnk, folder, URI, or shell:AppsFolder\AUMID.</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? Path { get; set; }
 

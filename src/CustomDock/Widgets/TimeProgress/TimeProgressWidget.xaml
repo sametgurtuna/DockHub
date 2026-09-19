@@ -4,7 +4,7 @@
               xmlns:w="clr-namespace:CustomDock.Widgets"
               xmlns:ctl="clr-namespace:CustomDock.Controls">
     <Grid Background="Transparent">
-        <!-- Barkod -->
+        <!-- Bar -->
         <StackPanel x:Name="Layout_bar" Width="168" VerticalAlignment="Center">
             <DockPanel>
                 <TextBlock x:Name="BarPercent" DockPanel.Dock="Right" Style="{StaticResource ValueText}" FontSize="15" LineHeight="18" />
@@ -14,7 +14,7 @@
                          OnBrush="{DynamicResource TickOnBrush}" OffBrush="{DynamicResource TickOffBrush}" />
         </StackPanel>
 
-        <!-- Halka -->
+        <!-- Ring -->
         <StackPanel x:Name="Layout_ring" Orientation="Horizontal" MinWidth="128">
             <Grid Width="32" Height="32" VerticalAlignment="Center">
                 <ctl:RingGauge x:Name="Ring" Thickness="4" Maximum="1"

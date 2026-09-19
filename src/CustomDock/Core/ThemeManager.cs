@@ -5,7 +5,7 @@ using Windows.UI.ViewManagement;
 
 namespace CustomDock.Core;
 
-/// <summary>Koyu/Açık tema kaynak sözlüklerini çalışma anında değiştirir ve Windows vurgu rengini uygular.</summary>
+/// <summary>Swaps Dark/Light theme resource dictionaries at runtime and applies the Windows accent color.</summary>
 public static class ThemeManager
 {
     private static ThemePreference _preference = ThemePreference.Dark;
@@ -51,7 +51,7 @@ public static class ThemeManager
         ThemeChanged?.Invoke();
     }
 
-    /// <summary>Windows vurgu rengini (koyu temada açık ton, açık temada koyu ton) uygular.</summary>
+    /// <summary>Applies the Windows accent color (lighter tint in dark theme, darker tint in light theme).</summary>
     private static void ApplyAccent(ResourceDictionary dictionary, bool dark)
     {
         try
@@ -62,7 +62,7 @@ public static class ThemeManager
             dictionary["AccentBrush"] = Frozen(accent);
             dictionary["SelectionBrush"] = Frozen(Color.FromArgb(0x33, c.R, c.G, c.B));
             dictionary["ActiveIndicatorBrush"] = Frozen(accent);
-            // Açık vurgu renginde siyah, koyu vurgu renginde beyaz metin
+            // Black text on light accent, white text on dark accent
             double luminance = (0.299 * c.R + 0.587 * c.G + 0.114 * c.B) / 255;
             dictionary["OnAccentBrush"] = Frozen(luminance > 0.55 ? Colors.Black : Colors.White);
         }

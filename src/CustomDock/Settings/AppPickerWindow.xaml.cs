@@ -24,8 +24,8 @@ public sealed class AppEntry
         Name = name;
         ParsingName = parsingName;
 
-        // "{KnownFolder}\...\app.exe" biçimindeki masaüstü uygulamalarını gerçek .exe yoluna çevir;
-        // böylece dock, çalışan pencereleri bu uygulamayla eşleştirebilir.
+        // Convert desktop apps of form "{KnownFolder}\...\app.exe" to real .exe path,
+        // so the dock can match running windows to this application.
         var expanded = TrayPreferences.ExpandKnownFolder(parsingName);
         DockPath = expanded.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) && File.Exists(expanded)
             ? expanded
@@ -54,7 +54,7 @@ public sealed class AppEntry
     }
 }
 
-/// <summary>Başlat menüsündeki uygulamalardan (shell:AppsFolder) dock'a sabitleme.</summary>
+/// <summary>Pins applications from the Start menu (shell:AppsFolder) to the dock.</summary>
 public partial class AppPickerWindow : Window
 {
     private readonly List<AppEntry> _entries = new();
@@ -97,11 +97,11 @@ public partial class AppPickerWindow : Window
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Uygulama listesi alınamadı");
+            Log.Error(ex, "Failed to load application list");
         }
 
-        // Başlat menüsü aynı uygulamayı (kullanıcı + tüm kullanıcılar kısayolu) iki kez listeleyebilir;
-        // aynı adı taşıyanlardan gerçek .exe yolu olanı tercih et.
+        // Start menu can list the same application twice (user + all users shortcut);
+        // prefer real .exe path for duplicates with the same name.
         var unique = _entries
             .GroupBy(e => e.Name, StringComparer.CurrentCultureIgnoreCase)
             .Select(g => g.FirstOrDefault(e => !e.DockPath.StartsWith(AppKeys.AppsFolderPrefix, StringComparison.OrdinalIgnoreCase)) ?? g.First())
@@ -113,7 +113,7 @@ public partial class AppPickerWindow : Window
         _view.Filter = Matches;
         AppList.ItemsSource = _view;
         LoadingText.Visibility = _entries.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        LoadingText.Text = "Uygulama bulunamadı. 'Dosyadan ekle' ile .exe veya kısayol seçebilirsiniz.";
+        LoadingText.Text = "No applications found. Use 'Browse file' to select an .exe or shortcut.";
         if (_entries.Count > 0) AppList.SelectedIndex = 0;
     }
 
@@ -168,15 +168,15 @@ public partial class AppPickerWindow : Window
     private void Add(string path, string? name)
     {
         AppServices.ConfigService.AddItem(DockItem.App(path, name), DockItemsIndex.EndOfApps());
-        StatusText.Text = $"{name ?? Path.GetFileNameWithoutExtension(path)} eklendi";
+        StatusText.Text = $"{name ?? Path.GetFileNameWithoutExtension(path)} added";
     }
 
     private void OnBrowseClick(object sender, RoutedEventArgs e)
     {
         var dialog = new OpenFileDialog
         {
-            Title = "Dock'a eklenecek uygulamayı seçin",
-            Filter = "Uygulamalar ve kısayollar (*.exe;*.lnk;*.url)|*.exe;*.lnk;*.url|Tüm dosyalar (*.*)|*.*",
+            Title = "Select application to add to dock",
+            Filter = "Applications and shortcuts (*.exe;*.lnk;*.url)|*.exe;*.lnk;*.url|All files (*.*)|*.*",
             DereferenceLinks = false,
             Multiselect = true,
             InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.CommonPrograms),

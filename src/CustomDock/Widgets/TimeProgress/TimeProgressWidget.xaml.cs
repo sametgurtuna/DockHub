@@ -18,7 +18,7 @@ public sealed class TimeProgressSettings : ObservableObject
         Enum.GetValues<TimeProgressMode>().Select(m => new Option<TimeProgressMode>(m, TimeProgressWidget.ModeName(m))).ToList();
 }
 
-/// <summary>Günün / haftanın / ayın / yılın ne kadarının geçtiği.</summary>
+/// <summary>Progress of the day / week / month / year.</summary>
 public partial class TimeProgressWidget : WidgetBase
 {
     private TimeProgressSettings _settings = new();
@@ -31,10 +31,10 @@ public partial class TimeProgressWidget : WidgetBase
 
     public static string ModeName(TimeProgressMode mode) => mode switch
     {
-        TimeProgressMode.Day => "Gün",
-        TimeProgressMode.Week => "Hafta",
-        TimeProgressMode.Month => "Ay",
-        _ => "Yıl",
+        TimeProgressMode.Day => "Day",
+        TimeProgressMode.Week => "Week",
+        TimeProgressMode.Month => "Month",
+        _ => "Year",
     };
 
     protected override void OnAttached()
@@ -93,15 +93,15 @@ public partial class TimeProgressWidget : WidgetBase
         string title = mode switch
         {
             TimeProgressMode.Day => now.ToString("dddd", culture),
-            TimeProgressMode.Week => $"{culture.Calendar.GetWeekOfYear(now, CalendarWeekRule.FirstFourDayWeek, culture.DateTimeFormat.FirstDayOfWeek)}. hafta",
+            TimeProgressMode.Week => $"Week {culture.Calendar.GetWeekOfYear(now, CalendarWeekRule.FirstFourDayWeek, culture.DateTimeFormat.FirstDayOfWeek)}",
             TimeProgressMode.Month => now.ToString("MMMM", culture),
             _ => now.Year.ToString(culture),
         };
         string detail = mode switch
         {
-            TimeProgressMode.Day => $"{(int)remaining.TotalHours} sa {remaining.Minutes} dk kaldı",
-            TimeProgressMode.Week => $"{remaining.Days} gün {remaining.Hours} sa kaldı",
-            _ => $"{Math.Ceiling(remaining.TotalDays):0} gün kaldı",
+            TimeProgressMode.Day => $"{(int)remaining.TotalHours}h {remaining.Minutes}m left",
+            TimeProgressMode.Week => $"{remaining.Days}d {remaining.Hours}h left",
+            _ => $"{Math.Ceiling(remaining.TotalDays):0} days left",
         };
 
         BarTitle.Text = title;
@@ -113,7 +113,7 @@ public partial class TimeProgressWidget : WidgetBase
         RingTitle.Text = title;
         RingDetail.Text = detail;
 
-        ToolTip = $"{ModeName(mode)}: {percent} geçti\n{detail}\nSağ tık: gün / hafta / ay / yıl";
+        ToolTip = $"{ModeName(mode)}: {percent} elapsed\n{detail}\nRight-click: day / week / month / year";
         _fraction = fraction;
         RefreshCompact();
     }

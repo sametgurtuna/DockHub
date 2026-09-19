@@ -17,8 +17,8 @@ using ManagedShell.WindowsTasks;
 namespace CustomDock.Dock;
 
 /// <summary>
-/// Dock'taki uygulama düğmesi: sabitlenmiş öğe ve/veya çalışan pencere grubu.
-/// Göstergeler: çalışıyor noktası, etkin pencere çizgisi, dikkat (yanıp sönme), ilerleme çubuğu, rozet, canlı önizleme.
+/// Application button on the dock: pinned item and/or running window group.
+/// Indicators: running dot, active window bar, attention (flashing), progress bar, badge, live preview.
 /// </summary>
 public sealed class AppButton : Grid
 {
@@ -78,10 +78,10 @@ public sealed class AppButton : Grid
         };
         RenderOptions.SetBitmapScalingMode(_overlay, BitmapScalingMode.HighQuality);
 
-        // Bildirim rozeti (Kırmızı hap / daire)
+        // Notification badge (Red pill / circle)
         _badgeBorder = new Border
         {
-            Background = new SolidColorBrush(Color.FromRgb(255, 59, 48)), // Canlı bildirim kırmızısı
+            Background = new SolidColorBrush(Color.FromRgb(255, 59, 48)), // Vibrant notification red
             BorderBrush = Brushes.White,
             BorderThickness = new Thickness(1.5),
             CornerRadius = new CornerRadius(8),
@@ -227,7 +227,7 @@ public sealed class AppButton : Grid
 
     private static ImageSource? IconFor(string path)
     {
-        // Kısayolun hedefi bir .exe ise onun ikonunu kullan (kısayol oku olmadan, daha net).
+        // If the shortcut target is an .exe, use its icon (clearer, without shortcut arrow).
         if (path.EndsWith(".lnk", StringComparison.OrdinalIgnoreCase) &&
             ShellIcons.ResolveShortcut(path) is { } target &&
             target.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) && File.Exists(target))
@@ -277,7 +277,7 @@ public sealed class AppButton : Grid
 
         UpdateBadge(group);
 
-        // Canlı küçük resim önizlemesi zaten açık pencereleri gösterir; sade tooltip
+        // Live thumbnail preview already shows open windows; clean tooltip
         ToolTip = group is { WindowCount: > 0 } ? null : Title;
     }
 
@@ -353,7 +353,7 @@ public sealed class AppButton : Grid
         Motion.Scale(_pressScale, scale, scale < 1 ? 90 : 260, easing);
     }
 
-    /// <summary>Dock'a yeni gelen düğme küçükten büyüyerek belirir.</summary>
+    /// <summary>Newly added dock button animates in from small to full size.</summary>
     private void OnFirstLoaded(object sender, RoutedEventArgs e)
     {
         Loaded -= OnFirstLoaded;
@@ -420,7 +420,7 @@ public sealed class AppButton : Grid
         if (LaunchPath is { } lPath && !lPath.StartsWith("shell:", StringComparison.OrdinalIgnoreCase))
             resolvedExe = lPath.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ? lPath : ShellIcons.ResolveShortcut(lPath);
 
-        // --- Jump List (Görevler) ---
+        // --- Jump List (Tasks) ---
         var tasks = JumpListService.GetTasks(resolvedExe);
         if (tasks.Count > 0)
         {
@@ -431,7 +431,7 @@ public sealed class AppButton : Grid
             }
         }
 
-        // --- Jump List (Son Açılanlar / Recent Items) ---
+        // --- Jump List (Recent Items) ---
         var recentItems = JumpListService.GetRecentItems(resolvedExe);
         if (recentItems.Count > 0)
         {
@@ -447,7 +447,7 @@ public sealed class AppButton : Grid
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, $"Son kullanılan öğe açılamadı: {r.Path}");
+                        Log.Error(ex, $"Failed to open recent item: {r.Path}");
                     }
                 });
                 if (r.Icon is not null)
@@ -459,18 +459,18 @@ public sealed class AppButton : Grid
         }
 
         menu.Items.Add(DockMenu.Separator());
-        menu.Items.Add(DockMenu.Item(windows.Count > 0 ? "Yeni pencere" : "Aç", "\uE8A7", StartNewInstance, LaunchPath is not null));
+        menu.Items.Add(DockMenu.Item(windows.Count > 0 ? "New window" : "Open", "\uE8A7", StartNewInstance, LaunchPath is not null));
 
         if (resolvedExe is not null && resolvedExe.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
         {
-            menu.Items.Add(DockMenu.Item("Yönetici olarak çalıştır", "\uE7EF", () => AppLauncher.RunAsAdmin(resolvedExe)));
-            menu.Items.Add(DockMenu.Item("Dosya konumunu aç", "\uE8B7", () => AppLauncher.OpenLocation(resolvedExe)));
+            menu.Items.Add(DockMenu.Item("Run as administrator", "\uE7EF", () => AppLauncher.RunAsAdmin(resolvedExe)));
+            menu.Items.Add(DockMenu.Item("Open file location", "\uE8B7", () => AppLauncher.OpenLocation(resolvedExe)));
         }
 
         menu.Items.Add(DockMenu.Separator());
         if (Item is not null)
         {
-            menu.Items.Add(DockMenu.Item("Sabitlemeyi kaldır", "\uE77A", () => AppServices.ConfigService.RemoveItem(Item.Id)));
+            menu.Items.Add(DockMenu.Item("Unpin from dock", "\uE77A", () => AppServices.ConfigService.RemoveItem(Item.Id)));
         }
         else if (_group is not null && AppLauncher.PinnablePath(_group) is { } pinPath)
         {
@@ -481,14 +481,14 @@ public sealed class AppButton : Grid
         if (windows.Count > 0)
         {
             menu.Items.Add(DockMenu.Separator());
-            menu.Items.Add(DockMenu.Item(windows.Count > 1 ? $"Tüm pencereleri kapat ({windows.Count})" : "Pencereyi kapat", "\uE711",
+            menu.Items.Add(DockMenu.Item(windows.Count > 1 ? $"Close all windows ({windows.Count})" : "Close window", "\uE711",
                 () => { foreach (var w in windows.ToList()) w.Close(); }));
-            menu.Items.Add(DockMenu.Item(windows.Count > 1 ? "İşlemleri sonlandır" : "İşlemi sonlandır", "\uE9CE",
+            menu.Items.Add(DockMenu.Item(windows.Count > 1 ? "End processes" : "End process", "\uE9CE",
                 () => TerminateWindows(windows.ToList())));
         }
     }
 
-    /// <summary>Pencerelerin ait olduğu işlemleri anında ve zorla sonlandırır (Görev Yöneticisi "Görevi Sonlandır" gibi).</summary>
+    /// <summary>Immediately and forcefully terminates processes owning the windows (like Task Manager "End Task").</summary>
     private static void TerminateWindows(IReadOnlyList<ApplicationWindow> windows)
     {
         foreach (var w in windows)
@@ -498,7 +498,7 @@ public sealed class AppButton : Grid
                 if (w.Handle != IntPtr.Zero)
                     NativeMethods.EndTask(w.Handle, false, true);
             }
-            catch { /* yoksay */ }
+            catch { /* ignore */ }
         }
 
         var pids = new HashSet<uint>();
@@ -528,7 +528,7 @@ public sealed class AppButton : Grid
                 }
                 catch (Exception ex)
                 {
-                    Log.Warn($"Süreç {pid} doğrudan sonlandırılamadı, taskkill deneniyor: {ex.Message}");
+                    Log.Warn($"Process {pid} could not be terminated directly, trying taskkill: {ex.Message}");
                     try
                     {
                         using var p = Process.Start(new ProcessStartInfo
@@ -542,7 +542,7 @@ public sealed class AppButton : Grid
                     }
                     catch (Exception taskKillEx)
                     {
-                        Log.Error(taskKillEx, $"taskkill PID {pid} için başarısız oldu");
+                        Log.Error(taskKillEx, $"taskkill failed for PID {pid}");
                     }
                 }
             }
@@ -603,7 +603,7 @@ public sealed class AppButton : Grid
     }
 }
 
-/// <summary>Yeni sabitlenen uygulamaların ekleneceği konum: son uygulama öğesinin hemen arkası.</summary>
+/// <summary>Position for newly pinned applications: immediately after the last app item.</summary>
 public static class DockItemsIndex
 {
     public static int EndOfApps()

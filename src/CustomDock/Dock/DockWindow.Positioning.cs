@@ -158,7 +158,7 @@ public partial class DockWindow
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Ekran alanı ayrılamadı");
+            Log.Error(ex, "Failed to reserve screen area");
             _reserver = null;
         }
     }
@@ -241,7 +241,7 @@ public partial class DockWindow
         };
     }
 
-    /// <summary>Başlat menüsü, hızlı ayarlar ve bildirimler bu dikdörtgene göre konumlanır.</summary>
+    /// <summary>Start menu, quick settings, and notifications position relative to this rectangle.</summary>
     private void UpdateTrayHost()
     {
         if (_hwnd == IntPtr.Zero || _shownRect.Width <= 0) return;
@@ -266,7 +266,7 @@ public partial class DockWindow
     private void ReassertTopmost()
     {
         if (_closing || _fullscreen) return;
-        // Menü/panel açıkken dock'u öne almak onların altında kalmasına yol açar.
+        // Bringing dock to front while a menu/panel is open causes them to end up underneath.
         if (_openMenus.Count > 0 || _interactionCount > 0) return;
         const uint flags = SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOOWNERZORDER;
         if (_shown && IsVisible && IsCoveredByForeignWindow())
@@ -276,8 +276,8 @@ public partial class DockWindow
     }
 
     /// <summary>
-    /// Dock'un üstündeki pencereleri tarar: bizim ya da bir menü/araç ipucu penceresi varsa dokunma;
-    /// yalnızca başka bir uygulamanın penceresi dock'u örtüyorsa true.
+    /// Scans windows above the dock: do nothing if it belongs to us or is a menu/tooltip window;
+    /// returns true only if another application's window covers the dock.
     /// </summary>
     private bool IsCoveredByForeignWindow()
     {

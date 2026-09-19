@@ -2,7 +2,7 @@ using CustomDock.Core;
 
 namespace CustomDock.Shell;
 
-/// <summary>İlk açılıştaki dock içeriği: Windows görev çubuğu sabitlemeleri + birkaç widget.</summary>
+/// <summary>Initial dock content on first launch: Windows taskbar pins + a few widgets.</summary>
 public static class DefaultItems
 {
     public static readonly string TaskbarPinsFolder = Path.Combine(
@@ -32,7 +32,7 @@ public static class DefaultItems
         return items;
     }
 
-    /// <summary>Windows görev çubuğuna sabitlenmiş uygulama kısayollarını okur.</summary>
+    /// <summary>Reads application shortcuts pinned to the Windows taskbar.</summary>
     public static List<DockItem> ImportTaskbarPins()
     {
         try
@@ -46,7 +46,7 @@ public static class DefaultItems
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Görev çubuğu sabitlemeleri okunamadı");
+            Log.Error(ex, "Failed to read taskbar pins");
             return new List<DockItem>();
         }
     }

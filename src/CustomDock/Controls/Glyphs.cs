@@ -3,7 +3,7 @@ using System.Windows.Media;
 
 namespace CustomDock.Controls;
 
-/// <summary>Windows 11 tarzı dört kareli logo.</summary>
+/// <summary>Windows 11-style four-square logo.</summary>
 public sealed class WindowsLogo : FrameworkElement
 {
     private static readonly Brush LogoBrush = CreateBrush();
@@ -36,7 +36,7 @@ public sealed class WindowsLogo : FrameworkElement
 
 public enum DeviceGlyphKind { Battery, Disk, Memory, Cpu, Laptop }
 
-/// <summary>Durum widget'ı için küçük çizgi ikonlar.</summary>
+/// <summary>Small line glyphs for status widget.</summary>
 public sealed class DeviceGlyph : FrameworkElement
 {
     public static readonly DependencyProperty KindProperty = DependencyProperty.Register(

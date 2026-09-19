@@ -7,7 +7,7 @@ using CustomDock.Services;
 
 namespace CustomDock.Widgets;
 
-/// <summary>Claude Code abonelik kullanımı: 5 saatlik ve haftalık limit (sayılar / halkalar / çubuklar).</summary>
+/// <summary>Claude Code subscription usage: 5-hour and weekly limits (numbers / rings / bars).</summary>
 public partial class AIUsageWidget : WidgetBase
 {
     public AIUsageWidget()
@@ -30,8 +30,8 @@ public partial class AIUsageWidget : WidgetBase
         var culture = CultureInfo.CurrentCulture;
         double session = data.SessionPercent ?? 0;
         double week = data.WeekPercent ?? 0;
-        string sessionText = data.SessionPercent is null ? "—" : $"%{Math.Round(session).ToString(culture)}";
-        string weekText = data.WeekPercent is null ? "—" : $"%{Math.Round(week).ToString(culture)}";
+        string sessionText = data.SessionPercent is null ? "—" : $"{Math.Round(session).ToString(culture)}%";
+        string weekText = data.WeekPercent is null ? "—" : $"{Math.Round(week).ToString(culture)}%";
 
         switch (Variant)
         {
@@ -55,13 +55,13 @@ public partial class AIUsageWidget : WidgetBase
 
         var tooltip = new List<string>();
         tooltip.Add(data.SessionPercent is null
-            ? "5 saat: bilinmiyor"
-            : $"5 saat: {sessionText}" + (data.SessionResets is null ? "" : $" (yenilenme: {data.SessionResets})"));
+            ? "5-hour: unknown"
+            : $"5-hour: {sessionText}" + (data.SessionResets is null ? "" : $" (resets: {data.SessionResets})"));
         tooltip.Add(data.WeekPercent is null
-            ? "Haftalık: bilinmiyor"
-            : $"Haftalık: {weekText}" + (data.WeekResets is null ? "" : $" (yenilenme: {data.WeekResets})"));
+            ? "Weekly: unknown"
+            : $"Weekly: {weekText}" + (data.WeekResets is null ? "" : $" (resets: {data.WeekResets})"));
         if (AppServices.AIUsage.Error is { } error)
-            tooltip.Add($"Hata: {error}");
+            tooltip.Add($"Error: {error}");
         ToolTip = string.Join("\n", tooltip);
 
         RefreshCompact();

@@ -1,5 +1,5 @@
-// Bu dosyadaki IImmersiveLauncher/IImmersiveMonitor tanımları ve Başlat menüsünü açma yöntemi
-// RetroBar'dan (https://github.com/dremin/RetroBar, Apache-2.0) uyarlanmıştır.
+// The IImmersiveLauncher/IImmersiveMonitor definitions and Start menu launch mechanism in this file
+// are adapted from RetroBar (https://github.com/dremin/RetroBar, Apache-2.0).
 using System.Runtime.InteropServices;
 using CustomDock.Core;
 using CustomDock.Native;
@@ -8,7 +8,7 @@ using static CustomDock.Native.NativeMethods;
 
 namespace CustomDock.Shell;
 
-/// <summary>Windows Başlat menüsünü, belirli bir monitörde, klavye simülasyonu olmadan açar.</summary>
+/// <summary>Opens the Windows Start menu on a specific monitor without keyboard simulation.</summary>
 public static class StartMenuLauncher
 {
     private static readonly Guid CLSID_ImmersiveMonitorManager = new("47094e3a-0cf2-430f-806f-cf9e4f0f12dd");
@@ -20,7 +20,7 @@ public static class StartMenuLauncher
     {
         try
         {
-            // Explorer'ın odağı almasına izin ver
+            // Allow Explorer to take focus
             GetWindowThreadProcessId(FindWindow("Progman", "Program Manager"), out uint explorerPid);
             AllowSetForegroundWindow((int)explorerPid);
 
@@ -36,10 +36,10 @@ public static class StartMenuLauncher
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Başlat menüsü IImmersiveLauncher ile açılamadı");
+            Log.Error(ex, "Failed to open Start menu via IImmersiveLauncher");
         }
 
-        // Yedek: Windows tuşu
+        // Fallback: Windows key
         InputHelper.SendKeyCombo(InputHelper.VK_LWIN);
     }
 

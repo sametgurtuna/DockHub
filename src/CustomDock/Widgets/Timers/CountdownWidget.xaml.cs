@@ -9,18 +9,18 @@ namespace CustomDock.Widgets;
 public sealed class CountdownSettings : ObservableObject
 {
     private int _seconds = 300;
-    private string _label = "Geri sayım";
+    private string _label = "Countdown";
 
     public int Seconds { get => _seconds; set => Set(ref _seconds, Math.Clamp(value, 5, 24 * 3600)); }
 
     public string Label { get => _label; set => Set(ref _label, value); }
 
     public static IReadOnlyList<Option<int>> Presets { get; } = Options.Of(
-        (60, "1 dakika"), (180, "3 dakika"), (300, "5 dakika"), (600, "10 dakika"), (900, "15 dakika"),
-        (1200, "20 dakika"), (1800, "30 dakika"), (2700, "45 dakika"), (3600, "1 saat"), (7200, "2 saat"));
+        (60, "1 minute"), (180, "3 minutes"), (300, "5 minutes"), (600, "10 minutes"), (900, "15 minutes"),
+        (1200, "20 minutes"), (1800, "30 minutes"), (2700, "45 minutes"), (3600, "1 hour"), (7200, "2 hours"));
 }
 
-/// <summary>Geri sayım: tıkla başlat/duraklat, bitince bildirim.</summary>
+/// <summary>Countdown timer: click to start/pause, notifies on completion.</summary>
 public partial class CountdownWidget : WidgetBase
 {
     private CountdownSettings _settings = new();
@@ -98,7 +98,7 @@ public partial class CountdownWidget : WidgetBase
             _finished = true;
             _remaining = TimeSpan.Zero;
             AppServices.Clock.SecondTick -= OnTick;
-            Notify("Süre doldu ⏱", $"{_settings.Label} ({TimerFormat.Format(Total)}) tamamlandı.", tag: "countdown-" + Item.Id);
+            Notify("Time's up ⏱", $"{_settings.Label} ({TimerFormat.Format(Total)}) completed.", tag: "countdown-" + Item.Id);
         }
         Render();
     }
@@ -107,11 +107,11 @@ public partial class CountdownWidget : WidgetBase
     {
         var remaining = _running ? _endsAt - DateTime.Now : _remaining;
         TimeText.Text = TimerFormat.FormatRemaining(remaining);
-        LabelText.Text = _finished ? "Süre doldu" : _running || remaining == Total ? _settings.Label : "Duraklatıldı";
+        LabelText.Text = _finished ? "Time's up" : _running || remaining == Total ? _settings.Label : "Paused";
         string brush = _finished ? "AccentOrangeBrush" : _running ? "AccentYellowBrush" : "TextPrimaryBrush";
         Icon.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, brush);
         TimeText.SetResourceReference(TextBlock.ForegroundProperty, _finished ? "AccentOrangeBrush" : "TextPrimaryBrush");
-        ToolTip = _finished ? "Sıfırlamak için tıklayın" : (_running ? "Duraklatmak için tıklayın" : "Başlatmak için tıklayın") + "\nSağ tık: süre seçin";
+        ToolTip = _finished ? "Click to reset" : (_running ? "Click to pause" : "Click to start") + "\nRight-click: select duration";
         RefreshCompact();
     }
 
@@ -131,9 +131,9 @@ public partial class CountdownWidget : WidgetBase
 
     public override void AddContextMenuItems(ItemCollection items)
     {
-        items.Add(DockMenu.Item(_running ? "Duraklat" : "Başlat", _running ? "\uE769" : "\uE768", Toggle));
-        items.Add(DockMenu.Item("Sıfırla", "\uE72C", Reset));
-        items.Add(DockMenu.Submenu("Süre", "\uE916",
+        items.Add(DockMenu.Item(_running ? "Pause" : "Start", _running ? "\uE769" : "\uE768", Toggle));
+        items.Add(DockMenu.Item("Reset", "\uE72C", Reset));
+        items.Add(DockMenu.Submenu("Duration", "\uE916",
             CountdownSettings.Presets.Select(o => DockMenu.Check(o.Label, _settings.Seconds == o.Value, () => _settings.Seconds = o.Value))));
     }
 }

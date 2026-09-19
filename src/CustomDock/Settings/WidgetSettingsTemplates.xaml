@@ -1,6 +1,6 @@
 <!--
-    Widget ayar nesneleri için örtük (DataType) şablonlar.
-    Ayarlar penceresi seçili öğenin ayar nesnesini bir ContentControl'e koyar; WPF şablonu türe göre seçer.
+    Implicit (DataType) templates for widget settings objects.
+    Settings window puts the selected item's settings object into a ContentControl; WPF selects the template by type.
 -->
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -8,55 +8,55 @@
                     xmlns:w="clr-namespace:CustomDock.Widgets"
                     xmlns:svc="clr-namespace:CustomDock.Services">
 
-    <!-- Saat -->
+    <!-- Clock -->
     <DataTemplate DataType="{x:Type w:ClockSettings}">
         <StackPanel>
-            <ctl:SettingRow Header="24 saat biçimi" Description="Kapalıyken 12 saat biçimi (ÖÖ/ÖS) kullanılır.">
+            <ctl:SettingRow Header="24-hour format" Description="When disabled, 12-hour format (AM/PM) is used.">
                 <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding Use24Hour}" />
             </ctl:SettingRow>
-            <ctl:SettingRow Header="Saniyeleri göster">
+            <ctl:SettingRow Header="Show seconds">
                 <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ShowSeconds}" />
             </ctl:SettingRow>
-            <ctl:SettingRow Header="Tarih biçimi">
+            <ctl:SettingRow Header="Date format">
                 <ComboBox Width="220" ItemsSource="{x:Static w:ClockSettings.DateFormatOptions}"
                           DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding DateFormat}" />
             </ctl:SettingRow>
         </StackPanel>
     </DataTemplate>
 
-    <!-- Odak -->
+    <!-- Focus -->
     <DataTemplate DataType="{x:Type w:FocusSettings}">
         <StackPanel>
-            <ctl:SettingRow Header="Odak süresi">
+            <ctl:SettingRow Header="Focus duration">
                 <ComboBox Width="160" ItemsSource="{x:Static w:FocusSettings.FocusOptions}"
                           DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding FocusMinutes}" />
             </ctl:SettingRow>
-            <ctl:SettingRow Header="Mola süresi">
+            <ctl:SettingRow Header="Break duration">
                 <ComboBox Width="160" ItemsSource="{x:Static w:FocusSettings.BreakOptions}"
                           DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding BreakMinutes}" />
             </ctl:SettingRow>
-            <ctl:SettingRow Header="Sonraki aşamayı kendiliğinden başlat" Description="Odak bitince mola, mola bitince odak başlar.">
+            <ctl:SettingRow Header="Auto-start next phase" Description="Starts break when focus ends, and focus when break ends.">
                 <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding AutoStartNext}" />
             </ctl:SettingRow>
-            <ctl:SettingRow Header="Uzun mola" Description="Bu kadar odak oturumundan sonra kısa yerine uzun mola verilir.">
+            <ctl:SettingRow Header="Long break" Description="Take a long break instead of a short one after this many focus sessions.">
                 <ComboBox Width="130" ItemsSource="{x:Static w:FocusSettings.SessionCountOptions}"
                           DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding SessionsBeforeLongBreak}" />
             </ctl:SettingRow>
-            <ctl:SettingRow Header="Uzun mola süresi">
+            <ctl:SettingRow Header="Long break duration">
                 <ComboBox Width="130" ItemsSource="{x:Static w:FocusSettings.LongBreakOptions}"
                           DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding LongBreakMinutes}" />
             </ctl:SettingRow>
         </StackPanel>
     </DataTemplate>
 
-    <!-- Geri sayım -->
+    <!-- Countdown -->
     <DataTemplate DataType="{x:Type w:CountdownSettings}">
         <StackPanel>
-            <ctl:SettingRow Header="Süre">
+            <ctl:SettingRow Header="Duration">
                 <ComboBox Width="160" ItemsSource="{x:Static w:CountdownSettings.Presets}"
                           DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding Seconds}" />
             </ctl:SettingRow>
-            <ctl:SettingRow Header="Etiket">
+            <ctl:SettingRow Header="Label">
                 <TextBox Width="200" Text="{Binding Label, UpdateSourceTrigger=PropertyChanged}" />
             </ctl:SettingRow>
         </StackPanel>
@@ -65,53 +65,53 @@
     <!-- Alarm -->
     <DataTemplate DataType="{x:Type w:AlarmSettings}">
         <StackPanel>
-            <ctl:SettingRow Header="Alarm açık">
+            <ctl:SettingRow Header="Alarm enabled">
                 <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding Enabled}" />
             </ctl:SettingRow>
-            <ctl:SettingRow Header="Saat" Description="SS:DD biçiminde.">
+            <ctl:SettingRow Header="Time" Description="In HH:mm format.">
                 <TextBox Width="90" HorizontalContentAlignment="Center" Text="{Binding Time}" />
             </ctl:SettingRow>
-            <ctl:SettingRow Header="Etiket">
+            <ctl:SettingRow Header="Label">
                 <TextBox Width="200" Text="{Binding Label}" />
             </ctl:SettingRow>
-            <ctl:SettingRow Header="Her gün tekrarla">
+            <ctl:SettingRow Header="Repeat daily">
                 <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding RepeatDaily}" />
             </ctl:SettingRow>
         </StackPanel>
     </DataTemplate>
 
-    <!-- Zaman ilerlemesi -->
+    <!-- Time progress -->
     <DataTemplate DataType="{x:Type w:TimeProgressSettings}">
         <StackPanel>
-            <ctl:SettingRow Header="Dönem" Description="Widget'a sağ tıklayarak da değiştirebilirsiniz.">
+            <ctl:SettingRow Header="Period" Description="You can also change this by right-clicking the widget.">
                 <ComboBox Width="140" ItemsSource="{x:Static w:TimeProgressSettings.ModeOptions}"
                           DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding Mode}" />
             </ctl:SettingRow>
         </StackPanel>
     </DataTemplate>
 
-    <!-- Su içme -->
+    <!-- Hydration -->
     <DataTemplate DataType="{x:Type svc:HydrationSettings}">
         <StackPanel>
-            <ctl:SettingRow Header="Günlük hedef" Description="Bardak sayısı.">
+            <ctl:SettingRow Header="Daily goal" Description="Number of glasses.">
                 <StackPanel Orientation="Horizontal">
                     <Slider Width="180" Minimum="1" Maximum="20" IsSnapToTickEnabled="True" TickFrequency="1" Value="{Binding DailyGoal}" />
                     <TextBlock Width="36" TextAlignment="Right" VerticalAlignment="Center" Text="{Binding DailyGoal}"
                                Foreground="{DynamicResource TextSecondaryBrush}" />
                 </StackPanel>
             </ctl:SettingRow>
-            <ctl:SettingRow Header="Bardak boyutu">
+            <ctl:SettingRow Header="Glass size">
                 <ComboBox Width="140" ItemsSource="{x:Static w:WidgetOptions.GlassSizes}"
                           DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding GlassMl}" />
             </ctl:SettingRow>
-            <ctl:SettingRow Header="Hatırlatma aralığı" Description="Son bardaktan bu kadar süre sonra hatırlatılır; widget bu süreye geri sayar.">
+            <ctl:SettingRow Header="Reminder interval" Description="Reminds after this duration since the last glass; widget counts down to this duration.">
                 <ComboBox Width="140" ItemsSource="{x:Static w:WidgetOptions.HydrationIntervals}"
                           DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding IntervalMinutes}" />
             </ctl:SettingRow>
-            <ctl:SettingRow Header="Bildirimler">
+            <ctl:SettingRow Header="Notifications">
                 <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding NotificationsEnabled}" />
             </ctl:SettingRow>
-            <ctl:SettingRow Header="Aktif saatler" Description="Bu saatler dışında bildirim gönderilmez.">
+            <ctl:SettingRow Header="Active hours" Description="No notifications are sent outside these hours.">
                 <StackPanel Orientation="Horizontal" IsEnabled="{Binding NotificationsEnabled}">
                     <ComboBox Width="90" ItemsSource="{x:Static w:WidgetOptions.StartHours}"
                               DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding StartHour}" />
@@ -123,18 +123,18 @@
         </StackPanel>
     </DataTemplate>
 
-    <!-- Not -->
+    <!-- Note -->
     <DataTemplate DataType="{x:Type w:NotesSettings}">
         <StackPanel>
-            <ctl:SettingRow Header="Renk">
+            <ctl:SettingRow Header="Color">
                 <ComboBox Width="140" ItemsSource="{x:Static w:NotesSettings.ColorOptions}"
                           DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding Color}" />
             </ctl:SettingRow>
-            <ctl:SettingRow Header="Kart genişliği" Description="Dock'taki önizleme kartının genişliği.">
+            <ctl:SettingRow Header="Card width" Description="Width of the preview card on the dock.">
                 <ComboBox Width="140" ItemsSource="{x:Static w:NotesSettings.WidthOptions}"
                           DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding Width}" />
             </ctl:SettingRow>
-            <ctl:SettingRow Header="Yazı boyutu" Description="Not kağıdındaki metnin boyutu.">
+            <ctl:SettingRow Header="Font size" Description="Size of text on the sticky note.">
                 <StackPanel Orientation="Horizontal">
                     <Slider Width="160" Minimum="14" Maximum="28" IsSnapToTickEnabled="True" TickFrequency="1" Value="{Binding FontSize}" />
                     <TextBlock Width="36" TextAlignment="Right" VerticalAlignment="Center" Text="{Binding FontSize}"
@@ -144,38 +144,38 @@
         </StackPanel>
     </DataTemplate>
 
-    <!-- Medya -->
+    <!-- Media -->
     <DataTemplate DataType="{x:Type w:MediaSettings}">
         <StackPanel>
-            <ctl:SettingRow Header="Çalan yokken gizle" Description="Hiçbir medya oturumu yoksa widget dock'ta yer kaplamaz.">
+            <ctl:SettingRow Header="Hide when idle" Description="Hides widget when there is no active media session.">
                 <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding HideWhenIdle}" />
             </ctl:SettingRow>
         </StackPanel>
     </DataTemplate>
 
-    <!-- CPU ve bellek -->
+    <!-- CPU & Memory -->
     <DataTemplate DataType="{x:Type w:SystemSettings}">
         <StackPanel>
-            <ctl:SettingRow Header="Güncelleme aralığı" Description="Daha uzun aralık daha az işlemci kullanır.">
+            <ctl:SettingRow Header="Update interval" Description="A longer interval uses less CPU.">
                 <ComboBox Width="140" ItemsSource="{x:Static w:WidgetOptions.SystemIntervals}"
                           DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding UpdateIntervalSeconds}" />
             </ctl:SettingRow>
         </StackPanel>
     </DataTemplate>
 
-    <!-- Durum -->
+    <!-- Status -->
     <DataTemplate DataType="{x:Type w:StatusSettings}">
         <StackPanel>
-            <ctl:SettingRow Header="Pil" Description="Pili olmayan bilgisayarlarda gösterilmez.">
+            <ctl:SettingRow Header="Battery" Description="Hidden on computers without a battery.">
                 <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ShowBattery}" />
             </ctl:SettingRow>
-            <ctl:SettingRow Header="Disk doluluğu (sistem sürücüsü)">
+            <ctl:SettingRow Header="Disk usage (system drive)">
                 <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ShowDisk}" />
             </ctl:SettingRow>
-            <ctl:SettingRow Header="Bellek">
+            <ctl:SettingRow Header="Memory">
                 <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ShowMemory}" />
             </ctl:SettingRow>
-            <ctl:SettingRow Header="İşlemci">
+            <ctl:SettingRow Header="CPU">
                 <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ShowCpu}" />
             </ctl:SettingRow>
         </StackPanel>

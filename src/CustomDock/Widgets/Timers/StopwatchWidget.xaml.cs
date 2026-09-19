@@ -6,7 +6,7 @@ using CustomDock.Dock;
 
 namespace CustomDock.Widgets;
 
-/// <summary>Kronometre: tıkla başlat/duraklat, sağ tık → sıfırla.</summary>
+/// <summary>Stopwatch: click to start/pause, right click → reset.</summary>
 public partial class StopwatchWidget : WidgetBase
 {
     private readonly Stopwatch _stopwatch = new();
@@ -50,8 +50,8 @@ public partial class StopwatchWidget : WidgetBase
     {
         var elapsed = _stopwatch.Elapsed;
         TimeText.Text = TimerFormat.Format(elapsed);
-        StatusText.Text = _stopwatch.IsRunning ? "Çalışıyor" : elapsed > TimeSpan.Zero ? "Duraklatıldı" : "Hazır";
-        ToolTip = _stopwatch.IsRunning ? "Duraklatmak için tıklayın" : "Başlatmak için tıklayın · Sağ tık: sıfırla";
+        StatusText.Text = _stopwatch.IsRunning ? "Running" : elapsed > TimeSpan.Zero ? "Paused" : "Ready";
+        ToolTip = _stopwatch.IsRunning ? "Click to pause" : "Click to start · Right-click: reset";
         RefreshCompact();
     }
 
@@ -69,8 +69,8 @@ public partial class StopwatchWidget : WidgetBase
 
     public override void AddContextMenuItems(ItemCollection items)
     {
-        items.Add(DockMenu.Item(_stopwatch.IsRunning ? "Duraklat" : "Başlat", _stopwatch.IsRunning ? "\uE769" : "\uE768", Toggle));
-        items.Add(DockMenu.Item("Sıfırla", "\uE72C", Reset, _stopwatch.Elapsed > TimeSpan.Zero));
+        items.Add(DockMenu.Item(_stopwatch.IsRunning ? "Pause" : "Start", _stopwatch.IsRunning ? "\uE769" : "\uE768", Toggle));
+        items.Add(DockMenu.Item("Reset", "\uE72C", Reset, _stopwatch.Elapsed > TimeSpan.Zero));
     }
 }
 
@@ -84,7 +84,7 @@ public static class TimerFormat
             : $"{span.Minutes}:{span.Seconds:00}";
     }
 
-    /// <summary>Geri sayımlarda kalan süreyi yukarı yuvarlar (4:59.3 → 5:00 değil, 5:00 → 5:00).</summary>
+    /// <summary>Rounds up remaining time in countdowns (e.g. 4:59.3 → 5:00).</summary>
     public static string FormatRemaining(TimeSpan span)
         => Format(TimeSpan.FromSeconds(Math.Ceiling(Math.Max(0, span.TotalSeconds))));
 }

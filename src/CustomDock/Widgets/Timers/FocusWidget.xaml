@@ -5,17 +5,17 @@
               xmlns:ctl="clr-namespace:CustomDock.Controls"
               Cursor="Hand">
     <Grid>
-        <!-- Dock kartı: tıklanınca kontrol paneli açılır -->
+        <!-- Dock card: click to open control panel -->
         <StackPanel x:Name="Root" Orientation="Horizontal" MinWidth="116" Background="Transparent" MouseLeftButtonUp="OnClick">
             <ctl:RingGauge x:Name="Ring" Width="30" Height="30" Thickness="4.5" Maximum="1" VerticalAlignment="Center"
                            Fill="{DynamicResource AccentOrangeBrush}" Track="{DynamicResource OrangeTrackBrush}" />
             <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
                 <TextBlock x:Name="TimeText" Style="{StaticResource ValueText}" Text="25:00" />
-                <TextBlock x:Name="PhaseText" Style="{StaticResource CaptionText}" Text="Odak" />
+                <TextBlock x:Name="PhaseText" Style="{StaticResource CaptionText}" Text="Focus" />
             </StackPanel>
         </StackPanel>
 
-        <!-- Kontrol paneli -->
+        <!-- Control panel -->
         <Popup x:Name="EditorPopup" StaysOpen="False" AllowsTransparency="True">
             <Border Width="270" Margin="10" Padding="18" CornerRadius="14"
                     Background="{DynamicResource PopupBrush}" BorderBrush="{DynamicResource PopupBorderBrush}" BorderThickness="1"
@@ -23,10 +23,10 @@
                 <StackPanel>
                     <DockPanel>
                         <Button DockPanel.Dock="Right" Style="{StaticResource CardIconButton}" Content="&#xE711;"
-                                ToolTip="Kapat" Click="OnCloseClick" />
+                                ToolTip="Close" Click="OnCloseClick" />
                         <Button DockPanel.Dock="Right" Style="{StaticResource CardIconButton}" Content="&#xE9E9;"
-                                ToolTip="Widget ayarları" Click="OnSettingsClick" Margin="0,0,2,0" />
-                        <TextBlock Text="Odak zamanlayıcı" FontFamily="{StaticResource DisplayFont}" FontSize="15"
+                                ToolTip="Widget settings" Click="OnSettingsClick" Margin="0,0,2,0" />
+                        <TextBlock Text="Focus timer" FontFamily="{StaticResource DisplayFont}" FontSize="15"
                                    FontWeight="SemiBold" VerticalAlignment="Center" />
                     </DockPanel>
 
@@ -40,8 +40,8 @@
                             <ColumnDefinition Width="8" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <Button x:Name="ToggleButton" Style="{StaticResource AccentButton}" Content="Başlat" Click="OnToggleClick" />
-                        <Button Grid.Column="2" Content="Sıfırla" Click="OnResetClick" />
+                        <Button x:Name="ToggleButton" Style="{StaticResource AccentButton}" Content="Start" Click="OnToggleClick" />
+                        <Button Grid.Column="2" Content="Reset" Click="OnResetClick" />
                     </Grid>
 
                     <WrapPanel x:Name="PresetList" Margin="0,16,0,0" HorizontalAlignment="Center" />

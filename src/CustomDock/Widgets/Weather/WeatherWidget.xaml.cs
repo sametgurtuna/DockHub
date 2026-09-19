@@ -16,7 +16,7 @@ public enum WeatherLocationMode { Auto, City }
 public sealed class WeatherSettings : ObservableObject
 {
     private WeatherLocationMode _locationMode = WeatherLocationMode.City;
-    private string _cityName = "İstanbul";
+    private string _cityName = "Istanbul";
     private double _latitude = 41.0138;
     private double _longitude = 28.9497;
     private bool _useFahrenheit;
@@ -37,7 +37,7 @@ public sealed class WeatherSettings : ObservableObject
 
 public sealed record HourlyItem(string Hour, WeatherKind Kind, bool IsDay, string Temperature);
 
-/// <summary>Open-Meteo ile güncel / saatlik hava durumu. Tıklayınca yeniler.</summary>
+/// <summary>Current / hourly weather via Open-Meteo. Click to refresh.</summary>
 public partial class WeatherWidget : WidgetBase
 {
     private WeatherSettings _settings = new();
@@ -70,7 +70,7 @@ public partial class WeatherWidget : WidgetBase
 
     private async void OnSettingsChanged(object? sender, PropertyChangedEventArgs e)
     {
-        // Şehir seçimi birden fazla özelliği art arda değiştirir; tek yeniden abonelik yeterli.
+        // City selection changes multiple properties sequentially; a single resubscription suffices.
         if (_resubscribeQueued) return;
         _resubscribeQueued = true;
         await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Background);
@@ -99,7 +99,7 @@ public partial class WeatherWidget : WidgetBase
     {
         if (_entry is not null && !IsPreview)
         {
-            SubText.Text = "Yenileniyor…";
+            SubText.Text = "Refreshing…";
             await WeatherHub.Instance.RefreshAsync(_entry);
         }
     }
@@ -137,7 +137,7 @@ public partial class WeatherWidget : WidgetBase
         if (data is null)
         {
             TempText.Text = "--°";
-            SubText.Text = _entry?.Error ?? "Yükleniyor…";
+            SubText.Text = _entry?.Error ?? "Loading…";
             HourlyList.ItemsSource = null;
             return;
         }
@@ -157,14 +157,14 @@ public partial class WeatherWidget : WidgetBase
 
         ToolTip =
             $"{data.LocationName} — {data.Description}\n" +
-            $"Sıcaklık {data.Temperature:0.#}{data.Unit} · Hissedilen {data.ApparentTemperature:0}{data.Unit}\n" +
-            $"En yüksek {data.High:0}° · En düşük {data.Low:0}°\n" +
-            $"Nem %{data.Humidity:0} · Rüzgâr {data.WindSpeed:0} km/sa\n" +
-            $"Güncellendi {data.FetchedAt:HH:mm}" + (_entry?.Error is { } error ? $" ({error})" : "") + " · yenilemek için tıklayın";
+            $"Temperature {data.Temperature:0.#}{data.Unit} · Feels like {data.ApparentTemperature:0}{data.Unit}\n" +
+            $"High {data.High:0}° · Low {data.Low:0}°\n" +
+            $"Humidity {data.Humidity:0}% · Wind {data.WindSpeed:0} km/h\n" +
+            $"Updated {data.FetchedAt:HH:mm}" + (_entry?.Error is { } error ? $" ({error})" : "") + " · click to refresh";
     }
 
     public override void AddContextMenuItems(ItemCollection items)
     {
-        items.Add(DockMenu.Item("Yenile", "\uE72C", () => { if (_entry is not null) _ = WeatherHub.Instance.RefreshAsync(_entry); }));
+        items.Add(DockMenu.Item("Refresh", "\uE72C", () => { if (_entry is not null) _ = WeatherHub.Instance.RefreshAsync(_entry); }));
     }
 }

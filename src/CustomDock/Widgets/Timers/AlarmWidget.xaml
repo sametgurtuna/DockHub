@@ -12,7 +12,7 @@
             </Grid.ColumnDefinitions>
             <StackPanel VerticalAlignment="Center">
                 <TextBlock x:Name="TitleText" Style="{StaticResource ValueText}" FontWeight="Normal" FontSize="17" Text="Alarm" />
-                <TextBlock x:Name="SubText" Style="{StaticResource CaptionText}" Text="Saat ayarlayın" />
+                <TextBlock x:Name="SubText" Style="{StaticResource CaptionText}" Text="Set time" />
             </StackPanel>
             <Path x:Name="Bell" Grid.Column="1" VerticalAlignment="Top" Margin="0,7,0,0" Width="17" Height="17" Stretch="Uniform"
                   Data="M12,6 A7,7 0 1 1 11.99,6 Z M12,9 V13 L14,14 M4,5 L7,2.5 M20,5 L17,2.5"
@@ -31,14 +31,14 @@
                             <ColumnDefinition Width="8" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <TextBox x:Name="TimeBox" Tag="SS:DD" MaxLength="5" HorizontalContentAlignment="Center" FontSize="16" KeyDown="OnEditorKeyDown" />
-                        <TextBox x:Name="LabelBox" Grid.Column="2" Tag="Etiket" KeyDown="OnEditorKeyDown" />
+                        <TextBox x:Name="TimeBox" Tag="HH:mm" MaxLength="5" HorizontalContentAlignment="Center" FontSize="16" KeyDown="OnEditorKeyDown" />
+                        <TextBox x:Name="LabelBox" Grid.Column="2" Tag="Label" KeyDown="OnEditorKeyDown" />
                     </Grid>
-                    <CheckBox x:Name="RepeatBox" Content="Her gün tekrarla" Margin="0,12,0,0" />
+                    <CheckBox x:Name="RepeatBox" Content="Repeat daily" Margin="0,12,0,0" />
                     <TextBlock x:Name="ErrorText" Foreground="{DynamicResource DangerBrush}" FontSize="12" Margin="0,8,0,0" />
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,6,0,0">
-                        <Button x:Name="DisableButton" Content="Kapat" Margin="0,0,8,0" Click="OnDisableClick" />
-                        <Button Style="{StaticResource AccentButton}" Content="Kur" MinWidth="72" Click="OnSaveClick" />
+                        <Button x:Name="DisableButton" Content="Turn off" Margin="0,0,8,0" Click="OnDisableClick" />
+                        <Button Style="{StaticResource AccentButton}" Content="Set" MinWidth="72" Click="OnSaveClick" />
                     </StackPanel>
                 </StackPanel>
             </Border>

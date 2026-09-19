@@ -4,7 +4,7 @@ using System.Windows.Media.Animation;
 
 namespace CustomDock.Controls;
 
-/// <summary>Dock genelinde tutarlı, yumuşak animasyonlar.</summary>
+/// <summary>Consistent, smooth animations throughout the dock.</summary>
 public static class Motion
 {
     private static readonly IEasingFunction EaseOut = Freeze(new CubicEase { EasingMode = EasingMode.EaseOut });
@@ -29,12 +29,12 @@ public static class Motion
     }
 
     /// <summary>
-    /// Dock öğelerinin (uygulama düğmesi, widget kartı) büyüme (fare üzerine gelince) ve kayma (yeniden sıralama)
-    /// animasyonlarını aynı anda, birbirini bozmadan kullanabilmesi için paylaşılan dönüşüm çifti.
+    /// Shared transform pair so dock items (app buttons, widget cards) can use magnification (on mouse hover)
+    /// and translation (reordering) animations simultaneously without interfering with each other.
     /// </summary>
     public readonly record struct ItemTransform(ScaleTransform Magnify, TranslateTransform Reorder);
 
-    /// <summary>Öğenin RenderTransform'unu (Ölçek + Kaydırma) döndürür; yoksa oluşturur.</summary>
+    /// <summary>Returns the item's RenderTransform (Scale + Translate); creates it if absent.</summary>
     public static ItemTransform GetItemTransform(FrameworkElement element)
     {
         if (element.RenderTransform is TransformGroup { Children: [ScaleTransform scale, TranslateTransform translate] })
@@ -47,7 +47,7 @@ public static class Motion
         return new ItemTransform(newScale, newTranslate);
     }
 
-    /// <summary>Öğe küçükten büyüyerek ve belirerek görünür (dock'a eklenen öğeler, açılan paneller).</summary>
+    /// <summary>Item appears by scaling up from smaller size and fading in (items added to dock, opened panels).</summary>
     public static void Appear(FrameworkElement element, double fromScale = 0.82, int milliseconds = 260)
     {
         var (scale, _) = GetItemTransform(element);
@@ -59,8 +59,8 @@ public static class Motion
     }
 
     /// <summary>
-    /// Bir öğeyi eski konumundan (dx, dy uzaklıkta) yeni (düzenden gelen) konumuna kaydırarak taşır (FLIP tekniği).
-    /// Dock'ta yeniden sıralama olduğunda öğelerin sıçramadan kayarak yer değiştirmesi için kullanılır.
+    /// Slides an item from its old position (dx, dy distance) to its new (layout-derived) position (FLIP technique).
+    /// Used when reordering dock items so they slide smoothly into place without jumping.
     /// </summary>
     public static void SlideFrom(FrameworkElement element, Vector delta, int milliseconds = 260)
     {
@@ -75,7 +75,7 @@ public static class Motion
         translate.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(0, duration) { EasingFunction = EaseOut });
     }
 
-    /// <summary>Popup içeriği için: hafif kayma + belirme. <paramref name="offset"/> kaymanın yönüdür.</summary>
+    /// <summary>For popup content: subtle slide + fade in. <paramref name="offset"/> is slide direction.</summary>
     public static void PopIn(FrameworkElement element, Vector offset, int milliseconds = 200)
     {
         var translate = new TranslateTransform(offset.X, offset.Y);

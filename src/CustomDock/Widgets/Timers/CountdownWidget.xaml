@@ -10,7 +10,7 @@
         </Grid>
         <StackPanel Margin="8,0,0,0" VerticalAlignment="Center">
             <TextBlock x:Name="TimeText" Style="{StaticResource ValueText}" Text="5:00" />
-            <TextBlock x:Name="LabelText" Style="{StaticResource CaptionText}" Text="Geri sayım" MaxWidth="110" />
+            <TextBlock x:Name="LabelText" Style="{StaticResource CaptionText}" Text="Countdown" MaxWidth="110" />
         </StackPanel>
     </StackPanel>
 </w:WidgetBase>

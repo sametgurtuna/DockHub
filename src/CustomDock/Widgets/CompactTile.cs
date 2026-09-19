@@ -9,8 +9,8 @@ using CustomDock.Controls;
 namespace CustomDock.Widgets;
 
 /// <summary>
-/// Dikey (sol/sağ) dock'ta widget'ın özet görünümü: üstte ikon/halka, altta kısa değer.
-/// Widget'ın tamamı kutucuğa tıklanınca açılan panelde gösterilir.
+/// Summary view of the widget in vertical (left/right) dock: icon/ring on top, short value below.
+/// The full widget is shown in a flyout panel when the tile is clicked.
 /// </summary>
 public sealed class CompactTile : Grid
 {
@@ -69,7 +69,7 @@ public sealed class CompactTile : Grid
         Children.Add(_text);
     }
 
-    /// <summary>Kutucuğun alt satırındaki kısa metin (null → gizli, görsel ortalanır).</summary>
+    /// <summary>Short text on the bottom line of the tile (null -> hidden, visual is centered).</summary>
     public string? Text
     {
         get => _text.Text;
@@ -93,7 +93,7 @@ public sealed class CompactTile : Grid
 
     public void SetTextBrushKey(string key) => _text.SetResourceReference(TextBlock.ForegroundProperty, key);
 
-    /// <summary>Tanımlayıcıdaki çizgi ikonunu gösterir.</summary>
+    /// <summary>Shows the outline icon from the descriptor.</summary>
     public Path ShowGlyph(Geometry icon, string brushKey)
     {
         _glyph ??= new Path
@@ -111,7 +111,7 @@ public sealed class CompactTile : Grid
         return _glyph;
     }
 
-    /// <summary>İlerleme halkası gösterir; <paramref name="inner"/> halkanın içindeki kısa metindir.</summary>
+    /// <summary>Shows a progress ring; <paramref name="inner"/> is short text inside the ring.</summary>
     public RingGauge ShowRing(double value, double maximum, string fillKey, string trackKey, string? inner = null)
     {
         _ring ??= new RingGauge { Thickness = 2.6 };
@@ -131,7 +131,7 @@ public sealed class CompactTile : Grid
         _inner.FontSize = inner?.Length > 2 ? 7.5 : 8.5;
     }
 
-    /// <summary>Görsel alanında büyük metin (ör. iki satırlık saat veya takvim günü).</summary>
+    /// <summary>Large text in the visual area (e.g. two-line clock or calendar day).</summary>
     public TextBlock ShowLabel(string text, double fontSize = 13, string brushKey = "TextPrimaryBrush")
     {
         if (_label is null)
@@ -155,7 +155,7 @@ public sealed class CompactTile : Grid
         return _label;
     }
 
-    /// <summary>Özel bir görsel (analog saat, hava ikonu, albüm kapağı...) gösterir.</summary>
+    /// <summary>Shows a custom visual (analog clock, weather icon, album art...).</summary>
     public void SetVisual(UIElement? visual)
     {
         if (!ReferenceEquals(visual, _ring)) SetInner(null);

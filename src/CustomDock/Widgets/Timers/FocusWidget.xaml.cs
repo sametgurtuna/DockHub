@@ -19,33 +19,33 @@ public sealed class FocusSettings : ObservableObject
 
     public int BreakMinutes { get => _breakMinutes; set => Set(ref _breakMinutes, Math.Clamp(value, 1, 60)); }
 
-    /// <summary>Odak bitince molayı (ve tersini) kendiliğinden başlatır.</summary>
+    /// <summary>Automatically starts break when focus ends and vice versa.</summary>
     public bool AutoStartNext { get => _autoStartNext; set => Set(ref _autoStartNext, value); }
 
-    /// <summary>Bu kadar odak oturumundan sonra kısa mola yerine uzun mola verilir.</summary>
+    /// <summary>Take a long break instead of a short break after this many focus sessions.</summary>
     public int SessionsBeforeLongBreak { get => _sessionsBeforeLongBreak; set => Set(ref _sessionsBeforeLongBreak, Math.Clamp(value, 2, 8)); }
 
     public int LongBreakMinutes { get => _longBreakMinutes; set => Set(ref _longBreakMinutes, Math.Clamp(value, 1, 60)); }
 
     public static IReadOnlyList<Option<int>> FocusOptions { get; } =
-        Options.Of((15, "15 dakika"), (25, "25 dakika"), (30, "30 dakika"), (45, "45 dakika"), (50, "50 dakika"), (60, "60 dakika"), (90, "90 dakika"));
+        Options.Of((15, "15 minutes"), (25, "25 minutes"), (30, "30 minutes"), (45, "45 minutes"), (50, "50 minutes"), (60, "60 minutes"), (90, "90 minutes"));
 
     public static IReadOnlyList<Option<int>> BreakOptions { get; } =
-        Options.Of((3, "3 dakika"), (5, "5 dakika"), (10, "10 dakika"), (15, "15 dakika"), (20, "20 dakika"));
+        Options.Of((3, "3 minutes"), (5, "5 minutes"), (10, "10 minutes"), (15, "15 minutes"), (20, "20 minutes"));
 
     public static IReadOnlyList<Option<int>> LongBreakOptions { get; } =
-        Options.Of((10, "10 dakika"), (15, "15 dakika"), (20, "20 dakika"), (30, "30 dakika"));
+        Options.Of((10, "10 minutes"), (15, "15 minutes"), (20, "20 minutes"), (30, "30 minutes"));
 
     public static IReadOnlyList<Option<int>> SessionCountOptions { get; } =
-        Options.Of((2, "2 oturum"), (3, "3 oturum"), (4, "4 oturum"), (6, "6 oturum"), (8, "8 oturum"));
+        Options.Of((2, "2 sessions"), (3, "3 sessions"), (4, "4 sessions"), (6, "6 sessions"), (8, "8 sessions"));
 
-    /// <summary>Panelde hızlı seçim için gösterilen odak süreleri.</summary>
+    /// <summary>Focus durations shown for quick selection in the flyout.</summary>
     public static IReadOnlyList<int> QuickFocusMinutes { get; } = new[] { 15, 25, 45, 60 };
 }
 
 /// <summary>
-/// Pomodoro tarzı odak zamanlayıcı. Karta tıklayınca kontrol paneli açılır (doğrudan başlatıp durdurmaz);
-/// başlat/duraklat/sıfırla ve süre seçimi panelin içindedir. Belirli sayıda odak oturumundan sonra uzun mola verir.
+/// Pomodoro-style focus timer. Clicking the card opens the control panel;
+/// start/pause/reset and duration selection are inside the panel. Provides a long break after a set number of focus sessions.
 /// </summary>
 public partial class FocusWidget : WidgetBase
 {
@@ -118,7 +118,7 @@ public partial class FocusWidget : WidgetBase
 
     private void OnResetClick(object sender, RoutedEventArgs e) => Reset();
 
-    // ------------------------------------------------------------------ Zamanlayıcı
+    // ------------------------------------------------------------------ Timer
 
     private void Toggle()
     {
@@ -159,7 +159,7 @@ public partial class FocusWidget : WidgetBase
         Render();
     }
 
-    /// <summary>Odak → mola, mola → bir sonraki odak oturumu geçişi (oturum sayacını da ilerletir).</summary>
+    /// <summary>Advance focus → break, break → next focus session (also advances session counter).</summary>
     private void AdvancePhase()
     {
         if (_isBreak)
@@ -179,10 +179,10 @@ public partial class FocusWidget : WidgetBase
         {
             bool finishedBreak = _isBreak;
             bool wasLongBreak = IsLongBreak;
-            Notify(finishedBreak ? "Mola bitti" : "Odak süresi bitti",
+            Notify(finishedBreak ? "Break ended" : "Focus session ended",
                 finishedBreak
-                    ? "Yeni bir odak oturumuna hazırsın."
-                    : wasLongBreak ? "Harika iş çıkardın! Şimdi uzun bir mola ver." : $"Harika! {_settings.BreakMinutes} dakika mola ver.",
+                    ? "Ready for a new focus session."
+                    : wasLongBreak ? "Great job! Time for a long break." : $"Great job! Take a {_settings.BreakMinutes}-minute break.",
                 tag: "focus-" + Item.Id);
             _running = false;
             AppServices.Clock.SecondTick -= OnTick;
@@ -206,11 +206,11 @@ public partial class FocusWidget : WidgetBase
         Ring.SetResourceReference(Controls.RingGauge.FillProperty, fillKey);
         Ring.SetResourceReference(Controls.RingGauge.TrackProperty, trackKey);
 
-        string phase = _isBreak ? (IsLongBreak ? "Uzun mola" : "Mola") : "Odak";
-        PhaseText.Text = _running ? phase : remaining < PhaseLength ? $"{phase} · duraklatıldı" : phase;
-        PopupPhase.Text = $"{phase} · {_settings.SessionsBeforeLongBreak} oturumdan {_session}.si";
+        string phase = _isBreak ? (IsLongBreak ? "Long break" : "Break") : "Focus";
+        PhaseText.Text = _running ? phase : remaining < PhaseLength ? $"{phase} · paused" : phase;
+        PopupPhase.Text = $"{phase} · session {_session} of {_settings.SessionsBeforeLongBreak}";
 
-        ToggleButton.Content = _running ? "Duraklat" : "Başlat";
+        ToggleButton.Content = _running ? "Pause" : "Start";
 
         foreach (var (minutes, button) in _presetButtons)
         {
@@ -219,7 +219,7 @@ public partial class FocusWidget : WidgetBase
             button.SetResourceReference(Button.ForegroundProperty, selected ? "OnAccentBrush" : "TextPrimaryBrush");
         }
 
-        ToolTip = (_running ? "Duraklatmak için tıklayın" : "Başlatmak için tıklayın") + "\nSağ tık: sıfırla, atla, süreler";
+        ToolTip = (_running ? "Click to pause" : "Click to start") + "\nRight-click: reset, skip, durations";
         RefreshCompact();
     }
 
@@ -230,7 +230,7 @@ public partial class FocusWidget : WidgetBase
             var button = new Button
             {
                 Style = (Style)FindResource("PillButton"),
-                Content = $"{minutes} dk",
+                Content = $"{minutes} min",
                 Margin = new Thickness(3, 0, 3, 0),
                 MinWidth = 54,
             };
@@ -250,13 +250,13 @@ public partial class FocusWidget : WidgetBase
 
     public override void AddContextMenuItems(ItemCollection items)
     {
-        items.Add(DockMenu.Item("Zamanlayıcıyı aç…", "", OpenEditor));
-        items.Add(DockMenu.Item(_running ? "Duraklat" : "Başlat", _running ? "" : "", Toggle));
-        items.Add(DockMenu.Item(_isBreak ? "Molayı atla" : "Odağı atla", "", Skip));
-        items.Add(DockMenu.Item("Sıfırla", "", Reset));
-        items.Add(DockMenu.Submenu("Odak süresi", "",
+        items.Add(DockMenu.Item("Open timer…", "\uE70F", OpenEditor));
+        items.Add(DockMenu.Item(_running ? "Pause" : "Start", _running ? "\uE769" : "\uE768", Toggle));
+        items.Add(DockMenu.Item(_isBreak ? "Skip break" : "Skip focus", "\uE893", Skip));
+        items.Add(DockMenu.Item("Reset", "\uE72C", Reset));
+        items.Add(DockMenu.Submenu("Focus duration", "\uE916",
             FocusSettings.FocusOptions.Select(o => DockMenu.Check(o.Label, _settings.FocusMinutes == o.Value, () => _settings.FocusMinutes = o.Value))));
-        items.Add(DockMenu.Submenu("Mola süresi", "",
+        items.Add(DockMenu.Submenu("Break duration", "\uEC72",
             FocusSettings.BreakOptions.Select(o => DockMenu.Check(o.Label, _settings.BreakMinutes == o.Value, () => _settings.BreakMinutes = o.Value))));
     }
 }

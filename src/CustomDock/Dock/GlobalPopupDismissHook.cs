@@ -11,10 +11,10 @@ using static CustomDock.Native.NativeMethods;
 namespace CustomDock.Dock;
 
 /// <summary>
-/// Masaüstüne veya başka bir uygulamaya tıklandığında açık olan tüm ContextMenu
-/// ve Popup'ların (Dock WS_EX_NOACTIVATE kipinde olduğu için normalde kapanmayan pencereler)
-/// anında ve pürüzsüzce kapanmasını sağlayan düşük seviyeli kanca.
-/// Yalnızca en az bir menü veya popup açıkken etkindir, diğer zamanlarda sıfır kaynak tüketir.
+/// Low-level hook ensuring all open ContextMenus and Popups
+/// (which normally do not close because Dock is in WS_EX_NOACTIVATE mode)
+/// close instantly and smoothly when the desktop or another application is clicked.
+/// Active only while at least one menu or popup is open; consumes zero resources otherwise.
 /// </summary>
 public static class GlobalPopupDismissHook
 {
@@ -208,7 +208,7 @@ public static class GlobalPopupDismissHook
                     }
                 }
 
-                // Dışarıya (örneğin masaüstüne veya başka bir pencereye) tıklandıysa kapat
+                // Dismiss if clicked outside (e.g. desktop or another window)
                 if (!clickedInsideMenu && s_activeMenus.Count > 0)
                 {
                     var menus = s_activeMenus.ToList();

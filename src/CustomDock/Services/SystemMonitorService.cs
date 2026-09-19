@@ -15,8 +15,8 @@ public readonly record struct SystemStats(
     bool IsCharging);
 
 /// <summary>
-/// CPU, RAM, disk ve pil durumunu ölçer. PerformanceCounter yerine GetSystemTimes / GlobalMemoryStatusEx:
-/// ilk ölçüm gecikmesi yok, dil bağımsız ve çok düşük maliyetli. Yalnızca abone varken çalışır.
+/// Measures CPU, RAM, disk, and battery state. Uses GetSystemTimes / GlobalMemoryStatusEx instead of PerformanceCounter:
+/// no initial measurement delay, language-independent, and very low overhead. Runs only while subscribed.
 /// </summary>
 public sealed class SystemMonitorService
 {
@@ -40,7 +40,7 @@ public sealed class SystemMonitorService
     public TimeSpan UpdateInterval
     {
         get => _timer.Interval;
-        // Performans: 1 saniyeden sık ölçüm yapılmaz.
+        // Performance: does not sample faster than 1 second.
         set => _timer.Interval = value < TimeSpan.FromSeconds(1) ? TimeSpan.FromSeconds(1) : value;
     }
 
@@ -68,7 +68,7 @@ public sealed class SystemMonitorService
         if (NativeMethods.GetSystemTimes(out var idle, out var kernel, out var user))
         {
             ulong idleDelta = idle.Value - _lastIdle;
-            ulong totalDelta = (kernel.Value - _lastKernel) + (user.Value - _lastUser); // kernel süresi idle'ı içerir
+            ulong totalDelta = (kernel.Value - _lastKernel) + (user.Value - _lastUser); // kernel time includes idle
             if (_lastKernel != 0 && totalDelta > 0)
                 cpu = Math.Clamp((1.0 - (double)idleDelta / totalDelta) * 100.0, 0, 100);
             _lastIdle = idle.Value;

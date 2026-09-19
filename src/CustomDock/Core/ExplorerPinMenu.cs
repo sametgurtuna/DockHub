@@ -4,12 +4,12 @@ using Microsoft.Win32;
 namespace CustomDock.Core;
 
 /// <summary>
-/// Explorer'da .exe ve kısayollara sağ tıklayınca çıkan "DockHub'a sabitle" komutu (HKCU, yönetici izni gerekmez).
-/// Komut <c>DockHub.exe --pin "dosya"</c> çalıştırır; açık olan örnek öğeyi sabitlenmiş uygulamaların sonuna ekler.
+/// Context menu command "Pin to DockHub" when right-clicking .exe and shortcut files in Explorer (HKCU, no admin privileges required).
+/// The command runs <c>DockHub.exe --pin "file"</c>; the running instance adds the item to the end of pinned applications.
 /// </summary>
 /// <remarks>
-/// Windows 11'in yeni kısa menüsü yalnızca paketlenmiş (imzalı) uygulamaların komutlarını gösterir;
-/// bu komut orada "Daha fazla seçenek göster" altında (ya da Shift+sağ tık ile) görünür.
+/// Windows 11's modern context menu only shows packaged (signed) app commands directly;
+/// this command appears under "Show more options" (or via Shift+Right Click).
 /// </remarks>
 public static class ExplorerPinMenu
 {
@@ -66,16 +66,16 @@ public static class ExplorerPinMenu
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Explorer menü kaydı güncellenemedi");
+            Log.Error(ex, "Failed to update Explorer menu registry entry");
         }
     }
 
-    // ------------------------------------------------------------------ Sabitleme istekleri (örnekler arası)
+    // ------------------------------------------------------------------ Pin requests (inter-instance)
 
     private const string MutexName = @"Local\DockHub.PinQueue.Mutex";
     private static string QueueFile => Path.Combine(AppPaths.Root, "pin-requests.txt");
 
-    /// <summary>İkinci örnek: isteği kuyruğa yazar; çalışan örnek sinyal ile okur.</summary>
+    /// <summary>Second instance: writes request to queue; running instance reads via signal.</summary>
     public static void Enqueue(string path)
     {
         try
@@ -106,11 +106,11 @@ public static class ExplorerPinMenu
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Sabitleme isteği yazılamadı");
+            Log.Error(ex, "Failed to write pin request");
         }
     }
 
-    /// <summary>Kuyruktaki istekleri alır ve kuyruğu boşaltır.</summary>
+    /// <summary>Retrieves queued requests and clears the queue.</summary>
     public static List<string> Dequeue()
     {
         try
@@ -147,7 +147,7 @@ public static class ExplorerPinMenu
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Sabitleme istekleri okunamadı");
+            Log.Error(ex, "Failed to read pin requests");
             return new List<string>();
         }
     }

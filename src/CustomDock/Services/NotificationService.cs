@@ -7,8 +7,8 @@ namespace CustomDock.Services;
 public sealed record ToastAction(string Label, string Action, string? Id = null);
 
 /// <summary>
-/// Windows toast bildirimleri. Paketlenmemiş masaüstü uygulamaları için
-/// Microsoft.Toolkit.Uwp.Notifications, AUMID kaydını ve COM aktivasyonunu otomatik yapar.
+/// Windows toast notifications. For unpackaged desktop applications,
+/// Microsoft.Toolkit.Uwp.Notifications automatically handles AUMID registration and COM activation.
 /// </summary>
 public sealed class NotificationService
 {
@@ -18,7 +18,7 @@ public sealed class NotificationService
 
     private bool _initialized;
 
-    /// <summary>Toast gösterilemezse kullanılacak yedek (tray balon bildirimi).</summary>
+    /// <summary>Fallback to use if toast cannot be shown (tray balloon notification).</summary>
     public Action<string, string>? Fallback { get; set; }
 
     public void Initialize()
@@ -35,7 +35,7 @@ public sealed class NotificationService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Toast aktivasyonu kaydedilemedi");
+            Log.Error(ex, "Failed to register toast activation");
         }
     }
 
@@ -68,12 +68,12 @@ public sealed class NotificationService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Toast gösterilemedi");
+            Log.Error(ex, "Failed to show toast notification");
             Fallback?.Invoke(title, body);
         }
     }
 
-    /// <summary>Alarm senaryolu bildirim (kullanıcı kapatana kadar ekranda kalır, alarm sesi çalar).</summary>
+    /// <summary>Alarm scenario notification (stays on screen until dismissed by user, plays alarm sound).</summary>
     public void ShowAlarm(string title, string body, string tag)
     {
         try
@@ -84,7 +84,7 @@ public sealed class NotificationService
                 .AddText(title)
                 .AddText(body)
                 .AddAudio(new Uri("ms-winsoundevent:Notification.Looping.Alarm"), loop: true)
-                .AddButton(new ToastButtonDismiss("Kapat"))
+                .AddButton(new ToastButtonDismiss("Dismiss"))
                 .Show(toast =>
                 {
                     toast.Tag = tag;
@@ -93,7 +93,7 @@ public sealed class NotificationService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Alarm bildirimi gösterilemedi");
+            Log.Error(ex, "Failed to show alarm notification");
             Show(title, body, tag);
         }
     }
@@ -122,7 +122,7 @@ public sealed class NotificationService
         }
         catch
         {
-            // yoksay
+            // ignore
         }
     }
 }

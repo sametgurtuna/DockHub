@@ -15,7 +15,7 @@ public sealed record JumpTask(string Title, string Glyph, Action Action);
 public sealed record RecentItem(string Title, string Path, ImageSource? Icon);
 
 /// <summary>
-/// Uygulamalar için Windows Jump List (Görevler, Sık Kullanılanlar ve Son Açılan Belgeler) desteği sağlar.
+/// Provides Windows Jump List (Tasks, Frequent, and Recent Documents) support for applications.
 /// </summary>
 public static class JumpListService
 {
@@ -30,54 +30,54 @@ public static class JumpListService
 
         string fileName = Path.GetFileName(exePath).ToLowerInvariant();
 
-        // 1. Web Tarayıcıları (Chrome, Edge, Firefox, Brave, Opera, Vivaldi)
+        // 1. Web Browsers (Chrome, Edge, Firefox, Brave, Opera, Vivaldi)
         if (fileName is "chrome.exe" or "msedge.exe" or "brave.exe" or "opera.exe" or "vivaldi.exe")
         {
             string incognitoArg = fileName is "msedge.exe" ? "-inprivate" : "-incognito";
-            string incognitoLabel = fileName is "msedge.exe" ? "Yeni InPrivate penceresi" : "Yeni gizli pencere";
+            string incognitoLabel = fileName is "msedge.exe" ? "New InPrivate window" : "New incognito window";
 
-            tasks.Add(new JumpTask("Yeni pencere", "\uE737", () => AppLauncher.Launch(exePath, "--new-window", true)));
+            tasks.Add(new JumpTask("New window", "\uE737", () => AppLauncher.Launch(exePath, "--new-window", true)));
             tasks.Add(new JumpTask(incognitoLabel, "\uE727", () => AppLauncher.Launch(exePath, incognitoArg, true)));
         }
         else if (fileName is "firefox.exe")
         {
-            tasks.Add(new JumpTask("Yeni pencere", "\uE737", () => AppLauncher.Launch(exePath, "-new-window", true)));
-            tasks.Add(new JumpTask("Yeni gizli pencere", "\uE727", () => AppLauncher.Launch(exePath, "-private-window", true)));
+            tasks.Add(new JumpTask("New window", "\uE737", () => AppLauncher.Launch(exePath, "-new-window", true)));
+            tasks.Add(new JumpTask("New private window", "\uE727", () => AppLauncher.Launch(exePath, "-private-window", true)));
         }
-        // 2. Kod Editörleri (VS Code, VS Code Insiders, Visual Studio, Notepad++)
+        // 2. Code Editors (VS Code, VS Code Insiders, Visual Studio, Notepad++)
         else if (fileName is "code.exe" or "code - insiders.exe")
         {
-            tasks.Add(new JumpTask("Yeni boş pencere", "\uE737", () => AppLauncher.Launch(exePath, "-n", true)));
+            tasks.Add(new JumpTask("New empty window", "\uE737", () => AppLauncher.Launch(exePath, "-n", true)));
         }
         else if (fileName is "notepad.exe" or "notepad++.exe")
         {
-            tasks.Add(new JumpTask("Yeni pencere", "\uE737", () => AppLauncher.Launch(exePath, "", true)));
+            tasks.Add(new JumpTask("New window", "\uE737", () => AppLauncher.Launch(exePath, "", true)));
         }
-        // 3. Dosya Gezgini (Explorer)
+        // 3. File Explorer
         else if (fileName is "explorer.exe")
         {
-            tasks.Add(new JumpTask("İndirilenler", "\uE896", () => Process.Start("explorer.exe", "shell:Downloads")));
-            tasks.Add(new JumpTask("Belgeler", "\uE8A5", () => Process.Start("explorer.exe", "shell:Personal")));
-            tasks.Add(new JumpTask("Masaüstü", "\uE7C3", () => Process.Start("explorer.exe", "shell:Desktop")));
-            tasks.Add(new JumpTask("Resimler", "\uEB9F", () => Process.Start("explorer.exe", "shell:My Pictures")));
+            tasks.Add(new JumpTask("Downloads", "\uE896", () => Process.Start("explorer.exe", "shell:Downloads")));
+            tasks.Add(new JumpTask("Documents", "\uE8A5", () => Process.Start("explorer.exe", "shell:Personal")));
+            tasks.Add(new JumpTask("Desktop", "\uE7C3", () => Process.Start("explorer.exe", "shell:Desktop")));
+            tasks.Add(new JumpTask("Pictures", "\uEB9F", () => Process.Start("explorer.exe", "shell:My Pictures")));
         }
-        // 4. Komut Satırı / Terminaller (Windows Terminal, PowerShell, CMD)
+        // 4. Command Line / Terminals (Windows Terminal, PowerShell, CMD)
         else if (fileName is "wt.exe" or "powershell.exe" or "pwsh.exe" or "cmd.exe")
         {
-            tasks.Add(new JumpTask("Yeni pencere", "\uE737", () => AppLauncher.Launch(exePath, "", true)));
-            tasks.Add(new JumpTask("Yönetici olarak yeni pencere", "\uE7EF", () => AppLauncher.RunAsAdmin(exePath)));
+            tasks.Add(new JumpTask("New window", "\uE737", () => AppLauncher.Launch(exePath, "", true)));
+            tasks.Add(new JumpTask("New window as administrator", "\uE7EF", () => AppLauncher.RunAsAdmin(exePath)));
         }
         // 5. Discord
         else if (fileName is "discord.exe" or "update.exe" && exePath.Contains("Discord", StringComparison.OrdinalIgnoreCase))
         {
-            tasks.Add(new JumpTask("Ses Ayarlarını Aç", "\uE720", () => AppLauncher.Launch(exePath, "--open-settings", false)));
+            tasks.Add(new JumpTask("Open Voice Settings", "\uE720", () => AppLauncher.Launch(exePath, "--open-settings", false)));
         }
 
         return tasks;
     }
 
     /// <summary>
-    /// Bu uygulamayla ilişkili son açılan belgeleri, projeleri veya sık kullanılan klasörleri döndürür.
+    /// Returns recent documents, projects, or frequent folders associated with this application.
     /// </summary>
     public static List<RecentItem> GetRecentItems(string? exePath, int maxCount = 6)
     {
@@ -87,7 +87,7 @@ public static class JumpListService
         string exeName = Path.GetFileNameWithoutExtension(exePath).ToLowerInvariant();
         var seenPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        // 1. Explorer için Windows AutomaticDestinations'tan sık kullanılan klasörleri al
+        // 1. For Explorer, get frequent folders from Windows AutomaticDestinations
         if (exeName == "explorer")
         {
             var frequentFolders = GetExplorerFrequentFolders(maxCount);
@@ -98,7 +98,7 @@ public static class JumpListService
             }
         }
 
-        // 2. VS Code için son projeleri/çalışma alanlarını al
+        // 2. For VS Code, get recent projects/workspaces
         if (exeName is "code" or "code - insiders")
         {
             var vsProjects = GetVsCodeProjects(maxCount);
@@ -109,7 +109,7 @@ public static class JumpListService
             }
         }
 
-        // 3. Kalan yuvalar için Windows Recent klasöründeki kısayolları tara
+        // 3. For remaining slots, scan shortcuts in Windows Recent folder
         if (items.Count < maxCount && Directory.Exists(RecentFolder))
         {
             try
@@ -145,13 +145,13 @@ public static class JumpListService
                     }
                     catch
                     {
-                        // tekil kısayol hatasını yoksay
+                        // ignore single shortcut failure
                     }
                 }
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Son kullanılan belgeler okunamadı");
+                Log.Error(ex, "Failed to read recent documents");
             }
         }
 
@@ -196,7 +196,7 @@ public static class JumpListService
     }
 
     /// <summary>
-    /// Windows Explorer AutomaticDestinations dosyasından son/sık kullanılan gerçek klasörleri okur.
+    /// Reads actual recent/frequent folders from Windows Explorer AutomaticDestinations file.
     /// </summary>
     private static List<RecentItem> GetExplorerFrequentFolders(int maxCount)
     {
@@ -232,7 +232,7 @@ public static class JumpListService
     }
 
     /// <summary>
-    /// VS Code'un depoladığı son çalışma alanlarını ve klasörleri okur.
+    /// Reads recent workspaces and folders stored by VS Code.
     /// </summary>
     private static List<RecentItem> GetVsCodeProjects(int maxCount)
     {

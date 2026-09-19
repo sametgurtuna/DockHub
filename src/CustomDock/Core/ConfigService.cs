@@ -6,7 +6,7 @@ using CustomDock.Widgets;
 
 namespace CustomDock.Core;
 
-/// <summary>config.json'ı yükler/taşır, değişiklikleri gecikmeli kaydeder ve öğe başına widget ayarlarını yönetir.</summary>
+/// <summary>Loads/migrates config.json, debounces saves on change, and manages per-item widget settings.</summary>
 public sealed class ConfigService
 {
     private readonly DispatcherTimer _saveTimer;
@@ -20,7 +20,7 @@ public sealed class ConfigService
 
     public AppConfig Config { get; private set; } = new();
 
-    /// <summary>Yüklenmemiş (varsayılan) yapılandırma asla diske yazılmaz; ör. ikinci örnek kapanırken.</summary>
+    /// <summary>An unloaded (default) configuration is never written to disk; e.g. when a second instance exits.</summary>
     public bool IsLoaded { get; private set; }
 
     public void Load()
@@ -59,15 +59,15 @@ public sealed class ConfigService
             }) as JsonObject;
             if (node is null) return new AppConfig { Items = DefaultItems.Create() };
 
-            // v1 enum değerlerini yeni değerlere çevir (aksi halde JSON okunamaz)
+            // Map v1 enum values to new values (otherwise JSON cannot be deserialized)
             MapEnum(node, "taskbarMode", ("HideTaskbar", "Replace"));
             MapEnum(node, "backdrop", ("Mica", "Blur"), ("Transparent", "Solid"));
             return node.Deserialize<AppConfig>(JsonStore.Options) ?? new AppConfig();
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "config.json okunamadı, varsayılanlar kullanılıyor");
-            try { File.Copy(AppPaths.ConfigFile, $"{AppPaths.ConfigFile}.corrupt-{DateTime.Now:yyyyMMddHHmmss}", overwrite: true); } catch { /* yoksay */ }
+            Log.Error(ex, "Failed to read config.json, using defaults");
+            try { File.Copy(AppPaths.ConfigFile, $"{AppPaths.ConfigFile}.corrupt-{DateTime.Now:yyyyMMddHHmmss}", overwrite: true); } catch { /* ignore */ }
             var config = new AppConfig { Items = DefaultItems.Create() };
             return config;
         }
@@ -85,10 +85,10 @@ public sealed class ConfigService
         }
     }
 
-    /// <summary>v1 (sabit widget listesi + pinned-apps.json) → v2 (serbest öğe listesi).</summary>
+    /// <summary>v1 (fixed widget list + pinned-apps.json) → v2 (freeform items list).</summary>
     private static void MigrateFromV1(AppConfig config)
     {
-        Log.Info("config.json v1 → v2 taşınıyor.");
+        Log.Info("Migrating config.json v1 → v2.");
         var items = new List<DockItem>();
 
         var pinned = JsonStore.LoadData<LegacyPinnedStore>("pinned-apps");
@@ -126,25 +126,25 @@ public sealed class ConfigService
             items.Add(DockItem.Separator());
         items.AddRange(widgetItems);
 
-        // Eski tek not dosyasını ilk not öğesine taşı
+        // Migrate legacy single notes file to first notes item
         if (widgetItems.FirstOrDefault(i => i.Widget == "notes") is { } noteItem && File.Exists(JsonStore.DataPath("notes")))
         {
-            try { File.Copy(JsonStore.DataPath("notes"), JsonStore.DataPath("notes-" + noteItem.Id), overwrite: true); } catch { /* yoksay */ }
+            try { File.Copy(JsonStore.DataPath("notes"), JsonStore.DataPath("notes-" + noteItem.Id), overwrite: true); } catch { /* ignore */ }
         }
 
         config.Items = items;
         config.Widgets = null;
         config.WidgetSettings = null;
         config.ReserveSpace = null;
-        // Kullanıcı DockHub'ın görev çubuğunun yerini almasını istiyor.
+        // User wants DockHub to replace the taskbar.
         config.TaskbarMode = TaskbarMode.Replace;
         if (config.Backdrop == BackdropKind.Acrylic) config.Backdrop = BackdropKind.Blur;
-        // v1 çok yer kaplıyordu: Windows görev çubuğu kalınlığında (48 DIP) küçük dock ile başla.
+        // v1 took too much space: start with a small dock matching Windows taskbar thickness (48 DIP).
         config.Size = DockSize.Small;
         config.EdgeMargin = Math.Min(config.EdgeMargin, 6);
     }
 
-    // ------------------------------------------------------------------ Öğeler
+    // ------------------------------------------------------------------ Items
 
     public DockItem? FindItem(string id) => Config.Items.FirstOrDefault(i => i.Id == id);
 
@@ -164,7 +164,7 @@ public sealed class ConfigService
         }
     }
 
-    /// <summary>Öğeyi <paramref name="newIndex"/> konumuna taşır (taşıma öncesi listeye göre ekleme indeksi).</summary>
+    /// <summary>Moves item to <paramref name="newIndex"/> position (insertion index relative to pre-move list).</summary>
     public void MoveItem(string id, int newIndex)
     {
         int oldIndex = Config.Items.FindIndex(i => i.Id == id);
@@ -183,11 +183,11 @@ public sealed class ConfigService
         Config.NotifyItemsChanged();
     }
 
-    // ------------------------------------------------------------------ Widget ayarları
+    // ------------------------------------------------------------------ Widget settings
 
     /// <summary>
-    /// Bir öğenin ayar nesnesini döndürür. Aynı örnek widget ve ayarlar penceresi arasında paylaşılır;
-    /// değişiklikler öğenin <see cref="DockItem.Settings"/> alanına yazılır.
+    /// Returns the settings object for an item. The same instance is shared between widget and settings window;
+    /// changes are serialized back into the item's <see cref="DockItem.Settings"/> property.
     /// </summary>
     public T GetItemSettings<T>(DockItem item) where T : ObservableObject, new()
         => (T)GetItemSettings(item, typeof(T));
@@ -206,7 +206,7 @@ public sealed class ConfigService
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"Widget ayarı okunamadı: {item.Widget}/{item.Id}");
+                Log.Error(ex, $"Failed to read widget settings: {item.Widget}/{item.Id}");
             }
         }
 

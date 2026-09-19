@@ -2,11 +2,11 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <!-- Windows 10 SDK projeksiyonları: SMTC (Windows.Media.Control), Geolocation, Toast bildirimleri -->
+    <!-- Windows 10 SDK projections: SMTC (Windows.Media.Control), Geolocation, Toast notifications -->
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
     <UseWPF>true</UseWPF>
-    <!-- Sadece NotifyIcon (tray) için -->
+    <!-- Only for NotifyIcon (tray) -->
     <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -20,12 +20,12 @@
     <Company>DockHub</Company>
     <Copyright>© 2026</Copyright>
     <SatelliteResourceLanguages>en;tr</SatelliteResourceLanguages>
-    <!-- DPI farkındalığı WPF için app.manifest üzerinden (PerMonitorV2) ayarlanır. -->
+    <!-- DPI awareness for WPF is configured via app.manifest (PerMonitorV2). -->
     <NoWarn>$(NoWarn);WFAC010</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- WPF ve WinForms tiplerinin (Application, Button, MessageBox...) çakışmasını önler -->
+    <!-- Prevents collision between WPF and WinForms types (Application, Button, MessageBox...) -->
     <Using Remove="System.Windows.Forms" />
     <Using Remove="System.Drawing" />
     <Using Include="System.IO" />
@@ -37,7 +37,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications" Version="7.1.3" />
-    <!-- Kabuk (shell) servisleri: görev listesi, sistem tepsisi, AppBar, Explorer görev çubuğunu gizleme. Apache-2.0 -->
+    <!-- Shell services: task list, system tray, AppBar, Explorer taskbar hiding. Apache-2.0 -->
     <PackageReference Include="ManagedShell" Version="0.0.372" />
   </ItemGroup>
 

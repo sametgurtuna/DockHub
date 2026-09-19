@@ -9,7 +9,7 @@
             <ctl:WeatherIcon x:Name="Icon" Width="32" Height="32" VerticalAlignment="Center" CloudBrush="{DynamicResource CloudBrush}" />
             <StackPanel Margin="9,0,0,0" VerticalAlignment="Center">
                 <TextBlock x:Name="TempText" Style="{StaticResource ValueText}" FontSize="19" LineHeight="22" Text="--°" />
-                <TextBlock x:Name="SubText" Style="{StaticResource CaptionText}" MaxWidth="96" Text="Yükleniyor…" />
+                <TextBlock x:Name="SubText" Style="{StaticResource CaptionText}" MaxWidth="96" Text="Loading…" />
             </StackPanel>
         </StackPanel>
 

@@ -5,8 +5,8 @@ using Microsoft.Win32;
 namespace CustomDock.Shell;
 
 /// <summary>
-/// Tepsi ikonlarının dock'ta her zaman görünmesi (sabitleme) tercihleri.
-/// Yeni görülen bir ikon, Windows'ta "görev çubuğunda göster" olarak işaretliyse bir kez sabitlenir.
+/// Preferences for always showing (pinning) tray icons on the dock.
+/// A newly detected icon is pinned once if it was marked as "show on taskbar" in Windows.
 /// </summary>
 public static class TrayPreferences
 {
@@ -54,7 +54,7 @@ public static class TrayPreferences
         AppServices.ConfigService.ScheduleSave();
     }
 
-    /// <summary>HKCU\Control Panel\NotifyIconSettings altında "IsPromoted=1" olan uygulama yolları.</summary>
+    /// <summary>Application paths with "IsPromoted=1" under HKCU\Control Panel\NotifyIconSettings.</summary>
     private static HashSet<string> ReadPromotedPaths()
     {
         var result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -72,7 +72,7 @@ public static class TrayPreferences
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Windows tepsi tercihleri okunamadı");
+            Log.Error(ex, "Failed to read Windows tray preferences");
         }
         return result;
     }

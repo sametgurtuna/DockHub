@@ -10,7 +10,7 @@ using CustomDock.Services;
 
 namespace CustomDock.Widgets;
 
-/// <summary>Anımsatıcılar: liste / sıradaki / sayı. Tıklayınca ekleme penceresi açılır.</summary>
+/// <summary>Reminders: list / next / count. Opens editor popup on click.</summary>
 public partial class RemindersWidget : WidgetBase
 {
     public sealed record CountModel(int Count);
@@ -87,9 +87,9 @@ public partial class RemindersWidget : WidgetBase
 
         if (count == 0)
         {
-            NextText.Text = "Anımsatıcı yok";
-            NextTime.Text = "Eklemek için tıklayın";
-            ToolTip = "Anımsatıcı eklemek için tıklayın";
+            NextText.Text = "No reminders";
+            NextTime.Text = "Click to add";
+            ToolTip = "Click to add reminder";
             return;
         }
 
@@ -97,23 +97,23 @@ public partial class RemindersWidget : WidgetBase
         NextText.Text = next.Text;
         NextTime.Text = DescribeDue(next.Due);
         ToolTip = string.Join("\n", items.Take(8).Select(r => $"{r.Due:ddd HH:mm}  {r.Text}"))
-                  + (count > 8 ? $"\n+{count - 8} daha" : "");
+                  + (count > 8 ? $"\n+{count - 8} more" : "");
     }
 
     internal static string DescribeDue(DateTime due)
     {
         var now = DateTime.Now;
         var diff = due - now;
-        if (diff < TimeSpan.FromMinutes(1)) return "şimdi";
-        if (diff < TimeSpan.FromHours(1)) return $"{Math.Ceiling(diff.TotalMinutes):0} dk sonra";
-        if (due.Date == now.Date) return $"bugün {due:HH:mm}";
-        if (due.Date == now.Date.AddDays(1)) return $"yarın {due:HH:mm}";
+        if (diff < TimeSpan.FromMinutes(1)) return "now";
+        if (diff < TimeSpan.FromHours(1)) return $"in {Math.Ceiling(diff.TotalMinutes):0}m";
+        if (due.Date == now.Date) return $"today {due:HH:mm}";
+        if (due.Date == now.Date.AddDays(1)) return $"tomorrow {due:HH:mm}";
         return due.ToString("d MMM HH:mm", CultureInfo.CurrentCulture);
     }
 
     public override void AddContextMenuItems(ItemCollection items)
     {
-        items.Add(DockMenu.Item("Anımsatıcı ekle…", "\uE710", OpenEditor));
+        items.Add(DockMenu.Item("Add reminder…", "\uE710", OpenEditor));
     }
 
     // ------------------------------------------------------------------ Popup
@@ -132,8 +132,8 @@ public partial class RemindersWidget : WidgetBase
         var culture = CultureInfo.CurrentCulture;
         var days = new List<Option<DateTime>>
         {
-            new(DateTime.Today, "Bugün"),
-            new(DateTime.Today.AddDays(1), "Yarın"),
+            new(DateTime.Today, "Today"),
+            new(DateTime.Today.AddDays(1), "Tomorrow"),
         };
         for (int i = 2; i < 7; i++)
         {
@@ -200,14 +200,14 @@ public partial class RemindersWidget : WidgetBase
         var text = NewText.Text.Trim();
         if (text.Length == 0)
         {
-            ErrorText.Text = "Bir metin yazın.";
+            ErrorText.Text = "Please enter a reminder text.";
             NewText.Focus();
             return;
         }
 
         if (DayCombo.SelectedItem is not Option<DateTime> day || !TimeInput.TryParse(TimeBox.Text, out var time))
         {
-            ErrorText.Text = "Saati SS:DD biçiminde girin.";
+            ErrorText.Text = "Enter time in HH:mm format.";
             TimeBox.Focus();
             return;
         }
@@ -215,7 +215,7 @@ public partial class RemindersWidget : WidgetBase
         var due = day.Value.Date + time;
         if (due <= DateTime.Now)
         {
-            ErrorText.Text = "Geçmiş bir zaman seçildi.";
+            ErrorText.Text = "Cannot set a reminder in the past.";
             return;
         }
 

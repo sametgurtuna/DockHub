@@ -13,7 +13,7 @@ using CustomDock.Widgets;
 
 namespace CustomDock.Settings;
 
-/// <summary>Dock öğeleri listesindeki bir satır.</summary>
+/// <summary>A row in the dock items list.</summary>
 public sealed class ItemRow
 {
     public ItemRow(DockItem item)
@@ -24,7 +24,7 @@ public sealed class ItemRow
             case DockItemKind.App:
                 Icon = item.Path is null ? null : ShellIcons.GetIcon(item.Path, 48);
                 Title = !string.IsNullOrWhiteSpace(item.Name) ? item.Name! : AppDisplayName(item.Path ?? "");
-                Subtitle = "Uygulama";
+                Subtitle = "Application";
                 break;
             case DockItemKind.Widget:
                 var descriptor = WidgetRegistry.Find(item.Widget);
@@ -36,8 +36,8 @@ public sealed class ItemRow
             default:
                 Glyph = Geometry.Parse("M12,3 V21");
                 GlyphBrush = Application.Current.TryFindResource("TextSecondaryBrush") as Brush;
-                Title = "Ayraç";
-                Subtitle = "Öğeleri gruplar";
+                Title = "Separator";
+                Subtitle = "Groups items";
                 break;
         }
     }
@@ -62,7 +62,7 @@ public sealed class ItemRow
             }
             catch
             {
-                // yoksay
+                // ignore
             }
         }
         return Path.GetFileNameWithoutExtension(path);
@@ -128,7 +128,7 @@ public partial class SettingsWindow
                 {
                     WidgetSettingsHost.Content = new TextBlock
                     {
-                        Text = "Bu widget'ın ek ayarı yok. Kullanım için widget'a dock üzerinde tıklayın veya sağ tıklayın.",
+                        Text = "This widget has no additional settings. Click or right-click the widget on the dock to use it.",
                         TextWrapping = TextWrapping.Wrap,
                         Foreground = (Brush)FindResource("TextSecondaryBrush"),
                         Margin = new Thickness(2, 6, 0, 0),
@@ -145,17 +145,17 @@ public partial class SettingsWindow
                 break;
 
             default:
-                DetailSubtitle.Text = "Dock'taki öğeleri görsel olarak gruplar.";
+                DetailSubtitle.Text = "Visually groups items on the dock.";
                 break;
         }
     }
 
-    /// <summary>Seçili widget'ın canlı önizlemesi (aynı ayarları paylaşır).</summary>
+    /// <summary>Live preview of the selected widget (shares the same settings).</summary>
     private void ShowDetailPreview(WidgetDescriptor descriptor, DockItem item)
     {
         try
         {
-            // Aynı ayar nesnesini kullanan, ancak kalıcı veri yazmayan kopya öğe
+            // Copy item sharing the same settings object without persisting data
             var previewItem = new DockItem { Id = item.Id, Kind = DockItemKind.Widget, Widget = item.Widget, Variant = item.Variant, Settings = item.Settings };
             _detailSource = item;
             _detailPreviewItem = previewItem;
@@ -168,7 +168,7 @@ public partial class SettingsWindow
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Önizleme oluşturulamadı");
+            Log.Error(ex, "Failed to create preview");
         }
     }
 
@@ -233,7 +233,7 @@ public partial class SettingsWindow
             added++;
         }
         if (added > 0) _config.NotifyItemsChanged();
-        MessageBox.Show(this, added > 0 ? $"{added} uygulama eklendi." : "Eklenecek yeni sabitleme bulunamadı.", "DockHub",
+        MessageBox.Show(this, added > 0 ? (added == 1 ? "1 application added." : $"{added} applications added.") : "No new pins found to import.", "DockHub",
             MessageBoxButton.OK, MessageBoxImage.Information);
     }
 

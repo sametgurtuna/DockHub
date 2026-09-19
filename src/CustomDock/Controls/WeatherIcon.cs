@@ -4,7 +4,7 @@ using CustomDock.Services;
 
 namespace CustomDock.Controls;
 
-/// <summary>Vektör çizimli, renkli hava durumu ikonu (WPF renkli emoji desteklemediği için).</summary>
+/// <summary>Vector-drawn colored weather icon (since WPF does not support colored emoji).</summary>
 public sealed class WeatherIcon : FrameworkElement
 {
     public static readonly DependencyProperty KindProperty = DependencyProperty.Register(

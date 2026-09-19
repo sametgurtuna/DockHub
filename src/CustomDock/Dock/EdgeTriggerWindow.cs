@@ -7,8 +7,8 @@ using static CustomDock.Native.NativeMethods;
 namespace CustomDock.Dock;
 
 /// <summary>
-/// Otomatik gizleme modunda ekran kenarında duran, neredeyse tamamen saydam ince pencere.
-/// Fare üzerine geldiğinde dock'u gösterir. Sürekli fare yoklaması yerine olay tabanlıdır.
+/// Nearly fully transparent thin window that sits at the screen edge in auto-hide mode.
+/// Reveals the dock when mouse hovers over it. Event-driven instead of constant mouse polling.
 /// </summary>
 public sealed class EdgeTriggerWindow : Window
 {
@@ -18,7 +18,7 @@ public sealed class EdgeTriggerWindow : Window
     {
         WindowStyle = WindowStyle.None;
         AllowsTransparency = true;
-        // Alfa = 1: görünmez ama fare olaylarını alır.
+        // Alpha = 1: invisible but receives mouse events.
         Background = new SolidColorBrush(Color.FromArgb(1, 0, 0, 0));
         ShowInTaskbar = false;
         ShowActivated = false;

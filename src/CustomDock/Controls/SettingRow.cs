@@ -3,7 +3,7 @@ using System.Windows.Controls;
 
 namespace CustomDock.Controls;
 
-/// <summary>Ayarlar sayfasında başlık + açıklama + sağda kontrol içeren satır kartı.</summary>
+/// <summary>Settings row card containing title + description + right-side control on settings page.</summary>
 public sealed class SettingRow : ContentControl
 {
     public static readonly DependencyProperty HeaderProperty = DependencyProperty.Register(

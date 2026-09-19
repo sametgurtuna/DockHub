@@ -4,7 +4,7 @@
               xmlns:w="clr-namespace:CustomDock.Widgets"
               Cursor="Hand">
     <w:WidgetBase.Resources>
-        <!-- Mavi yuvarlak liste ikonu + sayı -->
+        <!-- Blue circular list icon + count -->
         <DataTemplate x:Key="CountBlock">
             <StackPanel VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
@@ -15,14 +15,14 @@
                     </Grid>
                     <TextBlock Text="{Binding Count}" Style="{StaticResource ValueText}" FontSize="19" Margin="6,0,0,0" VerticalAlignment="Center" />
                 </StackPanel>
-                <TextBlock Text="Anımsatıcı" Style="{StaticResource CaptionText}" HorizontalAlignment="Center" FontWeight="SemiBold" />
+                <TextBlock Text="Reminders" Style="{StaticResource CaptionText}" HorizontalAlignment="Center" FontWeight="SemiBold" />
             </StackPanel>
         </DataTemplate>
     </w:WidgetBase.Resources>
 
     <Grid>
         <Grid Background="Transparent" MouseLeftButtonUp="OnBodyClick">
-            <!-- Liste -->
+            <!-- List -->
             <Grid x:Name="Layout_list" Width="226">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -38,10 +38,10 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
                 <TextBlock x:Name="ListEmpty" Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center"
-                           Style="{StaticResource CaptionText}" Text="Eklemek için tıklayın" />
+                           Style="{StaticResource CaptionText}" Text="Click to add" />
             </Grid>
 
-            <!-- Sıradaki -->
+            <!-- Next -->
             <Grid x:Name="Layout_next" Width="196">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -55,18 +55,18 @@
                 </StackPanel>
             </Grid>
 
-            <!-- Sayı -->
+            <!-- Count -->
             <ContentControl x:Name="Layout_count" MinWidth="80" ContentTemplate="{StaticResource CountBlock}" Focusable="False" />
         </Grid>
 
-        <!-- Ekleme / liste popup'ı -->
+        <!-- Add / list popup -->
         <Popup x:Name="EditorPopup" StaysOpen="False" AllowsTransparency="True" PopupAnimation="Fade" Opened="OnPopupOpened">
             <Border Width="320" Margin="10" Padding="16" CornerRadius="12"
                     Background="{DynamicResource PopupBrush}" BorderBrush="{DynamicResource PopupBorderBrush}" BorderThickness="1"
                     TextElement.Foreground="{DynamicResource TextPrimaryBrush}" TextElement.FontFamily="{StaticResource UiFont}">
                 <StackPanel>
-                    <TextBlock Text="Yeni anımsatıcı" FontFamily="{StaticResource DisplayFont}" FontSize="15" FontWeight="SemiBold" />
-                    <TextBox x:Name="NewText" Tag="Ne hatırlatılsın?" Margin="0,10,0,0" KeyDown="OnEditorKeyDown" />
+                    <TextBlock Text="New reminder" FontFamily="{StaticResource DisplayFont}" FontSize="15" FontWeight="SemiBold" />
+                    <TextBox x:Name="NewText" Tag="What to remind?" Margin="0,10,0,0" KeyDown="OnEditorKeyDown" />
                     <Grid Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -74,25 +74,25 @@
                             <ColumnDefinition Width="90" />
                         </Grid.ColumnDefinitions>
                         <ComboBox x:Name="DayCombo" DisplayMemberPath="Label" />
-                        <TextBox x:Name="TimeBox" Grid.Column="2" Tag="SS:DD" HorizontalContentAlignment="Center"
+                        <TextBox x:Name="TimeBox" Grid.Column="2" Tag="HH:mm" HorizontalContentAlignment="Center"
                                  KeyDown="OnEditorKeyDown" MaxLength="5" />
                     </Grid>
                     <WrapPanel Margin="0,8,0,0">
-                        <Button Style="{StaticResource PillButton}" Content="+5 dk" Tag="5" Margin="0,0,6,0" Click="OnQuickClick" />
-                        <Button Style="{StaticResource PillButton}" Content="+15 dk" Tag="15" Margin="0,0,6,0" Click="OnQuickClick" />
-                        <Button Style="{StaticResource PillButton}" Content="+30 dk" Tag="30" Margin="0,0,6,0" Click="OnQuickClick" />
-                        <Button Style="{StaticResource PillButton}" Content="+1 sa" Tag="60" Margin="0,0,6,0" Click="OnQuickClick" />
-                        <Button Style="{StaticResource PillButton}" Content="+3 sa" Tag="180" Click="OnQuickClick" />
+                        <Button Style="{StaticResource PillButton}" Content="+5m" Tag="5" Margin="0,0,6,0" Click="OnQuickClick" />
+                        <Button Style="{StaticResource PillButton}" Content="+15m" Tag="15" Margin="0,0,6,0" Click="OnQuickClick" />
+                        <Button Style="{StaticResource PillButton}" Content="+30m" Tag="30" Margin="0,0,6,0" Click="OnQuickClick" />
+                        <Button Style="{StaticResource PillButton}" Content="+1h" Tag="60" Margin="0,0,6,0" Click="OnQuickClick" />
+                        <Button Style="{StaticResource PillButton}" Content="+3h" Tag="180" Click="OnQuickClick" />
                     </WrapPanel>
                     <Grid Margin="0,12,0,0">
                         <TextBlock x:Name="ErrorText" Foreground="{DynamicResource DangerBrush}" FontSize="12"
                                    VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,0,80,0" />
-                        <Button Style="{StaticResource AccentButton}" Content="Ekle" HorizontalAlignment="Right" MinWidth="72" Click="OnAddClick" />
+                        <Button Style="{StaticResource AccentButton}" Content="Add" HorizontalAlignment="Right" MinWidth="72" Click="OnAddClick" />
                     </Grid>
 
                     <Border Height="1" Margin="0,14,0,10" Background="{DynamicResource SeparatorBrush}" />
-                    <TextBlock Text="Bekleyenler" FontWeight="SemiBold" FontSize="12.5" />
-                    <TextBlock x:Name="EmptyText" Text="Bekleyen anımsatıcı yok." Margin="0,6,0,0" FontSize="12"
+                    <TextBlock Text="Pending" FontWeight="SemiBold" FontSize="12.5" />
+                    <TextBlock x:Name="EmptyText" Text="No pending reminders." Margin="0,6,0,0" FontSize="12"
                                Foreground="{DynamicResource TextSecondaryBrush}" />
                     <ScrollViewer MaxHeight="210" Margin="0,4,-8,0" VerticalScrollBarVisibility="Auto">
                         <ItemsControl x:Name="PendingList" Margin="0,0,8,0">
@@ -109,7 +109,7 @@
                                                        Foreground="{DynamicResource TextSecondaryBrush}" />
                                         </StackPanel>
                                         <Button Grid.Column="1" Style="{StaticResource IconButton}" Content="&#xE74D;" FontSize="11"
-                                                Width="26" Height="26" ToolTip="Sil" Click="OnDeleteClick" />
+                                                Width="26" Height="26" ToolTip="Delete" Click="OnDeleteClick" />
                                     </Grid>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>

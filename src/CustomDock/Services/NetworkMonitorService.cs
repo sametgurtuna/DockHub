@@ -6,7 +6,7 @@ namespace CustomDock.Services;
 
 public readonly record struct NetworkStats(double DownBytesPerSec, double UpBytesPerSec);
 
-/// <summary>Tüm etkin ağ arabirimlerinin toplam indirme/yükleme hızı (saniyede bir, yalnızca abone varken).</summary>
+/// <summary>Total download/upload speed across all active network interfaces (once per second, only while subscribed).</summary>
 public sealed class NetworkMonitorService
 {
     public const int HistoryLength = 40;
@@ -94,7 +94,7 @@ public sealed class NetworkMonitorService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Ağ istatistikleri okunamadı");
+            Log.Error(ex, "Failed to read network statistics");
         }
         finally
         {
@@ -102,7 +102,7 @@ public sealed class NetworkMonitorService
         }
     }
 
-    /// <summary>Hızı okunur biçime çevirir: (değer, birim).</summary>
+    /// <summary>Formats speed into human-readable format: (value, unit).</summary>
     public static (string Value, string Unit) Format(double bytesPerSec)
     {
         double kb = bytesPerSec / 1024;

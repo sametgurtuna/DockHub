@@ -7,7 +7,7 @@ using System.Windows.Threading;
 
 namespace CustomDock.Dock;
 
-/// <summary>Dock öğelerini sürükleyerek yeniden sıralamak için ortak sürükleme başlatıcısı.</summary>
+/// <summary>Common drag initiator for reordering dock items via drag and drop.</summary>
 public static class DockDragHelper
 {
     public const string ItemFormat = "DockHub.ItemId";
@@ -16,7 +16,7 @@ public static class DockDragHelper
     private static FrameworkElement? _source;
     private static Point _start;
 
-    /// <summary>Sürükleme bittikten hemen sonra true; tıklama işleyicileri bunu yok saymak için kullanır.</summary>
+    /// <summary>True immediately after drag ends; click handlers use this to suppress click.</summary>
     public static bool JustDragged { get; private set; }
 
     public static event Action<bool>? DraggingChanged;

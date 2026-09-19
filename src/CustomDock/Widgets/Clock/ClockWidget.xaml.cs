@@ -48,7 +48,7 @@ public sealed class ClockSettings : ObservableObject
     }
 }
 
-/// <summary>Saat ve tarih (analog / dijital / takvim).</summary>
+/// <summary>Clock and date (analog / digital / calendar).</summary>
 public partial class ClockWidget : WidgetBase
 {
     private ClockSettings _settings = new();
@@ -239,7 +239,7 @@ public partial class ClockWidget : WidgetBase
         if (next is null)
         {
             EventDot.Visibility = Visibility.Collapsed;
-            EventTitle.Text = "Bugün boş";
+            EventTitle.Text = "No events today";
             EventTime.Text = now.ToString("MMMM yyyy", CultureInfo.CurrentCulture);
             return;
         }

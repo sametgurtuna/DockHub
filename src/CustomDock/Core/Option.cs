@@ -1,6 +1,6 @@
 namespace CustomDock.Core;
 
-/// <summary>ComboBox'larda değer + görünen ad çifti.</summary>
+/// <summary>Value + display label pair for ComboBoxes.</summary>
 public sealed record Option<T>(T Value, string Label)
 {
     public override string ToString() => Label;

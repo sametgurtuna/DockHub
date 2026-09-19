@@ -3,7 +3,7 @@ using static CustomDock.Native.NativeMethods;
 
 namespace CustomDock.Native;
 
-/// <summary>Kabuk kısayollarını (Win+S, Win+Tab...) tetiklemek için klavye girişi üretir.</summary>
+/// <summary>Synthesizes keyboard input to trigger shell shortcuts (Win+S, Win+Tab...).</summary>
 public static class InputHelper
 {
     public const ushort VK_LWIN = 0x5B;
@@ -14,7 +14,7 @@ public static class InputHelper
     public const ushort VK_S = 0x53;
     public const ushort VK_X = 0x58;
 
-    /// <summary>Tuşlara sırayla basar ve ters sırayla bırakır (ör. Win+S).</summary>
+    /// <summary>Presses keys in order and releases in reverse order (e.g. Win+S).</summary>
     public static void SendKeyCombo(params ushort[] keys)
     {
         var inputs = new List<INPUT>(keys.Length * 2);

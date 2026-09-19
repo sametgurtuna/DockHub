@@ -5,7 +5,7 @@
               xmlns:ctl="clr-namespace:CustomDock.Controls"
               Cursor="Hand">
     <Grid Background="Transparent" MouseLeftButtonUp="OnClick">
-        <!-- Zamanlayıcı: mavi kart, bir sonraki hatırlatmaya geri sayım -->
+        <!-- Timer: blue card, countdown to next reminder -->
         <StackPanel x:Name="Layout_timer" MinWidth="96" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
             <StackPanel.RenderTransform>
                 <ScaleTransform x:Name="TimerScale" />
@@ -21,7 +21,7 @@
                        Foreground="#D9FFFFFF" />
         </StackPanel>
 
-        <!-- Günlük hedef halkası -->
+        <!-- Daily goal ring -->
         <StackPanel x:Name="Layout_progress" Orientation="Horizontal" MinWidth="104">
             <Grid Width="32" Height="32" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
                 <Grid.RenderTransform>
@@ -34,7 +34,7 @@
             </Grid>
             <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
                 <TextBlock Style="{StaticResource ValueText}"><Run x:Name="CountRun" Text="0" /><Run x:Name="GoalRun" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Text="/8" /></TextBlock>
-                <TextBlock x:Name="ProgressCaption" Style="{StaticResource CaptionText}" Text="bardak" />
+                <TextBlock x:Name="ProgressCaption" Style="{StaticResource CaptionText}" Text="glasses" />
             </StackPanel>
         </StackPanel>
     </Grid>

@@ -493,6 +493,16 @@
                                 </ctl:SettingRow>
                                 <ContentControl x:Name="WidgetSettingsHost" Focusable="False" />
                             </StackPanel>
+
+                            <!-- Group / Folder -->
+                            <StackPanel x:Name="GroupDetail" Visibility="Collapsed">
+                                <ctl:SettingRow Header="Folder name" Description="The name displayed on the dock and in tooltips.">
+                                    <TextBox x:Name="GroupNameBox" Width="220" LostFocus="OnGroupNameChanged" KeyDown="OnGroupNameKeyDown" />
+                                </ctl:SettingRow>
+                                <ctl:SettingRow Header="Folder color" Description="Accent color applied to the folder.">
+                                    <ComboBox x:Name="GroupAccentCombo" Width="200" SelectionChanged="OnGroupAccentChanged" />
+                                </ctl:SettingRow>
+                            </StackPanel>
                         </StackPanel>
                     </StackPanel>
                 </Grid>

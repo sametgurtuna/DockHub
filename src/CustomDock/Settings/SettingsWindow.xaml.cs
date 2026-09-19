@@ -30,6 +30,7 @@ public partial class SettingsWindow : Window
     private Point _dragStart;
     private bool _galleryBuilt;
     private bool _suppressVariant;
+    private bool _suppressGroupAccent;
 
     public SettingsWindow()
     {

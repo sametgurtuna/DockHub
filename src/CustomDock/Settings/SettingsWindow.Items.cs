@@ -112,6 +112,7 @@ public partial class SettingsWindow
         DetailGlyph.Stroke = row.GlyphBrush;
         AppDetail.Visibility = item.Kind == DockItemKind.App ? Visibility.Visible : Visibility.Collapsed;
         WidgetDetail.Visibility = item.Kind == DockItemKind.Widget ? Visibility.Visible : Visibility.Collapsed;
+        GroupDetail.Visibility = item.Kind == DockItemKind.Group ? Visibility.Visible : Visibility.Collapsed;
 
         switch (item.Kind)
         {
@@ -151,7 +152,24 @@ public partial class SettingsWindow
                 break;
 
             case DockItemKind.Group:
-                DetailSubtitle.Text = $"Folder with {item.Children?.Count ?? 0} items. Drag items onto the group on the dock to add them.";
+                DetailSubtitle.Text = $"Folder containing {item.Children?.Count ?? 0} item(s). Click on the dock to expand, or drag items onto it.";
+                GroupNameBox.Text = item.GroupName ?? "Folder";
+                _suppressGroupAccent = true;
+                GroupAccentCombo.ItemsSource = new[]
+                {
+                    new { Name = "Blue", Key = "AccentBlueBrush" },
+                    new { Name = "Green", Key = "AccentGreenBrush" },
+                    new { Name = "Orange", Key = "AccentOrangeBrush" },
+                    new { Name = "Red", Key = "AccentRedBrush" },
+                    new { Name = "Purple", Key = "AccentPurpleBrush" },
+                    new { Name = "Cyan", Key = "AccentCyanBrush" },
+                    new { Name = "Pink", Key = "AccentPinkBrush" },
+                    new { Name = "Yellow", Key = "AccentYellowBrush" },
+                };
+                GroupAccentCombo.DisplayMemberPath = "Name";
+                GroupAccentCombo.SelectedValuePath = "Key";
+                GroupAccentCombo.SelectedValue = item.GroupAccent ?? "AccentBlueBrush";
+                _suppressGroupAccent = false;
                 break;
 
             default:
@@ -209,6 +227,32 @@ public partial class SettingsWindow
     private void OnAppNameKeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.Enter) OnAppNameChanged(sender, e);
+    }
+
+    private void OnGroupNameChanged(object sender, RoutedEventArgs e)
+    {
+        if (ItemList.SelectedItem is not ItemRow row) return;
+        var name = GroupNameBox.Text.Trim();
+        var value = string.IsNullOrEmpty(name) ? "Folder" : name;
+        if (row.Item.GroupName == value) return;
+        row.Item.GroupName = value;
+        AppServices.ConfigService.ReplaceItems(_config.Items);
+    }
+
+    private void OnGroupNameKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter) OnGroupNameChanged(sender, e);
+    }
+
+    private void OnGroupAccentChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_suppressGroupAccent || ItemList.SelectedItem is not ItemRow row) return;
+        if (GroupAccentCombo.SelectedValue is string accent)
+        {
+            if (row.Item.GroupAccent == accent) return;
+            row.Item.GroupAccent = accent;
+            AppServices.ConfigService.ReplaceItems(_config.Items);
+        }
     }
 
     private void OnAppArgsChanged(object sender, RoutedEventArgs e)

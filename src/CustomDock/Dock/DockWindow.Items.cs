@@ -268,8 +268,45 @@ public partial class DockWindow
     {
         e.Handled = true;
         DropCaret.Visibility = Visibility.Collapsed;
-        int index = DropIndexAt(e.GetPosition(ItemsPanel), out _);
         var config = AppServices.ConfigService;
+
+        // Check if dropped directly onto a group folder
+        var hit = VisualTreeHelper.HitTest(ItemsPanel, e.GetPosition(ItemsPanel))?.VisualHit;
+        var targetGroup = FindAncestor<GroupItemView>(hit);
+        if (targetGroup is not null)
+        {
+            if (e.Data.GetData(DockDragHelper.ItemFormat) is string dropId)
+            {
+                if (dropId != targetGroup.Item.Id)
+                {
+                    var existing = config.FindItem(dropId);
+                    if (existing is not null && existing.Kind != DockItemKind.Group)
+                    {
+                        config.RemoveItem(dropId);
+                        config.AddToGroup(targetGroup.Item.Id, existing);
+                        targetGroup.RefreshAppearance();
+                        return;
+                    }
+                }
+            }
+            else if (e.Data.GetData(DockDragHelper.RunningAppFormat) is string runKey &&
+                     _shell.RunningApps.Find(runKey) is { } runGroup &&
+                     AppLauncher.PinnablePath(runGroup) is { } runPath)
+            {
+                config.AddToGroup(targetGroup.Item.Id, DockItem.App(runPath, runGroup.Title));
+                targetGroup.RefreshAppearance();
+                return;
+            }
+            else if (e.Data.GetData(DataFormats.FileDrop) is string[] dropFiles)
+            {
+                foreach (var file in dropFiles.Where(f => !string.IsNullOrWhiteSpace(f)))
+                    config.AddToGroup(targetGroup.Item.Id, DockItem.App(file));
+                targetGroup.RefreshAppearance();
+                return;
+            }
+        }
+
+        int index = DropIndexAt(e.GetPosition(ItemsPanel), out _);
 
         if (e.Data.GetData(DockDragHelper.ItemFormat) is string itemId)
         {

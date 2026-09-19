@@ -26,6 +26,7 @@ public partial class App : Application
     private System.Collections.Specialized.NotifyCollectionChangedEventHandler? _trayIconsChangedHandler;
 
     public static App Instance => (App)Current;
+    public ShellHost? Shell => _shell;
 
     protected override void OnStartup(StartupEventArgs e)
     {

@@ -17,25 +17,25 @@ using CustomDock.Widgets;
 namespace CustomDock.Dock;
 
 /// <summary>
-/// A folder-like group item on the dock. Shows a stylish folder icon or a 2x2 grid of child icons.
-/// Clicking opens a popup where children appear with stagger animation.
+/// A sleek, macOS Stacks-style folder dock item.
+/// Closed: 38x38 frosted glass tile with an accent border; shows 2x2 child icons or a folder glyph when empty.
+/// Open: A fluid glass popup with header, item count, staggered app grid, color picker, and quick actions.
 /// </summary>
 public sealed class GroupItemView : Grid
 {
-    private const double IconSize = 13;
-    private const double GroupSize = 44;
+    private const double GroupWidth = 44;
     private const double GroupHeight = 46;
-    private const double ChildButtonSize = 44;
+    private const double TileSize = 38;
+    private const double MiniIconSize = 13;
     private const int MaxPreviewIcons = 4;
 
     private readonly DockItem _item;
     private readonly IWidgetHost _host;
     private readonly Border _hover;
-    private readonly Border _cardBorder;
-    private readonly Grid _iconContainer;
-    private readonly Grid _iconGrid;
-    private readonly TextBlock _fallbackIcon;
-    private readonly TextBlock _label;
+    private readonly Border _tileBorder;
+    private readonly Grid _tileContent;
+    private readonly TextBlock _emptyFolderGlyph;
+    private readonly Grid _previewGrid;
     private readonly Image[] _previewIcons = new Image[MaxPreviewIcons];
     private readonly ScaleTransform _pressScale = new();
 
@@ -43,19 +43,32 @@ public sealed class GroupItemView : Grid
     private bool _fanInteraction;
     private DateTime _fanClosedAt;
 
+    private static readonly (string Name, string BrushKey, Color Color)[] AccentColors =
+    {
+        ("Blue", "AccentBlueBrush", Color.FromRgb(0, 120, 215)),
+        ("Green", "AccentGreenBrush", Color.FromRgb(16, 124, 65)),
+        ("Orange", "AccentOrangeBrush", Color.FromRgb(202, 80, 16)),
+        ("Red", "AccentRedBrush", Color.FromRgb(232, 17, 35)),
+        ("Purple", "AccentPurpleBrush", Color.FromRgb(136, 23, 152)),
+        ("Cyan", "AccentCyanBrush", Color.FromRgb(0, 153, 188)),
+        ("Pink", "AccentPinkBrush", Color.FromRgb(234, 0, 94)),
+        ("Yellow", "AccentYellowBrush", Color.FromRgb(255, 185, 0)),
+    };
+
     public GroupItemView(DockItem item, IWidgetHost host)
     {
         _item = item;
         _host = host;
-        Width = GroupSize;
+        Width = GroupWidth;
         Height = GroupHeight;
         Margin = new Thickness(1, 0, 1, 0);
         Background = Brushes.Transparent;
         Focusable = false;
         AllowDrop = true;
-        ToolTipService.SetInitialShowDelay(this, 450);
+        Cursor = Cursors.Hand;
+        ToolTipService.SetInitialShowDelay(this, 350);
 
-        // Hover background
+        // Hover highlight overlay
         _hover = new Border
         {
             CornerRadius = new CornerRadius(10),
@@ -64,40 +77,39 @@ public sealed class GroupItemView : Grid
         };
         _hover.SetResourceReference(Border.BackgroundProperty, "DockHoverBrush");
 
-        // Subtle folder card border
-        _cardBorder = new Border
+        // 38x38 Frosted Glass Tile
+        _tileBorder = new Border
         {
-            CornerRadius = new CornerRadius(9),
-            Margin = new Thickness(2, 3, 2, 4),
-            BorderThickness = new Thickness(1),
-            Opacity = 0.85,
-        };
-
-        // Icon container that scales on press
-        _iconContainer = new Grid
-        {
-            Width = 32,
-            Height = 32,
+            Width = TileSize,
+            Height = TileSize,
+            CornerRadius = new CornerRadius(10),
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(0, 0, 0, 4),
+            BorderThickness = new Thickness(1.2),
             RenderTransformOrigin = new Point(0.5, 0.5),
             RenderTransform = _pressScale,
         };
 
-        // 1. Fallback folder icon (when empty)
-        _fallbackIcon = new TextBlock
+        _tileContent = new Grid
         {
-            Text = "\uE8B7", // Folder glyph
-            FontSize = 24,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+
+        // 1. Empty folder glyph
+        _emptyFolderGlyph = new TextBlock
+        {
+            Text = "\uE8B7",
+            FontFamily = GetIconFont(),
+            FontSize = 21,
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
             Visibility = Visibility.Visible,
         };
-        _iconContainer.Children.Add(_fallbackIcon);
+        _tileContent.Children.Add(_emptyFolderGlyph);
 
-        // 2. 2x2 grid preview (when children exist)
-        _iconGrid = new Grid
+        // 2. 2x2 Preview grid
+        _previewGrid = new Grid
         {
             Width = 28,
             Height = 28,
@@ -105,17 +117,17 @@ public sealed class GroupItemView : Grid
             VerticalAlignment = VerticalAlignment.Center,
             Visibility = Visibility.Collapsed,
         };
-        _iconGrid.RowDefinitions.Add(new RowDefinition());
-        _iconGrid.RowDefinitions.Add(new RowDefinition());
-        _iconGrid.ColumnDefinitions.Add(new ColumnDefinition());
-        _iconGrid.ColumnDefinitions.Add(new ColumnDefinition());
+        _previewGrid.RowDefinitions.Add(new RowDefinition());
+        _previewGrid.RowDefinitions.Add(new RowDefinition());
+        _previewGrid.ColumnDefinitions.Add(new ColumnDefinition());
+        _previewGrid.ColumnDefinitions.Add(new ColumnDefinition());
 
         for (int i = 0; i < MaxPreviewIcons; i++)
         {
             _previewIcons[i] = new Image
             {
-                Width = IconSize,
-                Height = IconSize,
+                Width = MiniIconSize,
+                Height = MiniIconSize,
                 Stretch = Stretch.Uniform,
                 Margin = new Thickness(0.5),
                 Visibility = Visibility.Collapsed,
@@ -123,37 +135,25 @@ public sealed class GroupItemView : Grid
             RenderOptions.SetBitmapScalingMode(_previewIcons[i], BitmapScalingMode.HighQuality);
             Grid.SetRow(_previewIcons[i], i / 2);
             Grid.SetColumn(_previewIcons[i], i % 2);
-            _iconGrid.Children.Add(_previewIcons[i]);
+            _previewGrid.Children.Add(_previewIcons[i]);
         }
-        _iconContainer.Children.Add(_iconGrid);
+        _tileContent.Children.Add(_previewGrid);
 
-        // Label
-        _label = new TextBlock
-        {
-            FontSize = 8.5,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Bottom,
-            Margin = new Thickness(1, 0, 1, 1),
-            MaxWidth = GroupSize - 2,
-            TextTrimming = TextTrimming.CharacterEllipsis,
-        };
-        _label.SetResourceReference(TextElement.ForegroundProperty, "TextSecondaryBrush");
+        _tileBorder.Child = _tileContent;
 
-        Children.Add(_cardBorder);
         Children.Add(_hover);
-        Children.Add(_iconContainer);
-        Children.Add(_label);
+        Children.Add(_tileBorder);
 
         MouseEnter += (_, _) => { Motion.Fade(_hover, 1, 120); AnimatePress(1.08); };
         MouseLeave += (_, _) => { Motion.Fade(_hover, 0, 220); AnimatePress(1); };
-        MouseLeftButtonDown += (_, _) => AnimatePress(0.86);
+        MouseLeftButtonDown += (_, _) => AnimatePress(0.88);
         MouseLeftButtonUp += OnLeftUp;
         Loaded += OnFirstLoaded;
 
         ContextMenu = new ContextMenu();
         ContextMenuOpening += OnContextMenuOpening;
 
-        // Accept drag drops
+        // Drag and drop into group
         DragEnter += OnDragEnter;
         DragOver += OnDragOver;
         DragLeave += OnDragLeave;
@@ -163,6 +163,12 @@ public sealed class GroupItemView : Grid
     }
 
     public DockItem Item => _item;
+
+    private static FontFamily GetIconFont()
+    {
+        return Application.Current.TryFindResource("IconFont") as FontFamily
+               ?? new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets, Segoe UI Symbol");
+    }
 
     private void OnFirstLoaded(object sender, RoutedEventArgs e)
     {
@@ -174,44 +180,37 @@ public sealed class GroupItemView : Grid
     {
         IEasingFunction easing = scale < 1
             ? new CubicEase { EasingMode = EasingMode.EaseOut }
-            : new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.6 };
-        Motion.Scale(_pressScale, scale, scale < 1 ? 90 : 260, easing);
+            : new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.5 };
+        Motion.Scale(_pressScale, scale, scale < 1 ? 80 : 220, easing);
     }
 
-    /// <summary>Updates color, folder icon, child icons, and label.</summary>
+    /// <summary>Updates tile color, folder glyph, 2x2 icons, and tooltip.</summary>
     public void RefreshAppearance()
     {
         var children = _item.Children ?? new List<DockItem>();
         string name = string.IsNullOrWhiteSpace(_item.GroupName) ? "Folder" : _item.GroupName!;
-        ToolTip = $"{name} ({children.Count} items)";
-        _label.Text = name;
+        ToolTip = $"{name} · {children.Count} item{(children.Count == 1 ? "" : "s")}";
 
-        // Apply accent color
+        // Accent color lookup
         var accentBrush = Application.Current.TryFindResource(_item.GroupAccent ?? "AccentBlueBrush") as Brush
                           ?? Brushes.DodgerBlue;
+        Color accentColor = accentBrush is SolidColorBrush scb ? scb.Color : Color.FromRgb(0, 120, 215);
 
-        _fallbackIcon.Foreground = accentBrush;
+        _emptyFolderGlyph.Foreground = accentBrush;
 
-        if (accentBrush is SolidColorBrush scb)
-        {
-            _cardBorder.Background = new SolidColorBrush(Color.FromArgb(28, scb.Color.R, scb.Color.G, scb.Color.B));
-            _cardBorder.BorderBrush = new SolidColorBrush(Color.FromArgb(70, scb.Color.R, scb.Color.G, scb.Color.B));
-        }
-        else
-        {
-            _cardBorder.Background = new SolidColorBrush(Color.FromArgb(28, 76, 194, 255));
-            _cardBorder.BorderBrush = accentBrush;
-        }
+        // Frosted glass background + accent border
+        _tileBorder.Background = new SolidColorBrush(Color.FromArgb(42, accentColor.R, accentColor.G, accentColor.B));
+        _tileBorder.BorderBrush = new SolidColorBrush(Color.FromArgb(130, accentColor.R, accentColor.G, accentColor.B));
 
         if (children.Count == 0)
         {
-            _fallbackIcon.Visibility = Visibility.Visible;
-            _iconGrid.Visibility = Visibility.Collapsed;
+            _emptyFolderGlyph.Visibility = Visibility.Visible;
+            _previewGrid.Visibility = Visibility.Collapsed;
         }
         else
         {
-            _fallbackIcon.Visibility = Visibility.Collapsed;
-            _iconGrid.Visibility = Visibility.Visible;
+            _emptyFolderGlyph.Visibility = Visibility.Collapsed;
+            _previewGrid.Visibility = Visibility.Visible;
 
             for (int i = 0; i < MaxPreviewIcons; i++)
             {
@@ -232,26 +231,33 @@ public sealed class GroupItemView : Grid
 
     private static ImageSource? GetChildIcon(DockItem child)
     {
-        if (child.Kind == DockItemKind.App && child.Path is not null)
-            return ShellIcons.GetIcon(child.Path, 48);
-        if (child.Kind == DockItemKind.Widget && WidgetRegistry.Find(child.Widget) is { } descriptor)
+        try
         {
-            var visual = new DrawingVisual();
-            using (var dc = visual.RenderOpen())
+            if (child.Kind == DockItemKind.App && child.Path is not null)
+                return ShellIcons.GetIcon(child.Path, 48);
+            if (child.Kind == DockItemKind.Widget && WidgetRegistry.Find(child.Widget) is { } descriptor)
             {
-                var brush = Application.Current.TryFindResource(descriptor.AccentKey) as Brush ?? Brushes.Gray;
-                var pen = new Pen(brush, 1.5) { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round, LineJoin = PenLineJoin.Round };
-                dc.DrawGeometry(null, pen, descriptor.Icon);
+                var visual = new DrawingVisual();
+                using (var dc = visual.RenderOpen())
+                {
+                    var brush = Application.Current.TryFindResource(descriptor.AccentKey) as Brush ?? Brushes.Gray;
+                    var pen = new Pen(brush, 1.5) { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round, LineJoin = PenLineJoin.Round };
+                    dc.DrawGeometry(null, pen, descriptor.Icon);
+                }
+                var bitmap = new RenderTargetBitmap(24, 24, 96, 96, PixelFormats.Pbgra32);
+                bitmap.Render(visual);
+                bitmap.Freeze();
+                return bitmap;
             }
-            var bitmap = new RenderTargetBitmap(24, 24, 96, 96, PixelFormats.Pbgra32);
-            bitmap.Render(visual);
-            bitmap.Freeze();
-            return bitmap;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to get child icon");
         }
         return null;
     }
 
-    // ------------------------------------------------------------------ Fan popup
+    // ------------------------------------------------------------------ Popup handling
 
     private void OnLeftUp(object sender, MouseButtonEventArgs e)
     {
@@ -260,207 +266,329 @@ public sealed class GroupItemView : Grid
         e.Handled = true;
 
         if (_fanPopup?.IsOpen == true)
+        {
             CloseFan();
-        else if (DateTime.UtcNow - _fanClosedAt > TimeSpan.FromMilliseconds(200))
+        }
+        else if (DateTime.UtcNow - _fanClosedAt > TimeSpan.FromMilliseconds(180))
+        {
             OpenFan();
+        }
     }
 
-    private void OpenFan()
+    public void OpenFan()
     {
-        CloseFan();
-
-        var children = _item.Children ?? new List<DockItem>();
-        var edge = _host.Edge;
-        bool vertical = edge is DockEdge.Left or DockEdge.Right;
-
-        var accentBrush = Application.Current.TryFindResource(_item.GroupAccent ?? "AccentBlueBrush") as Brush
-                          ?? Brushes.DodgerBlue;
-
-        // Container frame
-        var frame = new Border
-        {
-            CornerRadius = new CornerRadius(14),
-            Padding = new Thickness(10),
-            BorderThickness = new Thickness(1),
-            Margin = new Thickness(8),
-            MinWidth = 160,
-            Effect = new System.Windows.Media.Effects.DropShadowEffect { BlurRadius = 18, ShadowDepth = 4, Opacity = 0.4 },
-        };
-        frame.SetResourceReference(Border.BackgroundProperty, "PopupBrush");
-        frame.SetResourceReference(Border.BorderBrushProperty, "PopupBorderBrush");
-
-        var mainStack = new StackPanel();
-
-        // Header
-        var headerGrid = new Grid { Margin = new Thickness(2, 0, 2, 8) };
-        headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-
-        var titleRow = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-        var folderGlyph = new TextBlock
-        {
-            Text = "\uE8B7",
-            FontSize = 14,
-            Foreground = accentBrush,
-            Margin = new Thickness(0, 0, 6, 0),
-            VerticalAlignment = VerticalAlignment.Center,
-        };
-        var titleText = new TextBlock
-        {
-            Text = _item.GroupName ?? "Folder",
-            FontSize = 12.5,
-            FontWeight = FontWeights.SemiBold,
-            VerticalAlignment = VerticalAlignment.Center,
-        };
-        titleText.SetResourceReference(TextElement.ForegroundProperty, "TextPrimaryBrush");
-
-        var countBadge = new TextBlock
-        {
-            Text = $" ({children.Count})",
-            FontSize = 11,
-            VerticalAlignment = VerticalAlignment.Center,
-        };
-        countBadge.SetResourceReference(TextElement.ForegroundProperty, "TextTertiaryBrush");
-
-        titleRow.Children.Add(folderGlyph);
-        titleRow.Children.Add(titleText);
-        titleRow.Children.Add(countBadge);
-        Grid.SetColumn(titleRow, 0);
-        headerGrid.Children.Add(titleRow);
-
-        var editBtn = new Button
-        {
-            Content = "\uE8AC", // Edit pencil
-            FontFamily = (FontFamily)FindResource("SegoeIcons"),
-            FontSize = 10,
-            Width = 22,
-            Height = 22,
-            Padding = new Thickness(0),
-            ToolTip = "Rename folder",
-            Background = Brushes.Transparent,
-            BorderThickness = new Thickness(0),
-        };
-        editBtn.SetResourceReference(Button.ForegroundProperty, "TextTertiaryBrush");
-        editBtn.Click += (_, _) =>
+        try
         {
             CloseFan();
-            PromptRename();
-        };
-        Grid.SetColumn(editBtn, 1);
-        headerGrid.Children.Add(editBtn);
 
-        mainStack.Children.Add(headerGrid);
+            var children = _item.Children ?? new List<DockItem>();
+            var edge = _host.Edge;
+            string folderName = string.IsNullOrWhiteSpace(_item.GroupName) ? "Folder" : _item.GroupName!;
 
-        if (children.Count == 0)
-        {
-            // Empty state view
-            var emptyPanel = new StackPanel
+            var accentBrush = Application.Current.TryFindResource(_item.GroupAccent ?? "AccentBlueBrush") as Brush
+                              ?? Brushes.DodgerBlue;
+            var textPrimary = Application.Current.TryFindResource("TextPrimaryBrush") as Brush ?? Brushes.White;
+            var textSecondary = Application.Current.TryFindResource("TextSecondaryBrush") as Brush ?? Brushes.Gray;
+            var textTertiary = Application.Current.TryFindResource("TextTertiaryBrush") as Brush ?? Brushes.DarkGray;
+
+            // Container frame
+            var frame = new Border
             {
-                Margin = new Thickness(4, 6, 4, 6),
-                HorizontalAlignment = HorizontalAlignment.Center,
+                CornerRadius = new CornerRadius(16),
+                Padding = new Thickness(14),
+                BorderThickness = new Thickness(1),
+                Margin = new Thickness(8),
+                MinWidth = 200,
+                Effect = new System.Windows.Media.Effects.DropShadowEffect
+                {
+                    BlurRadius = 24,
+                    ShadowDepth = 5,
+                    Opacity = 0.5,
+                },
+            };
+            frame.SetResourceReference(Border.BackgroundProperty, "PopupBrush");
+            frame.SetResourceReference(Border.BorderBrushProperty, "PopupBorderBrush");
+
+            var mainStack = new StackPanel();
+
+            // 1. Header (Folder icon, title, item count pill, rename & close buttons)
+            var headerGrid = new Grid { Margin = new Thickness(2, 0, 2, 10) };
+            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            var titleRow = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+            var folderGlyph = new TextBlock
+            {
+                Text = "\uE8B7",
+                FontFamily = GetIconFont(),
+                FontSize = 16,
+                Foreground = accentBrush,
+                Margin = new Thickness(0, 0, 7, 0),
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            var titleText = new TextBlock
+            {
+                Text = folderName,
+                FontSize = 13.5,
+                FontWeight = FontWeights.SemiBold,
+                Foreground = textPrimary,
+                VerticalAlignment = VerticalAlignment.Center,
+                MaxWidth = 180,
+                TextTrimming = TextTrimming.CharacterEllipsis,
             };
 
-            var emptyMsg = new TextBlock
+            var countPill = new Border
             {
-                Text = "This folder is empty",
-                FontSize = 11.5,
-                FontWeight = FontWeights.Medium,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(0, 4, 0, 2),
+                CornerRadius = new CornerRadius(8),
+                Padding = new Thickness(6, 1, 6, 1),
+                Margin = new Thickness(8, 0, 0, 0),
+                VerticalAlignment = VerticalAlignment.Center,
             };
-            emptyMsg.SetResourceReference(TextElement.ForegroundProperty, "TextSecondaryBrush");
-
-            var emptyHint = new TextBlock
+            countPill.SetResourceReference(Border.BackgroundProperty, "DockHoverBrush");
+            var countText = new TextBlock
             {
-                Text = "Drag apps or widgets here to group them",
-                FontSize = 10,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(0, 0, 0, 10),
+                Text = $"{children.Count} item{(children.Count == 1 ? "" : "s")}",
+                FontSize = 10.5,
+                Foreground = textSecondary,
             };
-            emptyHint.SetResourceReference(TextElement.ForegroundProperty, "TextTertiaryBrush");
+            countPill.Child = countText;
 
-            var addBtn = new Button
+            titleRow.Children.Add(folderGlyph);
+            titleRow.Children.Add(titleText);
+            titleRow.Children.Add(countPill);
+            Grid.SetColumn(titleRow, 0);
+            headerGrid.Children.Add(titleRow);
+
+            // Action icons on header: Rename & Close
+            var headerActions = new StackPanel { Orientation = Orientation.Horizontal };
+
+            var renameBtn = new Button
             {
-                Content = "+ Add Application",
-                Height = 28,
-                Padding = new Thickness(12, 0, 12, 0),
-                HorizontalAlignment = HorizontalAlignment.Center,
+                Content = "\uE8AC",
+                FontFamily = GetIconFont(),
+                FontSize = 12,
+                Width = 24,
+                Height = 24,
+                Padding = new Thickness(0),
+                ToolTip = "Rename folder",
+                Background = Brushes.Transparent,
+                Foreground = textSecondary,
+                BorderThickness = new Thickness(0),
+                Cursor = Cursors.Hand,
+            };
+            renameBtn.Click += (_, _) =>
+            {
+                CloseFan();
+                PromptRename();
+            };
+            headerActions.Children.Add(renameBtn);
+
+            var closeBtn = new Button
+            {
+                Content = "\uE711",
+                FontFamily = GetIconFont(),
                 FontSize = 11,
+                Width = 24,
+                Height = 24,
+                Margin = new Thickness(4, 0, 0, 0),
+                Padding = new Thickness(0),
+                ToolTip = "Close",
+                Background = Brushes.Transparent,
+                Foreground = textSecondary,
+                BorderThickness = new Thickness(0),
+                Cursor = Cursors.Hand,
             };
-            addBtn.SetResourceReference(Button.BackgroundProperty, "AccentBlueBrush");
-            addBtn.SetResourceReference(Button.ForegroundProperty, "TextOnColorBrush");
-            addBtn.Click += (_, _) =>
+            closeBtn.Click += (_, _) => CloseFan();
+            headerActions.Children.Add(closeBtn);
+
+            Grid.SetColumn(headerActions, 1);
+            headerGrid.Children.Add(headerActions);
+            mainStack.Children.Add(headerGrid);
+
+            // Divider
+            var divider = new Border
+            {
+                Height = 1,
+                Margin = new Thickness(0, 0, 0, 10),
+                Opacity = 0.4,
+            };
+            divider.SetResourceReference(Border.BackgroundProperty, "SurfaceBorderBrush");
+            mainStack.Children.Add(divider);
+
+            // 2. Content Area
+            if (children.Count == 0)
+            {
+                var emptyPanel = new StackPanel
+                {
+                    Margin = new Thickness(8, 12, 8, 14),
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                };
+
+                var emptyMsg = new TextBlock
+                {
+                    Text = "This folder is empty",
+                    FontSize = 13,
+                    FontWeight = FontWeights.Medium,
+                    Foreground = textPrimary,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 0, 0, 4),
+                };
+                var emptyHint = new TextBlock
+                {
+                    Text = "Drag apps or widgets onto this folder to group them.",
+                    FontSize = 11,
+                    Foreground = textSecondary,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 0, 0, 14),
+                };
+
+                var addAppBtn = new Button
+                {
+                    Content = "+ Add application…",
+                    Height = 32,
+                    Padding = new Thickness(16, 0, 16, 0),
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    FontSize = 11.5,
+                    FontWeight = FontWeights.SemiBold,
+                    Background = accentBrush,
+                    Foreground = Brushes.White,
+                    BorderThickness = new Thickness(0),
+                    Cursor = Cursors.Hand,
+                };
+                addAppBtn.Click += (_, _) =>
+                {
+                    CloseFan();
+                    App.Instance.ShowAppPicker();
+                };
+
+                emptyPanel.Children.Add(emptyMsg);
+                emptyPanel.Children.Add(emptyHint);
+                emptyPanel.Children.Add(addAppBtn);
+                mainStack.Children.Add(emptyPanel);
+            }
+            else
+            {
+                int cols = Math.Clamp(children.Count, 2, 5);
+                var itemsPanel = new WrapPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    MaxWidth = cols * 64 + 10,
+                };
+
+                foreach (var child in children)
+                {
+                    var btn = CreateChildButton(child);
+                    itemsPanel.Children.Add(btn);
+                }
+
+                mainStack.Children.Add(itemsPanel);
+            }
+
+            // 3. Footer Bar with Quick Colors & Manage
+            var footerDivider = new Border
+            {
+                Height = 1,
+                Margin = new Thickness(0, 10, 0, 8),
+                Opacity = 0.35,
+            };
+            footerDivider.SetResourceReference(Border.BackgroundProperty, "SurfaceBorderBrush");
+            mainStack.Children.Add(footerDivider);
+
+            var footerGrid = new Grid();
+            footerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            footerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            // Color dots
+            var colorDots = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+            foreach (var (cName, cKey, cVal) in AccentColors)
+            {
+                bool isSelected = (_item.GroupAccent ?? "AccentBlueBrush") == cKey;
+                var dotBorder = new Border
+                {
+                    Width = 16,
+                    Height = 16,
+                    CornerRadius = new CornerRadius(8),
+                    Margin = new Thickness(0, 0, 5, 0),
+                    Background = new SolidColorBrush(cVal),
+                    BorderBrush = isSelected ? textPrimary : Brushes.Transparent,
+                    BorderThickness = new Thickness(isSelected ? 2 : 0),
+                    ToolTip = cName,
+                    Cursor = Cursors.Hand,
+                };
+                string targetKey = cKey;
+                dotBorder.MouseLeftButtonUp += (_, e) =>
+                {
+                    e.Handled = true;
+                    _item.GroupAccent = targetKey;
+                    RefreshAppearance();
+                    AppServices.ConfigService.ScheduleSave();
+                    AppServices.Config.NotifyItemsChanged();
+                    OpenFan(); // Refresh open popup with new color
+                };
+                colorDots.Children.Add(dotBorder);
+            }
+            Grid.SetColumn(colorDots, 0);
+            footerGrid.Children.Add(colorDots);
+
+            // Add App button
+            var addMoreBtn = new Button
+            {
+                Content = "+ Add App",
+                FontSize = 10.5,
+                Padding = new Thickness(8, 3, 8, 3),
+                Background = Brushes.Transparent,
+                Foreground = textSecondary,
+                BorderThickness = new Thickness(0),
+                Cursor = Cursors.Hand,
+            };
+            addMoreBtn.Click += (_, _) =>
             {
                 CloseFan();
                 App.Instance.ShowAppPicker();
             };
+            Grid.SetColumn(addMoreBtn, 1);
+            footerGrid.Children.Add(addMoreBtn);
 
-            emptyPanel.Children.Add(emptyMsg);
-            emptyPanel.Children.Add(emptyHint);
-            emptyPanel.Children.Add(addBtn);
-            mainStack.Children.Add(emptyPanel);
-        }
-        else
-        {
-            // Grid of children
-            int colCount = Math.Clamp(children.Count, 2, 5);
-            var panel = new WrapPanel
+            mainStack.Children.Add(footerGrid);
+            frame.Child = mainStack;
+
+            _fanPopup = new Popup
             {
-                Orientation = Orientation.Horizontal,
-                MaxWidth = colCount * (ChildButtonSize + 16) + 8,
+                Child = frame,
+                AllowsTransparency = true,
+                StaysOpen = false,
+                PopupAnimation = PopupAnimation.None,
+                PlacementTarget = this,
+            };
+            _fanPopup.Closed += (_, _) =>
+            {
+                _fanClosedAt = DateTime.UtcNow;
+                if (_fanInteraction)
+                {
+                    _fanInteraction = false;
+                    _host.EndInteraction();
+                }
             };
 
-            var fanOffset = FanOffset(edge);
-            int index = 0;
-            foreach (var child in children)
-            {
-                var btn = CreateChildButton(child);
-                panel.Children.Add(btn);
-                int idx = index++;
-                btn.Loaded += (_, _) => Motion.FanOut(btn, fanOffset, idx, staggerMs: 40, durationMs: 260);
-            }
-
-            mainStack.Children.Add(panel);
+            PopupPlacement.PlacePopup(_fanPopup, this, edge, gap: 4);
+            Motion.PopIn(frame, PopupPlacement.EnterOffset(edge));
+            _fanInteraction = true;
+            _host.BeginInteraction();
+            GlobalPopupDismissHook.RegisterPopup(_fanPopup);
+            _fanPopup.IsOpen = true;
         }
-
-        frame.Child = mainStack;
-
-        _fanPopup = new Popup
+        catch (Exception ex)
         {
-            Child = frame,
-            AllowsTransparency = true,
-            StaysOpen = false,
-            PopupAnimation = PopupAnimation.None,
-            PlacementTarget = this,
-        };
-        _fanPopup.Closed += (_, _) =>
-        {
-            _fanClosedAt = DateTime.UtcNow;
-            if (_fanInteraction) { _fanInteraction = false; _host.EndInteraction(); }
-        };
-
-        PopupPlacement.PlacePopup(_fanPopup, this, edge, gap: 4);
-        Motion.PopIn(frame, PopupPlacement.EnterOffset(edge));
-        _fanInteraction = true;
-        _host.BeginInteraction();
-        GlobalPopupDismissHook.RegisterPopup(_fanPopup);
-        _fanPopup.IsOpen = true;
+            Log.Error(ex, "Failed to open folder fan popup");
+        }
     }
-
-    private static Vector FanOffset(DockEdge edge) => edge switch
-    {
-        DockEdge.Top => new Vector(0, -16),
-        DockEdge.Left => new Vector(-16, 0),
-        DockEdge.Right => new Vector(16, 0),
-        _ => new Vector(0, 16),
-    };
 
     private FrameworkElement CreateChildButton(DockItem child)
     {
         var icon = new Image
         {
-            Width = 28,
-            Height = 28,
+            Width = 32,
+            Height = 32,
             Stretch = Stretch.Uniform,
             Source = GetChildIcon(child),
             HorizontalAlignment = HorizontalAlignment.Center,
@@ -470,11 +598,11 @@ public sealed class GroupItemView : Grid
 
         var hover = new Border
         {
-            CornerRadius = new CornerRadius(8),
+            CornerRadius = new CornerRadius(10),
             Opacity = 0,
             Child = icon,
-            Width = 36,
-            Height = 36,
+            Width = 46,
+            Height = 46,
             HorizontalAlignment = HorizontalAlignment.Center,
         };
         hover.SetResourceReference(Border.BackgroundProperty, "DockHoverBrush");
@@ -483,30 +611,31 @@ public sealed class GroupItemView : Grid
             ? (!string.IsNullOrWhiteSpace(child.Name) ? child.Name! : Path.GetFileNameWithoutExtension(child.Path ?? ""))
             : (WidgetRegistry.Find(child.Widget)?.Name ?? child.Widget ?? "Widget");
 
+        var textSecondary = Application.Current.TryFindResource("TextSecondaryBrush") as Brush ?? Brushes.Gray;
         var label = new TextBlock
         {
             Text = title,
-            FontSize = 9.5,
+            FontSize = 10,
+            Foreground = textSecondary,
             TextTrimming = TextTrimming.CharacterEllipsis,
             HorizontalAlignment = HorizontalAlignment.Center,
-            MaxWidth = ChildButtonSize + 12,
-            Margin = new Thickness(0, 2, 0, 0),
+            MaxWidth = 58,
+            Margin = new Thickness(0, 3, 0, 0),
         };
-        label.SetResourceReference(TextElement.ForegroundProperty, "TextSecondaryBrush");
 
         var stack = new StackPanel
         {
-            Width = ChildButtonSize + 12,
+            Width = 60,
             Children = { hover, label },
         };
 
         var wrapper = new Border
         {
-            CornerRadius = new CornerRadius(8),
-            Padding = new Thickness(2),
+            CornerRadius = new CornerRadius(10),
+            Padding = new Thickness(2, 4, 2, 4),
             Background = Brushes.Transparent,
             Child = stack,
-            Margin = new Thickness(3),
+            Margin = new Thickness(2),
             ToolTip = title,
             Cursor = Cursors.Hand,
         };
@@ -558,7 +687,7 @@ public sealed class GroupItemView : Grid
             _fanPopup.IsOpen = false;
     }
 
-    // ------------------------------------------------------------------ Rename & Color
+    // ------------------------------------------------------------------ Rename & Context Menu
 
     public void PromptRename()
     {
@@ -584,13 +713,10 @@ public sealed class GroupItemView : Grid
         menu.Items.Add(DockMenu.Item("Rename folder…", "\uE8AC", PromptRename));
 
         // Color submenu
-        var accents = new[] { "AccentBlueBrush", "AccentGreenBrush", "AccentOrangeBrush", "AccentRedBrush",
-            "AccentPurpleBrush", "AccentCyanBrush", "AccentPinkBrush", "AccentYellowBrush" };
-        var colorNames = new[] { "Blue", "Green", "Orange", "Red", "Purple", "Cyan", "Pink", "Yellow" };
-        menu.Items.Add(DockMenu.Submenu("Folder color", "\uE790", accents.Select((a, i) =>
-            DockMenu.Check(colorNames[i], (_item.GroupAccent ?? "AccentBlueBrush") == a, () =>
+        menu.Items.Add(DockMenu.Submenu("Folder color", "\uE790", AccentColors.Select(ac =>
+            DockMenu.Check(ac.Name, (_item.GroupAccent ?? "AccentBlueBrush") == ac.BrushKey, () =>
             {
-                _item.GroupAccent = a;
+                _item.GroupAccent = ac.BrushKey;
                 RefreshAppearance();
                 AppServices.ConfigService.ScheduleSave();
                 AppServices.Config.NotifyItemsChanged();
@@ -609,7 +735,7 @@ public sealed class GroupItemView : Grid
         menu.Items.Add(DockMenu.Item("Remove folder", "\uE77A", () => AppServices.ConfigService.RemoveItem(_item.Id)));
     }
 
-    // ------------------------------------------------------------------ Drop handling (add items to group)
+    // ------------------------------------------------------------------ Drag and Drop handling
 
     private void OnDragEnter(object sender, DragEventArgs e)
     {

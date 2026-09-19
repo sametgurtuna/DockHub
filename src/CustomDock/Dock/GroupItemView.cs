@@ -144,7 +144,7 @@ public sealed class GroupItemView : Grid
         Children.Add(_hover);
         Children.Add(_tileBorder);
 
-        MouseEnter += (_, _) => { Motion.Fade(_hover, 1, 120); AnimatePress(1.08); };
+        MouseEnter += (_, _) => { Motion.Fade(_hover, 1, 120); AnimatePress(1.08); WindowPreviewWindow.Instance.HidePreview(); };
         MouseLeave += (_, _) => { Motion.Fade(_hover, 0, 220); AnimatePress(1); };
         MouseLeftButtonDown += (_, _) => AnimatePress(0.88);
         MouseLeftButtonUp += OnLeftUp;
@@ -269,7 +269,7 @@ public sealed class GroupItemView : Grid
         {
             CloseFan();
         }
-        else if (DateTime.UtcNow - _fanClosedAt > TimeSpan.FromMilliseconds(180) && !PopupAnimationHelper.IsClosing(_fanPopup!))
+        else if (DateTime.UtcNow - _fanClosedAt > TimeSpan.FromMilliseconds(180) && (_fanPopup is null || !PopupAnimationHelper.IsClosing(_fanPopup)))
         {
             OpenFan();
         }
@@ -279,7 +279,10 @@ public sealed class GroupItemView : Grid
     {
         try
         {
-            CloseFan();
+            if (_fanPopup is { IsOpen: true })
+            {
+                _fanPopup.IsOpen = false;
+            }
 
             var children = _item.Children ?? new List<DockItem>();
             var edge = _host.Edge;
@@ -574,7 +577,7 @@ public sealed class GroupItemView : Grid
             _fanInteraction = true;
             _host.BeginInteraction();
             GlobalPopupDismissHook.RegisterPopup(_fanPopup);
-            PopupAnimationHelper.AnimateOpen(_fanPopup, edge);
+            PopupAnimationHelper.AnimateOpen(_fanPopup, edge, this);
         }
         catch (Exception ex)
         {
@@ -690,7 +693,7 @@ public sealed class GroupItemView : Grid
     public void CloseFan()
     {
         if (_fanPopup is { IsOpen: true } && !PopupAnimationHelper.IsClosing(_fanPopup))
-            PopupAnimationHelper.ClosePopup(_fanPopup, _host.Edge);
+            PopupAnimationHelper.ClosePopup(_fanPopup, _host.Edge, this);
     }
 
     // ------------------------------------------------------------------ Rename & Context Menu

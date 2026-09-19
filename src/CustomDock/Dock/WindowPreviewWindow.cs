@@ -27,6 +27,8 @@ public sealed class WindowPreviewWindow : Window
     private readonly Border _container;
     private readonly List<IntPtr> _thumbnails = new();
     private readonly DispatcherTimer _hideTimer;
+    private readonly DispatcherTimer _monitorTimer;
+    private int _outsideTicks;
     private readonly List<(Border Host, ApplicationWindow Window)> _previewItems = new();
 
     private IntPtr _hwnd;
@@ -48,12 +50,35 @@ public sealed class WindowPreviewWindow : Window
         Left = -32000;
         Top = -32000;
 
-        _hideTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(320) };
+        _hideTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
         _hideTimer.Tick += (_, _) =>
         {
             _hideTimer.Stop();
             if (!IsMouseOverPreviewOrButton())
                 HidePreview();
+        };
+
+        _monitorTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(50) };
+        _monitorTimer.Tick += (_, _) =>
+        {
+            if (!IsVisible)
+            {
+                _monitorTimer.Stop();
+                return;
+            }
+
+            if (!IsMouseOverPreviewOrButton())
+            {
+                _outsideTicks++;
+                if (_outsideTicks >= 2) // ~100ms outside
+                {
+                    HidePreview();
+                }
+            }
+            else
+            {
+                _outsideTicks = 0;
+            }
         };
 
         _cardsPanel = new StackPanel
@@ -83,8 +108,12 @@ public sealed class WindowPreviewWindow : Window
 
         Content = _container;
 
-        MouseEnter += (_, _) => _hideTimer.Stop();
-        MouseLeave += (_, _) => ScheduleHide();
+        MouseEnter += (_, _) =>
+        {
+            _hideTimer.Stop();
+            _outsideTicks = 0;
+        };
+        MouseLeave += (_, _) => ScheduleHide(100);
         SourceInitialized += OnSourceInitialized;
     }
 
@@ -101,6 +130,7 @@ public sealed class WindowPreviewWindow : Window
     {
         if (_isClosing) return;
         _hideTimer.Stop();
+        _outsideTicks = 0;
 
         var windows = group.Windows.Where(w => w.ShowInTaskbar).ToList();
         if (windows.Count == 0)
@@ -123,17 +153,21 @@ public sealed class WindowPreviewWindow : Window
         UpdateLayout();
         PositionWindow(button, edge);
         RegisterThumbnails();
+        _monitorTimer.Start();
     }
 
-    public void ScheduleHide()
+    public void ScheduleHide(int delayMs = 100)
     {
         _hideTimer.Stop();
+        _hideTimer.Interval = TimeSpan.FromMilliseconds(delayMs);
         _hideTimer.Start();
     }
 
     public void HidePreview()
     {
+        _monitorTimer.Stop();
         _hideTimer.Stop();
+        _outsideTicks = 0;
         UnregisterAllThumbnails();
         _currentButton = null;
         _currentGroup = null;
@@ -144,27 +178,62 @@ public sealed class WindowPreviewWindow : Window
 
     private bool IsMouseOverPreviewOrButton()
     {
+        if (!IsVisible) return false;
+
         if (IsMouseOver) return true;
         if (_currentButton is { IsMouseOver: true }) return true;
 
-        if (_currentButton is not null && GetCursorPos(out var pt))
+        if (_currentButton is null || !GetCursorPos(out var pt))
+            return false;
+
+        try
         {
-            try
-            {
-                var buttonTopLeft = _currentButton.PointToScreen(new Point(0, 0));
-                var buttonRect = new Rect(buttonTopLeft.X, buttonTopLeft.Y, _currentButton.ActualWidth, _currentButton.ActualHeight);
-                var previewRect = new Rect(Left, Top, ActualWidth, ActualHeight);
+            var p = new Point(pt.X, pt.Y);
 
-                var union = Rect.Union(buttonRect, previewRect);
-                union.Inflate(10, 10);
+            // Button bounds in physical screen pixels
+            var bTopLeft = _currentButton.PointToScreen(new Point(0, 0));
+            var bBottomRight = _currentButton.PointToScreen(new Point(_currentButton.ActualWidth, _currentButton.ActualHeight));
+            var bRect = new Rect(bTopLeft, bBottomRight);
+            var bHit = bRect;
+            bHit.Inflate(4, 4);
+            if (bHit.Contains(p))
+                return true;
 
-                if (union.Contains(new Point(pt.X, pt.Y)))
-                    return true;
-            }
-            catch
-            {
-                // Ignore if detached from visual tree
-            }
+            // Preview window bounds in physical screen pixels
+            var prevTopLeft = PointToScreen(new Point(0, 0));
+            var prevBottomRight = PointToScreen(new Point(ActualWidth, ActualHeight));
+            var prevRect = new Rect(prevTopLeft, prevBottomRight);
+            var prevHit = prevRect;
+            prevHit.Inflate(4, 4);
+            if (prevHit.Contains(p))
+                return true;
+
+            // Transition corridor between button and preview window
+            double minX = Math.Min(bRect.Left, prevRect.Left);
+            double maxX = Math.Max(bRect.Right, prevRect.Right);
+            double minY = Math.Min(bRect.Top, prevRect.Top);
+            double maxY = Math.Max(bRect.Bottom, prevRect.Bottom);
+
+            // In horizontal dock (Bottom or Top):
+            // Check if cursor is in the vertical gap between button and preview window
+            bool inVerticalGap = p.Y >= Math.Min(bRect.Bottom, prevRect.Bottom) - 4 &&
+                                 p.Y <= Math.Max(bRect.Top, prevRect.Top) + 4;
+            bool inHorizontalSpan = p.X >= minX - 6 && p.X <= maxX + 6;
+
+            if (inVerticalGap && inHorizontalSpan)
+                return true;
+
+            // In vertical dock (Left or Right):
+            bool inHorizontalGap = p.X >= Math.Min(bRect.Right, prevRect.Right) - 4 &&
+                                   p.X <= Math.Max(bRect.Left, prevRect.Left) + 4;
+            bool inVerticalSpan = p.Y >= minY - 6 && p.Y <= maxY + 6;
+
+            if (inHorizontalGap && inVerticalSpan)
+                return true;
+        }
+        catch
+        {
+            // Ignore if detached from visual tree
         }
 
         return false;

@@ -62,6 +62,7 @@ public sealed class WidgetItemView : WidgetCard
             };
         }
         DockDragHelper.Attach(this, () => new DataObject(DockDragHelper.ItemFormat, item.Id));
+        MouseEnter += (_, _) => WindowPreviewWindow.Instance.HidePreview();
         Loaded += OnFirstLoaded;
     }
 
@@ -189,13 +190,13 @@ public sealed class WidgetItemView : WidgetCard
         _flyoutInteraction = true;
         _host.BeginInteraction();
         GlobalPopupDismissHook.RegisterPopup(_flyout);
-        PopupAnimationHelper.AnimateOpen(_flyout, _host.Edge);
+        PopupAnimationHelper.AnimateOpen(_flyout, _host.Edge, this);
     }
 
     private void CloseFlyout()
     {
         if (_flyout is { IsOpen: true } && !PopupAnimationHelper.IsClosing(_flyout))
-            PopupAnimationHelper.ClosePopup(_flyout, _host.Edge);
+            PopupAnimationHelper.ClosePopup(_flyout, _host.Edge, this);
     }
 
     private void OnContextMenuOpening(object sender, ContextMenuEventArgs e)

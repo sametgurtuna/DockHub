@@ -211,7 +211,7 @@ public abstract class WidgetBase : UserControl
     protected void ClosePopup(Popup popup)
     {
         if (popup is null) return;
-        Dock.PopupAnimationHelper.ClosePopup(popup, Host.Edge);
+        Dock.PopupAnimationHelper.ClosePopup(popup, Host.Edge, popup.PlacementTarget as FrameworkElement ?? this);
     }
 
     /// <summary>Opens popup or closes it if already open (toggle).</summary>
@@ -256,7 +256,7 @@ public abstract class WidgetBase : UserControl
         }
         popup.Closed += OnClosed;
         Dock.GlobalPopupDismissHook.RegisterPopup(popup);
-        Dock.PopupAnimationHelper.AnimateOpen(popup, edge);
+        Dock.PopupAnimationHelper.AnimateOpen(popup, edge, anchor);
     }
 
     /// <summary>Shows notification (suppressed in preview mode).</summary>

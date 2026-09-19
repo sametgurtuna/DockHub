@@ -152,13 +152,18 @@ public sealed class AppButton : Grid
                 else
                     _previewTimer.Start();
             }
+            else
+            {
+                _previewTimer.Stop();
+                WindowPreviewWindow.Instance.HidePreview();
+            }
         };
         MouseLeave += (_, _) =>
         {
             Motion.Fade(_hover, 0, 220);
             AnimatePress(1);
             _previewTimer.Stop();
-            WindowPreviewWindow.Instance.ScheduleHide();
+            WindowPreviewWindow.Instance.ScheduleHide(100);
         };
         MouseLeftButtonDown += (_, _) => AnimatePress(0.86);
         Loaded += OnFirstLoaded;

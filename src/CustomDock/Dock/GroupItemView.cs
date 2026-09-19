@@ -23,10 +23,10 @@ namespace CustomDock.Dock;
 /// </summary>
 public sealed class GroupItemView : Grid
 {
-    private const double GroupWidth = 46;
+    private const double GroupWidth = 44;
     private const double GroupHeight = 46;
-    private const double TileSize = 28;
-    private const double MiniIconSize = 10;
+    private const double TileSize = 38;
+    private const double MiniIconSize = 13;
     private const int MaxPreviewIcons = 4;
 
     private readonly DockItem _item;
@@ -37,7 +37,6 @@ public sealed class GroupItemView : Grid
     private readonly TextBlock _emptyFolderGlyph;
     private readonly Grid _previewGrid;
     private readonly Image[] _previewIcons = new Image[MaxPreviewIcons];
-    private readonly TextBlock _nameLabel;
     private readonly ScaleTransform _pressScale = new();
 
     private Popup? _fanPopup;
@@ -72,21 +71,21 @@ public sealed class GroupItemView : Grid
         // Hover highlight overlay
         _hover = new Border
         {
-            CornerRadius = new CornerRadius(8),
-            Margin = new Thickness(1, 1, 1, 1),
+            CornerRadius = new CornerRadius(10),
+            Margin = new Thickness(1, 2, 1, 2),
             Opacity = 0,
         };
         _hover.SetResourceReference(Border.BackgroundProperty, "DockHoverBrush");
 
-        // 28x28 Frosted Glass Tile
+        // 38x38 Frosted Glass Tile
         _tileBorder = new Border
         {
             Width = TileSize,
             Height = TileSize,
-            CornerRadius = new CornerRadius(7),
+            CornerRadius = new CornerRadius(10),
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
-            BorderThickness = new Thickness(1),
+            BorderThickness = new Thickness(1.2),
             RenderTransformOrigin = new Point(0.5, 0.5),
             RenderTransform = _pressScale,
         };
@@ -102,7 +101,7 @@ public sealed class GroupItemView : Grid
         {
             Text = "\uE8B7",
             FontFamily = GetIconFont(),
-            FontSize = 15,
+            FontSize = 21,
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
             Visibility = Visibility.Visible,
@@ -112,8 +111,8 @@ public sealed class GroupItemView : Grid
         // 2. 2x2 Preview grid
         _previewGrid = new Grid
         {
-            Width = 22,
-            Height = 22,
+            Width = 28,
+            Height = 28,
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
             Visibility = Visibility.Collapsed,
@@ -142,44 +141,11 @@ public sealed class GroupItemView : Grid
 
         _tileBorder.Child = _tileContent;
 
-        // Folder name label displayed underneath the tile on the dock
-        _nameLabel = new TextBlock
-        {
-            Text = string.IsNullOrWhiteSpace(_item.GroupName) ? "Folder" : _item.GroupName!,
-            FontSize = 8.5,
-            FontWeight = FontWeights.Normal,
-            TextTrimming = TextTrimming.CharacterEllipsis,
-            TextAlignment = TextAlignment.Center,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            MaxWidth = 44,
-            Margin = new Thickness(0, 1, 0, 0),
-        };
-        _nameLabel.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondaryBrush");
-
-        var contentStack = new StackPanel
-        {
-            Orientation = Orientation.Vertical,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-        };
-        contentStack.Children.Add(_tileBorder);
-        contentStack.Children.Add(_nameLabel);
-
         Children.Add(_hover);
-        Children.Add(contentStack);
+        Children.Add(_tileBorder);
 
-        MouseEnter += (_, _) =>
-        {
-            Motion.Fade(_hover, 1, 120);
-            AnimatePress(1.08);
-            _nameLabel.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimaryBrush");
-        };
-        MouseLeave += (_, _) =>
-        {
-            Motion.Fade(_hover, 0, 220);
-            AnimatePress(1);
-            _nameLabel.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondaryBrush");
-        };
+        MouseEnter += (_, _) => { Motion.Fade(_hover, 1, 120); AnimatePress(1.08); };
+        MouseLeave += (_, _) => { Motion.Fade(_hover, 0, 220); AnimatePress(1); };
         MouseLeftButtonDown += (_, _) => AnimatePress(0.88);
         MouseLeftButtonUp += OnLeftUp;
         Loaded += OnFirstLoaded;
@@ -223,7 +189,6 @@ public sealed class GroupItemView : Grid
     {
         var children = _item.Children ?? new List<DockItem>();
         string name = string.IsNullOrWhiteSpace(_item.GroupName) ? "Folder" : _item.GroupName!;
-        _nameLabel.Text = name;
         ToolTip = $"{name} · {children.Count} item{(children.Count == 1 ? "" : "s")}";
 
         // Accent color lookup

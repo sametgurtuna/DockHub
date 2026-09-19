@@ -137,13 +137,15 @@ public sealed class WidgetItemView : WidgetCard
         if (!_compact || DockDragHelper.JustDragged || e.Handled) return;
         e.Handled = true;
         if (Widget.OnCompactClick()) return;
-        // StaysOpen=false panel closes the moment tile is pressed; prevent the same click from reopening it.
-        if (_flyout?.IsOpen == true) CloseFlyout();
-        else if (DateTime.UtcNow - _flyoutClosedAt > TimeSpan.FromMilliseconds(250)) OpenFlyout();
+        if (_flyout?.IsOpen == true || (_flyout is not null && PopupAnimationHelper.IsClosing(_flyout))) CloseFlyout();
+        else if (DateTime.UtcNow - _flyoutClosedAt > TimeSpan.FromMilliseconds(250) && !PopupAnimationHelper.IsClosing(_flyout!)) OpenFlyout();
     }
 
     private void OpenFlyout()
     {
+        if (_flyout is not null && PopupAnimationHelper.IsClosing(_flyout))
+            return;
+
         if (_flyout is null)
         {
             _flyoutCard = new WidgetCard { HoverEnabled = false };
@@ -163,7 +165,7 @@ public sealed class WidgetItemView : WidgetCard
             {
                 Child = frame,
                 AllowsTransparency = true,
-                StaysOpen = false,
+                StaysOpen = true,
                 PopupAnimation = PopupAnimation.None,
                 PlacementTarget = this,
             };
@@ -184,16 +186,16 @@ public sealed class WidgetItemView : WidgetCard
         }
 
         PopupPlacement.PlacePopup(_flyout, this, _host.Edge, gap: 2);
-        Motion.PopIn((FrameworkElement)_flyout.Child, PopupPlacement.EnterOffset(_host.Edge));
         _flyoutInteraction = true;
         _host.BeginInteraction();
         GlobalPopupDismissHook.RegisterPopup(_flyout);
-        _flyout.IsOpen = true;
+        PopupAnimationHelper.AnimateOpen(_flyout, _host.Edge);
     }
 
     private void CloseFlyout()
     {
-        if (_flyout is { IsOpen: true }) _flyout.IsOpen = false;
+        if (_flyout is { IsOpen: true } && !PopupAnimationHelper.IsClosing(_flyout))
+            PopupAnimationHelper.ClosePopup(_flyout, _host.Edge);
     }
 
     private void OnContextMenuOpening(object sender, ContextMenuEventArgs e)

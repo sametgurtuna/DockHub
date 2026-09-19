@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Interop;
 using System.Windows.Media;
+using CustomDock.Core;
 using CustomDock.Native;
 using static CustomDock.Native.NativeMethods;
 
@@ -67,6 +68,9 @@ public static class GlobalPopupDismissHook
     public static void RegisterPopup(Popup popup)
     {
         if (popup is null) return;
+        popup.AllowsTransparency = true;
+        popup.PopupAnimation = PopupAnimation.None;
+        popup.StaysOpen = true;
         if (s_activePopups.Add(popup))
         {
             popup.Closed += OnPopupClosed;
@@ -228,8 +232,12 @@ public static class GlobalPopupDismissHook
                         System.Windows.Threading.DispatcherPriority.Input,
                         () =>
                         {
+                            var edge = AppServices.Config.Edge;
                             foreach (var p in popups)
-                                if (p.IsOpen) p.IsOpen = false;
+                            {
+                                if (p.IsOpen && !PopupAnimationHelper.IsClosing(p))
+                                    PopupAnimationHelper.ClosePopup(p, edge);
+                            }
                         });
                 }
             }

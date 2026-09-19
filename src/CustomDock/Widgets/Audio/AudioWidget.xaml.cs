@@ -151,9 +151,9 @@ public partial class AudioWidget : WidgetBase
 
     private void ToggleMixer()
     {
-        if (MixerPopup.IsOpen)
+        if (MixerPopup.IsOpen || Dock.PopupAnimationHelper.IsClosing(MixerPopup))
         {
-            MixerPopup.IsOpen = false;
+            ClosePopup(MixerPopup);
             return;
         }
         // Prevent reopen if newly closed by click (toggle feel)
@@ -161,7 +161,6 @@ public partial class AudioWidget : WidgetBase
             return;
 
         BuildMixerUI();
-        GlobalPopupDismissHook.RegisterPopup(MixerPopup);
         OpenPopup(MixerPopup);
     }
 

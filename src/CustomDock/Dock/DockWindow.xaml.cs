@@ -372,7 +372,15 @@ public partial class DockWindow : Window, IWidgetHost
         };
         BeginInteraction();
         GlobalPopupDismissHook.RegisterPopup(TrayOverflowPopup);
-        TrayOverflowPopup.IsOpen = true;
+        PopupAnimationHelper.AnimateOpen(TrayOverflowPopup, _config.Edge);
+    }
+
+    private void OnTrayOverflowUnchecked(object sender, RoutedEventArgs e)
+    {
+        if (TrayOverflowPopup.IsOpen && !PopupAnimationHelper.IsClosing(TrayOverflowPopup))
+        {
+            PopupAnimationHelper.ClosePopup(TrayOverflowPopup, _config.Edge);
+        }
     }
 
     private void OnTrayOverflowClosed(object? sender, EventArgs e)

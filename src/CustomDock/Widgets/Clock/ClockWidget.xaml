@@ -45,7 +45,7 @@
         </Grid>
 
         <!-- Clock Popup -->
-        <Popup x:Name="ClockPopup" StaysOpen="False" AllowsTransparency="True" PopupAnimation="None" Placement="Top">
+        <Popup x:Name="ClockPopup" StaysOpen="True" AllowsTransparency="True" PopupAnimation="None" Placement="Top">
             <Border CornerRadius="16" Padding="20,14" BorderThickness="1" Margin="8" Width="260"
                     Background="{DynamicResource PopupBrush}" BorderBrush="{DynamicResource PopupBorderBrush}">
                 <Border.Effect>

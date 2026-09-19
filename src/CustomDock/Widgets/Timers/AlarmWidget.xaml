@@ -19,7 +19,7 @@
                   Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
         </Grid>
 
-        <Popup x:Name="EditorPopup" StaysOpen="False" AllowsTransparency="True" PopupAnimation="Fade" Opened="OnPopupOpened">
+        <Popup x:Name="EditorPopup" StaysOpen="True" AllowsTransparency="True" PopupAnimation="None" Opened="OnPopupOpened">
             <Border Width="270" Margin="10" Padding="16" CornerRadius="12"
                     Background="{DynamicResource PopupBrush}" BorderBrush="{DynamicResource PopupBorderBrush}" BorderThickness="1"
                     TextElement.Foreground="{DynamicResource TextPrimaryBrush}" TextElement.FontFamily="{StaticResource UiFont}">

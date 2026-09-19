@@ -207,12 +207,19 @@ public abstract class WidgetBase : UserControl
 
     private DateTime _lastPopupClosedAt = DateTime.MinValue;
 
+    /// <summary>Closes popup with smooth macOS-style animation.</summary>
+    protected void ClosePopup(Popup popup)
+    {
+        if (popup is null) return;
+        Dock.PopupAnimationHelper.ClosePopup(popup, Host.Edge);
+    }
+
     /// <summary>Opens popup or closes it if already open (toggle).</summary>
     protected void TogglePopup(Popup popup, UIElement? target = null)
     {
-        if (popup.IsOpen)
+        if (popup.IsOpen || Dock.PopupAnimationHelper.IsClosing(popup))
         {
-            popup.IsOpen = false;
+            ClosePopup(popup);
             return;
         }
         OpenPopup(popup, target);
@@ -221,9 +228,9 @@ public abstract class WidgetBase : UserControl
     /// <summary>Opens popup in correct direction according to dock edge and prevents auto-hide while open.</summary>
     protected void OpenPopup(Popup popup, UIElement? target = null)
     {
-        if (popup.IsOpen)
+        if (popup.IsOpen || Dock.PopupAnimationHelper.IsClosing(popup))
         {
-            popup.IsOpen = false;
+            ClosePopup(popup);
             return;
         }
 
@@ -239,10 +246,6 @@ public abstract class WidgetBase : UserControl
         var anchor = target as FrameworkElement ?? this;
         var edge = Host.Edge;
         Dock.PopupPlacement.PlacePopup(popup, anchor, edge, IsPreview ? 6 : 8);
-        popup.AllowsTransparency = true;
-        popup.PopupAnimation = PopupAnimation.None;
-        if (popup.Child is FrameworkElement child)
-            Controls.Motion.PopIn(child, Dock.PopupPlacement.EnterOffset(edge));
 
         Host.BeginInteraction();
         void OnClosed(object? sender, EventArgs e)
@@ -253,7 +256,7 @@ public abstract class WidgetBase : UserControl
         }
         popup.Closed += OnClosed;
         Dock.GlobalPopupDismissHook.RegisterPopup(popup);
-        popup.IsOpen = true;
+        Dock.PopupAnimationHelper.AnimateOpen(popup, edge);
     }
 
     /// <summary>Shows notification (suppressed in preview mode).</summary>

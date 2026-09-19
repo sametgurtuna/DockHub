@@ -8,7 +8,9 @@ namespace CustomDock.Controls;
 public static class Motion
 {
     private static readonly IEasingFunction EaseOut = Freeze(new CubicEase { EasingMode = EasingMode.EaseOut });
+    private static readonly IEasingFunction EaseIn = Freeze(new CubicEase { EasingMode = EasingMode.EaseIn });
     private static readonly IEasingFunction Spring = Freeze(new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.35 });
+    private static readonly IEasingFunction MacSpring = Freeze(new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.16 });
 
     private static IEasingFunction Freeze(EasingFunctionBase easing)
     {
@@ -75,21 +77,77 @@ public static class Motion
         translate.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(0, duration) { EasingFunction = EaseOut });
     }
 
-    /// <summary>For popup content: subtle slide + fade in. <paramref name="offset"/> is slide direction.</summary>
-    public static void PopIn(FrameworkElement element, Vector offset, int milliseconds = 200)
+    /// <summary>macOS-style window/popover open: smooth zoom-out from origin, gentle spring overshoot, and fade-in.</summary>
+    public static void PopIn(FrameworkElement element, Vector offset, Point origin, int milliseconds = 230)
     {
         var translate = new TranslateTransform(offset.X, offset.Y);
-        var scale = new ScaleTransform(0.97, 0.97);
-        element.RenderTransformOrigin = new Point(0.5, 0.5);
+        var scale = new ScaleTransform(0.85, 0.85);
+        element.RenderTransformOrigin = origin;
         element.RenderTransform = new TransformGroup { Children = { scale, translate } };
+        element.Opacity = 0;
 
         var duration = TimeSpan.FromMilliseconds(milliseconds);
         translate.BeginAnimation(TranslateTransform.XProperty, new DoubleAnimation(0, duration) { EasingFunction = EaseOut });
         translate.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(0, duration) { EasingFunction = EaseOut });
-        scale.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(1, duration) { EasingFunction = EaseOut });
-        scale.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(1, duration) { EasingFunction = EaseOut });
+        scale.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(1, duration) { EasingFunction = MacSpring });
+        scale.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(1, duration) { EasingFunction = MacSpring });
         element.BeginAnimation(UIElement.OpacityProperty,
             new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(milliseconds * 0.75)) { EasingFunction = EaseOut });
+    }
+
+    /// <summary>For popup content: subtle slide + fade in. <paramref name="offset"/> is slide direction.</summary>
+    public static void PopIn(FrameworkElement element, Vector offset, int milliseconds = 230)
+        => PopIn(element, offset, new Point(0.5, 0.5), milliseconds);
+
+    /// <summary>macOS-style window/popover close: shrinks back towards dock origin and fades out cleanly.</summary>
+    public static void PopOut(FrameworkElement element, Vector offset, Action? onCompleted = null, int milliseconds = 160)
+    {
+        var duration = TimeSpan.FromMilliseconds(milliseconds);
+        var tg = element.RenderTransform as TransformGroup;
+        ScaleTransform scale;
+        TranslateTransform translate;
+
+        if (tg is { Children: [ScaleTransform s, TranslateTransform t] })
+        {
+            scale = s;
+            translate = t;
+        }
+        else
+        {
+            scale = new ScaleTransform(1, 1);
+            translate = new TranslateTransform(0, 0);
+            element.RenderTransform = new TransformGroup { Children = { scale, translate } };
+        }
+
+        var scaleAnim = new DoubleAnimation(0.85, duration) { EasingFunction = EaseIn };
+        var slideX = new DoubleAnimation(offset.X, duration) { EasingFunction = EaseIn };
+        var slideY = new DoubleAnimation(offset.Y, duration) { EasingFunction = EaseIn };
+        var fade = new DoubleAnimation(0, duration) { EasingFunction = EaseOut };
+
+        bool completedFired = false;
+        System.Windows.Threading.DispatcherTimer? safetyTimer = null;
+        void Finish()
+        {
+            if (completedFired) return;
+            completedFired = true;
+            safetyTimer?.Stop();
+            fade.Completed -= OnCompletedHandler;
+            onCompleted?.Invoke();
+        }
+
+        void OnCompletedHandler(object? sender, EventArgs e) => Finish();
+
+        fade.Completed += OnCompletedHandler;
+
+        safetyTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(milliseconds + 60) };
+        safetyTimer.Tick += (_, _) => Finish();
+        safetyTimer.Start();
+
+        scale.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnim);
+        scale.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnim);
+        translate.BeginAnimation(TranslateTransform.XProperty, slideX);
+        translate.BeginAnimation(TranslateTransform.YProperty, slideY);
+        element.BeginAnimation(UIElement.OpacityProperty, fade);
     }
 
     /// <summary>

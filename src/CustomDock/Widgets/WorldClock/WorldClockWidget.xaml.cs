@@ -178,9 +178,9 @@ public partial class WorldClockWidget : WidgetBase
 
     private void ToggleClockPopup()
     {
-        if (ClockPopup.IsOpen)
+        if (ClockPopup.IsOpen || Dock.PopupAnimationHelper.IsClosing(ClockPopup))
         {
-            ClockPopup.IsOpen = false;
+            ClosePopup(ClockPopup);
             return;
         }
 
@@ -208,7 +208,7 @@ public partial class WorldClockWidget : WidgetBase
 
     private void OnPopupCloseClick(object sender, RoutedEventArgs e)
     {
-        ClockPopup.IsOpen = false;
+        ClosePopup(ClockPopup);
     }
 
     private static string GetLocalCityName()

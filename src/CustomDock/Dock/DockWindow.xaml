@@ -100,7 +100,7 @@
                 <dock:SeparatorView x:Name="EndSeparator" />
 
                 <ToggleButton x:Name="TrayOverflowButton" Style="{StaticResource DockButton}" Width="26" FontSize="11"
-                              Content="&#xE70E;" ToolTip="Show hidden icons" Checked="OnTrayOverflowChecked" />
+                              Content="&#xE70E;" ToolTip="Show hidden icons" Checked="OnTrayOverflowChecked" Unchecked="OnTrayOverflowUnchecked" />
                 <ItemsControl x:Name="PinnedTray" Focusable="False" VerticalAlignment="Center">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -131,7 +131,7 @@
         </ctl:DockZonesPanel>
 
         <!-- Hidden tray icons -->
-        <Popup x:Name="TrayOverflowPopup" StaysOpen="False" AllowsTransparency="True" PopupAnimation="Fade"
+        <Popup x:Name="TrayOverflowPopup" StaysOpen="True" AllowsTransparency="True" PopupAnimation="None"
                PlacementTarget="{Binding ElementName=TrayOverflowButton}"
                Closed="OnTrayOverflowClosed">
             <Border Margin="8" Padding="6" CornerRadius="10" MaxWidth="200"

@@ -161,7 +161,7 @@ public partial class AlarmWidget : WidgetBase
     private void OnEditorKeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.Enter) Save();
-        else if (e.Key == Key.Escape) EditorPopup.IsOpen = false;
+        else if (e.Key == Key.Escape) ClosePopup(EditorPopup);
     }
 
     private void OnSaveClick(object sender, RoutedEventArgs e) => Save();
@@ -177,13 +177,13 @@ public partial class AlarmWidget : WidgetBase
         _settings.Label = LabelBox.Text.Trim();
         _settings.RepeatDaily = RepeatBox.IsChecked == true;
         _settings.Enabled = true;
-        EditorPopup.IsOpen = false;
+        ClosePopup(EditorPopup);
     }
 
     private void OnDisableClick(object sender, RoutedEventArgs e)
     {
         _settings.Enabled = false;
-        EditorPopup.IsOpen = false;
+        ClosePopup(EditorPopup);
     }
 
     public override void AddContextMenuItems(ItemCollection items)

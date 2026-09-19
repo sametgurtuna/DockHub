@@ -188,7 +188,7 @@ public partial class RemindersWidget : WidgetBase
         }
         else if (e.Key == Key.Escape)
         {
-            EditorPopup.IsOpen = false;
+            ClosePopup(EditorPopup);
             e.Handled = true;
         }
     }

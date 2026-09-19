@@ -237,7 +237,7 @@ public partial class NotesWidget : WidgetBase
         FocusEditor();
     }
 
-    private void OnCloseClick(object sender, RoutedEventArgs e) => EditorPopup.IsOpen = false;
+    private void OnCloseClick(object sender, RoutedEventArgs e) => ClosePopup(EditorPopup);
 
     // ------------------------------------------------------------------ Note sheet
 
@@ -257,7 +257,7 @@ public partial class NotesWidget : WidgetBase
 
     private void OpenEditor()
     {
-        if (IsPreview || EditorPopup.IsOpen) return;
+        if (IsPreview || EditorPopup.IsOpen || Dock.PopupAnimationHelper.IsClosing(EditorPopup)) return;
         NotePage.Visibility = Visibility.Visible;
         CustomizePage.Visibility = Visibility.Collapsed;
         OpenPopup(EditorPopup, Root);
@@ -297,7 +297,7 @@ public partial class NotesWidget : WidgetBase
     private void OnEditorKeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key != Key.Escape) return;
-        EditorPopup.IsOpen = false;
+        ClosePopup(EditorPopup);
         e.Handled = true;
     }
 

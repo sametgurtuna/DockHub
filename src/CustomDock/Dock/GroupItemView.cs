@@ -265,11 +265,11 @@ public sealed class GroupItemView : Grid
         if (DockDragHelper.JustDragged) return;
         e.Handled = true;
 
-        if (_fanPopup?.IsOpen == true)
+        if (_fanPopup?.IsOpen == true || (_fanPopup is not null && PopupAnimationHelper.IsClosing(_fanPopup)))
         {
             CloseFan();
         }
-        else if (DateTime.UtcNow - _fanClosedAt > TimeSpan.FromMilliseconds(180))
+        else if (DateTime.UtcNow - _fanClosedAt > TimeSpan.FromMilliseconds(180) && !PopupAnimationHelper.IsClosing(_fanPopup!))
         {
             OpenFan();
         }
@@ -556,7 +556,7 @@ public sealed class GroupItemView : Grid
             {
                 Child = frame,
                 AllowsTransparency = true,
-                StaysOpen = false,
+                StaysOpen = true,
                 PopupAnimation = PopupAnimation.None,
                 PlacementTarget = this,
             };
@@ -571,11 +571,10 @@ public sealed class GroupItemView : Grid
             };
 
             PopupPlacement.PlacePopup(_fanPopup, this, edge, gap: 4);
-            Motion.PopIn(frame, PopupPlacement.EnterOffset(edge));
             _fanInteraction = true;
             _host.BeginInteraction();
             GlobalPopupDismissHook.RegisterPopup(_fanPopup);
-            _fanPopup.IsOpen = true;
+            PopupAnimationHelper.AnimateOpen(_fanPopup, edge);
         }
         catch (Exception ex)
         {
@@ -690,8 +689,8 @@ public sealed class GroupItemView : Grid
 
     public void CloseFan()
     {
-        if (_fanPopup is { IsOpen: true })
-            _fanPopup.IsOpen = false;
+        if (_fanPopup is { IsOpen: true } && !PopupAnimationHelper.IsClosing(_fanPopup))
+            PopupAnimationHelper.ClosePopup(_fanPopup, _host.Edge);
     }
 
     // ------------------------------------------------------------------ Rename & Context Menu

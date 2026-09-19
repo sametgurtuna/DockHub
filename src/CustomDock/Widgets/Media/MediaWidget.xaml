@@ -74,7 +74,7 @@
                 Content="&#xE768;" Click="OnPlayPauseClick" />
 
         <!-- Media Player Popup -->
-        <Popup x:Name="MediaPopup" StaysOpen="False" AllowsTransparency="True" PopupAnimation="None" Placement="Top">
+        <Popup x:Name="MediaPopup" StaysOpen="True" AllowsTransparency="True" PopupAnimation="None" Placement="Top">
             <Border CornerRadius="16" Padding="18,14" BorderThickness="1" Margin="8" Width="280"
                     Background="{DynamicResource PopupBrush}" BorderBrush="{DynamicResource PopupBorderBrush}">
                 <Border.Effect>

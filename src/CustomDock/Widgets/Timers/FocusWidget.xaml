@@ -16,7 +16,7 @@
         </StackPanel>
 
         <!-- Control panel -->
-        <Popup x:Name="EditorPopup" StaysOpen="False" AllowsTransparency="True">
+        <Popup x:Name="EditorPopup" StaysOpen="True" AllowsTransparency="True" PopupAnimation="None">
             <Border Width="270" Margin="10" Padding="18" CornerRadius="14"
                     Background="{DynamicResource PopupBrush}" BorderBrush="{DynamicResource PopupBorderBrush}" BorderThickness="1"
                     TextElement.Foreground="{DynamicResource TextPrimaryBrush}" TextElement.FontFamily="{StaticResource UiFont}">

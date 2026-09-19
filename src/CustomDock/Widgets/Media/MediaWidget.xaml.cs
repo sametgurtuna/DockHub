@@ -153,9 +153,9 @@ public partial class MediaWidget : WidgetBase
 
     private void ToggleMediaPopup()
     {
-        if (MediaPopup.IsOpen)
+        if (MediaPopup.IsOpen || Dock.PopupAnimationHelper.IsClosing(MediaPopup))
         {
-            MediaPopup.IsOpen = false;
+            ClosePopup(MediaPopup);
             return;
         }
 
@@ -246,7 +246,7 @@ public partial class MediaWidget : WidgetBase
 
     private void OnPopupCloseClick(object sender, RoutedEventArgs e)
     {
-        MediaPopup.IsOpen = false;
+        ClosePopup(MediaPopup);
     }
 
     private void OnPopupMixerClick(object sender, RoutedEventArgs e)

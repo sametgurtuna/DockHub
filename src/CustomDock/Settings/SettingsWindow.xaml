@@ -280,7 +280,8 @@
                     </ctl:SettingRow>
 
                     <TextBlock Text="Size and shape" Style="{StaticResource SectionHeader}" />
-                    <ctl:SettingRow Glyph="&#xE740;" Header="Size">
+                    <ctl:SettingRow Glyph="&#xE740;" Header="Size"
+                                    Description="Size of the main dock. Docks on other displays can have their own size under Position.">
                         <Border Style="{StaticResource SegmentedHost}">
                             <StackPanel Orientation="Horizontal">
                                 <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Size" Content="Small"
@@ -359,6 +360,8 @@
                                     IsEnabled="{Binding ShowOnAllDisplays}">
                         <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding RunningAppsOnOwnDisplay}" />
                     </ctl:SettingRow>
+                    <!-- One size row per other display (built in code, see LoadDisplaySizes) -->
+                    <StackPanel x:Name="DisplaySizesPanel" />
                     <ctl:SettingRow Glyph="&#xE89F;" Header="Auto-hide"
                                     Description="The dock stays hidden until the mouse touches the screen edge. When disabled, windows do not overlap under the dock.">
                         <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding AutoHide}" />

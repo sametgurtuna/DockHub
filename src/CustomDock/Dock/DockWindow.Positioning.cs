@@ -17,7 +17,10 @@ public partial class DockWindow
     /// Scaled content thickness in DIP. Whole numbers keep the scaled layout on a clean grid;
     /// the bar is always sized from this so the scaled content is never squeezed or clipped.
     /// </summary>
-    private double ContentDip => _config.Size switch
+    /// <summary>The main dock uses the general size; docks on other displays may have their own.</summary>
+    private DockSize EffectiveSize => IsMain ? _config.Size : _config.DisplaySizeOf(_monitor.DeviceName) ?? _config.Size;
+
+    private double ContentDip => EffectiveSize switch
     {
         DockSize.Small => 40,
         DockSize.Large => 54,

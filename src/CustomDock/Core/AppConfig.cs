@@ -140,7 +140,29 @@ public sealed class AppConfig : ObservableObject
 
     public double TintOpacity { get => _tintOpacity; set => Set(ref _tintOpacity, Math.Clamp(value, 0, 1)); }
 
+    /// <summary>Size of the main dock (and of other displays without their own size).</summary>
     public DockSize Size { get => _size; set => Set(ref _size, value); }
+
+    /// <summary>Per-display size overrides for docks on other displays, keyed by device name (e.g. \.\DISPLAY1).</summary>
+    public Dictionary<string, DockSize> DisplaySizes { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>Own size of a display's dock, or null when it follows <see cref="Size"/>.</summary>
+    public DockSize? DisplaySizeOf(string device)
+    {
+        foreach (var (key, size) in DisplaySizes)
+            if (string.Equals(key, device, StringComparison.OrdinalIgnoreCase)) return size;
+        return null;
+    }
+
+    /// <summary>Sets (or with null, clears) a display's own dock size.</summary>
+    public void SetDisplaySize(string device, DockSize? size)
+    {
+        if (DisplaySizeOf(device) == size) return;
+        foreach (var key in DisplaySizes.Keys.Where(k => string.Equals(k, device, StringComparison.OrdinalIgnoreCase)).ToList())
+            DisplaySizes.Remove(key);
+        if (size is { } value) DisplaySizes[device] = value;
+        OnPropertyChanged(nameof(DisplaySizes));
+    }
 
     public DockLayout Layout { get => _layout; set => Set(ref _layout, value); }
 

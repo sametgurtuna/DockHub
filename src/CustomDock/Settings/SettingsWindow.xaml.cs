@@ -54,6 +54,8 @@ public partial class SettingsWindow : Window
         ConfigFolderRow.Description = AppPaths.Root;
 
         LoadMonitors();
+        LoadDisplaySizes();
+        _config.PropertyChanged += OnDisplayConfigChanged;
         LoadTray();
         ItemList.ItemsSource = _rows;
         LoadItems();
@@ -70,6 +72,7 @@ public partial class SettingsWindow : Window
     {
         ThemeManager.ThemeChanged -= OnThemeChanged;
         _config.ItemsChanged -= OnConfigItemsChanged;
+        _config.PropertyChanged -= OnDisplayConfigChanged;
         foreach (var preview in _previews) preview.Detach();
         ShowDetail(null);
     }
@@ -182,6 +185,51 @@ public partial class SettingsWindow : Window
 
         MonitorCombo.ItemsSource = options;
         MonitorCombo.SelectedItem = options.FirstOrDefault(o => o.Device == _config.MonitorDevice) ?? options[0];
+    }
+
+    private void OnDisplayConfigChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(AppConfig.MonitorDevice) or nameof(AppConfig.ShowOnAllDisplays))
+            LoadDisplaySizes();
+    }
+
+    private sealed record SizeOption(string Label, DockSize? Size);
+
+    /// <summary>Size picker for each display other than the main one ("Same as main" follows the general size).</summary>
+    private void LoadDisplaySizes()
+    {
+        DisplaySizesPanel.Children.Clear();
+        if (!_config.ShowOnAllDisplays) return;
+
+        string mainDevice = MonitorHelper.GetPreferred(_config.MonitorDevice).DeviceName;
+        foreach (var monitor in MonitorHelper.GetAll()
+                     .Where(m => !string.Equals(m.DeviceName, mainDevice, StringComparison.OrdinalIgnoreCase)))
+        {
+            var options = new List<SizeOption>
+            {
+                new("Same as main dock", null),
+                new("Small", DockSize.Small),
+                new("Medium", DockSize.Medium),
+                new("Large", DockSize.Large),
+            };
+            var combo = new ComboBox { Width = 260, DisplayMemberPath = nameof(SizeOption.Label), ItemsSource = options };
+            var current = _config.DisplaySizeOf(monitor.DeviceName);
+            combo.SelectedItem = options.First(o => o.Size == current);
+            string device = monitor.DeviceName;
+            combo.SelectionChanged += (_, _) =>
+            {
+                if (combo.SelectedItem is SizeOption option)
+                    _config.SetDisplaySize(device, option.Size);
+            };
+
+            DisplaySizesPanel.Children.Add(new Controls.SettingRow
+            {
+                Glyph = "",
+                Header = $"Size on {monitor.DisplayName}",
+                Description = "Dock size on this display.",
+                Content = combo,
+            });
+        }
     }
 
     private void OnMonitorChanged(object sender, SelectionChangedEventArgs e)

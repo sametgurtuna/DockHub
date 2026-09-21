@@ -223,6 +223,11 @@ public sealed class WidgetItemView : WidgetCard
                 }))));
         }
         menu.Items.Add(DockMenu.Item("Widget settings…", "\uE713", () => SettingsRequested?.Invoke(Item)));
+        menu.Items.Add(DockMenu.Check("Pin to right edge", Item.PinnedEnd, () =>
+        {
+            Item.PinnedEnd = !Item.PinnedEnd;
+            AppServices.Config.NotifyItemsChanged();
+        }));
         menu.Items.Add(DockMenu.Item("Remove from dock", "\uE77A", () => AppServices.ConfigService.RemoveItem(Item.Id)));
     }
 

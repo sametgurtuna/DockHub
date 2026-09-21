@@ -19,6 +19,8 @@ public static class AppServices
 
     public static NetworkMonitorService Network { get; } = new();
 
+    public static NetworkStatusService NetworkStatus { get; } = new();
+
     public static MediaService Media { get; } = new();
 
     public static WeatherService Weather { get; } = new();

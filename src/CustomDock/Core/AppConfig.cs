@@ -204,6 +204,7 @@ public sealed class DockItem : ObservableObject
 {
     private string? _variant;
     private string? _name;
+    private bool _pinnedEnd;
 
     public string Id { get; set; } = NewId();
 
@@ -231,6 +232,10 @@ public sealed class DockItem : ObservableObject
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public JsonObject? Settings { get; set; }
+
+    /// <summary>Widgets only: pinned to the fixed right edge of the dock (after the tray/clock) instead of scrolling with the other items.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool PinnedEnd { get => _pinnedEnd; set => Set(ref _pinnedEnd, value); }
 
     // ---- Group
 

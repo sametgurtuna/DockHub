@@ -15,6 +15,9 @@ public partial class DockWindow
 {
     private void OnItemsChanged(object? sender, EventArgs e) => RebuildItems();
 
+    /// <summary>Widgets pinned to the fixed right edge render in <see cref="EndItemsPanel"/> instead of the scrollable center list.</summary>
+    private static bool IsPinnedEnd(DockItem item) => item.Kind == DockItemKind.Widget && item.PinnedEnd;
+
     private void RebuildItems()
     {
         var items = _config.Items;
@@ -29,6 +32,7 @@ public partial class DockWindow
         }
 
         ItemsPanel.Children.Clear();
+        EndItemsPanel.Children.Clear();
         foreach (var item in items)
         {
             if (!_itemViews.TryGetValue(item.Id, out var view))
@@ -58,7 +62,7 @@ public partial class DockWindow
                     groupView.RefreshIcons();
                     break;
             }
-            ItemsPanel.Children.Add(view);
+            (IsPinnedEnd(item) ? EndItemsPanel : ItemsPanel).Children.Add(view);
         }
 
         _runningSeparator.SetOrientation(vertical);
@@ -184,7 +188,7 @@ public partial class DockWindow
         }
 
         // Rebuild the tail section (separator + running apps)
-        int itemCount = _config.Items.Count(i => _itemViews.ContainsKey(i.Id));
+        int itemCount = _config.Items.Count(i => !IsPinnedEnd(i) && _itemViews.ContainsKey(i.Id));
         while (ItemsPanel.Children.Count > itemCount)
             ItemsPanel.Children.RemoveAt(ItemsPanel.Children.Count - 1);
 
@@ -245,7 +249,7 @@ public partial class DockWindow
             RefreshRunningApps();
     }
 
-    private int PinnedViewCount => _config.Items.Count(i => _itemViews.ContainsKey(i.Id));
+    private int PinnedViewCount => _config.Items.Count(i => !IsPinnedEnd(i) && _itemViews.ContainsKey(i.Id));
 
     /// <summary>
     /// Insertion index in <see cref="AppConfig.Items"/> for a pointer position. Views can be missing for some items
@@ -367,6 +371,12 @@ public partial class DockWindow
 
         if (e.Data.GetData(DockDragHelper.ItemFormat) is string itemId)
         {
+            // Dropping a right-pinned widget back into the scrollable list unpins it.
+            if (config.FindItem(itemId) is { PinnedEnd: true } draggedItem)
+            {
+                draggedItem.PinnedEnd = false;
+                _config.NotifyItemsChanged();
+            }
             config.MoveItem(itemId, index);
         }
         else if (e.Data.GetData(DockDragHelper.RunningAppFormat) is string key &&
@@ -380,5 +390,31 @@ public partial class DockWindow
             foreach (var file in files.Where(f => !string.IsNullOrWhiteSpace(f)))
                 config.AddItem(DockItem.App(file), index++);
         }
+    }
+
+    private static bool HasPinnableWidget(IDataObject data) =>
+        data.GetDataPresent(DockDragHelper.ItemFormat) &&
+        data.GetData(DockDragHelper.ItemFormat) is string id &&
+        AppServices.ConfigService.FindItem(id) is { Kind: DockItemKind.Widget };
+
+    private void OnEndItemsDragOver(object sender, DragEventArgs e)
+    {
+        e.Handled = true;
+        if (!_shown) Reveal();
+        e.Effects = HasPinnableWidget(e.Data) ? DragDropEffects.Move : DragDropEffects.None;
+    }
+
+    private void OnEndItemsDragLeave(object sender, DragEventArgs e) => e.Handled = true;
+
+    /// <summary>Dropping a widget anywhere in the end zone (tray/clock area) pins it to the fixed right edge.</summary>
+    private void OnEndItemsDrop(object sender, DragEventArgs e)
+    {
+        e.Handled = true;
+        if (e.Data.GetData(DockDragHelper.ItemFormat) is not string itemId) return;
+        if (AppServices.ConfigService.FindItem(itemId) is not { Kind: DockItemKind.Widget } item) return;
+        if (item.PinnedEnd) return;
+
+        item.PinnedEnd = true;
+        _config.NotifyItemsChanged();
     }
 }

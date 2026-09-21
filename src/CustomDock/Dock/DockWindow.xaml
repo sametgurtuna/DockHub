@@ -92,7 +92,8 @@
             </Grid>
 
             <!-- End zone -->
-            <StackPanel x:Name="EndZone" Orientation="Horizontal">
+            <StackPanel x:Name="EndZone" Orientation="Horizontal" AllowDrop="True"
+                        DragOver="OnEndItemsDragOver" DragLeave="OnEndItemsDragLeave" Drop="OnEndItemsDrop">
                 <Button x:Name="ScrollBackButton" Style="{StaticResource DockButton}" Width="26" FontSize="11" Content="&#xE76B;"
                         ToolTip="Scroll back" Click="OnScrollBackClick" Visibility="Collapsed" />
                 <Button x:Name="ScrollForwardButton" Style="{StaticResource DockButton}" Width="26" FontSize="11" Content="&#xE76C;"
@@ -113,6 +114,7 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
+                <dock:NetworkStatusIconView x:Name="NetworkStatusIcon" VerticalAlignment="Center" />
 
                 <Button x:Name="ClockButton" Style="{StaticResource DockButton}" Width="Auto" Padding="9,0" Margin="2,0"
                         FontFamily="{StaticResource UiFont}" Click="OnClockClick">
@@ -125,6 +127,7 @@
                                    Foreground="{DynamicResource TextPrimaryBrush}" />
                     </StackPanel>
                 </Button>
+                <StackPanel x:Name="EndItemsPanel" Orientation="Horizontal" VerticalAlignment="Center" />
                 <Button x:Name="ShowDesktopButton" Style="{StaticResource ShowDesktopButton}" ToolTip="Show desktop"
                         Click="OnShowDesktopClick" />
             </StackPanel>

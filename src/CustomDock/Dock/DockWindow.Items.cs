@@ -4,6 +4,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using CustomDock.Controls;
 using CustomDock.Core;
+using CustomDock.Native;
 using CustomDock.Services;
 using CustomDock.Shell;
 using CustomDock.Widgets;
@@ -111,6 +112,9 @@ public partial class DockWindow
                     var app = new AppButton(item, null);
                     DockDragHelper.Attach(app, () => new DataObject(DockDragHelper.ItemFormat, item.Id));
                     return app;
+                // Widgets keep their own state (timers, notes, alarms); a second copy would diverge, so they stay on the main dock.
+                case DockItemKind.Widget when !IsMain:
+                    return null;
                 case DockItemKind.Widget when WidgetRegistry.Find(item.Widget) is { } descriptor:
                     var widget = descriptor.Create(item);
                     var view = new WidgetItemView(item, widget, this);
@@ -170,9 +174,8 @@ public partial class DockWindow
                 button.Group = _shell.RunningApps.Find(key);
         }
 
-        var unpinned = _config.ShowRunningApps
-            ? _shell.RunningApps.Groups.Where(g => !pinnedKeys.Contains(g.Key)).OrderBy(g => g.Order).ToList()
-            : new List<AppGroup>();
+        var unpinned = UnpinnedRunningGroups(pinnedKeys);
+        _runningSignature = Signature(unpinned);
 
         foreach (var key in _runningViews.Keys.Except(unpinned.Select(g => g.Key)).ToList())
         {
@@ -204,8 +207,50 @@ public partial class DockWindow
         }
     }
 
+    /// <summary>With docks on several displays each one only lists the apps whose windows are on its display.</summary>
+    private bool FilterRunningByDisplay => _config.ShowOnAllDisplays && _config.RunningAppsOnOwnDisplay && s_docks.Count > 1;
+
+    private List<AppGroup> UnpinnedRunningGroups(HashSet<string> pinnedKeys)
+    {
+        if (!_config.ShowRunningApps) return new List<AppGroup>();
+        var groups = _shell.RunningApps.Groups.Where(g => !pinnedKeys.Contains(g.Key));
+        if (FilterRunningByDisplay) groups = groups.Where(IsOnThisDisplay);
+        return groups.OrderBy(g => g.Order).ToList();
+    }
+
+    private bool IsOnThisDisplay(AppGroup group)
+    {
+        if (group.Windows.Count == 0) return IsMain;
+        foreach (var window in group.Windows)
+        {
+            // Minimized windows report the display they were restored on.
+            var monitor = NativeMethods.MonitorFromWindow(window.Handle, NativeMethods.MONITOR_DEFAULTTONEAREST);
+            if (monitor == _monitor.Handle) return true;
+            // A display handle may be stale after a display change; fall back to the device name.
+            if (monitor != IntPtr.Zero && MonitorHelper.TryGet(monitor) is { } info &&
+                string.Equals(info.DeviceName, _monitor.DeviceName, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        return false;
+    }
+
+    private static string Signature(List<AppGroup> groups) => string.Join("|", groups.Select(g => g.Key));
+
+    /// <summary>Rebuilds running apps when a window moved to or from this display.</summary>
+    private void RefreshRunningAppsIfMoved()
+    {
+        if (_closing || !FilterRunningByDisplay) return;
+        var pinnedKeys = _config.Items.Where(i => i.Kind == DockItemKind.App).Select(KeyFor).ToHashSet();
+        if (Signature(UnpinnedRunningGroups(pinnedKeys)) != _runningSignature)
+            RefreshRunningApps();
+    }
+
     private int PinnedViewCount => _config.Items.Count(i => _itemViews.ContainsKey(i.Id));
 
+    /// <summary>
+    /// Insertion index in <see cref="AppConfig.Items"/> for a pointer position. Views can be missing for some items
+    /// (widgets on secondary docks, items that failed to load), so panel positions are mapped back to config indices.
+    /// </summary>
     private int DropIndexAt(Point panelPoint, out double caret)
     {
         int count = PinnedViewCount;
@@ -223,16 +268,28 @@ public partial class DockWindow
             double length = vertical ? child.ActualHeight : child.ActualWidth;
             double pointer = vertical ? panelPoint.Y : panelPoint.X;
             lastEnd = start + length;
+            int configIndex = ConfigIndexOf(child, i);
 
             if (pointer < start + length / 2)
             {
                 caret = start;
-                return index;
+                return configIndex;
             }
-            index = i + 1;
+            index = configIndex + 1;
         }
         caret = lastEnd;
         return index;
+    }
+
+    private int ConfigIndexOf(FrameworkElement view, int fallback)
+    {
+        foreach (var (id, candidate) in _itemViews)
+        {
+            if (!ReferenceEquals(candidate, view)) continue;
+            int index = _config.Items.FindIndex(i => i.Id == id);
+            return index >= 0 ? index : fallback;
+        }
+        return fallback;
     }
 
     private static bool HasDockData(IDataObject data) =>

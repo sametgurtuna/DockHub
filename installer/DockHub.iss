@@ -7,7 +7,7 @@
 #define MyAppURL "https://github.com/sametgurtuna/DockHub"
 
 #ifndef MyAppVersion
-  #define MyAppVersion "0.4.0"
+  #define MyAppVersion "0.6.0"
 #endif
 
 #ifndef SourceDir

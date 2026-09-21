@@ -55,6 +55,8 @@ public sealed class AppConfig : ObservableObject
     private TaskbarMode _taskbarMode = TaskbarMode.Replace;
     private DockEdge _edge = DockEdge.Bottom;
     private string? _monitorDevice;
+    private bool _showOnAllDisplays;
+    private bool _runningAppsOnOwnDisplay = true;
     private bool _autoHide;
     private bool _hideOnFullscreen = true;
     private bool _startWithWindows = true;
@@ -123,6 +125,12 @@ public sealed class AppConfig : ObservableObject
 
     /// <summary>Monitor device name (e.g. \\.\DISPLAY2). null = primary monitor.</summary>
     public string? MonitorDevice { get => _monitorDevice; set => Set(ref _monitorDevice, value); }
+
+    /// <summary>Shows a dock on every connected display. The main display (<see cref="MonitorDevice"/>) keeps widgets and tray icons.</summary>
+    public bool ShowOnAllDisplays { get => _showOnAllDisplays; set => Set(ref _showOnAllDisplays, value); }
+
+    /// <summary>With docks on all displays: unpinned running apps appear only on the dock of the display their window is on.</summary>
+    public bool RunningAppsOnOwnDisplay { get => _runningAppsOnOwnDisplay; set => Set(ref _runningAppsOnOwnDisplay, value); }
 
     public bool AutoHide { get => _autoHide; set => Set(ref _autoHide, value); }
 

@@ -27,13 +27,17 @@ namespace CustomDock.Dock;
 /// </summary>
 public partial class DockWindow : Window, IWidgetHost
 {
-    /// <summary>Base bar thickness in DIP (content 46 DIP + 5 DIP margins).</summary>
-    private const double BaseThickness = 56;
+    /// <summary>Unscaled content thickness in DIP (dock buttons and widget cards are 46 DIP tall).</summary>
+    private const double BaseContent = 46;
+    /// <summary>Margin around the zones panel (not scaled, see DockWindow.xaml).</summary>
+    private const double ZonesMargin = 5;
     private const int TriggerThickness = 2;
     private static readonly TimeSpan ShowDuration = TimeSpan.FromMilliseconds(260);
     private static readonly TimeSpan HideDuration = TimeSpan.FromMilliseconds(200);
 
-    private static DockWindow? s_current;
+    private static readonly List<DockWindow> s_docks = new();
+    /// <summary>Dock that last positioned Start / tray flyouts (they open on its display).</summary>
+    private static DockWindow? s_trayHostOwner;
 
     private readonly AppConfig _config;
     private readonly ShellHost _shell;
@@ -53,6 +57,9 @@ public partial class DockWindow : Window, IWidgetHost
     private (string Device, DockEdge Edge, double Thickness)? _reserverKey;
     private EdgeTriggerWindow? _trigger;
     private MonitorInfo _monitor;
+    private readonly string? _secondaryDevice;
+    private readonly DispatcherTimer _displayFilterTimer;
+    private string _runningSignature = "";
     private RECT _shownRect;
 
     private const int HOTKEY_DOCK_TOGGLE = 0xD0C4;
@@ -75,17 +82,29 @@ public partial class DockWindow : Window, IWidgetHost
     {
         // Opened/Closed always arrive in pairs: auto-hide pauses while dock context menus are open.
         EventManager.RegisterClassHandler(typeof(ContextMenu), ContextMenu.OpenedEvent,
-            new RoutedEventHandler((s, _) => s_current?.OnContextMenuStateChanged((ContextMenu)s, open: true)));
+            new RoutedEventHandler((s, _) => OwnerOf((ContextMenu)s)?.OnContextMenuStateChanged((ContextMenu)s, open: true)));
         EventManager.RegisterClassHandler(typeof(ContextMenu), ContextMenu.ClosedEvent,
-            new RoutedEventHandler((s, _) => s_current?.OnContextMenuStateChanged((ContextMenu)s, open: false)));
+            new RoutedEventHandler((s, _) => OwnerOf((ContextMenu)s)?.OnContextMenuStateChanged((ContextMenu)s, open: false)));
     }
 
-    public DockWindow(AppConfig config, ShellHost shell)
+    /// <summary>Dock whose content opened the menu (falls back to the main dock).</summary>
+    private static DockWindow? OwnerOf(ContextMenu menu)
     {
-        s_current = this;
+        foreach (var dock in s_docks)
+            if (dock._openMenus.Contains(menu)) return dock;
+        if (menu.PlacementTarget is DependencyObject target && GetWindow(target) is DockWindow owner)
+            return owner;
+        return s_docks.FirstOrDefault(d => d.IsMain) ?? s_docks.FirstOrDefault();
+    }
+
+    /// <param name="monitorDevice">Display of a secondary dock; null for the main dock, which follows <see cref="AppConfig.MonitorDevice"/>.</param>
+    public DockWindow(AppConfig config, ShellHost shell, string? monitorDevice = null)
+    {
+        s_docks.Add(this);
         _config = config;
         _shell = shell;
-        _monitor = MonitorHelper.GetPreferred(config.MonitorDevice);
+        _secondaryDevice = monitorDevice;
+        _monitor = ResolveMonitor();
         InitializeComponent();
 
         AllowDrop = true;
@@ -95,6 +114,9 @@ public partial class DockWindow : Window, IWidgetHost
         _revealTimer.Tick += (_, _) => { _revealTimer.Stop(); Reveal(); };
         _topmostTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromSeconds(2) };
         _topmostTimer.Tick += (_, _) => ReassertTopmost();
+        // Windows moving between displays raise no task list event; poll cheaply while filtering by display.
+        _displayFilterTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromSeconds(1) };
+        _displayFilterTimer.Tick += (_, _) => RefreshRunningAppsIfMoved();
 
         DragEnter += (_, _) => { _hideTimer.Stop(); BeginInteraction(); };
         DragLeave += (_, _) => { EndInteraction(); ScheduleAutoHide(); };
@@ -122,10 +144,10 @@ public partial class DockWindow : Window, IWidgetHost
         _shell.RunningApps.GroupsChanged += RefreshRunningApps;
         _shell.Manager.FullScreenHelper.FullScreenApps.CollectionChanged += OnFullScreenAppsChanged;
         _shell.LauncherVisibilityChanged += OnLauncherVisibilityChanged;
-        TrayIconView.Interacting += UpdateTrayHost;
+        if (IsMain) TrayIconView.Interacting += UpdateTrayHost;
         DockDragHelper.DraggingChanged += OnDraggingChanged;
 
-        if (_shell.Tray is { } tray)
+        if (IsMain && _shell.Tray is { } tray)
         {
             PinnedTray.ItemsSource = tray.PinnedIcons;
             OverflowTray.ItemsSource = tray.UnpinnedIcons;
@@ -136,6 +158,17 @@ public partial class DockWindow : Window, IWidgetHost
         // Wave effect where items near the cursor scale up slightly, similar to macOS Dock.
         _magnifier = new DockMagnifier(ItemsPanel, () => IsVertical);
     }
+
+    /// <summary>The main dock hosts widgets, the system tray and the global shortcut; secondary docks mirror apps.</summary>
+    public bool IsMain => _secondaryDevice is null;
+
+    /// <summary>Device name of the display this dock is on.</summary>
+    public string MonitorDevice => _monitor.DeviceName;
+
+    public static IReadOnlyList<DockWindow> All => s_docks;
+
+    private MonitorInfo ResolveMonitor()
+        => IsMain ? MonitorHelper.GetPreferred(_config.MonitorDevice) : MonitorHelper.GetPreferred(_secondaryDevice);
 
     // ------------------------------------------------------------------ IWidgetHost
 
@@ -195,7 +228,7 @@ public partial class DockWindow : Window, IWidgetHost
         WindowEffects.MakeToolWindow(_hwnd, noActivate: true);
         WindowEffects.ExtendGlass(_hwnd);
         ApplyBackdrop();
-        RegisterGlobalHotkey();
+        if (IsMain) RegisterGlobalHotkey();
     }
 
     private void RegisterGlobalHotkey()
@@ -217,6 +250,13 @@ public partial class DockWindow : Window, IWidgetHost
             Log.Info("DockHub shortcut registered: Win+Alt+D");
         }
         _hotkeyRegistered = success;
+    }
+
+    /// <summary>Global shortcut: toggles every dock.</summary>
+    private static void ToggleAllDocks()
+    {
+        foreach (var dock in s_docks.ToList())
+            dock.ToggleDock();
     }
 
     public void ToggleDock()
@@ -254,13 +294,13 @@ public partial class DockWindow : Window, IWidgetHost
         }
         if (msg == WM_HOTKEY && wParam.ToInt32() == HOTKEY_DOCK_TOGGLE)
         {
-            ToggleDock();
+            ToggleAllDocks();
             handled = true;
             return IntPtr.Zero;
         }
         if (msg == WM_DPICHANGED)
         {
-            _monitor = MonitorHelper.GetPreferred(_config.MonitorDevice);
+            _monitor = ResolveMonitor();
             UpdateReserver();
             QueueReposition();
             handled = true;
@@ -276,8 +316,11 @@ public partial class DockWindow : Window, IWidgetHost
     {
         if (_hwnd == IntPtr.Zero || _closing) return;
 
-        _monitor = MonitorHelper.GetPreferred(_config.MonitorDevice);
+        _monitor = ResolveMonitor();
         ContentScale.ScaleX = ContentScale.ScaleY = Scale;
+        // Display-mode text snaps glyphs to the pixel grid before the scale transform, which renders
+        // scaled text blurry and distorted; Ideal mode lays text out in the scaled space instead.
+        TextOptions.SetTextFormattingMode(Zones, Scale == 1 ? TextFormattingMode.Display : TextFormattingMode.Ideal);
         ApplyOrientation();
         ApplyZoneVisibility();
         ApplyBackdrop();
@@ -285,6 +328,8 @@ public partial class DockWindow : Window, IWidgetHost
         UpdateClock(DateTime.Now);
         SubscribeClock();
         UpdateReserver();
+        if (FilterRunningByDisplay) _displayFilterTimer.Start();
+        else _displayFilterTimer.Stop();
 
         if (_config.AutoHide) ScheduleAutoHide();
         else _revealed = true;
@@ -432,8 +477,10 @@ public partial class DockWindow : Window, IWidgetHost
         if (_closing) return;
         _closing = true;
         _animationVersion++;
-        if (s_current == this) s_current = null;
+        s_docks.Remove(this);
+        if (s_trayHostOwner == this) s_trayHostOwner = null;
         _hideTimer.Stop();
+        _displayFilterTimer.Stop();
         _revealTimer.Stop();
         _topmostTimer.Stop();
         if (_scrollAnimating) CompositionTarget.Rendering -= OnScrollFrame;
@@ -460,7 +507,7 @@ public partial class DockWindow : Window, IWidgetHost
         TrayIconView.Interacting -= UpdateTrayHost;
         DockDragHelper.DraggingChanged -= OnDraggingChanged;
 
-        if (_shell.Tray is { } tray && _unpinnedIconsChangedHandler is not null)
+        if (IsMain && _shell.Tray is { } tray && _unpinnedIconsChangedHandler is not null)
         {
             ((INotifyCollectionChanged)tray.UnpinnedIcons).CollectionChanged -= _unpinnedIconsChangedHandler;
         }
@@ -475,7 +522,10 @@ public partial class DockWindow : Window, IWidgetHost
         }
         _trigger?.Close();
         _magnifier?.Dispose();
-        try { WindowPreviewWindow.Instance.HidePreview(); } catch { }
+        if (s_docks.Count == 0)
+        {
+            try { WindowPreviewWindow.Instance.HidePreview(); } catch { }
+        }
         Close();
     }
 }

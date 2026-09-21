@@ -13,14 +13,21 @@ namespace CustomDock.Dock;
 
 public partial class DockWindow
 {
-    private double Scale => _config.Size switch
+    /// <summary>
+    /// Scaled content thickness in DIP. Whole numbers keep the scaled layout on a clean grid;
+    /// the bar is always sized from this so the scaled content is never squeezed or clipped.
+    /// </summary>
+    private double ContentDip => _config.Size switch
     {
-        DockSize.Small => 0.86,
-        DockSize.Large => 1.18,
-        _ => 1.0,
+        DockSize.Small => 40,
+        DockSize.Large => 54,
+        _ => BaseContent,
     };
 
-    private double ThicknessDip => Math.Round(BaseThickness * Scale);
+    private double Scale => ContentDip / BaseContent;
+
+    /// <summary>Bar thickness: scaled content plus the unscaled zone margins.</summary>
+    private double ThicknessDip => ContentDip + ZonesMargin * 2;
 
     private double MarginDip => _config.Layout == DockLayout.Floating ? _config.EdgeMargin : 0;
 
@@ -74,16 +81,19 @@ public partial class DockWindow
         StartSeparator.Visibility = _config.ShowStartButton || _config.ShowSearchButton || _config.ShowTaskViewButton
             ? Visibility.Visible : Visibility.Collapsed;
 
-        bool tray = _config.ShowTray && _shell.Tray is not null;
+        bool tray = HasTray;
         PinnedTray.Visibility = tray ? Visibility.Visible : Visibility.Collapsed;
         ClockButton.Visibility = _config.ShowClock ? Visibility.Visible : Visibility.Collapsed;
         ShowDesktopButton.Visibility = _config.ShowDesktopButton ? Visibility.Visible : Visibility.Collapsed;
         UpdateTrayVisibility();
     }
 
+    /// <summary>Tray icons live on the main dock only (like the Windows taskbar on secondary displays).</summary>
+    private bool HasTray => IsMain && _config.ShowTray && _shell.Tray is not null;
+
     private void UpdateTrayVisibility()
     {
-        bool tray = _config.ShowTray && _shell.Tray is not null;
+        bool tray = HasTray;
         bool hasHidden = tray && _shell.Tray!.UnpinnedIcons is { IsEmpty: false };
         TrayOverflowButton.Visibility = hasHidden ? Visibility.Visible : Visibility.Collapsed;
         EndSeparator.Visibility = tray || _config.ShowClock || ScrollBackButton.Visibility == Visibility.Visible
@@ -177,9 +187,11 @@ public partial class DockWindow
     private double DesiredLengthPx(double dpi)
     {
         var zonesMargin = Zones.Margin;
+        // The constraint is in the (scaled) window space, so it must be the scaled content thickness;
+        // measuring with the unscaled 46 DIP squeezes Large content and yields a wrong length.
         Zones.Measure(IsVertical
-            ? new Size(Zones.ActualWidth > 0 ? Zones.ActualWidth : 46, double.PositiveInfinity)
-            : new Size(double.PositiveInfinity, Zones.ActualHeight > 0 ? Zones.ActualHeight : 46));
+            ? new Size(ContentDip, double.PositiveInfinity)
+            : new Size(double.PositiveInfinity, ContentDip));
         double length = IsVertical
             ? Zones.DesiredSize.Height + zonesMargin.Top + zonesMargin.Bottom
             : Zones.DesiredSize.Width + zonesMargin.Left + zonesMargin.Right;
@@ -190,7 +202,7 @@ public partial class DockWindow
     {
         if (_hwnd == IntPtr.Zero || _closing) return;
 
-        _monitor = MonitorHelper.GetPreferred(_config.MonitorDevice);
+        _monitor = ResolveMonitor();
         double dpi = _monitor.DpiScale;
         int barPx = (int)Math.Round(ThicknessDip * dpi);
         int marginPx = (int)Math.Round(MarginDip * dpi);
@@ -219,7 +231,9 @@ public partial class DockWindow
             MoveTo(_shownRect);
 
         UpdateTrigger();
-        UpdateTrayHost();
+        // Only the dock the flyouts belong to may move them (the main dock unless one was just used).
+        if (s_trayHostOwner is null ? IsMain : s_trayHostOwner == this)
+            UpdateTrayHost();
         UpdateFadeMask();
     }
 
@@ -245,6 +259,7 @@ public partial class DockWindow
     private void UpdateTrayHost()
     {
         if (_hwnd == IntPtr.Zero || _shownRect.Width <= 0) return;
+        s_trayHostOwner = this;
         _shell.SetTrayHost(_shownRect, _config.Edge);
     }
 
@@ -252,7 +267,7 @@ public partial class DockWindow
         => Dispatcher.BeginInvoke(() =>
         {
             if (_closing) return;
-            _monitor = MonitorHelper.GetPreferred(_config.MonitorDevice);
+            _monitor = ResolveMonitor();
             ApplyBackdrop();
             UpdateReserver();
             QueueReposition();

@@ -346,8 +346,18 @@
                             </StackPanel>
                         </Border>
                     </ctl:SettingRow>
-                    <ctl:SettingRow Glyph="&#xE7F4;" Header="Display" Description="Display to show the dock on in multi-monitor setups.">
+                    <ctl:SettingRow Glyph="&#xE7F4;" Header="Main display"
+                                    Description="Display for the main dock. Widgets and tray icons are shown here.">
                         <ComboBox x:Name="MonitorCombo" Width="260" DisplayMemberPath="Label" SelectionChanged="OnMonitorChanged" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE7F9;" Header="Show on all displays"
+                                    Description="Adds a dock with your pinned apps, groups, Start and clock to every other connected display.">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ShowOnAllDisplays}" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE737;" Header="Running apps on their own display"
+                                    Description="Each dock lists only the open apps whose windows are on its display."
+                                    IsEnabled="{Binding ShowOnAllDisplays}">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding RunningAppsOnOwnDisplay}" />
                     </ctl:SettingRow>
                     <ctl:SettingRow Glyph="&#xE89F;" Header="Auto-hide"
                                     Description="The dock stays hidden until the mouse touches the screen edge. When disabled, windows do not overlap under the dock.">

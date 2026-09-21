@@ -18,6 +18,8 @@ public partial class App : Application
     private bool _running;
     private ShellHost? _shell;
     private DockWindow? _dock;
+    /// <summary>Docks on the other displays (when "Show on all displays" is on), keyed by device name.</summary>
+    private readonly Dictionary<string, DockWindow> _secondaryDocks = new(StringComparer.OrdinalIgnoreCase);
     private TrayIconManager? _tray;
     private SettingsWindow? _settings;
     private AppPickerWindow? _appPicker;
@@ -173,6 +175,57 @@ public partial class App : Application
     {
         _dock = new DockWindow(AppServices.Config, _shell!);
         _dock.Start();
+        SyncSecondaryDocks();
+        SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
+    }
+
+    private void OnDisplaySettingsChanged(object? sender, EventArgs e)
+        => Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background, () =>
+        {
+            if (_cleanedUp) return;
+            SyncSecondaryDocks();
+        });
+
+    /// <summary>Opens a dock on every display other than the main one, or closes them all.</summary>
+    private void SyncSecondaryDocks()
+    {
+        if (_shell is null || _dock is null) return;
+        var config = AppServices.Config;
+        string mainDevice = Native.MonitorHelper.GetPreferred(config.MonitorDevice).DeviceName;
+        var wanted = config.ShowOnAllDisplays
+            ? Native.MonitorHelper.GetAll()
+                .Select(m => m.DeviceName)
+                .Where(d => !string.Equals(d, mainDevice, StringComparison.OrdinalIgnoreCase))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase)
+            : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        bool changed = false;
+        foreach (var device in _secondaryDocks.Keys.Where(d => !wanted.Contains(d)).ToList())
+        {
+            _secondaryDocks[device].CloseDock();
+            _secondaryDocks.Remove(device);
+            changed = true;
+        }
+
+        foreach (var device in wanted.Where(d => !_secondaryDocks.ContainsKey(d)))
+        {
+            try
+            {
+                var dock = new DockWindow(config, _shell, device);
+                _secondaryDocks[device] = dock;
+                dock.Start();
+                changed = true;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"Failed to create dock on {device}");
+            }
+        }
+
+        // Running apps are split between displays only while several docks exist.
+        if (changed)
+            foreach (var dock in DockWindow.All.ToList())
+                dock.ApplySettings();
     }
 
     private void ApplyTaskbarMode()
@@ -205,8 +258,14 @@ public partial class App : Application
                 break;
             case nameof(AppConfig.PinnedTrayIcons):
                 break;
+            case nameof(AppConfig.ShowOnAllDisplays):
+            case nameof(AppConfig.MonitorDevice):
+                // Close a secondary dock on the new main display before the main dock moves there.
+                SyncSecondaryDocks();
+                foreach (var dock in DockWindow.All.ToList()) dock.ApplySettings();
+                break;
             default:
-                _dock?.ApplySettings();
+                foreach (var dock in DockWindow.All.ToList()) dock.ApplySettings();
                 break;
         }
     }
@@ -320,6 +379,9 @@ public partial class App : Application
         {
             _settings?.Close();
             _appPicker?.Close();
+            SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
+            foreach (var dock in _secondaryDocks.Values) dock.CloseDock();
+            _secondaryDocks.Clear();
             _dock?.CloseDock();
             AppServices.ConfigService.SaveNow();
             if (_shell?.Tray is { } shellTray && _trayIconsChangedHandler is not null)

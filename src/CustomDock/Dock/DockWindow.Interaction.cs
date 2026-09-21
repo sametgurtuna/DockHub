@@ -25,9 +25,15 @@ public partial class DockWindow
 
     private void OnLauncherVisibilityChanged(bool visible)
     {
+        // Start / Search open on the display of the dock that launched them.
+        bool owner = s_trayHostOwner is null ? IsMain : s_trayHostOwner == this;
+        // Hand the flyouts back to the main display once they close (e.g. for the Windows key).
+        if (!visible && owner && !IsMain)
+            Dispatcher.BeginInvoke(() => s_docks.FirstOrDefault(d => d.IsMain)?.UpdateTrayHost());
+
         if (!_config.AutoHide) return;
-        if (visible) Reveal();
-        else ScheduleAutoHide();
+        if (!visible) ScheduleAutoHide();
+        else if (owner) Reveal();
     }
 
     private bool IsFullscreenBlocked => _config.HideOnFullscreen && _fullscreen;

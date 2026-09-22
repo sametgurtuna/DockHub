@@ -19,7 +19,45 @@ struct DockItemView: View {
         case .app:      appIcon
         case .widget:   widgetPill
         case .separator: separator
+        case .group:    groupTile
         }
+    }
+
+    // ---- Klasor (grup): Windows'taki kapali hal (Dock/GroupItemView.cs) -
+    // vurgu kenarli kutucuk, icinde ilk dort uygulamanin 2x2 ikonu, bossa
+    // klasor simgesi. Acma, yeniden adlandirma ve renk secimi wf-dock-groups
+    // gorevinde; burada yalniz icerigin dock'ta kaybolmamasi saglaniyor.
+    private var groupTile: some View {
+        let accent = DockStyle.groupAccent(item.groupAccent)
+        let icons = (item.children ?? []).compactMap { child -> NSImage? in
+            guard child.kind == .app, let path = child.path else { return nil }
+            return AppCatalog.icon(forAppAt: path)
+        }.prefix(4)
+        let cell = style.iconSize * 0.36
+        return ZStack {
+            RoundedRectangle(cornerRadius: style.iconSize * 0.24, style: .continuous)
+                .fill(Color(nsColor: DockStyle.itemBackground))
+                .overlay(
+                    RoundedRectangle(cornerRadius: style.iconSize * 0.24, style: .continuous)
+                        .strokeBorder(Color(nsColor: accent).opacity(0.7), lineWidth: 1.2)
+                )
+            if icons.isEmpty {
+                Image(systemName: "folder.fill")
+                    .font(.system(size: style.iconSize * 0.42))
+                    .foregroundStyle(Color(nsColor: accent))
+            } else {
+                LazyVGrid(columns: [GridItem(.fixed(cell), spacing: 2), GridItem(.fixed(cell), spacing: 2)],
+                          spacing: 2) {
+                    ForEach(Array(icons.enumerated()), id: \.offset) { _, icon in
+                        Image(nsImage: icon).resizable().interpolation(.high)
+                            .frame(width: cell, height: cell)
+                    }
+                }
+            }
+        }
+        .frame(width: style.iconSize, height: style.iconSize)
+        .frame(height: style.itemHeight)
+        .help(item.groupName ?? "")
     }
 
     // ---- Uygulama: sade ikon, altinda calisiyor noktasi (macOS Dock gibi)

@@ -86,6 +86,100 @@ final class ConfigSchemaTests: XCTestCase {
         XCTAssertTrue(FileManager.default.fileExists(atPath: svc.url.path))
         try? FileManager.default.removeItem(at: tmp)
     }
+
+    // ---------------- Upstream v0.6.1 alanlari
+
+    /// Yeni alanlari olmayan eski dosya okunabilmeli; eksikler varsayilan olur.
+    /// Onceden sentezlenen init(from:) burada hata atiyordu ve ConfigService
+    /// dosyayi bozuk sayip varsayilanlara donuyordu.
+    func testEksikAnahtarlarVarsayilanlaOkunur() throws {
+        let eski = #"{"version":2,"edge":"Left","size":"Large","items":[{"id":"a1","kind":"Separator"}]}"#
+        let c = try JSONStore.decoder.decode(AppConfig.self, from: Data(eski.utf8))
+
+        XCTAssertEqual(c.edge, .left)
+        XCTAssertEqual(c.size, .large)
+        XCTAssertEqual(c.items.first?.kind, .separator)
+        XCTAssertFalse(c.showOnAllDisplays)
+        XCTAssertTrue(c.runningAppsOnOwnDisplay, "C# varsayilani true")
+        XCTAssertTrue(c.displaySizes.isEmpty)
+        XCTAssertEqual(c.tintOpacity, 0.55)
+        XCTAssertTrue(c.hideOnFullscreen)
+        XCTAssertNil(c.monitorDevice)
+    }
+
+    /// v0.6 ust duzey alanlari C# gibi her zaman yazilmali; displaySizes bossa {}.
+    func testV06AlanlariHerZamanYazilir() throws {
+        let data = try JSONStore.encoder.encode(AppConfig())
+        let obj = try XCTUnwrap(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+        XCTAssertEqual(obj["showOnAllDisplays"] as? Bool, false)
+        XCTAssertEqual(obj["runningAppsOnOwnDisplay"] as? Bool, true)
+        XCTAssertEqual((obj["displaySizes"] as? [String: Any])?.count, 0)
+    }
+
+    /// Windows'un yazdigi grup ve pinnedEnd iceren oge listesi okunup ayni
+    /// kurallarla geri yazilmali: pinnedEnd false ise yok, nil grup alanlari yok.
+    func testGrupVeSagKenarTurTuru() throws {
+        let windows = #"""
+        {"version":2,"items":[
+          {"id":"g1","kind":"Group","groupName":"AI","groupAccent":"AccentPurpleBrush","children":[
+            {"id":"c1","kind":"App","path":"/Applications/Claude.app","name":"Claude"},
+            {"id":"c2","kind":"Widget","widget":"clock","variant":"digital"}]},
+          {"id":"w1","kind":"Widget","widget":"network","pinnedEnd":true},
+          {"id":"w2","kind":"Widget","widget":"clock"}],
+         "displaySizes":{"DELL U2720Q":"Large"}}
+        """#
+        let c = try JSONStore.decoder.decode(AppConfig.self, from: Data(windows.utf8))
+        XCTAssertEqual(c.items.count, 3)
+        XCTAssertEqual(c.items[0].kind, .group)
+        XCTAssertEqual(c.items[0].groupName, "AI")
+        XCTAssertEqual(c.items[0].children?.count, 2)
+        XCTAssertEqual(c.items[0].children?[1].widget, "clock")
+        XCTAssertTrue(c.items[1].pinnedEnd)
+        XCTAssertFalse(c.items[2].pinnedEnd)
+        XCTAssertEqual(c.displaySize(of: "DELL U2720Q"), .large)
+
+        let data = try JSONStore.encoder.encode(c)
+        let obj = try XCTUnwrap(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        let items = try XCTUnwrap(obj["items"] as? [[String: Any]])
+        XCTAssertEqual(items[0]["kind"] as? String, "Group")
+        XCTAssertEqual(items[0]["groupAccent"] as? String, "AccentPurpleBrush")
+        let cocuk = try XCTUnwrap(items[0]["children"] as? [[String: Any]])
+        XCTAssertEqual(cocuk[0]["path"] as? String, "/Applications/Claude.app")
+        XCTAssertFalse(cocuk[0].keys.contains("pinnedEnd"), "false yazilmamali (WhenWritingDefault)")
+        XCTAssertEqual(items[1]["pinnedEnd"] as? Bool, true)
+        XCTAssertFalse(items[2].keys.contains("pinnedEnd"))
+        XCTAssertFalse(items[2].keys.contains("groupName"), "nil yazilmamali (WhenWritingNull)")
+        XCTAssertFalse(items[2].keys.contains("children"))
+        XCTAssertEqual((obj["displaySizes"] as? [String: String])?["DELL U2720Q"], "Large")
+    }
+
+    /// C# DisplaySizes StringComparer.OrdinalIgnoreCase kullaniyor.
+    func testEkranBoyutuBuyukKucukHarfDuyarsiz() {
+        var c = AppConfig()
+        c.setDisplaySize(.medium, of: "Built-in Retina Display")
+        XCTAssertEqual(c.displaySize(of: "built-in retina display"), .medium)
+        c.setDisplaySize(.large, of: "BUILT-IN RETINA DISPLAY")
+        XCTAssertEqual(c.displaySizes.count, 1, "ayni ekran iki kez tutulmamali")
+        XCTAssertEqual(c.displaySize(of: "Built-in Retina Display"), .large)
+        c.setDisplaySize(nil, of: "built-in retina display")
+        XCTAssertNil(c.displaySize(of: "Built-in Retina Display"))
+    }
+
+    /// Windows v0.6.0 olculeri: ContentDip 40/46/54 + 2 * ZonesMargin(5).
+    func testBoyutKalinliklariWindowsIleAyni() {
+        XCTAssertEqual(DockSize.small.thickness, 50)
+        XCTAssertEqual(DockSize.medium.thickness, 56)
+        XCTAssertEqual(DockSize.large.thickness, 64)
+    }
+
+    /// Grup fabrikasi C# DockItem.Group ile ayni varsayilanlari kullanir.
+    func testGrupFabrikasi() {
+        let g = DockItem.group("Yeni", children: [.app("/Applications/Safari.app")])
+        XCTAssertEqual(g.kind, .group)
+        XCTAssertEqual(g.groupAccent, "AccentBlueBrush")
+        XCTAssertEqual(g.children?.count, 1)
+    }
 }
 
 /// Hatirlatici siralama ve "sonraki" secimi (ReminderLogic).

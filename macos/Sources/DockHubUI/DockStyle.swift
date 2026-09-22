@@ -35,6 +35,23 @@ public struct DockStyle: Sendable {
     public static let itemBackground = NSColor(white: 1, alpha: 0.04)
     public static let separatorColor = NSColor(white: 1, alpha: 0.12)
 
+    /// Klasor vurgu renkleri. Windows config'e WPF firca anahtarini yazar
+    /// (Themes/Dark.xaml); degerler zaten macOS sistem renklerinin koyu tema
+    /// karsiliklari, o yuzden sistem rengine eslenir ve acik temaya da uyar.
+    /// Bilinmeyen anahtar -> systemBlue (C# varsayilani AccentBlueBrush).
+    public static func groupAccent(_ key: String?) -> NSColor {
+        switch key {
+        case "AccentGreenBrush":   .systemGreen
+        case "AccentOrangeBrush":  .systemOrange
+        case "AccentCyanBrush":    .systemCyan
+        case "AccentMagentaBrush", "AccentPurpleBrush": .systemPurple
+        case "AccentPinkBrush":    .systemPink
+        case "AccentYellowBrush":  .systemYellow
+        case "AccentRedBrush":     .systemRed
+        default:                   .systemBlue
+        }
+    }
+
     // ---- Dis golge: 0 5px 20px rgba(0,0,0,0.2)
     public static let shadowColor = NSColor(white: 0, alpha: 0.2)
     public var shadowRadius: CGFloat { height * 0.47 }

@@ -33,6 +33,183 @@ enum SelfTests {
         return false
     }
 
+    /// Ayarlar penceresi oz-testleri:
+    ///   --test-settings              ayarlar penceresinin yazma yollarini (SettingsStore)
+    ///                                calistirip dock'a canli yansimayi olcer
+    ///   --snapshot-settings <klasor> her ayar sayfasini PNG olarak yazar
+    static func startSettingsTests(store: SettingsStore,
+                                   dock: @escaping @MainActor () -> DockPanel?,
+                                   settings: @escaping @MainActor () -> SettingsWindowController?) {
+        let args = CommandLine.arguments
+        if args.contains("--test-settings") {
+            Task { await settingsTest(store: store, dock: dock, settings: settings) }
+        } else if let i = args.firstIndex(of: "--snapshot-settings"), i + 1 < args.count {
+            Task { await snapshots(dir: args[i + 1], settings: settings) }
+        }
+    }
+
+    private static func snapshots(dir: String, settings: () -> SettingsWindowController?) async {
+        guard let c = settings() else { print("ayarlar penceresi kurulamadi"); NSApp.terminate(nil); return }
+        try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
+        for page in SettingsPage.allCases {
+            let url = URL(fileURLWithPath: dir).appendingPathComponent("settings-\(page.rawValue).png")
+            let ok = await c.snapshot(page, to: url)
+            print("  \(page.rawValue.padding(toLength: 11, withPad: " ", startingAt: 0)): \(ok ? url.path : "YAZILAMADI")")
+        }
+        NSApp.terminate(nil)
+    }
+
+    /// Ayarlar penceresinin kontrolleri SettingsStore.binding/update ve oge
+    /// islemlerine baglidir; bu test ayni yollari fare olmadan calistirir.
+    private static func settingsTest(store: SettingsStore, dock: () -> DockPanel?,
+                                     settings: () -> SettingsWindowController?) async {
+        var gecen = 0, toplam = 0
+        func kontrol(_ ad: String, _ ok: Bool, _ detay: String) {
+            toplam += 1; if ok { gecen += 1 }
+            print("  \(ok ? "GECTI" : "KALDI")  \(ad.padding(toLength: 30, withPad: " ", startingAt: 0)) \(detay)")
+        }
+        func bekle() async { try? await Task.sleep(for: .milliseconds(500)) }
+        func cerceve(_ d: DockPanel?) -> CGRect { d?.panel.frame ?? .zero }
+        func f(_ r: CGRect) -> String { "x=\(Int(r.minX)) y=\(Int(r.minY)) w=\(Int(r.width)) h=\(Int(r.height))" }
+        func diskte() -> [String: Any] {
+            guard let d = try? Data(contentsOf: store.service.url),
+                  let o = try? JSONSerialization.jsonObject(with: d) as? [String: Any] else { return [:] }
+            return o
+        }
+
+        try? await Task.sleep(for: .milliseconds(600))
+        let ilk = store.config
+        print("--- Ayarlar testi ---")
+        print("  baslangic: \(f(cerceve(dock())))  ogeler=\(dock()?.model.items.count ?? -1)")
+
+        // Dock'un sag tik menusu: "Settings…" ogesi pencereyi acmali.
+        func menuBul(_ v: NSView?) -> NSMenu? {
+            guard let v else { return nil }
+            if let m = v.menu { return m }
+            for alt in v.subviews { if let m = menuBul(alt) { return m } }
+            return nil
+        }
+        if let menu = menuBul(dock()?.panel.contentView),
+           let i = menu.items.firstIndex(where: { $0.title == "Settings…" }) {
+            menu.performActionForItem(at: i)
+            await bekle()
+            let w = settings()
+            kontrol("menu 'Settings…' pencereyi acar", w?.window?.isVisible == true && w?.page == .general,
+                    "menu: \(menu.items.map(\.title).filter { !$0.isEmpty }.joined(separator: " | "))")
+            if let g = menu.items.firstIndex(where: { $0.title == "Add Widget…" }) {
+                menu.performActionForItem(at: g); await bekle()
+                kontrol("menu 'Add Widget…' galeriyi acar", settings()?.page == .gallery, "sayfa=\(settings()?.page.rawValue ?? "-")")
+            }
+            settings()?.window?.orderOut(nil)
+        } else {
+            kontrol("menu 'Settings…' pencereyi acar", false, "menu bulunamadi")
+        }
+
+        // Ana ekran secimi: dock secilen ekranin icinde kurulmali.
+        if let son = NSScreen.screens.last {
+            store.update { $0.monitorDevice = son.localizedName }; await bekle()
+            let r0 = cerceve(dock())
+            kontrol("ana ekran -> o ekranda", son.frame.contains(r0), "\(son.localizedName) (\(NSScreen.screens.count) ekran) \(f(r0))")
+            store.update { $0.monitorDevice = ilk.monitorDevice }; await bekle()
+        }
+
+        // General / Appearance: yerlesim
+        var once = dock()
+        store.update { $0.edge = .left }; await bekle()
+        var r = cerceve(dock())
+        kontrol("kenar Left -> dikey dock", dock() !== once && r.width == 50 && r.height > r.width, f(r))
+
+        once = dock()
+        store.update { $0.size = .large }; await bekle()
+        r = cerceve(dock())
+        kontrol("boyut Large -> 64", dock() !== once && r.width == 64, f(r))
+
+        store.update { $0.edge = .bottom }; await bekle()
+        let tam = cerceve(dock())
+        store.update { $0.widthMode = .fit }; await bekle()
+        r = cerceve(dock())
+        kontrol("Fit content -> icerik kadar", r.width < tam.width && r.width > 64, "tam w=\(Int(tam.width)) fit w=\(Int(r.width))")
+
+        store.update { $0.alignment = .start }; await bekle()
+        let bas = cerceve(dock())
+        kontrol("hizalama Start -> sola yasli", bas.minX < r.minX, "center x=\(Int(r.minX)) start x=\(Int(bas.minX))")
+
+        store.update { $0.layout = .attached }; await bekle()
+        let yapisik = cerceve(dock())
+        kontrol("sekil Attached -> bosluksuz", yapisik.minX < bas.minX, "floating x=\(Int(bas.minX)) attached x=\(Int(yapisik.minX))")
+
+        store.update { $0.theme = .light; $0.backdrop = .solid; $0.tintOpacity = 0.2; $0.hoverEffect = false }
+        await bekle()
+        let gorunum = dock()?.panel.appearance?.name
+        kontrol("tema Light -> panel aqua", gorunum == .aqua, gorunum?.rawValue ?? "nil")
+
+        let o = diskte()
+        let diskOk = o["edge"] as? String == "Bottom" && o["size"] as? String == "Large"
+            && o["widthMode"] as? String == "Fit" && o["alignment"] as? String == "Start"
+            && o["layout"] as? String == "Attached" && o["theme"] as? String == "Light"
+            && o["backdrop"] as? String == "Solid" && o["tintOpacity"] as? Double == 0.2
+            && o["hoverEffect"] as? Bool == false
+        kontrol("config.json Windows adlariyla", diskOk,
+                "edge=\(o["edge"] ?? "-") size=\(o["size"] ?? "-") widthMode=\(o["widthMode"] ?? "-") alignment=\(o["alignment"] ?? "-") layout=\(o["layout"] ?? "-") theme=\(o["theme"] ?? "-") backdrop=\(o["backdrop"] ?? "-") tintOpacity=\(o["tintOpacity"] ?? "-") hoverEffect=\(o["hoverEffect"] ?? "-")")
+
+        // Dock items
+        let n0 = dock()?.model.items.count ?? -1
+        store.addSeparator()
+        let saat = store.addWidget("clock", variant: "digital")
+        let su = store.addWidget("hydration", variant: "timer")
+        store.addApps(["/System/Applications/Calculator.app"])
+        await bekle()
+        let hesapId = store.config.items.first { $0.path == "/System/Applications/Calculator.app" }?.id ?? ""
+        var m = dock()?.model.items ?? []
+        kontrol("ekle: ayirici+2 widget+uygulama", m.count == n0 + 4 && m.last?.path == "/System/Applications/Calculator.app"
+                && m.contains { $0.id == saat && $0.variant == "digital" }, "oge \(n0) -> \(m.count)")
+        kontrol("ayni uygulama iki kez eklenmez", store.addApps(["/System/Applications/Calculator.app"]) == 0, "addApps tekrar = 0")
+
+        store.setName(hesapId, "Hesap"); store.setArguments(hesapId, "--foo \"a b\"")
+        store.setVariant(saat, "analog")
+        await bekle()
+        m = dock()?.model.items ?? []
+        let hesap = m.first { $0.id == hesapId }
+        kontrol("ad, argüman, varyant dock'ta", hesap?.name == "Hesap" && hesap?.arguments == "--foo \"a b\""
+                && m.first { $0.id == saat }?.variant == "analog",
+                "ad=\(hesap?.name ?? "-") arg=\(hesap?.arguments ?? "-") saat=\(m.first { $0.id == saat }?.variant ?? "-")")
+
+        if let i = store.config.items.firstIndex(where: { $0.id == hesapId }) {
+            store.moveItems(from: IndexSet(integer: i), to: 0)
+        }
+        await bekle()
+        kontrol("siralama: en basa tasindi", dock()?.model.items.first?.id == hesapId, "ilk=\(dock()?.model.items.first?.name ?? "-")")
+
+        // Widget'in kendi ayari dock'u yeniden kurmamali; yerlesim degisikligi kurmali.
+        let simdiki = dock()
+        simdiki?.model.setSetting(su, "count", .number(7))
+        await bekle()
+        kontrol("widget ayari -> yeniden kurulmaz", dock() === simdiki
+                && store.service.config.items.first { $0.id == su }?.numberSetting("count", default: -1) == 7,
+                "ayni panel=\(dock() === simdiki)")
+        store.setVariant(su, "progress"); await bekle()
+        kontrol("varyant -> yeniden kurulur", dock() !== simdiki, "yeni panel=\(dock() !== simdiki)")
+
+        for id in [saat, su, hesapId] { store.removeItem(id) }
+        if let sep = store.config.items.last(where: { $0.kind == .separator })?.id { store.removeItem(sep) }
+        await bekle()
+        kontrol("sil: oge sayisi geri dondu", dock()?.model.items.count == n0, "oge \(dock()?.model.items.count ?? -1)")
+
+        // Replace / Show both: sistem Dock'unu gizler ve geri yukler.
+        let dockOnce = SystemDock.isAutoHideEnabled()
+        store.update { $0.taskbarMode = .replace }; await bekle()
+        let gizli = SystemDock.isAutoHideEnabled()
+        store.update { $0.taskbarMode = .showBoth }; await bekle()
+        let geri = SystemDock.isAutoHideEnabled()
+        kontrol("Replace/Show both", gizli == true && geri == dockOnce,
+                "once=\(dockOnce.map(String.init) ?? "-") replace=\(gizli.map(String.init) ?? "-") showBoth=\(geri.map(String.init) ?? "-")")
+
+        store.update { $0 = ilk }; await bekle()
+        print("  bitis: \(f(cerceve(dock())))  config ilk haline dondu")
+        print("  SONUC: \(gecen)/\(toplam) GECTI")
+        NSApp.terminate(nil)
+    }
+
     /// Dock'a TIKLAMA ile ayni kod yolunu (model.activate) calistirir.
     /// Fare olayi disinda her sey ayni akis.
     private static func activate(_ hedef: String, panel: DockPanel) async {

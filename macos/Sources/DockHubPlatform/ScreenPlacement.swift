@@ -18,7 +18,7 @@ public enum ScreenPlacement {
         return NSScreen.screens.first { $0.localizedName == name } ?? NSScreen.main
     }
 
-    /// Icerige gore genislik (widthMode == .fit) icin iskelet degeri.
+    /// Icerik olculemediginde (ilk kurulum, bos dock) "Fit content" uzunlugu.
     public static let fitExtent: CGFloat = 420
 
     /// Dock'un yerlesecegi alan.
@@ -43,7 +43,11 @@ public enum ScreenPlacement {
         }
     }
 
-    public static func geometry(for config: AppConfig, on screen: NSScreen) -> DockGeometry {
+    /// `contentLength`: widthMode == .fit iken dock icerigin olculen uzunlugu
+    /// (yatayda genislik, dikeyde yukseklik). Ekrana sigmazsa ekrana kirpilir,
+    /// Windows'ta da Fit genisligi ekrani asamaz.
+    public static func geometry(for config: AppConfig, on screen: NSScreen,
+                                contentLength: CGFloat? = nil) -> DockGeometry {
         let area = usableArea(for: config, on: screen)
         let thickness = CGFloat(config.size.thickness)
         let margin = config.layout == .floating ? CGFloat(config.clampedEdgeMargin) : 0
@@ -52,7 +56,8 @@ public enum ScreenPlacement {
         var frame = CGRect.zero
 
         if config.edge.isVertical {
-            let height = config.widthMode == .full ? area.height - margin * 2 : fitExtent
+            let height = config.widthMode == .full ? area.height - margin * 2
+                : min(contentLength ?? fitExtent, area.height - margin * 2)
             let y: CGFloat = switch config.alignment {
             case .center: area.midY - height / 2
             case .start:  area.maxY - margin - height      // dikeyde "bas" = ust
@@ -62,7 +67,8 @@ public enum ScreenPlacement {
                 : area.maxX - margin - thickness
             frame = CGRect(x: x, y: y, width: thickness, height: height)
         } else {
-            let width = config.widthMode == .full ? area.width - margin * 2 : fitExtent
+            let width = config.widthMode == .full ? area.width - margin * 2
+                : min(contentLength ?? fitExtent, area.width - margin * 2)
             let x: CGFloat = switch config.alignment {
             case .center: area.midX - width / 2
             case .start:  area.minX + margin

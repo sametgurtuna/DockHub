@@ -9,8 +9,14 @@ import DockHubUI
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var dock: DockPanel?
     private var configService: ConfigService?
+    private var settingsStore: SettingsStore?
+    private var settingsWindow: SettingsWindowController?
     private var themeObserver: NSObjectProtocol?
     private var screenObserver: NSObjectProtocol?
+    private var configObserver: NSObjectProtocol?
+    /// Son kurulan dock'un yerlesim imzasi ve kipi; degismediyse yeniden kurulmaz.
+    private var builtSignature = Data()
+    private var appliedMode: TaskbarMode?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Windows surumundeki --restore-taskbar acil cikisinin karsiligi.
@@ -33,12 +39,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         DockLifecycle.apply(service.config.taskbarMode)
+        appliedMode = service.config.taskbarMode
         DockLifecycle.installSignalHandlers()
         Task { @MainActor in await Notifier.setup() }
 
-        let panel = DockPanel(config: service.config, items: service.config.items, service: service)
-        dock = panel
-        panel.show()
+        let panel = buildDock(service)
+        settingsStore = SettingsStore(service: service)
 
         // Ekran duzeni degisimi: Dock gizlenmesi, cozunurluk, monitor takma/cikarma
         screenObserver = NotificationCenter.default.addObserver(
@@ -52,11 +58,59 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
+        // Ayarlar penceresi config'i degistirdi (wf-settings-ui).
+        configObserver = NotificationCenter.default.addObserver(
+            forName: ConfigEvents.didChange, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.applyConfigChange() }
+        }
+
         themeObserver = Appearance.observeSystemTheme {
             Log.info("Sistem temasi degisti")
         }
 
-        _ = SelfTests.start(service: service, panel: panel)
+        if CommandLine.arguments.contains("--settings") { openSettings(.general) }
+
+        if !SelfTests.start(service: service, panel: panel), let store = settingsStore {
+            SelfTests.startSettingsTests(store: store, dock: { [weak self] in self?.dock },
+                                         settings: { [weak self] in self?.settingsController() })
+        }
+    }
+
+    /// Dock'u config'ten kurar ve gosterir; yerlesim imzasini kaydeder.
+    @discardableResult
+    private func buildDock(_ service: ConfigService) -> DockPanel {
+        let panel = DockPanel(config: service.config, items: service.config.items, service: service)
+        panel.onOpenSettings = { [weak self] page in self?.openSettings(page) }
+        dock = panel
+        builtSignature = service.config.layoutSignature()
+        panel.show()
+        return panel
+    }
+
+    /// Ayar degisikligini uygular. Yalniz yerlesimi etkileyen degisiklik
+    /// dock'u yeniden kurar (AppConfig.layoutSignature); Windows'taki
+    /// DockWindow.ApplySettings karsiligi.
+    private func applyConfigChange() {
+        guard let service = configService else { return }
+        let cfg = service.config
+        if cfg.taskbarMode != appliedMode {
+            DockLifecycle.apply(cfg.taskbarMode)
+            appliedMode = cfg.taskbarMode
+        }
+        guard cfg.layoutSignature() != builtSignature else { return }
+        dock?.close()
+        buildDock(service)
+        Log.info("Ayarlar degisti, dock yeniden kuruldu")
+    }
+
+    private func settingsController() -> SettingsWindowController? {
+        guard let store = settingsStore else { return nil }
+        if settingsWindow == nil { settingsWindow = SettingsWindowController(store: store) }
+        return settingsWindow
+    }
+
+    private func openSettings(_ page: SettingsPage) {
+        settingsController()?.show(page)
     }
 
     /// Normal cikista sistem Dock ayari geri yuklenir (d-dock-geri-yukleme).

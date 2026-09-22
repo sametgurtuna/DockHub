@@ -49,11 +49,14 @@ public enum AppCatalog {
     /// kabuktan `open -a Finder` getirdi. macOS 14'ten beri aktivasyon
     /// isbirlikci; kullanici etkilesimi olmayan arka plan uygulamasinin
     /// istegi reddediliyor. Gercek fare tiklamasinda sonuc henuz olculmedi.
-    public static func activateOrLaunch(appAt path: String,
+    /// `arguments` yalniz uygulama yeni baslatilirken gecer (Windows'ta da
+    /// ShellExecute yalniz baslatmada argüman verir; calisan pencere one gelir).
+    public static func activateOrLaunch(appAt path: String, arguments: [String] = [],
                                         completion: (@Sendable (Bool) -> Void)? = nil) {
         let running = runningApplication(forAppAt: path)
         let config = NSWorkspace.OpenConfiguration()
         config.activates = true
+        config.arguments = arguments
         NSWorkspace.shared.openApplication(at: URL(fileURLWithPath: path),
                                            configuration: config) { app, error in
             if let error {

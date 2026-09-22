@@ -13,18 +13,41 @@ public final class DockPanel {
     public let model: DockModel
     public private(set) var geometry: DockGeometry
     public let style: DockStyle
+    /// "Fit content" icin olculen icerik uzunlugu; Full'da nil.
+    private let contentLength: CGFloat?
+    private let menuActions = MenuActions()
+
+    /// Sag tik menusunden ayarlar penceresini acar; AppDelegate baglar.
+    public var onOpenSettings: ((SettingsPage) -> Void)? {
+        get { menuActions.openSettings }
+        set { menuActions.openSettings = newValue }
+    }
 
     public init(config: AppConfig, items: [DockItem], service: ConfigService? = nil) {
         let screen = ScreenPlacement.screen(named: config.monitorDevice) ?? NSScreen.screens[0]
-        self.geometry = ScreenPlacement.geometry(for: config, on: screen)
         // Dikey dock'ta "kalinlik" genisliktir; stil her zaman kalinliktan turer.
-        let thickness = config.edge.isVertical ? geometry.frame.width : geometry.frame.height
-        self.style = DockStyle(height: thickness)
+        self.style = DockStyle(height: CGFloat(config.size.thickness))
         self.model = DockModel(config: config, items: items, service: service)
+
+        // Icerik gorunumu yerlesimden ONCE kurulur: "Fit content" (widthMode .fit)
+        // dock'un uzunlugunu icerigin gercek boyutundan alir. Windows'ta da Fit
+        // genisligi ogelerden hesaplanir; eskiden burada sabit 420 vardi.
+        let host = NSHostingView(rootView: DockContentView(model: model, style: style))
+        if config.widthMode == .fit {
+            let ideal = host.fittingSize
+            contentLength = ceil(config.edge.isVertical ? ideal.height : ideal.width)
+        } else {
+            contentLength = nil
+        }
+        self.geometry = ScreenPlacement.geometry(for: config, on: screen, contentLength: contentLength)
 
         panel = NSPanel(contentRect: geometry.frame,
                         styleMask: [.nonactivatingPanel, .borderless],
                         backing: .buffered, defer: false)
+
+        // Ayarlar degisince panel kapatilip yenisi kurulur; Swift referansi
+        // tutarken AppKit'in ayrica serbest birakmasi cokmeye yol acar.
+        panel.isReleasedWhenClosed = false
 
         // ag-window-layer
         panel.level = .statusBar
@@ -73,7 +96,6 @@ public final class DockPanel {
         fx.addSubview(tint)
 
         // Icerik
-        let host = NSHostingView(rootView: DockContentView(model: model, style: style))
         host.frame = bounds
         host.autoresizingMask = [.width, .height]
         fx.addSubview(host)
@@ -95,15 +117,27 @@ public final class DockPanel {
         container.addSubview(fx)
         panel.contentView = container
 
-        // Asgari cikis yolu (tam wf-dock-menu sonraki gorevin isi)
+        // Dock menusu. Tam wf-dock-menu (sabitleme, ayirici, konum, otomatik
+        // gizleme) ayri gorev; burada ayarlara giden yol ve cikis var.
         let menu = NSMenu()
-        menu.addItem(withTitle: "DockHub", action: nil, keyEquivalent: "").isEnabled = false
+        let widget = NSMenuItem(title: "Add Widget…", action: #selector(MenuActions.openGallery), keyEquivalent: "")
+        widget.target = menuActions
+        menu.addItem(widget)
+        let settings = NSMenuItem(title: "Settings…", action: #selector(MenuActions.openGeneral), keyEquivalent: ",")
+        settings.target = menuActions
+        menu.addItem(settings)
         menu.addItem(.separator())
         let quit = NSMenuItem(title: "Quit DockHub",
                               action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         quit.target = NSApp
         menu.addItem(quit)
         fx.menu = menu
+    }
+
+    /// Paneli ekrandan kaldirir; ayarlar degisince yeni panel kurulmadan once.
+    public func close() {
+        panel.orderOut(nil)
+        panel.close()
     }
 
     public func show() {
@@ -119,7 +153,7 @@ public final class DockPanel {
     @discardableResult
     public func reposition(config: AppConfig) -> Bool {
         let screen = ScreenPlacement.screen(named: config.monitorDevice) ?? NSScreen.screens[0]
-        let yeni = ScreenPlacement.geometry(for: config, on: screen)
+        let yeni = ScreenPlacement.geometry(for: config, on: screen, contentLength: contentLength)
         guard yeni.frame != geometry.frame else { return false }
         geometry = yeni
         panel.setFrame(yeni.frame, display: true, animate: false)
@@ -146,4 +180,12 @@ public final class DockPanel {
             "ikonBoyutu": String(format: "%.1f", style.iconSize),
         ]
     }
+}
+
+/// NSMenuItem hedefi: DockPanel NSObject olmadigi icin menu eylemleri burada.
+@MainActor
+final class MenuActions: NSObject {
+    var openSettings: ((SettingsPage) -> Void)?
+    @objc func openGeneral() { openSettings?(.general) }
+    @objc func openGallery() { openSettings?(.gallery) }
 }

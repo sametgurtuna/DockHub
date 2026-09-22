@@ -58,7 +58,8 @@ public final class DockModel: ObservableObject {
 
     public func activate(_ item: DockItem) {
         guard item.kind == .app, let path = item.path else { return }
-        AppCatalog.activateOrLaunch(appAt: path) { _ in }
+        AppCatalog.activateOrLaunch(appAt: path,
+                                    arguments: LaunchArguments.split(item.arguments ?? "")) { _ in }
     }
 }
 

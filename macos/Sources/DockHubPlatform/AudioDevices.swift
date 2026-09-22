@@ -73,24 +73,57 @@ public enum AudioDevices {
         return UnsafeMutableAudioBufferListPointer(list).contains { $0.mNumberChannels > 0 }
     }
 
-    /// 0...1 arasi ses seviyesi; aygit desteklemiyorsa nil.
+    /// Ses/sessiz ozelliginin bulundugu cikis ogeleri: once ana oge; yoksa
+    /// aygitin stereo kanallari.
+    ///
+    /// OLCULMUS: PRO X 2 LIGHTSPEED (USB kulaklik) ana ogede (element 0) ses
+    /// yayinlamiyor, yalniz kanal 1 ve 2'de. Eskiden yalniz ana oge okundugu
+    /// icin widget %0 gosteriyordu; osascript %92 diyordu (= kanallar 0.918).
+    /// Sistemin "sanal ana ses" ozelligi (AudioHardwareService) ayni degeri
+    /// verir ama API kullanimdan kaldirilmis; kanal ortalamasi esdegeri.
+    private static func cikisOgeleri(_ id: AudioDeviceID,
+                                     _ selector: AudioObjectPropertySelector) -> [AudioObjectPropertyElement] {
+        var ana = adres(selector, kAudioDevicePropertyScopeOutput)
+        if AudioObjectHasProperty(id, &ana) { return [kAudioObjectPropertyElementMain] }
+        var pc = adres(kAudioDevicePropertyPreferredChannelsForStereo, kAudioDevicePropertyScopeOutput)
+        var kanallar: [UInt32] = [1, 2]
+        var size = UInt32(MemoryLayout<UInt32>.size * 2)
+        _ = AudioObjectGetPropertyData(id, &pc, 0, nil, &size, &kanallar)
+        return kanallar.filter { kanal in
+            var a = AudioObjectPropertyAddress(mSelector: selector,
+                                               mScope: kAudioDevicePropertyScopeOutput, mElement: kanal)
+            return AudioObjectHasProperty(id, &a)
+        }
+    }
+
+    private static func ogeAdresi(_ selector: AudioObjectPropertySelector,
+                                  _ oge: AudioObjectPropertyElement) -> AudioObjectPropertyAddress {
+        AudioObjectPropertyAddress(mSelector: selector, mScope: kAudioDevicePropertyScopeOutput, mElement: oge)
+    }
+
+    /// 0...1 arasi ses seviyesi (kanallarin ortalamasi); aygit desteklemiyorsa nil.
     public static func volume(of id: AudioDeviceID) -> Float? {
-        var addr = adres(kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput)
-        var v: Float32 = 0
-        var size = UInt32(MemoryLayout<Float32>.size)
-        let st = AudioObjectGetPropertyData(id, &addr, 0, nil, &size, &v)
-        return st == noErr ? v : nil
+        let degerler = cikisOgeleri(id, kAudioDevicePropertyVolumeScalar).compactMap { oge -> Float? in
+            var addr = ogeAdresi(kAudioDevicePropertyVolumeScalar, oge)
+            var v: Float32 = 0
+            var size = UInt32(MemoryLayout<Float32>.size)
+            return AudioObjectGetPropertyData(id, &addr, 0, nil, &size, &v) == noErr ? v : nil
+        }
+        guard !degerler.isEmpty else { return nil }
+        return degerler.reduce(0, +) / Float(degerler.count)
     }
 
     public static func setVolume(_ v: Float, of id: AudioDeviceID) {
-        var addr = adres(kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput)
-        var deger = Float32(min(max(v, 0), 1))
-        AudioObjectSetPropertyData(id, &addr, 0, nil,
-                                   UInt32(MemoryLayout<Float32>.size), &deger)
+        for oge in cikisOgeleri(id, kAudioDevicePropertyVolumeScalar) {
+            var addr = ogeAdresi(kAudioDevicePropertyVolumeScalar, oge)
+            var deger = Float32(min(max(v, 0), 1))
+            AudioObjectSetPropertyData(id, &addr, 0, nil, UInt32(MemoryLayout<Float32>.size), &deger)
+        }
     }
 
     public static func isMuted(_ id: AudioDeviceID) -> Bool? {
-        var addr = adres(kAudioDevicePropertyMute, kAudioDevicePropertyScopeOutput)
+        guard let oge = cikisOgeleri(id, kAudioDevicePropertyMute).first else { return nil }
+        var addr = ogeAdresi(kAudioDevicePropertyMute, oge)
         var m: UInt32 = 0
         var size = UInt32(MemoryLayout<UInt32>.size)
         let st = AudioObjectGetPropertyData(id, &addr, 0, nil, &size, &m)
@@ -98,9 +131,11 @@ public enum AudioDevices {
     }
 
     public static func setMuted(_ muted: Bool, of id: AudioDeviceID) {
-        var addr = adres(kAudioDevicePropertyMute, kAudioDevicePropertyScopeOutput)
-        var m: UInt32 = muted ? 1 : 0
-        AudioObjectSetPropertyData(id, &addr, 0, nil, UInt32(MemoryLayout<UInt32>.size), &m)
+        for oge in cikisOgeleri(id, kAudioDevicePropertyMute) {
+            var addr = ogeAdresi(kAudioDevicePropertyMute, oge)
+            var m: UInt32 = muted ? 1 : 0
+            AudioObjectSetPropertyData(id, &addr, 0, nil, UInt32(MemoryLayout<UInt32>.size), &m)
+        }
     }
 
     /// Varsayilan cikis aygitini degistirir (kulaklik/hoparlor gecisi).

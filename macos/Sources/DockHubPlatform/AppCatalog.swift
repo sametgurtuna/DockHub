@@ -32,18 +32,30 @@ public enum AppCatalog {
 
     /// ag-app-launch: calisiyorsa one getirir, calismiyorsa baslatir.
     /// Windows surumundeki "tiklama one getirir veya baslatir" davranisinin karsiligi.
+    ///
+    /// Calisan uygulamada da openApplication kullaniliyor: sistem Dock'u gibi
+    /// "reopen" olayi gonderir, penceresi olmayan uygulama yeni pencere acar.
+    /// activate() bunu yapmaz; yalniz LaunchServices hata verirse deneniyor.
+    ///
+    /// OLCULMUS, COZULMEMIS: --activate testi (gercek tiklama degil, kod yolu)
+    /// calisan Finder'i IKI yolla da one getiremedi (isActive=false), oysa
+    /// kabuktan `open -a Finder` getirdi. macOS 14'ten beri aktivasyon
+    /// isbirlikci; kullanici etkilesimi olmayan arka plan uygulamasinin
+    /// istegi reddediliyor. Gercek fare tiklamasinda sonuc henuz olculmedi.
     public static func activateOrLaunch(appAt path: String,
                                         completion: (@Sendable (Bool) -> Void)? = nil) {
-        if let running = runningApplication(forAppAt: path) {
-            let ok = running.activate(options: [])
-            completion?(ok)
-            return
-        }
+        let running = runningApplication(forAppAt: path)
         let config = NSWorkspace.OpenConfiguration()
         config.activates = true
         NSWorkspace.shared.openApplication(at: URL(fileURLWithPath: path),
                                            configuration: config) { app, error in
-            if let error { Log.error("Uygulama baslatilamadi: \(path)", error) }
+            if let error {
+                Log.error("Uygulama acilamadi: \(path)", error)
+                if let running {
+                    completion?(running.activate(options: []))
+                    return
+                }
+            }
             completion?(app != nil)
         }
     }

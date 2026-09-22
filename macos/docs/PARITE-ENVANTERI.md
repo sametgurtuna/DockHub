@@ -5,6 +5,12 @@ her yetenek grubunu macOS'taki
 karşılığına göre sınıflandırır. Kaynak: `README.md` ve `src/CustomDock/` altındaki
 gerçek kod. Orvant kaydındaki karşılığı: `T1-ENVANTER` görevi, 32 `parity_call` nesnesi.
 
+**Upstream v0.6.1 ile yeniden incelendi.** v0.4.0–v0.6.1 arasında gelen 9 yeni
+yetenek grubu ayrı belgede: [UPSTREAM-v0.6.md](UPSTREAM-v0.6.md) (`T15-UPSTREAM-ENVANTER`).
+Bu belgedeki 32 kararın hiçbiri değişmedi. Kaynak dosyalardaki farkların çoğu
+Türkçeden İngilizceye çeviri. Davranış değişiklikleri ilgili bölümlerin altında
+**v0.6.1 notu** olarak işaretlendi.
+
 ## Ölçütler
 
 Sınıflandırma iki kayıtlı ölçüte dayanır:
@@ -73,6 +79,12 @@ Pencere düzeyinde liste, öne getirme ve küçültme için `AXUIElement`
 Windows'taki "ilerleme çubuğu" ve "dikkat istiyor" durumlarının macOS karşılığı
 yoktur; o iki alt davranış düşer.
 
+**v0.6.1 notu:** Rozet sayıları, canlı pencere önizlemesi ve Jump List ayrı
+yetenek grubu olarak [UPSTREAM-v0.6.md](UPSTREAM-v0.6.md) içinde. Eşleme kodu
+`Dock/DockWindow.Items.cs` dosyasına taşındı. Birden çok ekranda her dock yalnız
+kendi ekranındaki pencereleri listeleyebiliyor (`wf-multi-display`). Kalan
+davranış aynı, karar değişmez.
+
 ### `wf-pinned-apps` — Sabitlenmiş uygulamalar → **var**
 `NSWorkspace.shared.icon(forFile:)` ikonu, `NSWorkspace.shared.openApplication(at:configuration:)`
 başlatmayı verir. `runningApplications` ile eşleştirme `bundleIdentifier` üzerinden
@@ -118,24 +130,46 @@ Vurgu rengi: `NSColor.controlAccentColor`. Tam parite.
 `NSScreen.frame` ile alt/üst/sol/sağ kenar yerleşimi; floating/attached ayrımı
 köşe yarıçapı ve kenar boşluğu meselesidir. Kaynak: `Dock/DockWindow.xaml.cs`.
 
+**v0.6.1 notu:** Yerleşim kodu `Dock/DockWindow.Positioning.cs` dosyasına taşındı.
+v0.6.0'da küçük ve büyük boyut hesabı düzeltildi. Eskiden bütün çubuk 56'nın
+0,86 ve 1,18 katıydı (48/56/66). Şimdi yalnız içerik ölçekleniyor (40/46/54), kenar
+boşlukları (2×5) sabit kalıyor, yani kalınlık **50/56/64**. Ekran başına boyut ayrı
+grup (`wf-multi-display`).
+
 ### `wf-dock-behavior` — Dock davranışı → **var**
 Otomatik gizleme: `NSEvent.addGlobalMonitorForEvents(matching: .mouseMoved)` veya
 `NSTrackingArea`. Tam ekran algılama: `NSWorkspace` bildirimleri ve
 `CGWindowListCopyWindowInfo`. Çok monitör: `NSScreen.screens`. DPI: `backingScaleFactor`
 otomatik uygulanır — Windows'taki PerMonitorV2 uğraşı macOS'ta gerekmez.
 
+**v0.6.1 notu:** Otomatik gizleme ve tam ekran kodu `Dock/DockWindow.Interaction.cs`
+dosyasına taşındı. Birden çok ekranda dock artık ayrı grup (`wf-multi-display`),
+global kısayol da öyle (`wf-global-hotkey`).
+
 ### `wf-dock-dnd` — Sürükle-bırak düzenleme → **var**
 `NSDraggingSource` / `NSDraggingDestination` ve `NSPasteboard` (`.fileURL` tipi).
 Finder'dan `.app` bırakma Windows'taki `.exe`/`.lnk` bırakmanın karşılığıdır.
+
+**v0.6.1 notu:** Bırakma konumu hesabı `Dock/DockWindow.Items.cs` dosyasına taşındı.
+Öğeyi başka bir öğenin üzerine bırakmak artık klasör oluşturuyor (`wf-dock-groups`),
+dosyayı uygulama düğmesine bırakmak o uygulamayla açıyor (`wf-drop-on-app`).
 
 ### `wf-dock-motion` — Kare senkron animasyon → **var**
 `CADisplayLink` (macOS 14+) veya `CVDisplayLink`, `NSAnimationContext`, Core Animation.
 Yüksek yenileme hızı (ProMotion 120 Hz) desteklenir. Windows'taki
 `CompositionTarget.Rendering` yaklaşımının doğrudan karşılığı.
 
+**v0.6.1 notu:** Açılır pencerelere genie, zoom ve küçülme, klasörlere kademeli
+yelpaze animasyonu geldi (`Dock/GenieEffectHelper.cs`). Genie, anlık görüntünün
+dokulu 3B mesh ile bükülmesi. macOS'ta mesh bükme API'si (`CAMeshTransform`)
+private, genel yol Metal ya da şerit tabanlı yaklaşık çözüm. Ayrıntı
+[UPSTREAM-v0.6.md](UPSTREAM-v0.6.md) bölüm 2'de. Karar `var` kalır.
+
 ### `wf-dock-menu` — Dock bağlam menüsü → **var**
 `NSMenu` / `NSMenuItem`. "Görev Yöneticisi" öğesi macOS'ta Activity Monitor'ü açar
 (`open -a "Activity Monitor"`); "Görev çubuğunu gizle" öğesi Dock ayarına dönüşür.
+
+**v0.6.1 notu:** Menüye "Create group" eklendi (`wf-dock-groups` ile birlikte gelir).
 
 ---
 
@@ -145,6 +179,12 @@ Yüksek yenileme hızı (ProMotion 120 Hz) desteklenir. Windows'taki
 Çok örnekli widget, örnek başına ayar, layout seçimi ve panel açma tamamen kendi
 mimarimiz; platform API'si gerektirmez. `Widgets/WidgetRegistry.cs` birebir
 SwiftUI karşılığına çevrilebilir. Dikey dock'ta kompakt karo da salt düzen işi.
+
+**v0.6.1 notu:** Kayıt defterindeki fark yalnız çeviri. Widget ve varyant
+kimlikleri aynı kaldı, yalnız görünen adlar İngilizceye geçti. Widget'a
+tıklayınca açılan paneller (saat, dünya saati, medya) ve widget başına sağ tık
+menüsü (eylemler, layout, ayarlar) eklendi. Widget'ı sağ uca sabitleme ayrı grup
+(`wf-widget-pin-end`).
 
 ### `wf-widgets-clocks` — Saat widget'ları → **var**
 `Date`, `Calendar`, `TimeZone`, `DateFormatter`; analog kadran SwiftUI `Canvas` veya
@@ -168,6 +208,11 @@ medyasını verir (`Services/MediaService.cs`). macOS'ta:
   (Otomasyon izni gerekir). Tarayıcıda çalan medya bu yolla **kapsanmaz**.
 
 **Sonuç:** kapsam Music + Spotify'a daralır; "tarayıcı, VLC ve dahası" paritesi düşer.
+
+**v0.6.1 notu:** Medya paneline ileri/geri sarma eklendi (`MediaService.SeekAsync`,
+SMTC `TryChangePlaybackPositionAsync`). Music ve Spotify'da `player position`
+AppleScript özelliği yazılabilir, yani sarma Music ve Spotify kapsamında
+karşılanabilir. Albüm kapağı 128'den 512 piksele büyütüldü.
 
 ### `wf-widgets-system` — Sistem widget'ları → **var**
 - CPU: `host_statistics64` / `HOST_CPU_LOAD_INFO`
@@ -211,6 +256,10 @@ klasörlerini kaçırır) veya AppleScript `tell application "Finder" to empty t
 Not: Windows sürümündeki widget açıklaması bu özelliği zaten **"macOS tarzı çöp
 kutusu"** diye tanımlıyor — yani davranış macOS'tan ilham almış, geri taşınması doğal.
 
+**v0.6.1 notu:** Boşaltma artık onay soruyor (`SHEmptyRecycleBin` bayrağı
+`SHERB_NOCONFIRMATION` yerine `0`). macOS'ta boşaltma zaten Finder'a bırakıldığı
+için etkisi yok.
+
 ### `wf-widget-devicebattery` — Aygıt pilleri widget'ı → **uyarla**
 Windows'ta `hid.dll` (`HidD_GetHidGuid`, rapor okuma) ve `setupapi.dll`
 (`SetupDiGetClassDevs`, `SetupDiEnumDeviceInterfaces`) ile HID aygıtları sayılıp
@@ -240,11 +289,25 @@ gerektirdiği için grup bütünüyle `uyarla`.
 SwiftUI `Settings` scene veya ayrı `NSWindow`; önizlemeli galeri salt UI işi.
 Windows'taki Mica pencere efektinin karşılığı `NSVisualEffectView`.
 
+**v0.6.1 notu:** Sayfalar: General, Taskbar, Appearance, Dock items, Widget gallery,
+About. General sayfasına ana ekran seçimi, "tüm ekranlarda göster", "çalışan
+uygulamalar kendi ekranında" ve ekran başına boyut satırları eklendi. Dock items
+ve galeri ayrı dosyalara taşındı (`Settings/SettingsWindow.Items.cs`,
+`SettingsWindow.Gallery.cs`). Widget ayar formları
+`Settings/WidgetSettingsTemplates.xaml` içinde. Global kısayol için ayar satırı
+**yok**, README'nin aksine kısayol kodda sabit.
+
 ### `wf-config` — Yapılandırma ve veri deposu → **var**
 `%AppData%\DockHub` → `~/Library/Application Support/DockHub/`.
 `config.json` ve `session.json` aynı adlarla kullanılabilir; `Codable` ile
 Windows şemasının alan adları korunabilir (`Core/AppConfig.cs` referans şema).
 `DOCKHUB_HOME` ortam değişkeni taşınabilir kullanım için aynen desteklenir.
+
+**v0.6.1 notu:** Şemaya yeni alanlar geldi: `showOnAllDisplays`,
+`runningAppsOnOwnDisplay`, `displaySizes`, ayrıca `DockItem` içinde `Group` türü,
+`pinnedEnd`, `groupName`, `groupAccent`, `children`. Tam liste ve yazma kuralları
+[UPSTREAM-v0.6.md](UPSTREAM-v0.6.md) bölüm 3'te. Karar `var` kalır. Swift modeli
+güncellenene kadar uyum fiilen kırık (`T4-ISKELET`).
 
 ### `wf-single-instance` — Tek örnek ve tema takibi → **var**
 Tek örnek: `Info.plist` içinde `LSMultipleInstancesProhibited` veya
@@ -278,24 +341,19 @@ başkasına dağıtım için Apple Developer hesabı (yıllık ücretli) şart.
 
 ## macOS'ta karşılığı olmayan yetenekler (`yok`)
 
-`pc-kapsam-v1` gereği bu iki yetenek için karar **parite tanımından çıkarma**
-önerisidir; onay kullanıcıya aittir:
+`pc-kapsam-v1` gereği bu iki yetenek **parite tanımından çıkarıldı**. Karar
+kullanıcı tarafından verildi ve `d-yok-cikarma` olarak kayıtlı:
 
 | Yetenek | Neden karşılıksız |
 |---|---|
 | `wf-reserved-space` | macOS'ta `NSScreen.visibleFrame`'i sistem yönetir; üçüncü parti uygulamaya ekran kenarı rezerve etme API'si yok. Pencereler dock'un altına girebilir. |
 | `wf-tray` | `NSStatusBar` yalnız kendi status item'ını verir; başka uygulamaların menü çubuğu öğelerini devralmak/listelemek mümkün değil. |
 
-### Kullanıcıya sorulacak (açık soru)
+### İzin gerektiren kararlar
 
-Bu iki yetenek parite tanımından **çıkarılsın mı**, yoksa aşağıdaki daraltılmış
-karşılıklarla **uyarla** sayılsın mı?
-
-- `wf-reserved-space` → "sistem Dock'u gizlenir, onun alanı kullanılır" (rezervasyon yok)
-- `wf-tray` → "yalnız DockHub'ın kendi menü çubuğu öğesi" (devralma yok)
-
-Ayrıca `uyarla` kararlarının üçü **kullanıcı izni** gerektiriyor ve bu izinler
-reddedilirse ilgili davranış çalışmaz:
+`uyarla` kararlarının üçü **kullanıcı izni** gerektiriyor ve bu izinler
+reddedilirse ilgili davranış çalışmaz. v0.6.1 ile gelen yeni izinler
+[UPSTREAM-v0.6.md](UPSTREAM-v0.6.md) bölüm 5'te.
 
 | Yetenek | Gerekli izin |
 |---|---|
@@ -303,7 +361,15 @@ reddedilirse ilgili davranış çalışmaz:
 | `wf-start-menu`, `wf-search-taskview` | Erişilebilirlik (tuş simülasyonu) |
 | `wf-widget-media` | Otomasyon (Music/Spotify Apple Events) |
 
-## Sonraki adım
+## Arayüz dili
 
-`T2-API-HARITA` görevi bu belgedeki eşleştirmeleri 20 `api_gap` kaydına işler ve
-her birinin `status` değerini `mapped` / `partial` / `none` olarak belirler.
+Upstream v0.4.x'te (`68193d8`) bütün arayüzü İngilizceye çevirdi. README'de artık
+"yalnız İngilizce, tarih ve sayılar sistem yerel ayarını izler" yazıyor. macOS
+sürümünün arayüzü şu an Türkçe. `pc-davranis-v1` görsel birebir aynılık
+istemediği için bu parite kırılması değil. Dil sorusu Orvant kaydında açık
+soru olarak duruyor.
+
+## API eşleştirmesi
+
+`T2-API-HARITA` görevi bu belgedeki eşleştirmeleri `api_gap` kayıtlarına işler
+([API-HARITASI.md](API-HARITASI.md)).

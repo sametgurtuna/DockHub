@@ -120,6 +120,24 @@ Dikkat edilecek üç nokta:
    olduğundan macOS'ta hiçbir etkisi olmaz ama silinmez — aynı dosya Windows'a
    dönerse bilgi kaybolmasın.
 
+4. **Eksik anahtar varsayılanla okunur.** System.Text.Json dosyada olmayan bir
+   alanı sınıftaki başlangıç değeriyle bırakır. Swift'in sentezlediği
+   `init(from:)` ise optional olmayan her alanı zorunlu sayar ve eksikte hata
+   atar. Bu durumda `ConfigService` dosyayı bozuk sayıp varsayılanlara döner.
+   Upstream v0.6.1 üç yeni üst düzey alan getirince (`showOnAllDisplays`,
+   `runningAppsOnOwnDisplay`, `displaySizes`) bu fark gerçek bir risk oldu: eski
+   dosya okunamazdı. Bu yüzden `AppConfig` ve `DockItem` için `init(from:)` elle
+   yazıldı, her alan `decodeIfPresent ?? varsayılan` ile okunuyor. Bilinmeyen enum
+   değeri ise iki tarafta da hata olarak kalıyor (`JsonStringEnumConverter` da
+   atar). Şema farkı her upstream merge'ünden sonra
+   `Scripts/compare-config-schema.py` ile ölçülmeli.
+
+5. **Yazma kuralları alan alan.** `DockItem.pinnedEnd` C#'ta `WhenWritingDefault`
+   taşıyor, yani `false` iken hiç yazılmaz. Grup alanları (`groupName`,
+   `groupAccent`, `children`) `WhenWritingNull`. `displaySizes` boş olsa da `{}`
+   olarak yazılır. `children` iç içe `DockItem` listesi olduğu için Swift
+   yapısı kendini içeriyor (`[DockItem]?`).
+
 Yollar: `~/Library/Application Support/DockHub/config.json` ve `session.json`
 (`ag-config-path`). `DOCKHUB_HOME` geçersiz kılma davranışı `Core/AppPaths.cs`'deki
 gibi korunur. Yazma `Data.write(to:options:.atomic)` ile — C#'taki `.tmp` + taşıma
@@ -190,6 +208,25 @@ daraltılmış uygulamaya ihtiyaç var; `DockHubUI` bu ayrımdan habersiz kalıy
 
 Widget veri modelleri (`AudioDevice`, `TrashState`, `DeviceBattery`)
 `DockHubCore`'a, görünümleri `DockHubUI`'ye gider. Yeni modül gerekmiyor.
+
+## 4c. Upstream v0.6.1 modül sınırlarını bozuyor mu?
+
+Hayır. v0.4.0–v0.6.1 ile gelen dokuz yetenek ([UPSTREAM-v0.6.md](UPSTREAM-v0.6.md))
+aynı dört modüle yerleşiyor:
+
+| Yeni yetenek | macOS modülü | Not |
+|---|---|---|
+| Klasörler | `DockHubCore` (model: `DockItem.children`), `DockHubUI` (kutucuk, açılır ızgara) | Model bu incelemede eklendi. |
+| Sağ kenara sabitleme | `DockHubCore` (`pinnedEnd`), `DockHubUI` (yerleşim) | Model bu incelemede eklendi. |
+| Her ekranda dock | `DockHubCore` (`displaySizes`), `DockHubPlatform` (ekran listesi, pencere-ekran eşlemesi), `DockHubUI` (ekran başına bir `DockPanel`) | `DockPanel` tekil varsayılmamalı. |
+| Pencere önizlemesi | `DockHubPlatform` | ScreenCaptureKit, `partial`. Protokol + izinsiz "yalnız liste" uygulaması. |
+| Rozet sayıları | `DockHubPlatform` | Dock AX ağacı, `partial`. Protokol + izin yoksa boş uygulama. |
+| Jump List | `DockHubPlatform` (Spotlight sorgusu, görev tablosu) | `partial`. |
+| Ağ durumu ikonu | `DockHubPlatform` (`NWPathMonitor`) | izinsiz |
+| Global kısayol | `DockHubPlatform` (Carbon `RegisterEventHotKey`), bağlama `DockHubApp`'te | izinsiz |
+| Dosyayı uygulamaya bırakma | `DockHubUI` (bırakma hedefi), `DockHubPlatform` (`NSWorkspace.open`) | izinsiz |
+
+Üç `partial` yetenek bölüm 2'deki protokol katmanı kuralına uyuyor.
 
 ## 5. T2'den devreden dört konu
 

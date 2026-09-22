@@ -19,6 +19,13 @@ materyalleri koşulsuz kullanılabilir.
 > Upstream `76e0cb9` (v0.3.0) üç yeni çağrı grubu getirdi: Core Audio, HID pil
 > raporu ve Recycle Bin. Üçü de aşağıda ilgili bölümlerde haritalandı.
 
+> **v0.6.1 ile yeniden incelendi.** Yeni gelen çağrılar (DWM küçük resim,
+> `RegisterHotKey`, pencere başlığından rozet, Jump List, ağ türü) yeni yetenek
+> gruplarına ait. Bulguları [UPSTREAM-v0.6.md](UPSTREAM-v0.6.md) içinde. Bu
+> belgedeki 23 eşleştirmenin durumu değişmedi. Beşine not eklendi:
+> `ag-app-icons`, `ag-multi-monitor`, `ag-running-apps`, `ag-media-control`,
+> `ag-trash`.
+
 ---
 
 ## `mapped` — birebir karşılığı olanlar (12)
@@ -35,6 +42,9 @@ materyalleri koşulsuz kullanılabilir.
 - **Windows:** `SHGetFileInfo` / `ExtractIconEx` (`Native/ShellIcons.cs`)
 - **macOS:** `NSWorkspace.shared.icon(forFile:)`, `NSWorkspace.shared.icon(for: UTType)`
 - **Not:** macOS ikonları vektör tabanlı; Windows'taki çoklu çözünürlük seçme derdi yok.
+- **v0.6.1 notu:** Windows artık çalışan pencerelerin ikonunu pencereden de alıyor
+  (`WM_GETICON`, `GetClassLongPtr(GCLP_HICON)`). macOS'ta pencere başına ikon yok,
+  uygulama ikonu `NSRunningApplication.icon` ile izinsiz alınır.
 
 ### `ag-app-launch` — Uygulama başlatma ve pencere eşleştirme
 - **Windows:** `ShellExecuteEx` + AppUserModelId eşleştirme (`Services/AppLauncher.cs`)
@@ -103,6 +113,11 @@ materyalleri koşulsuz kullanılabilir.
 - **Not:** DPI ölçekleme AppKit tarafından otomatik uygulanır. Windows'taki
   `app.manifest` PerMonitorV2 uğraşının macOS'ta karşılığı **gerekmiyor** — bu bir
   sadeleşme, kayıp değil.
+- **v0.6.1 notu:** Artık her ekrana ayrı dock konabiliyor (`wf-multi-display`).
+  Ekran değişimi `NSApplication.didChangeScreenParametersNotification` ile
+  izlenir. Ekran anahtarı `NSScreen.localizedName` olarak kalır. Aynı model iki
+  monitörde aynı adı taşıyabilir, bu durumda ayırt etmek için
+  `deviceDescription["NSScreenNumber"]` (`CGDirectDisplayID`) gerekir.
 
 ### `ag-audio-devices` — Ses aygıtı sayımı ve ses denetimi
 - **Windows:** Core Audio COM — `IMMDeviceEnumerator`, `IMMDevice`,
@@ -162,6 +177,11 @@ materyalleri koşulsuz kullanılabilir.
   Gizlilik ve Güvenlik > Erişilebilirlik). İzin verilmezse yalnız uygulama düzeyinde
   başlatma/öne getirme kalır. Windows'taki "ilerleme çubuğu" ve "dikkat istiyor"
   durumlarının karşılığı **hiç yok**.
+- **v0.6.1 notu:** Windows "görevi sonlandır" için `EndTask` kullanıyor. macOS
+  karşılığı `NSRunningApplication.terminate()` ve `forceTerminate()`, izinsiz.
+  Her ekranda ayrı dock durumunda pencerenin hangi ekranda olduğu
+  `CGWindowListCopyWindowInfo` → `kCGWindowBounds` + `kCGWindowOwnerPID` ile
+  izinsiz bulunur. Yalnız `kCGWindowName` Ekran Kaydı ister.
 
 ### `ag-launcher` — Sistem uygulama başlatıcısını açma
 - **Windows:** `IImmersiveLauncher` (Başlat menüsü), Win+X menüsü
@@ -180,6 +200,9 @@ materyalleri koşulsuz kullanılabilir.
 - **Neden kısmi:** Kapsam Music + Spotify'a daralır. Tarayıcıda (YouTube) ve VLC'de
   çalan medya bu yolla **görülemez**. Bu, envanterde kabul edilmiş tek büyük
   işlevsel daralma.
+- **v0.6.1 notu:** Medya paneline sarma geldi (SMTC `TryChangePlaybackPositionAsync`).
+  Music ve Spotify'ın AppleScript sözlüğünde `player position` yazılabilir bir
+  özellik, yani sarma aynı Otomasyon izniyle karşılanır.
 
 ### `ag-file-manager-verb` — Dosya yöneticisi bağlam menüsü
 - **Windows:** HKCU shell verb kaydı (`Core/ExplorerPinMenu.cs`)
@@ -218,6 +241,10 @@ materyalleri koşulsuz kullanılabilir.
 - **Neden kısmi:** Dört alt davranıştan üçü genel API ile karşılanıyor, boşaltma
   karşılanmıyor. Ayrıca `~/.Trash` dışındaki birim çöp kutuları
   (`/Volumes/X/.Trashes/uid`) ayrıca taranmalı.
+- **v0.6.1 notu:** Windows'ta boşaltma artık onay penceresi gösteriyor
+  (`SHERB_NOCONFIRMATION` kaldırıldı). Bizde boşaltma zaten Finder'a bırakıldığı
+  için etkisi yok. İleride AppleScript ile boşaltma eklenirse onayı kendi
+  `NSAlert`'imizle sormak gerekir.
 
 ### `ag-hid-battery` — HID aygıt pil seviyesi
 - **Windows:** `hid.dll` (`HidD_GetHidGuid`, rapor okuma) + `setupapi.dll`
@@ -265,11 +292,11 @@ ve alternatif kayda geçiyor:
 
 ## Sonuç ve T3'e devreden kararlar
 
-| Konu | Karar gerektiren |
+| Konu | Karar |
 |---|---|
-| Erişilebilirlik izni | Uygulama ilk açılışta mı isteyecek, ilgili özellik kullanılınca mı? |
-| Otomasyon izni | Media widget'ı yalnız Music/Spotify ile mi sunulacak, hiç sunulmayacak mı? |
-| Dock gizleme | Çıkışta kullanıcının Dock ayarı geri yüklenecek (`session.json` karşılığı) — zorunlu. |
-| Dağıtım | Apple Developer hesabı alınacak mı? Alınmazsa yalnız yerel kullanım. |
+| Erişilebilirlik izni | Özellik ilk kullanılınca istenir (`d-izin-zamani`). |
+| Otomasyon izni | Media widget'ı yalnız Music ve Spotify ile sunulur (`d-media-kapsami`). |
+| Dock gizleme | Çıkışta, çökmede ve `--restore-dock` ile geri yüklenir (`d-dock-geri-yukleme`). |
+| Dağıtım | Hâlâ açık soru. Apple Developer hesabı alınmazsa yalnız yerel kullanım. |
 
-Bu dört konu `T3-MIMARI` görevinin girdisidir.
+Bu dört konu `T3-MIMARI` görevinin girdisiydi.

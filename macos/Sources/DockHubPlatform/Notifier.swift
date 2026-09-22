@@ -10,7 +10,7 @@ import DockHubCore
 /// calismaya devam eder, yalniz bildirim gitmez.
 @MainActor
 public enum Notifier {
-    public private(set) static var izinDurumu: String = "sorulmadi"
+    public private(set) static var izinDurumu: String = "not requested"
     public private(set) static var kullanilabilir = false
 
     /// Kategori kimlikleri; eylemli bildirimler icin.
@@ -19,14 +19,14 @@ public enum Notifier {
 
     public static func setup() async {
         guard Bundle.main.bundleIdentifier != nil else {
-            izinDurumu = "paket yok"                   // ciplak ikilide merkez cokuyor
+            izinDurumu = "no app bundle"                   // ciplak ikilide merkez cokuyor
             return
         }
         let center = UNUserNotificationCenter.current()
 
         // Windows'taki "Su ictim" ve "10 dk ertele" dugmelerinin karsiligi
-        let ictim = UNNotificationAction(identifier: "drank", title: "Su içtim", options: [])
-        let ertele = UNNotificationAction(identifier: "snooze", title: "10 dk ertele", options: [])
+        let ictim = UNNotificationAction(identifier: "drank", title: "Drank ✓", options: [])
+        let ertele = UNNotificationAction(identifier: "snooze", title: "Snooze 10m", options: [])
         center.setNotificationCategories([
             UNNotificationCategory(identifier: hydrationCategory, actions: [ictim],
                                    intentIdentifiers: [], options: []),
@@ -40,7 +40,7 @@ public enum Notifier {
             izinDurumu = ok ? "verildi" : "reddedildi"
         } catch {
             kullanilabilir = false
-            izinDurumu = "hata: \(error.localizedDescription)"
+            izinDurumu = "error: \(error.localizedDescription)"
             Log.error("Bildirim izni alinamadi", error)
         }
     }

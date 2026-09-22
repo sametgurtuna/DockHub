@@ -25,18 +25,29 @@ public struct WeatherReading: Sendable {
     }
 
     public var description: String {
+        // Windows karsiligi: Services/WeatherService.cs DescribeCode (birebir).
         switch weatherCode {
-        case 0:            "Açık"
-        case 1, 2:         "Parçalı bulutlu"
-        case 3:            "Kapalı"
-        case 45, 48:       "Sisli"
-        case 51...57:      "Çiseliyor"
-        case 61...67:      "Yağmurlu"
-        case 71...77:      "Karlı"
-        case 80...82:      "Sağanak"
-        case 85, 86:       "Kar sağanağı"
-        case 95...99:      "Gök gürültülü"
-        default:           "Bilinmiyor"
+        case 0:            "Clear sky"
+        case 1:            "Mainly clear"
+        case 2:            "Partly cloudy"
+        case 3:            "Overcast"
+        case 45, 48:       "Fog"
+        case 51, 53, 55:   "Drizzle"
+        case 56, 57:       "Freezing drizzle"
+        case 61:           "Slight rain"
+        case 63:           "Moderate rain"
+        case 65:           "Heavy rain"
+        case 66, 67:       "Freezing rain"
+        case 71:           "Slight snow"
+        case 73:           "Moderate snow"
+        case 75:           "Heavy snow"
+        case 77:           "Snow grains"
+        case 80, 81:       "Rain showers"
+        case 82:           "Violent rain showers"
+        case 85, 86:       "Snow showers"
+        case 95:           "Thunderstorm"
+        case 96, 99:       "Thunderstorm with hail"
+        default:           "—"
         }
     }
 }

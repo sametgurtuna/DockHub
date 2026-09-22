@@ -30,7 +30,7 @@ struct ShortcutWidget: View {
                 .foregroundStyle(renk)
                 .symbolEffect(.pulse, isActive: durum == .calisiyor)
             VStack(alignment: .leading, spacing: 0) {
-                Text(ad ?? "Kısayol seçilmedi")
+                Text(ad ?? "No shortcut selected")
                     .font(.system(size: style.height * 0.2, weight: .medium))
                     .lineLimit(1)
                 if case .hata(let m) = durum {
@@ -42,7 +42,7 @@ struct ShortcutWidget: View {
         }
         .contentShape(Rectangle())
         .onTapGesture { calistir() }
-        .help(ad.map { "Tıkla: \($0) kısayolunu çalıştır" } ?? "Ayarlardan bir kısayol adı verin")
+        .help(ad.map { "Click to run \($0)" } ?? "Set a shortcut name in the widget settings")
     }
 
     private var gosterilenIkon: String {
@@ -62,16 +62,16 @@ struct ShortcutWidget: View {
     }
 
     private func calistir() {
-        guard let ad else { durum = .hata("ad yok"); return }
-        guard ShortcutsService.kullanilabilir else { durum = .hata("Kısayollar yok"); return }
+        guard let ad else { durum = .hata("no name"); return }
+        guard ShortcutsService.kullanilabilir else { durum = .hata("Shortcuts unavailable"); return }
         durum = .calisiyor
         Task.detached {
             let s = ShortcutsService.run(ad)
             await MainActor.run {
                 switch s {
                 case .calisti:      durum = .bitti
-                case .bulunamadi:   durum = .hata("CLI yok")
-                case .zamanAsimi:   durum = .hata("zaman aşımı")
+                case .bulunamadi:   durum = .hata("CLI not found")
+                case .zamanAsimi:   durum = .hata("timed out")
                 case .hata(let m):  durum = .hata(String(m.prefix(30)))
                 }
             }
@@ -108,7 +108,7 @@ struct AirDropWidget: View {
             Task { @MainActor in gonder(providers) }
             return true
         }
-        .help("Dosya, fotoğraf veya bağlantıyı buraya bırakın; alıcıyı siz seçersiniz")
+        .help("Drop files, photos or links here; you choose the recipient")
     }
 
     private func gonder(_ providers: [NSItemProvider]) {
@@ -124,8 +124,8 @@ struct AirDropWidget: View {
         grup.notify(queue: .main) {
             guard !urls.isEmpty else { return }
             mesaj = AirDropService.send(urls)
-                ? "\(urls.count) dosya gönderiliyor"
-                : "AirDrop kullanılamıyor"
+                ? "Sending \(urls.count) file(s)"
+                : "AirDrop is unavailable"
             Task { @MainActor in
                 try? await Task.sleep(for: .seconds(4))
                 mesaj = nil

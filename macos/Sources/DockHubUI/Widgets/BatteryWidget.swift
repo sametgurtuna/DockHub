@@ -38,7 +38,7 @@ struct BatteryWidget: View {
     private var yok: some View {
         HStack(spacing: 4) {
             Image(systemName: "powerplug.fill")
-            Text("Pil yok").font(.system(size: style.height * 0.18))
+            Text("No battery").font(.system(size: style.height * 0.18))
         }
         .foregroundStyle(.secondary)
     }

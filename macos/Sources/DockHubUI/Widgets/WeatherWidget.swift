@@ -25,7 +25,7 @@ public final class WeatherStore: ObservableObject {
     private func yenile() {
         guard let lat, let lon else {
             // UYDURMA DEGER YOK: konum yoksa durum acikca bildirilir.
-            hata = "Konum ayarlanmamış"
+            hata = "Location not set"
             return
         }
         Task { @MainActor in
@@ -33,12 +33,12 @@ public final class WeatherStore: ObservableObject {
                 reading = try await WeatherService.fetch(latitude: lat, longitude: lon, place: place)
                 hata = nil
             } catch WeatherError.noLocation {
-                hata = "Konum yok"
+                hata = "Location disabled"
             } catch WeatherError.network(let m) {
-                hata = "Ağ hatası"
+                hata = "No connection"
                 Log.error("Hava durumu alinamadi: \(m)")
             } catch {
-                hata = "Veri okunamadı"
+                hata = "Failed to get weather data"
             }
         }
     }
@@ -54,7 +54,7 @@ struct WeatherWidget: View {
     var body: some View {
         Group {
             if let r = store.reading { icerik(r) }
-            else { bilgiYok(store.hata ?? "Yükleniyor…") }
+            else { bilgiYok(store.hata ?? "Loading…") }
         }
         .onAppear {
             let lat = item.setting("latitude").flatMap { if case .number(let v) = $0 { v } else { nil } }

@@ -16,8 +16,8 @@ enum DockLifecycle {
     static func handleRestoreArgument() -> Bool {
         guard CommandLine.arguments.contains("--restore-dock") else { return false }
         let geri = SystemDock.restore()
-        print(geri ? "Sistem Dock ayari geri yuklendi."
-                   : "Geri yuklenecek kayit yok (session.json bos veya biz hic degistirmedik).")
+        print(geri ? "macOS Dock setting restored."
+                   : "Nothing to restore (session.json is empty or DockHub never changed the setting).")
         return true
     }
 

@@ -28,7 +28,7 @@ struct WorldClockWidget: View {
         if list.isEmpty {
             HStack(spacing: 4) {
                 Image(systemName: "globe")
-                Text("Şehir eklenmemiş").font(.system(size: style.height * 0.17))
+                Text("No cities added").font(.system(size: style.height * 0.17))
             }.foregroundStyle(.secondary)
         } else {
             TimelineView(.periodic(from: .now, by: 30)) { ctx in
@@ -99,10 +99,10 @@ struct TimeProgressWidget: View {
 
     private var etiket: String {
         switch scope {
-        case "week": "Hafta"
-        case "month": "Ay"
-        case "year": "Yıl"
-        default: "Gün"
+        case "week": "Week"
+        case "month": "Month"
+        case "year": "Year"
+        default: "Day"
         }
     }
 
@@ -111,7 +111,7 @@ struct TimeProgressWidget: View {
             HStack(spacing: 4) {
                 Text(etiket).font(.system(size: style.height * 0.17, weight: .semibold))
                     .foregroundStyle(.secondary)
-                Text("%\(Int((p * 100).rounded()))")
+                Text("\(Int((p * 100).rounded()))%")
                     .font(.system(size: style.height * 0.19, weight: .medium)).monospacedDigit()
             }
             GeometryReader { geo in

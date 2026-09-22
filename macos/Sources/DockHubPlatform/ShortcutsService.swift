@@ -59,7 +59,7 @@ public enum ShortcutsService {
         if p.terminationStatus == 0 { return .calisti }
         let metin = String(data: err.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
         return .hata(metin.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                     ? "çıkış kodu \(p.terminationStatus)" : metin)
+                     ? "exit code \(p.terminationStatus)" : metin)
     }
 }
 

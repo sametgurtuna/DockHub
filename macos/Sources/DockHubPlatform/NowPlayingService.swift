@@ -48,7 +48,7 @@ public enum NowPlayingService {
             if let hata {
                 // -1743 = kullanici Otomasyon iznini vermedi
                 izinHatasi = (hata["NSAppleScriptErrorBriefMessage"] as? String)
-                    ?? "AppleScript hatası"
+                    ?? "AppleScript error"
                 continue
             }
             guard let metin = sonuc?.stringValue, !metin.isEmpty else { continue }

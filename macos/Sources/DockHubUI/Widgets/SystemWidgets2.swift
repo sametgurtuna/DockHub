@@ -91,7 +91,7 @@ struct StatusWidget: View {
     private var olculer: [Olcu] {
         var l: [Olcu] = []
         if bat.state.hasBattery {
-            l.append(Olcu(ad: "PIL", deger: Double(bat.state.percent),
+            l.append(Olcu(ad: "BAT", deger: Double(bat.state.percent),
                           renk: bat.state.percent <= 20 ? .red : .green))
         }
         l.append(Olcu(ad: "DSK", deger: disk, renk: .purple))
@@ -125,7 +125,7 @@ struct StatusWidget: View {
             Text(o.ad).font(.system(size: d * 0.24, weight: .bold)).foregroundStyle(.secondary)
         }
         .frame(width: d, height: d)
-        .help("\(o.ad): %\(Int(o.deger.rounded()))")
+        .help("\(o.ad): \(Int(o.deger.rounded()))%")
     }
 
     private func yuzde(_ o: Olcu) -> some View {
@@ -197,9 +197,9 @@ struct AudioWidget: View {
                     .frame(width: style.itemHeight * 1.6)
             } else {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text("%\(Int((store.seviye * 100).rounded()))")
+                    Text("\(Int((store.seviye * 100).rounded()))%")
                         .font(.system(size: style.height * 0.22, weight: .semibold)).monospacedDigit()
-                    Text(aktif?.name ?? "Aygıt yok")
+                    Text(aktif?.name ?? "No device")
                         .font(.system(size: style.height * 0.14))
                         .foregroundStyle(.secondary).lineLimit(1)
                         .frame(maxWidth: style.itemHeight * 1.6, alignment: .leading)
@@ -214,7 +214,7 @@ struct AudioWidget: View {
                 }
             }
         }
-        .help(aktif.map { "Çıkış: \($0.name)" } ?? "Çıkış aygıtı yok")
+        .help(aktif.map { "Output: \($0.name)" } ?? "No output device")
     }
 
     private var ikon: String {
@@ -256,7 +256,7 @@ struct DeviceBatteryWidget: View {
             if store.cihazlar.isEmpty {
                 HStack(spacing: 4) {
                     Image(systemName: "keyboard").font(.system(size: style.iconSize * 0.5))
-                    Text("Pilli cihaz yok").font(.system(size: style.height * 0.16))
+                    Text("No battery devices").font(.system(size: style.height * 0.16))
                 }.foregroundStyle(.secondary)
             } else {
                 let g = item.effectiveVariant == "single"
@@ -273,7 +273,7 @@ struct DeviceBatteryWidget: View {
                 .font(.system(size: style.height * 0.2))
                 .foregroundStyle(c.percent <= 20 ? .red : .primary)
             VStack(alignment: .leading, spacing: 0) {
-                Text("%\(c.percent)")
+                Text("\(c.percent)%")
                     .font(.system(size: style.height * 0.2, weight: .semibold)).monospacedDigit()
                 Text(c.name).font(.system(size: style.height * 0.13))
                     .foregroundStyle(.secondary).lineLimit(1)

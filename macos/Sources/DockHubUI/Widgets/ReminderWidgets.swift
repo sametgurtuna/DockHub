@@ -45,9 +45,9 @@ struct HydrationWidget: View {
         }
         .contentShape(Rectangle())
         .onTapGesture { ekle() }
-        .contextMenu { Button("Sıfırla") { model.setSetting(item.id, "count", .number(0)) } }
+        .contextMenu { Button("Reset today") { model.setSetting(item.id, "count", .number(0)) } }
         .onAppear { gunKontrol() }
-        .help("Tıkla: bir bardak ekle")
+        .help("Click to add a glass")
     }
 
     /// Gun degistiyse sayaci sifirla. Windows surumu de gunluk sayiyor.
@@ -64,7 +64,7 @@ struct HydrationWidget: View {
         let yeni = sayac + 1
         model.setSetting(item.id, "count", .number(Double(yeni)))
         if yeni == hedef {
-            Notifier.gonder(baslik: "Günlük su hedefi", metin: "\(hedef) bardak tamamlandı.")
+            Notifier.gonder(baslik: "Daily water goal", metin: "\(hedef) glasses done.")
         }
     }
 }
@@ -101,7 +101,7 @@ struct RemindersWidget: View {
             if l.isEmpty {
                 HStack(spacing: 4) {
                     Image(systemName: "bell.slash")
-                    Text("Hatırlatıcı yok").font(.system(size: style.height * 0.17))
+                    Text("No reminders").font(.system(size: style.height * 0.17))
                 }.foregroundStyle(.secondary)
             } else {
                 switch item.effectiveVariant {
@@ -131,7 +131,7 @@ struct RemindersWidget: View {
                 }
             }
             if l.count > 2 {
-                Text("+\(l.count - 2) daha")
+                Text("+\(l.count - 2) more")
                     .font(.system(size: style.height * 0.14)).foregroundStyle(.tertiary)
             }
         }
@@ -155,7 +155,7 @@ struct RemindersWidget: View {
         planlandi = true
         for (i, h) in l.enumerated() {
             Notifier.planlaSaat(saat: h.hour, dakika: h.minute, tekrar: true,
-                                baslik: "Hatırlatıcı", metin: h.text,
+                                baslik: "Reminder", metin: h.text,
                                 id: "\(item.id)-\(i)")
         }
     }
@@ -191,7 +191,7 @@ struct StickyNoteWidget: View {
             Image(systemName: "note.text")
                 .font(.system(size: style.iconSize * 0.55))
                 .foregroundStyle(renk)
-            Text(metin.isEmpty ? "Not ekle" : metin)
+            Text(metin.isEmpty ? "Add a note" : metin)
                 .font(.system(size: style.height * 0.19))
                 .foregroundStyle(metin.isEmpty ? .secondary : .primary)
                 .lineLimit(2)
@@ -204,14 +204,14 @@ struct StickyNoteWidget: View {
 
     private var duzenleyici: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Yapışkan not").font(.headline)
+            Text("Sticky note").font(.headline)
             TextEditor(text: $taslak)
                 .font(.system(size: 13))
                 .frame(width: 260, height: 140)
                 .overlay(RoundedRectangle(cornerRadius: 6).stroke(renk.opacity(0.5), lineWidth: 2))
             HStack {
                 Spacer()
-                Button("Kaydet") {
+                Button("Save") {
                     model.setSetting(item.id, "text", .string(taslak))
                     aciliyor = false
                 }.keyboardShortcut(.defaultAction)

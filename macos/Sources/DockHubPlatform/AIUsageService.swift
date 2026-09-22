@@ -51,11 +51,11 @@ public enum AIUsageService {
 
         let bitis = Date().addingTimeInterval(timeout)
         while p.isRunning && Date() < bitis { usleep(100_000) }
-        if p.isRunning { p.terminate(); return .okunamadi("zaman asimi") }
+        if p.isRunning { p.terminate(); return .okunamadi("timed out") }
 
         let metin = String(data: pipe.fileHandleForReading.readDataToEndOfFile(),
                            encoding: .utf8) ?? ""
-        guard let u = parse(metin) else { return .okunamadi("cikti ayristirilamadi") }
+        guard let u = parse(metin) else { return .okunamadi("could not parse output") }
         return .veri(u)
     }
 

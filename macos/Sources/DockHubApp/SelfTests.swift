@@ -37,14 +37,15 @@ enum SelfTests {
     /// Fare olayi disinda her sey ayni akis.
     private static func activate(_ hedef: String, panel: DockPanel) async {
         try? await Task.sleep(for: .milliseconds(400))
+        func ad(_ i: DockItem) -> String { i.name ?? i.path.map(AppCatalog.displayName(forAppAt:)) ?? "" }
         guard let item = panel.model.items.first(where: {
-            ($0.name ?? "").localizedCaseInsensitiveContains(hedef)
+            $0.kind == .app && ad($0).localizedCaseInsensitiveContains(hedef)
         }) else {
             print("BULUNAMADI: \(hedef)"); NSApp.terminate(nil); return
         }
         let onceCalisiyor = item.path.map { panel.model.runningPaths.contains($0) } ?? false
         print("--- Tiklama testi ---")
-        print("  hedef            : \(item.name ?? "-")  (\(item.path ?? "-"))")
+        print("  hedef            : \(ad(item))  (\(item.path ?? "-"))")
         print("  once calisiyor mu: \(onceCalisiyor)")
         panel.model.activate(item)               // tiklamanin cagirdigi ayni fonksiyon
         try? await Task.sleep(for: .seconds(3))
@@ -132,7 +133,7 @@ enum SelfTests {
         for i in panel.model.items {
             let running = i.path.map { panel.model.runningPaths.contains($0) } ?? false
             print("      \(i.kind.rawValue.padding(toLength: 10, withPad: " ", startingAt: 0)) "
-                  + "\((i.name ?? i.widget ?? "-").padding(toLength: 18, withPad: " ", startingAt: 0)) "
+                  + "\((i.name ?? i.widget ?? i.path.map(AppCatalog.displayName(forAppAt:)) ?? "-").padding(toLength: 18, withPad: " ", startingAt: 0)) "
                   + "\(running ? "[calisiyor]" : "")")
         }
         // Widget kopyalari ve kendi ayarlari (ayni widget'in iki kopyasi ayri ayar tasir)

@@ -97,9 +97,9 @@ public final class DockPanel {
 
         // Asgari cikis yolu (tam wf-dock-menu sonraki gorevin isi)
         let menu = NSMenu()
-        menu.addItem(withTitle: "DockHub — iskelet sürüm", action: nil, keyEquivalent: "").isEnabled = false
+        menu.addItem(withTitle: "DockHub", action: nil, keyEquivalent: "").isEnabled = false
         menu.addItem(.separator())
-        let quit = NSMenuItem(title: "DockHub'dan Çık",
+        let quit = NSMenuItem(title: "Quit DockHub",
                               action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         quit.target = NSApp
         menu.addItem(quit)

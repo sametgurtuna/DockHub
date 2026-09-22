@@ -42,6 +42,38 @@ final class WidgetRegistryTests: XCTestCase {
         }
     }
 
+    /// Gorunen adlar Windows v0.6.1'deki Ingilizce metinlerle ayni (d-arayuz-dili):
+    /// kimlik -> (ad, kategori, [varyant adlari], eksik varyantlar haric).
+    func testAdlarWindowsIleAyni() throws {
+        let beklenen: [String: (String, String, [String])] = [
+            "clock": ("Clock", "Clocks", ["Analog", "Digital"]),
+            "world-clock": ("World clock", "Clocks", ["Single city", "Multiple cities"]),
+            "stopwatch": ("Stopwatch", "Clocks", ["Stopwatch"]),
+            "focus": ("Focus timer", "Clocks", ["Focus timer"]),
+            "countdown": ("Countdown", "Clocks", ["Countdown"]),
+            "alarm": ("Alarm", "Clocks", ["Alarm"]),
+            "time-progress": ("Time progress", "Clocks", ["Bar", "Ring"]),
+            "hydration": ("Hydration", "Reminders", ["Timer", "Daily goal"]),
+            "reminders": ("Reminders", "Reminders", ["List", "Next", "Count"]),
+            "notes": ("Sticky note", "Sticky notes", ["Sticky note"]),
+            "media": ("Now playing", "Media", ["Full", "Compact", "Mini"]),
+            "system": ("CPU and memory", "System", ["Numbers", "Rings"]),
+            "network": ("Network speed", "System", ["Numbers only", "Chart"]),
+            "status": ("Status", "System", ["Rings", "Percentage ring"]),
+            "weather": ("Weather", "Weather", ["Current", "Conditions"]),
+            "ai-usage": ("AI usage", "AI", ["Rings", "Bars"]),
+            "audio": ("Audio device", "Media", ["Compact", "Slider"]),
+            "recycle-bin": ("Recycle bin", "System", ["Icon only", "Detailed"]),
+            "battery-devices": ("Device batteries", "System", ["Single device", "Multiple devices"]),
+        ]
+        for (id, (ad, kategori, varyantlar)) in beklenen {
+            let t = try XCTUnwrap(WidgetRegistry.find(id))
+            XCTAssertEqual(t.name, ad, id)
+            XCTAssertEqual(t.category, kategori, id)
+            XCTAssertEqual(t.variants.map(\.name), varyantlar, id)
+        }
+    }
+
     /// Varsayilan varyant Windows'taki ilk varyantla ayni (eksik olan haric).
     func testVarsayilanVaryantWindowsIleAyni() {
         for (id, v) in windows where !eksik.contains("\(id)/\(v[0])") {
@@ -79,6 +111,25 @@ final class WidgetRegistryTests: XCTestCase {
     func testWindowsConfigineDokunulmaz() {
         let win = windows.flatMap { id, vs in vs.map { DockItem(kind: .widget, widget: id, variant: $0) } }
         XCTAssertFalse(WidgetRegistry.migrateLegacyIds(win).changed)
+    }
+
+    /// Varsayilan uygulamalarin eski Turkce adlari yalniz ayni yol + ayni adla
+    /// eslesirse silinir; kullanicinin verdigi ad ve baska yoldaki ayni ad korunur.
+    func testEskiVarsayilanAdlarTemizlenir() {
+        let items: [DockItem] = [
+            .app("/System/Applications/Notes.app", name: "Notlar"),
+            .app("/System/Applications/Music.app", name: "Benim müziğim"),
+            .app("/Applications/Notlar.app", name: "Notlar"),
+            .group("K", children: [.app("/System/Applications/System Settings.app", name: "Sistem Ayarları")]),
+        ]
+        let (yeni, degisti) = DefaultItems.migrateLegacyNames(items)
+        XCTAssertTrue(degisti)
+        XCTAssertNil(yeni[0].name)
+        XCTAssertEqual(yeni[1].name, "Benim müziğim")
+        XCTAssertEqual(yeni[2].name, "Notlar")
+        XCTAssertNil(yeni[3].children?.first?.name)
+        XCTAssertFalse(DefaultItems.migrateLegacyNames(yeni).changed)
+        XCTAssertTrue(DefaultItems.build { _ in true }.allSatisfy { $0.name == nil }, "varsayilanlar ad yazmaz")
     }
 
     /// ConfigService eski kimlikli dosyayi yuklerken tasir ve bir kez yazar.

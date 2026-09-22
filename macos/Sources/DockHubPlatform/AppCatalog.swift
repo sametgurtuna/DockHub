@@ -13,6 +13,13 @@ public enum AppCatalog {
         return NSWorkspace.shared.icon(forFile: path)
     }
 
+    /// Sistem dilinde gorunen uygulama adi (".app" olmadan). DockItem.name
+    /// bos oldugunda kullanilir; Windows'ta da bos ad uygulamanin adina duser.
+    public static func displayName(forAppAt path: String) -> String {
+        let ad = FileManager.default.displayName(atPath: path)
+        return ad.hasSuffix(".app") ? String(ad.dropLast(4)) : ad
+    }
+
     /// Paketin bundle kimligi. Calisan uygulamayla eslestirmede kullanilir;
     /// Windows'taki AppUserModelId eslestirmesinden daha guvenilir.
     public static func bundleIdentifier(forAppAt path: String) -> String? {

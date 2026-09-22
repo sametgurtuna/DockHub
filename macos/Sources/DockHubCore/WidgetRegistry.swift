@@ -18,84 +18,84 @@ public struct WidgetDefinition: Sendable, Identifiable {
 /// Widget kayit defteri. Windows karsiligi: Widgets/WidgetRegistry.cs
 /// Gorunum ureticisi burada DEGIL DockHubUI tarafinda; bu katman AppKit bilmez.
 ///
-/// Kimlikler ve varyant kimlikleri Windows v0.6.1 ile AYNI; config.json iki
+/// Kimlikler, varyant kimlikleri ve gorunen adlar (d-arayuz-dili) Windows v0.6.1 ile AYNI; config.json iki
 /// platformda okunabilsin diye (MIMARI.md bolum 3). Ilk varyant varsayilandir,
 /// sira da Windows'la ayni. Windows'ta olup bizde henuz cizilmeyen varyantlar
 /// (clock/calendar, system/bars, status/icons, weather/hourly, ai-usage/numbers)
 /// listeye konmadi; eksikler docs/WIDGET-SEMASI.md'de.
 public enum WidgetRegistry {
     public static let all: [WidgetDefinition] = [
-        // ---- Saatler (Windows: Clocks)
-        WidgetDefinition(id: "clock", name: "Saat", category: "Saatler",
+        // ---- Clocks
+        WidgetDefinition(id: "clock", name: "Clock", category: "Clocks",
                          variants: [WidgetVariant("analog", "Analog"),
-                                    WidgetVariant("digital", "Dijital")]),
-        WidgetDefinition(id: "world-clock", name: "Dünya saati", category: "Saatler",
-                         variants: [WidgetVariant("single", "Tek şehir"),
-                                    WidgetVariant("multi", "Çoklu şehir")]),
-        WidgetDefinition(id: "stopwatch", name: "Kronometre", category: "Saatler",
-                         variants: [WidgetVariant("default", "Kronometre")]),
-        WidgetDefinition(id: "focus", name: "Odak zamanlayıcı", category: "Saatler",
-                         variants: [WidgetVariant("default", "Odak zamanlayıcı")]),
-        WidgetDefinition(id: "countdown", name: "Geri sayım", category: "Saatler",
-                         variants: [WidgetVariant("default", "Geri sayım")]),
-        WidgetDefinition(id: "alarm", name: "Alarm", category: "Saatler",
+                                    WidgetVariant("digital", "Digital")]),
+        WidgetDefinition(id: "world-clock", name: "World clock", category: "Clocks",
+                         variants: [WidgetVariant("single", "Single city"),
+                                    WidgetVariant("multi", "Multiple cities")]),
+        WidgetDefinition(id: "stopwatch", name: "Stopwatch", category: "Clocks",
+                         variants: [WidgetVariant("default", "Stopwatch")]),
+        WidgetDefinition(id: "focus", name: "Focus timer", category: "Clocks",
+                         variants: [WidgetVariant("default", "Focus timer")]),
+        WidgetDefinition(id: "countdown", name: "Countdown", category: "Clocks",
+                         variants: [WidgetVariant("default", "Countdown")]),
+        WidgetDefinition(id: "alarm", name: "Alarm", category: "Clocks",
                          variants: [WidgetVariant("default", "Alarm")]),
-        WidgetDefinition(id: "time-progress", name: "Zaman ilerlemesi", category: "Saatler",
-                         variants: [WidgetVariant("bar", "Çubuk"),
-                                    WidgetVariant("ring", "Halka")]),
-        // ---- Hatirlaticilar (Windows: Reminders)
-        WidgetDefinition(id: "hydration", name: "Su takibi", category: "Hatırlatıcılar",
-                         variants: [WidgetVariant("timer", "Zamanlayıcı"),
-                                    WidgetVariant("progress", "Günlük hedef")]),
-        WidgetDefinition(id: "reminders", name: "Hatırlatıcılar", category: "Hatırlatıcılar",
-                         variants: [WidgetVariant("list", "Liste"),
-                                    WidgetVariant("next", "Sıradaki"),
-                                    WidgetVariant("count", "Sayı")]),
-        // ---- Yapiskan notlar (Windows: Sticky notes)
-        WidgetDefinition(id: "notes", name: "Yapışkan not", category: "Yapışkan notlar",
-                         variants: [WidgetVariant("sticky", "Yapışkan not")]),
-        // ---- Medya (Windows: Media)
-        WidgetDefinition(id: "media", name: "Çalan medya", category: "Medya",
-                         variants: [WidgetVariant("full", "Tam"),
-                                    WidgetVariant("compact", "Kompakt"),
+        WidgetDefinition(id: "time-progress", name: "Time progress", category: "Clocks",
+                         variants: [WidgetVariant("bar", "Bar"),
+                                    WidgetVariant("ring", "Ring")]),
+        // ---- Reminders
+        WidgetDefinition(id: "hydration", name: "Hydration", category: "Reminders",
+                         variants: [WidgetVariant("timer", "Timer"),
+                                    WidgetVariant("progress", "Daily goal")]),
+        WidgetDefinition(id: "reminders", name: "Reminders", category: "Reminders",
+                         variants: [WidgetVariant("list", "List"),
+                                    WidgetVariant("next", "Next"),
+                                    WidgetVariant("count", "Count")]),
+        // ---- Sticky notes
+        WidgetDefinition(id: "notes", name: "Sticky note", category: "Sticky notes",
+                         variants: [WidgetVariant("sticky", "Sticky note")]),
+        // ---- Media
+        WidgetDefinition(id: "media", name: "Now playing", category: "Media",
+                         variants: [WidgetVariant("full", "Full"),
+                                    WidgetVariant("compact", "Compact"),
                                     WidgetVariant("mini", "Mini")]),
-        WidgetDefinition(id: "audio", name: "Ses aygıtı", category: "Medya",
-                         variants: [WidgetVariant("compact", "Kompakt"),
-                                    WidgetVariant("slider", "Çubuklu")]),
-        // ---- Sistem (Windows: System)
-        WidgetDefinition(id: "system", name: "İşlemci ve bellek", category: "Sistem",
-                         variants: [WidgetVariant("numbers", "Sayılar"),
-                                    WidgetVariant("rings", "Halkalar")]),
-        WidgetDefinition(id: "network", name: "Ağ hızı", category: "Sistem",
-                         variants: [WidgetVariant("numbers", "Yalnızca sayılar"),
-                                    WidgetVariant("chart", "Grafikli")]),
-        WidgetDefinition(id: "status", name: "Durum", category: "Sistem",
-                         variants: [WidgetVariant("rings", "Halkalar"),
-                                    WidgetVariant("percent", "Yüzde halkası")]),
-        WidgetDefinition(id: "recycle-bin", name: "Çöp kutusu", category: "Sistem",
-                         variants: [WidgetVariant("icon", "Yalnızca ikon"),
-                                    WidgetVariant("details", "Detaylı")]),
-        WidgetDefinition(id: "battery-devices", name: "Aygıt pilleri", category: "Sistem",
-                         variants: [WidgetVariant("single", "Tek aygıt"),
-                                    WidgetVariant("multi", "Çoklu aygıt")]),
-        // ---- Hava durumu (Windows: Weather)
-        WidgetDefinition(id: "weather", name: "Hava durumu", category: "Hava durumu",
-                         variants: [WidgetVariant("current", "Anlık"),
-                                    WidgetVariant("conditions", "Durum")]),
-        // ---- Yapay zeka (Windows: AI)
-        WidgetDefinition(id: "ai-usage", name: "AI kullanımı", category: "Yapay zeka",
-                         variants: [WidgetVariant("rings", "Halkalar"),
-                                    WidgetVariant("bars", "Çubuklar")]),
+        WidgetDefinition(id: "audio", name: "Audio device", category: "Media",
+                         variants: [WidgetVariant("compact", "Compact"),
+                                    WidgetVariant("slider", "Slider")]),
+        // ---- System
+        WidgetDefinition(id: "system", name: "CPU and memory", category: "System",
+                         variants: [WidgetVariant("numbers", "Numbers"),
+                                    WidgetVariant("rings", "Rings")]),
+        WidgetDefinition(id: "network", name: "Network speed", category: "System",
+                         variants: [WidgetVariant("numbers", "Numbers only"),
+                                    WidgetVariant("chart", "Chart")]),
+        WidgetDefinition(id: "status", name: "Status", category: "System",
+                         variants: [WidgetVariant("rings", "Rings"),
+                                    WidgetVariant("percent", "Percentage ring")]),
+        WidgetDefinition(id: "recycle-bin", name: "Recycle bin", category: "System",
+                         variants: [WidgetVariant("icon", "Icon only"),
+                                    WidgetVariant("details", "Detailed")]),
+        WidgetDefinition(id: "battery-devices", name: "Device batteries", category: "System",
+                         variants: [WidgetVariant("single", "Single device"),
+                                    WidgetVariant("multi", "Multiple devices")]),
+        // ---- Weather
+        WidgetDefinition(id: "weather", name: "Weather", category: "Weather",
+                         variants: [WidgetVariant("current", "Current"),
+                                    WidgetVariant("conditions", "Conditions")]),
+        // ---- AI
+        WidgetDefinition(id: "ai-usage", name: "AI usage", category: "AI",
+                         variants: [WidgetVariant("rings", "Rings"),
+                                    WidgetVariant("bars", "Bars")]),
         // ---- macOS'a ozgu: Windows kayit defterinde karsiliklari yok.
         // "battery" Windows'ta Durum widget'inin bir halkasi; burada ayri widget.
-        WidgetDefinition(id: "battery", name: "Pil", category: "Sistem",
-                         variants: [WidgetVariant("percent", "Yüzde"),
-                                    WidgetVariant("icon", "Yalnızca ikon")]),
-        WidgetDefinition(id: "shortcut", name: "Kısayol", category: "Ekler",
-                         variants: [WidgetVariant("single", "Tek")]),
-        WidgetDefinition(id: "airdrop", name: "AirDrop", category: "Ekler",
-                         variants: [WidgetVariant("full", "Tam"),
-                                    WidgetVariant("icon", "Yalnızca ikon")]),
+        WidgetDefinition(id: "battery", name: "Battery", category: "System",
+                         variants: [WidgetVariant("percent", "Percentage"),
+                                    WidgetVariant("icon", "Icon only")]),
+        WidgetDefinition(id: "shortcut", name: "Shortcut", category: "Extras",
+                         variants: [WidgetVariant("single", "Shortcut")]),
+        WidgetDefinition(id: "airdrop", name: "AirDrop", category: "Extras",
+                         variants: [WidgetVariant("full", "Full"),
+                                    WidgetVariant("icon", "Icon only")]),
     ]
 
     public static func find(_ id: String?) -> WidgetDefinition? {

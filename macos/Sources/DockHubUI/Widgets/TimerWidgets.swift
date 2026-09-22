@@ -40,7 +40,7 @@ struct StopwatchWidget: View {
         }
         .contentShape(Rectangle())
         .onTapGesture { store.toggle(item.id) }
-        .contextMenu { Button("Sıfırla") { store.reset(item.id) } }
+        .contextMenu { Button("Reset") { store.reset(item.id) } }
     }
 }
 
@@ -55,7 +55,7 @@ struct CountdownWidget: View {
     private var toplam: TimeInterval { item.numberSetting("minutes", default: 5) * 60 }
     private var etiket: String {
         if case .string(let s)? = item.setting("label") { return s }
-        return "Geri sayım"
+        return "Countdown"
     }
 
     var body: some View {
@@ -69,7 +69,7 @@ struct CountdownWidget: View {
                     .foregroundStyle(kalan <= 0 ? .orange
                                      : (calisiyor ? Color(nsColor: .controlAccentColor) : .secondary))
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(kalan <= 0 ? "Bitti" : hhmmss(kalan))
+                    Text(kalan <= 0 ? "Done" : hhmmss(kalan))
                         .font(.system(size: style.height * 0.25, weight: .semibold))
                         .monospacedDigit()
                     Text(etiket)
@@ -82,9 +82,9 @@ struct CountdownWidget: View {
         .onTapGesture {
             let kalan = toplam - store.elapsed(item.id)
             store.toggle(item.id, notifyAfter: kalan,
-                         baslik: etiket, metin: "Geri sayım tamamlandı.")
+                         baslik: etiket, metin: "Countdown finished.")
         }
-        .contextMenu { Button("Sıfırla") { store.reset(item.id) } }
+        .contextMenu { Button("Reset") { store.reset(item.id) } }
     }
 }
 
@@ -118,7 +118,7 @@ struct FocusWidget: View {
                     Text(mmss(kalan))
                         .font(.system(size: style.height * 0.25, weight: .semibold))
                         .monospacedDigit()
-                    Text(molada ? "Mola" : "Odak")
+                    Text(molada ? "Break" : "Focus")
                         .font(.system(size: style.height * 0.15))
                         .foregroundStyle(.secondary)
                 }
@@ -128,10 +128,10 @@ struct FocusWidget: View {
         .onTapGesture {
             let (molada, kalan) = asama(store.elapsed(item.id))
             store.toggle(item.id, notifyAfter: kalan,
-                         baslik: molada ? "Mola bitti" : "Odak bitti",
-                         metin: molada ? "Yeni odak turu başlıyor." : "Mola zamanı.")
+                         baslik: molada ? "Break ended" : "Focus session ended",
+                         metin: molada ? "A new focus session is starting." : "Time for a break.")
         }
-        .contextMenu { Button("Sıfırla") { store.reset(item.id) } }
+        .contextMenu { Button("Reset") { store.reset(item.id) } }
     }
 }
 
@@ -168,7 +168,7 @@ struct AlarmWidget: View {
                 Text(String(format: "%02d:%02d", h, m))
                     .font(.system(size: style.height * 0.25, weight: .semibold))
                     .monospacedDigit()
-                Text(acik ? (tekrar ? "Her gün · \(etiket)" : etiket) : "Kapalı")
+                Text(acik ? (tekrar ? "Every day · \(etiket)" : etiket) : "Off")
                     .font(.system(size: style.height * 0.15))
                     .foregroundStyle(.secondary)
             }
@@ -177,7 +177,7 @@ struct AlarmWidget: View {
             guard acik, !planlandi else { return }
             planlandi = true
             Notifier.planlaSaat(saat: h, dakika: m, tekrar: tekrar,
-                                baslik: etiket, metin: "Alarm çalıyor.", id: item.id)
+                                baslik: etiket, metin: "Alarm is ringing.", id: item.id)
         }
     }
 }

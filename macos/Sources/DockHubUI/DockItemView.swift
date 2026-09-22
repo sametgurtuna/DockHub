@@ -82,7 +82,7 @@ struct DockItemView: View {
         .contentShape(Rectangle())
         .onHover { hovering = $0 }
         .onTapGesture(perform: onTap)
-        .help(item.name ?? item.path ?? "")
+        .help(item.name ?? item.path.map(AppCatalog.displayName(forAppAt:)) ?? "")
     }
 
     // ---- Widget: neredeyse gorunmez arka planli yuvarlak kutucuk

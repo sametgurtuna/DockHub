@@ -31,7 +31,7 @@ public enum DeviceBattery {
             guard let yuzde = intProperty(entry, "BatteryPercent") else { continue }
             let ad = stringProperty(entry, "Product")
                 ?? stringProperty(entry, "DeviceAddress")
-                ?? "Bilinmeyen cihaz"
+                ?? "Unknown device"
             sonuc.append(PeripheralBattery(id: ad, name: ad, percent: yuzde))
         }
         return sonuc.sorted { $0.percent < $1.percent }

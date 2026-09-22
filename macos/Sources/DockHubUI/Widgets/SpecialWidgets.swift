@@ -38,8 +38,8 @@ struct TrashWidget: View {
                 .scaleEffect(uzerinde ? 1.15 : 1)
             if item.effectiveVariant == "details" {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(!store.state.accessible ? "Erişim yok"
-                         : (store.state.isEmpty ? "Boş" : "\(store.state.itemCount) öğe"))
+                    Text(!store.state.accessible ? "No access"
+                         : (store.state.isEmpty ? "Empty" : "\(store.state.itemCount) items"))
                         .font(.system(size: style.height * 0.2, weight: .semibold))
                         .foregroundStyle(store.state.accessible ? .primary : .secondary)
                     if store.state.accessible && !store.state.isEmpty {
@@ -67,15 +67,15 @@ struct TrashWidget: View {
             return true
         }
         .contextMenu {
-            Button("Çöp kutusunu aç") { TrashService.open() }
+            Button("Open Trash") { TrashService.open() }
             // Bosaltmanin genel API karsiligi yok; kullaniciyi yaniltmamak icin
             // dugme koymuyoruz, Finder'a yonlendiriyoruz.
-            Text("Boşaltmak için Finder'ı kullanın").font(.caption)
+            Text("Use Finder to empty the Trash").font(.caption)
         }
         .help(!store.state.accessible
-              ? "Çöp kutusu okunamıyor — Sistem Ayarları ▸ Gizlilik ve Güvenlik ▸ Tam Disk Erişimi"
-              : (store.state.isEmpty ? "Çöp kutusu boş"
-                 : "\(store.state.itemCount) öğe · \(boyut(store.state.totalBytes))"))
+              ? "Can't read the Trash — System Settings ▸ Privacy & Security ▸ Full Disk Access"
+              : (store.state.isEmpty ? "Trash is empty"
+                 : "\(store.state.itemCount) items · \(boyut(store.state.totalBytes))"))
     }
 
     private func boyut(_ b: UInt64) -> String {
@@ -112,12 +112,12 @@ struct NowPlayingWidget: View {
         Group {
             switch store.sonuc {
             case .calan(let n): calan(n)
-            case .hicbiriCalmiyor: bilgi("music.note", "Çalmıyor")
-            case .izinYok: bilgi("lock", "Otomasyon izni yok")
+            case .hicbiriCalmiyor: bilgi("music.note", "Not playing")
+            case .izinYok: bilgi("lock", "No Automation permission")
             }
         }
         .onAppear { store.start() }
-        .help("Kapsam: Music ve Spotify. Tarayıcıdaki medya macOS'ta görülemez.")
+        .help("Supports Music and Spotify. Media playing in a browser isn't visible on macOS.")
     }
 
     private func bilgi(_ ikon: String, _ metin: String) -> some View {
@@ -192,7 +192,7 @@ struct AIUsageWidget: View {
             case .veri(let u):
                 if item.effectiveVariant == "rings" { halkalar(u) } else { cubuklar(u) }
             case .cliYok:
-                bilgi("terminal", "claude CLI yok")
+                bilgi("terminal", "Claude CLI not found")
             case .okunamadi(let m):
                 bilgi("exclamationmark.triangle", m)
             }
@@ -209,8 +209,8 @@ struct AIUsageWidget: View {
 
     private func cubuklar(_ u: AIUsage) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            cubuk("Oturum", u.sessionPercent, .orange)
-            cubuk("Hafta", u.weekPercent, .red)
+            cubuk("5-hour", u.sessionPercent, .orange)
+            cubuk("Weekly", u.weekPercent, .red)
         }
     }
 
@@ -224,14 +224,14 @@ struct AIUsageWidget: View {
                     Capsule().fill(renk).frame(width: geo.size.width * min(p / 100, 1))
                 }
             }.frame(width: style.itemHeight * 1.1, height: 3)
-            Text("%\(Int(p))").font(.system(size: style.height * 0.14)).monospacedDigit()
+            Text("\(Int(p))%").font(.system(size: style.height * 0.14)).monospacedDigit()
         }
     }
 
     private func halkalar(_ u: AIUsage) -> some View {
         HStack(spacing: style.gap) {
-            halka("OTR", u.sessionPercent, .orange)
-            halka("HFT", u.weekPercent, .red)
+            halka("5H", u.sessionPercent, .orange)
+            halka("WK", u.weekPercent, .red)
         }
     }
 

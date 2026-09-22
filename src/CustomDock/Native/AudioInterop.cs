@@ -239,7 +239,7 @@ public interface IMMNotificationClient
     int OnPropertyValueChanged([MarshalAs(UnmanagedType.LPWStr)] string pwstrDeviceId, PROPERTYKEY key);
 }
 
-/// <summary>Windows 10/11 PolicyConfig COM nesnesi (varsayılan ses çıkış cihazını değiştirmek için).</summary>
+/// <summary>Windows 10/11 PolicyConfig COM object (for changing default audio endpoint device).</summary>
 [ComImport]
 [Guid("870af99c-171d-4f9e-af0d-e63df40c2bc9")]
 public class PolicyConfigComObject
@@ -275,7 +275,7 @@ public static class AudioPropertyKeys
     public static extern int PropVariantClear(ref PROPVARIANT pvar);
 }
 
-// ------------------------------------------------------------------ Audio Session (EarTrumpet tarzı uygulama bazlı ses kontrolü)
+// ------------------------------------------------------------------ Audio Session (EarTrumpet-style per-application audio control)
 
 public enum AudioSessionState
 {

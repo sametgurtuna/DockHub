@@ -26,7 +26,7 @@ public sealed class MediaState
     public TimeSpan Duration { get; init; }
     public DateTimeOffset PositionUpdatedAt { get; init; }
 
-    /// <summary>Son güncellemeden bu yana geçen süreyle tahmini oynatma konumu.</summary>
+    /// <summary>Estimated playback position based on time elapsed since last update.</summary>
     public TimeSpan EstimatedPosition
     {
         get
@@ -39,8 +39,8 @@ public sealed class MediaState
 }
 
 /// <summary>
-/// Windows System Media Transport Controls (SMTC) üzerinden aktif medya oturumunu izler.
-/// Spotify, YouTube Music (tarayıcı), Apple Music, VLC vb. SMTC destekleyen her oynatıcıyla çalışır.
+/// Monitors the active media session via Windows System Media Transport Controls (SMTC).
+/// Works with Spotify, YouTube Music (browser), Apple Music, VLC, etc. or any SMTC-compliant player.
 /// </summary>
 public sealed class MediaService
 {
@@ -53,7 +53,7 @@ public sealed class MediaService
 
     public MediaState Current { get; private set; } = MediaState.Empty;
 
-    /// <summary>UI iş parçacığında tetiklenir.</summary>
+    /// <summary>Fired on the UI thread.</summary>
     public event Action? Changed;
 
     public Task EnsureStartedAsync() => _initTask ??= InitializeAsync();
@@ -69,7 +69,7 @@ public sealed class MediaService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "SMTC başlatılamadı");
+            Log.Error(ex, "Failed to initialize SMTC");
         }
     }
 
@@ -93,7 +93,7 @@ public sealed class MediaService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "SMTC oturumu alınamadı");
+            Log.Error(ex, "Failed to get SMTC session");
         }
 
         if (!ReferenceEquals(session, _session))
@@ -151,7 +151,7 @@ public sealed class MediaService
             }
             else if (_thumbnail is null && props?.Thumbnail is { } retryRef)
             {
-                // Bazı oynatıcılar kapak görselini birkaç yüz ms sonra gönderir.
+                // Some players send the cover image a few hundred ms later.
                 _thumbnail = await LoadThumbnailAsync(retryRef);
                 if (version != _refreshVersion) return;
             }
@@ -176,7 +176,7 @@ public sealed class MediaService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Medya bilgisi okunamadı");
+            Log.Error(ex, "Failed to read media info");
         }
     }
 
@@ -200,7 +200,7 @@ public sealed class MediaService
             var bitmap = new BitmapImage();
             bitmap.BeginInit();
             bitmap.CacheOption = BitmapCacheOption.OnLoad;
-            bitmap.DecodePixelWidth = 128;
+            bitmap.DecodePixelWidth = 512;
             bitmap.StreamSource = memory;
             bitmap.EndInit();
             bitmap.Freeze();
@@ -208,7 +208,7 @@ public sealed class MediaService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Albüm kapağı yüklenemedi");
+            Log.Error(ex, "Failed to load album artwork");
             return null;
         }
     }
@@ -221,7 +221,7 @@ public sealed class MediaService
         if (lower.Contains("chrome")) return "Chrome";
         if (lower.Contains("msedge")) return "Edge";
         if (lower.Contains("firefox")) return "Firefox";
-        if (lower.Contains("zunemusic") || lower.Contains("media")) return "Medya Oynatıcı";
+        if (lower.Contains("zunemusic") || lower.Contains("media")) return "Media Player";
         if (lower.Contains("applemusic") || lower.Contains("itunes")) return "Apple Music";
         if (lower.Contains("vlc")) return "VLC";
         var name = aumid.Split('!')[0];
@@ -244,6 +244,14 @@ public sealed class MediaService
         if (_session is not null) await Try(() => _session.TrySkipPreviousAsync().AsTask());
     }
 
+    public async Task SeekAsync(TimeSpan position)
+    {
+        if (_session is not null)
+        {
+            await Try(() => _session.TryChangePlaybackPositionAsync(position.Ticks).AsTask());
+        }
+    }
+
     private static async Task Try(Func<Task<bool>> action)
     {
         try
@@ -252,7 +260,7 @@ public sealed class MediaService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Medya komutu başarısız");
+            Log.Error(ex, "Media command failed");
         }
     }
 }

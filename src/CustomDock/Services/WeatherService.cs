@@ -48,7 +48,7 @@ public sealed record GeoResult(string Name, string Region, string Country, doubl
         string.Join(", ", new[] { Name, Region, Country }.Where(s => !string.IsNullOrWhiteSpace(s)).Distinct());
 }
 
-/// <summary>Open-Meteo (API anahtarı gerektirmez) ile hava durumu ve şehir arama.</summary>
+/// <summary>Weather forecast and city search via Open-Meteo (no API key required).</summary>
 public sealed class WeatherService
 {
     private static readonly HttpClient Http = CreateClient();
@@ -128,8 +128,8 @@ public sealed class WeatherService
     }
 
     /// <summary>
-    /// Windows konum servisinden konum alır. Ayarlar &gt; Gizlilik &gt; Konum altında
-    /// "Masaüstü uygulamalarının konumunuza erişmesine izin ver" açık olmalıdır.
+    /// Gets location from Windows location service. Under Settings &gt; Privacy &gt; Location,
+    /// "Allow desktop apps to access your location" must be turned on.
     /// </summary>
     public async Task<(double Latitude, double Longitude)?> GetDeviceLocationAsync()
     {
@@ -145,7 +145,7 @@ public sealed class WeatherService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Cihaz konumu alınamadı");
+            Log.Error(ex, "Failed to get device location");
             return null;
         }
     }
@@ -165,26 +165,26 @@ public sealed class WeatherService
 
     public static string DescribeCode(int code) => code switch
     {
-        0 => "Açık",
-        1 => "Çoğunlukla açık",
-        2 => "Parçalı bulutlu",
-        3 => "Kapalı",
-        45 or 48 => "Sisli",
-        51 or 53 or 55 => "Çisenti",
-        56 or 57 => "Donan çisenti",
-        61 => "Hafif yağış",
-        63 => "Yağışlı",
-        65 => "Kuvvetli yağış",
-        66 or 67 => "Donan yağış",
-        71 => "Hafif kar",
-        73 => "Karlı",
-        75 => "Yoğun kar",
-        77 => "Kar taneleri",
-        80 or 81 => "Sağanak",
-        82 => "Şiddetli sağanak",
-        85 or 86 => "Kar sağanağı",
-        95 => "Gök gürültülü",
-        96 or 99 => "Dolulu fırtına",
+        0 => "Clear sky",
+        1 => "Mainly clear",
+        2 => "Partly cloudy",
+        3 => "Overcast",
+        45 or 48 => "Fog",
+        51 or 53 or 55 => "Drizzle",
+        56 or 57 => "Freezing drizzle",
+        61 => "Slight rain",
+        63 => "Moderate rain",
+        65 => "Heavy rain",
+        66 or 67 => "Freezing rain",
+        71 => "Slight snow",
+        73 => "Moderate snow",
+        75 => "Heavy snow",
+        77 => "Snow grains",
+        80 or 81 => "Rain showers",
+        82 => "Violent rain showers",
+        85 or 86 => "Snow showers",
+        95 => "Thunderstorm",
+        96 or 99 => "Thunderstorm with hail",
         _ => "—",
     };
 }

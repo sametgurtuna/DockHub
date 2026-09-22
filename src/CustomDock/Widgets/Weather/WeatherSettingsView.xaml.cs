@@ -30,18 +30,18 @@ public partial class WeatherSettingsView : UserControl
         var query = SearchBox.Text.Trim();
         if (query.Length < 2) return;
 
-        SetStatus("Aranıyor…");
+        SetStatus("Searching…");
         ResultsList.ItemsSource = null;
         try
         {
             var results = await AppServices.Weather.SearchCityAsync(query);
             ResultsList.ItemsSource = results;
-            SetStatus(results.Count == 0 ? "Sonuç bulunamadı." : null);
+            SetStatus(results.Count == 0 ? "No results found." : null);
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Şehir araması başarısız");
-            SetStatus("Arama yapılamadı. İnternet bağlantınızı kontrol edin.");
+            Log.Error(ex, "City search failed");
+            SetStatus("Search failed. Please check your internet connection.");
         }
     }
 
@@ -54,7 +54,7 @@ public partial class WeatherSettingsView : UserControl
         _settings.LocationMode = WeatherLocationMode.City;
         ResultsList.ItemsSource = null;
         SearchBox.Text = "";
-        SetStatus($"{result.DisplayName} seçildi.");
+        SetStatus($"{result.DisplayName} selected.");
     }
 
     private void SetStatus(string? text)

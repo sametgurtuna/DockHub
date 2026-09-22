@@ -6,7 +6,7 @@
               Cursor="Hand"
               Background="Transparent">
     <Grid Background="Transparent">
-        <!-- Kompakt Görünüm (İkon + Aygıt Adı + Yüzde) -->
+        <!-- Compact View (Icon + Device Name + Percent) -->
         <StackPanel x:Name="Layout_compact" Orientation="Horizontal" VerticalAlignment="Center">
             <Border Width="28" Height="28" CornerRadius="14" Background="{DynamicResource SurfaceLightBrush}" Margin="0,0,8,0">
                 <Path x:Name="CompactIcon" Width="14" Height="14" Stretch="Uniform"
@@ -18,7 +18,7 @@
             </StackPanel>
         </StackPanel>
 
-        <!-- Çubuklu Görünüm (İkon + Aygıt Adı + Ses Çubuğu + Yüzde) -->
+        <!-- Bar View (Icon + Device Name + Volume Bar + Percent) -->
         <Grid x:Name="Layout_slider" Width="168" VerticalAlignment="Center">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="28" />
@@ -37,7 +37,7 @@
             </Border>
 
             <TextBlock x:Name="SliderDeviceName" Grid.Column="1" Style="{StaticResource TitleText}" FontSize="11.5"
-                       VerticalAlignment="Center" Margin="6,0,0,0" />
+                        VerticalAlignment="Center" Margin="6,0,0,0" />
 
             <Grid x:Name="SliderBarTrack" Grid.Row="1" Grid.Column="1" Height="4.5" VerticalAlignment="Center" Margin="6,0,0,0">
                 <Border CornerRadius="2.25" Background="{DynamicResource BlueTrackBrush}" />
@@ -45,11 +45,11 @@
             </Grid>
 
             <TextBlock x:Name="SliderVolumeText" Grid.Row="1" Grid.Column="2" Style="{StaticResource CaptionText}"
-                       Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                        Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" />
         </Grid>
 
-        <!-- Ses Mikser Popup'ı (EarTrumpet / Windows 11 tarzı profesyonel mikser) -->
-        <Popup x:Name="MixerPopup" StaysOpen="False" AllowsTransparency="True" PopupAnimation="None" Placement="Top">
+        <!-- Audio Mixer Popup (EarTrumpet / Windows 11 style mixer) -->
+        <Popup x:Name="MixerPopup" StaysOpen="True" AllowsTransparency="True" PopupAnimation="None" Placement="Top">
             <Border x:Name="MixerBorder" CornerRadius="14" Padding="14,12" BorderThickness="1" Margin="8" Width="310"
                     Background="{DynamicResource PopupBrush}" BorderBrush="{DynamicResource PopupBorderBrush}"
                     PreviewMouseWheel="OnMixerBorderPreviewMouseWheel">

@@ -3,7 +3,7 @@ using System.Windows.Controls;
 
 namespace CustomDock.Controls;
 
-/// <summary>Dock içindeki yuvarlak köşeli widget kartı.</summary>
+/// <summary>Rounded-corner widget card inside the dock.</summary>
 public class WidgetCard : ContentControl
 {
     public static readonly DependencyProperty HoverEnabledProperty = DependencyProperty.Register(

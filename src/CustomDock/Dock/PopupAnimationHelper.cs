@@ -1,0 +1,26 @@
+using System.Windows;
+using System.Windows.Controls.Primitives;
+using CustomDock.Core;
+
+namespace CustomDock.Dock;
+
+/// <summary>
+/// Coordinates macOS Genie Effect opening and closing animations across all popups
+/// (folders, widgets, compact flyouts, tray overflow).
+/// </summary>
+public static class PopupAnimationHelper
+{
+    public static bool IsClosing(Popup popup) => GenieEffectHelper.IsClosing(popup);
+
+    /// <summary>Opens popup with authentic macOS Genie Effect emerging from anchor.</summary>
+    public static void AnimateOpen(Popup popup, DockEdge edge, FrameworkElement? anchor = null, Action? onOpened = null)
+    {
+        GenieEffectHelper.AnimateOpen(popup, edge, anchor ?? (popup.PlacementTarget as FrameworkElement), onOpened);
+    }
+
+    /// <summary>Closes popup with authentic macOS Genie Effect sucking into anchor.</summary>
+    public static void ClosePopup(Popup popup, DockEdge edge, FrameworkElement? anchor = null, Action? onClosed = null)
+    {
+        GenieEffectHelper.ClosePopup(popup, edge, anchor ?? (popup.PlacementTarget as FrameworkElement), onClosed);
+    }
+}

@@ -16,7 +16,7 @@ public sealed class SystemSettings : ObservableObject
     public int UpdateIntervalSeconds { get => _updateIntervalSeconds; set => Set(ref _updateIntervalSeconds, Math.Clamp(value, 1, 30)); }
 }
 
-/// <summary>CPU ve bellek kullanımı (sayılar / halkalar / çubuklar).</summary>
+/// <summary>CPU and memory usage (numbers / rings / bars).</summary>
 public partial class SystemWidget : WidgetBase
 {
     private SystemSettings _settings = new();
@@ -75,7 +75,7 @@ public partial class SystemWidget : WidgetBase
                 break;
         }
 
-        ToolTip = $"İşlemci: {cpu}\nBellek: {stats.RamUsedGb:0.0} / {stats.RamTotalGb:0.0} GB ({ram})";
+        ToolTip = $"CPU: {cpu}\nMemory: {stats.RamUsedGb:0.0} / {stats.RamTotalGb:0.0} GB ({ram})";
         RefreshCompact();
     }
 
@@ -83,7 +83,7 @@ public partial class SystemWidget : WidgetBase
     private RingGauge? _compactCpu;
     private RingGauge? _compactRam;
 
-    /// <summary>Kutucukta iç içe iki halka: dışta işlemci (pembe), içte bellek (mavi).</summary>
+    /// <summary>Two concentric rings in compact tile: outer CPU (magenta), inner RAM (blue).</summary>
     protected override void UpdateCompact(CompactTile tile)
     {
         var stats = AppServices.SystemMonitor.Current;
@@ -103,7 +103,7 @@ public partial class SystemWidget : WidgetBase
         _compactRam!.Value = stats.RamPercent;
         tile.SetVisual(_compactRings);
         tile.SetTextBrushKey("AccentMagentaBrush");
-        tile.Text = "%" + Math.Round(stats.CpuPercent).ToString(CultureInfo.CurrentCulture);
+        tile.Text = Math.Round(stats.CpuPercent).ToString(CultureInfo.CurrentCulture) + "%";
     }
 
     private void AnimateBar(System.Windows.FrameworkElement bar, double width)

@@ -6,7 +6,7 @@
               Cursor="Hand"
               Background="Transparent">
     <Grid Background="Transparent">
-        <!-- Tekli / Öncelikli Aygıt Görünümü -->
+        <!-- Single / Primary Device View -->
         <StackPanel x:Name="Layout_single" Orientation="Horizontal" VerticalAlignment="Center">
             <Grid Width="28" Height="28" Margin="0,0,8,0">
                 <ctl:RingGauge x:Name="SingleBatteryRing" Thickness="3" Fill="{DynamicResource AccentGreenBrush}" Track="{DynamicResource GreenTrackBrush}" />
@@ -14,14 +14,14 @@
                       Fill="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
             </Grid>
             <StackPanel VerticalAlignment="Center" MaxWidth="110">
-                <TextBlock x:Name="SingleDeviceName" Style="{StaticResource TitleText}" FontSize="12" Text="Aygıt Yok" />
+                <TextBlock x:Name="SingleDeviceName" Style="{StaticResource TitleText}" FontSize="12" Text="No Devices" />
                 <TextBlock x:Name="SingleBatteryText" Style="{StaticResource CaptionText}" Text="—" />
             </StackPanel>
         </StackPanel>
 
-        <!-- Çoklu Aygıt Görünümü (Yan Yana) -->
+        <!-- Multi Device View (Side by side) -->
         <StackPanel x:Name="Layout_multi" Orientation="Horizontal" VerticalAlignment="Center">
-            <!-- Dinamik olarak kod arkasında doldurulur -->
+            <!-- Populated dynamically in code-behind -->
             <ItemsControl x:Name="MultiDevicesList">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -29,7 +29,7 @@
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
             </ItemsControl>
-            <TextBlock x:Name="MultiEmptyText" Style="{StaticResource CaptionText}" Text="Bağlı aygıt yok" Visibility="Collapsed" />
+            <TextBlock x:Name="MultiEmptyText" Style="{StaticResource CaptionText}" Text="No connected devices" Visibility="Collapsed" />
         </StackPanel>
     </Grid>
 </w:WidgetBase>

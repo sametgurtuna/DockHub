@@ -4,7 +4,7 @@
               xmlns:w="clr-namespace:CustomDock.Widgets"
               CardPadding="12,6,10,6">
     <w:WidgetBase.Resources>
-        <!-- Not kağıdı üzerindeki yuvarlak ikon düğmesi -->
+        <!-- Circular icon button on note sheet -->
         <Style x:Key="PaperIconButton" TargetType="Button">
             <Setter Property="Focusable" Value="False" />
             <Setter Property="Width" Value="30" />
@@ -46,7 +46,7 @@
             </Setter>
         </Style>
 
-        <!-- "‹ Geri" ve yazı boyutu gibi kağıt üzerindeki hap düğmeler -->
+        <!-- Pill buttons on sheet like "‹ Back" and font size -->
         <Style x:Key="PaperPillButton" TargetType="Button">
             <Setter Property="Focusable" Value="False" />
             <Setter Property="Height" Value="34" />
@@ -77,18 +77,18 @@
     </w:WidgetBase.Resources>
 
     <Grid>
-        <!-- Dock'taki kart: notun önizlemesi -->
+        <!-- Card in dock: note preview -->
         <Grid x:Name="Root" Width="170" Height="34" Background="Transparent" Cursor="Hand"
               MouseLeftButtonUp="OnCardClick">
             <TextBlock x:Name="PreviewText" FontSize="11.5" LineHeight="14" LineStackingStrategy="BlockLineHeight"
                        TextWrapping="Wrap" TextTrimming="CharacterEllipsis" VerticalAlignment="Top"
                        Foreground="{DynamicResource NoteTextBrush}" />
-            <TextBlock x:Name="PlaceholderText" Text="Not yazmak için tıklayın" FontSize="11.5" VerticalAlignment="Center"
+            <TextBlock x:Name="PlaceholderText" Text="Click to write a note" FontSize="11.5" VerticalAlignment="Center"
                        Opacity="0.55" Foreground="{DynamicResource NoteTextBrush}" />
         </Grid>
 
-        <!-- Büyük not kağıdı -->
-        <Popup x:Name="EditorPopup" StaysOpen="False" AllowsTransparency="True" Opened="OnPopupOpened" Closed="OnPopupClosed">
+        <!-- Big note sheet -->
+        <Popup x:Name="EditorPopup" StaysOpen="True" AllowsTransparency="True" PopupAnimation="None" Opened="OnPopupOpened" Closed="OnPopupClosed">
             <Border x:Name="Sheet" Width="310" Margin="16" CornerRadius="18" BorderThickness="1" BorderBrush="#26000000"
                     Background="{DynamicResource NoteYellowBrush}"
                     TextElement.Foreground="{DynamicResource NoteTextBrush}" TextElement.FontFamily="{StaticResource UiFont}">
@@ -96,7 +96,7 @@
                     <DropShadowEffect BlurRadius="26" ShadowDepth="5" Direction="270" Opacity="0.3" />
                 </Border.Effect>
                 <Grid>
-                    <!-- Not sayfası -->
+                    <!-- Note page -->
                     <Grid x:Name="NotePage" Height="270" Margin="18,12,12,16">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -104,31 +104,31 @@
                         </Grid.RowDefinitions>
                         <DockPanel>
                             <Button DockPanel.Dock="Right" Style="{StaticResource PaperIconButton}" Content="&#xE711;" FontSize="11"
-                                    ToolTip="Kapat" Click="OnCloseClick" />
+                                    ToolTip="Close" Click="OnCloseClick" />
                             <Button DockPanel.Dock="Right" Style="{StaticResource PaperIconButton}" Content="&#xE9E9;"
-                                    ToolTip="Özelleştir" Click="OnCustomizeClick" Margin="0,0,2,0" />
-                            <TextBlock Text="Yapışkan not" FontSize="13.5" Opacity="0.72" VerticalAlignment="Center" />
+                                    ToolTip="Customize" Click="OnCustomizeClick" Margin="0,0,2,0" />
+                            <TextBlock Text="Sticky note" FontSize="13.5" Opacity="0.72" VerticalAlignment="Center" />
                         </DockPanel>
-                        <TextBox x:Name="NoteBox" Grid.Row="1" Style="{StaticResource NoteTextBox}" Tag="Bir şeyler yazın…"
+                        <TextBox x:Name="NoteBox" Grid.Row="1" Style="{StaticResource NoteTextBox}" Tag="Take a note…"
                                  FontSize="20" Margin="0,12,4,0" FontFamily="{StaticResource DisplayFont}"
                                  TextChanged="OnTextChanged" PreviewKeyDown="OnEditorKeyDown" />
                     </Grid>
 
-                    <!-- Özelleştirme sayfası -->
+                    <!-- Customize page -->
                     <StackPanel x:Name="CustomizePage" Margin="14,12,12,20" Visibility="Collapsed">
                         <DockPanel>
                             <Button DockPanel.Dock="Right" Style="{StaticResource PaperIconButton}" Content="&#xE711;" FontSize="11"
-                                    ToolTip="Kapat" Click="OnCloseClick" />
+                                    ToolTip="Close" Click="OnCloseClick" />
                             <Button DockPanel.Dock="Left" Style="{StaticResource PaperPillButton}" Click="OnBackClick">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="&#xE76B;" FontFamily="{StaticResource IconFont}" FontSize="11" VerticalAlignment="Center" Margin="0,1,8,0" />
-                                    <TextBlock Text="Geri" VerticalAlignment="Center" />
+                                    <TextBlock Text="Back" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
-                            <TextBlock Text="Özelleştir" FontSize="14" Opacity="0.8" VerticalAlignment="Center" Margin="12,0,0,0" />
+                            <TextBlock Text="Customize" FontSize="14" Opacity="0.8" VerticalAlignment="Center" Margin="12,0,0,0" />
                         </DockPanel>
 
-                        <TextBlock Text="Kağıt rengi" FontSize="14" Opacity="0.85" Margin="4,16,0,10" />
+                        <TextBlock Text="Paper color" FontSize="14" Opacity="0.85" Margin="4,16,0,10" />
                         <ItemsControl x:Name="SwatchList" Margin="2,0,0,0" Focusable="False">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
@@ -137,7 +137,7 @@
                             </ItemsControl.ItemsPanel>
                         </ItemsControl>
 
-                        <TextBlock Text="Yazı boyutu" FontSize="14" Opacity="0.85" Margin="4,18,0,10" />
+                        <TextBlock Text="Font size" FontSize="14" Opacity="0.85" Margin="4,18,0,10" />
                         <StackPanel x:Name="FontSizeList" Orientation="Horizontal" Margin="2,0,0,0" />
                     </StackPanel>
                 </Grid>

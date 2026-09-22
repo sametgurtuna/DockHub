@@ -6,7 +6,7 @@ using Forms = System.Windows.Forms;
 
 namespace CustomDock.Dock;
 
-/// <summary>Sistem tepsisi ikonu ve menüsü (WinForms NotifyIcon).</summary>
+/// <summary>System tray icon and menu (WinForms NotifyIcon).</summary>
 public sealed class TrayIconManager : IDisposable
 {
     private readonly Forms.NotifyIcon _icon;
@@ -15,18 +15,18 @@ public sealed class TrayIconManager : IDisposable
     public TrayIconManager()
     {
         _menu = new Forms.ContextMenuStrip { ShowImageMargin = false };
-        _menu.Items.Add("Ayarlar…", null, (_, _) => App.Instance.ShowSettings());
-        _menu.Items.Add("Dock öğeleri…", null, (_, _) => App.Instance.ShowSettings("items"));
-        _menu.Items.Add("Widget ekle…", null, (_, _) => App.Instance.ShowSettings("gallery"));
-        _menu.Items.Add("Dock'u göster", null, (_, _) => App.Instance.RevealDock());
+        _menu.Items.Add("Settings…", null, (_, _) => App.Instance.ShowSettings());
+        _menu.Items.Add("Dock items…", null, (_, _) => App.Instance.ShowSettings("items"));
+        _menu.Items.Add("Add widget…", null, (_, _) => App.Instance.ShowSettings("gallery"));
+        _menu.Items.Add("Show dock", null, (_, _) => App.Instance.RevealDock());
         _menu.Items.Add(new Forms.ToolStripSeparator());
-        _menu.Items.Add("Görev çubuğunu geri getir", null, (_, _) =>
+        _menu.Items.Add("Restore taskbar", null, (_, _) =>
         {
             TaskbarController.ForceShow();
             AppServices.Config.TaskbarMode = TaskbarMode.ShowBoth;
         });
         _menu.Items.Add(new Forms.ToolStripSeparator());
-        _menu.Items.Add("Çıkış", null, (_, _) => App.Instance.ExitApplication());
+        _menu.Items.Add("Exit", null, (_, _) => App.Instance.ExitApplication());
         _menu.Opening += (_, _) => ApplyMenuTheme();
 
         _icon = new Forms.NotifyIcon
@@ -59,7 +59,7 @@ public sealed class TrayIconManager : IDisposable
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Tray ikonu yüklenemedi");
+            Log.Error(ex, "Failed to load tray icon");
         }
         return Drawing.SystemIcons.Application;
     }
@@ -83,6 +83,7 @@ public sealed class TrayIconManager : IDisposable
     public void Dispose()
     {
         _icon.Visible = false;
+        try { _icon.Icon?.Dispose(); } catch { }
         _icon.Dispose();
         _menu.Dispose();
     }

@@ -4,25 +4,25 @@
               xmlns:w="clr-namespace:CustomDock.Widgets"
               xmlns:ctl="clr-namespace:CustomDock.Controls">
     <Grid Background="Transparent">
-        <!-- Sayılar -->
+        <!-- Numbers -->
         <StackPanel x:Name="Layout_numbers" Orientation="Horizontal" VerticalAlignment="Center">
             <StackPanel MinWidth="56">
                 <TextBlock x:Name="SessionNumber" Style="{StaticResource ValueText}" FontSize="19" LineHeight="22" />
                 <StackPanel Orientation="Horizontal">
                     <Ellipse Width="6" Height="6" Fill="{DynamicResource AccentOrangeBrush}" VerticalAlignment="Center" Margin="0,1,5,0" />
-                    <TextBlock Text="5 saat" Style="{StaticResource CaptionText}" />
+                    <TextBlock Text="5-hour" Style="{StaticResource CaptionText}" />
                 </StackPanel>
             </StackPanel>
             <StackPanel MinWidth="56" Margin="18,0,0,0">
                 <TextBlock x:Name="WeekNumber" Style="{StaticResource ValueText}" FontSize="19" LineHeight="22" />
                 <StackPanel Orientation="Horizontal">
                     <Ellipse Width="6" Height="6" Fill="{DynamicResource AccentBlueBrush}" VerticalAlignment="Center" Margin="0,1,5,0" />
-                    <TextBlock Text="Haftalık" Style="{StaticResource CaptionText}" />
+                    <TextBlock Text="Weekly" Style="{StaticResource CaptionText}" />
                 </StackPanel>
             </StackPanel>
         </StackPanel>
 
-        <!-- Halkalar -->
+        <!-- Rings -->
         <StackPanel x:Name="Layout_rings" Orientation="Horizontal" VerticalAlignment="Center">
             <StackPanel Width="46">
                 <Grid Width="28" Height="28">
@@ -30,7 +30,7 @@
                     <TextBlock x:Name="SessionRingText" FontSize="8.5" FontWeight="SemiBold" FontFamily="{StaticResource DisplayFont}"
                                Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Grid>
-                <TextBlock Text="5 saat" Style="{StaticResource MicroText}" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" Margin="0,1,0,0" />
+                <TextBlock Text="5-hour" Style="{StaticResource MicroText}" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" Margin="0,1,0,0" />
             </StackPanel>
             <StackPanel Width="46" Margin="10,0,0,0">
                 <Grid Width="28" Height="28">
@@ -38,11 +38,11 @@
                     <TextBlock x:Name="WeekRingText" FontSize="8.5" FontWeight="SemiBold" FontFamily="{StaticResource DisplayFont}"
                                Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Grid>
-                <TextBlock Text="Haftalık" Style="{StaticResource MicroText}" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" Margin="0,1,0,0" />
+                <TextBlock Text="Weekly" Style="{StaticResource MicroText}" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" Margin="0,1,0,0" />
             </StackPanel>
         </StackPanel>
 
-        <!-- Çubuklar -->
+        <!-- Bars -->
         <Grid x:Name="Layout_bars" Width="172" VerticalAlignment="Center">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="58" />
@@ -53,13 +53,13 @@
                 <RowDefinition Height="19" />
                 <RowDefinition Height="19" />
             </Grid.RowDefinitions>
-            <TextBlock Text="5 saat" Style="{StaticResource CaptionText}" VerticalAlignment="Center" />
+            <TextBlock Text="5-hour" Style="{StaticResource CaptionText}" VerticalAlignment="Center" />
             <Grid x:Name="SessionBarTrack" Grid.Column="1" Height="5" VerticalAlignment="Center">
                 <Border CornerRadius="2.5" Background="{DynamicResource OrangeTrackBrush}" />
                 <Border x:Name="SessionBar" CornerRadius="2.5" HorizontalAlignment="Left" Width="0" Background="{DynamicResource AccentOrangeBrush}" />
             </Grid>
             <TextBlock x:Name="SessionBarText" Grid.Column="2" Style="{StaticResource TitleText}" HorizontalAlignment="Right" VerticalAlignment="Center" />
-            <TextBlock Grid.Row="1" Text="Haftalık" Style="{StaticResource CaptionText}" VerticalAlignment="Center" />
+            <TextBlock Grid.Row="1" Text="Weekly" Style="{StaticResource CaptionText}" VerticalAlignment="Center" />
             <Grid x:Name="WeekBarTrack" Grid.Row="1" Grid.Column="1" Height="5" VerticalAlignment="Center">
                 <Border CornerRadius="2.5" Background="{DynamicResource BlueTrackBrush}" />
                 <Border x:Name="WeekBar" CornerRadius="2.5" HorizontalAlignment="Left" Width="0" Background="{DynamicResource AccentBlueBrush}" />

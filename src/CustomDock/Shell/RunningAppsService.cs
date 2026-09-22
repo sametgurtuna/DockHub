@@ -13,7 +13,7 @@ using TBPFLAG = ManagedShell.Interop.NativeMethods.TBPFLAG;
 
 namespace CustomDock.Shell;
 
-/// <summary>Aynı uygulamaya ait açık pencereler.</summary>
+/// <summary>Open windows belonging to the same application.</summary>
 public sealed class AppGroup : ObservableObject
 {
     private bool _isActive;
@@ -50,7 +50,7 @@ public sealed class AppGroup : ObservableObject
 
     public int WindowCount { get => _windowCount; private set => Set(ref _windowCount, value); }
 
-    /// <summary>0-1 arası görev çubuğu ilerlemesi (ITaskbarList3).</summary>
+    /// <summary>Taskbar progress between 0-1 (ITaskbarList3).</summary>
     public double Progress { get => _progress; private set => Set(ref _progress, value); }
 
     public bool HasProgress { get => _hasProgress; private set => Set(ref _hasProgress, value); }
@@ -61,7 +61,7 @@ public sealed class AppGroup : ObservableObject
 
     public string? ExecutablePath => AppKeys.ExecutableOf(Key);
 
-    /// <summary>En son etkin olan pencere (ya da ilk pencere).</summary>
+    /// <summary>Most recently active window (or first window).</summary>
     public ApplicationWindow? PrimaryWindow =>
         Windows.FirstOrDefault(w => w.State == ApplicationWindow.WindowState.Active) ?? Windows.FirstOrDefault();
 
@@ -90,7 +90,7 @@ public sealed class AppGroup : ObservableObject
             if (string.IsNullOrEmpty(Title))
             {
                 string? description = null;
-                try { description = FileVersionInfo.GetVersionInfo(exe).FileDescription; } catch { /* yoksay */ }
+                try { description = FileVersionInfo.GetVersionInfo(exe).FileDescription; } catch { /* ignore */ }
                 Title = string.IsNullOrWhiteSpace(description) ? Path.GetFileNameWithoutExtension(exe) : description.Trim();
             }
         }
@@ -99,20 +99,43 @@ public sealed class AppGroup : ObservableObject
             Title = first.Title;
         }
 
-        if (Icon is null || ExecutablePath is null)
+        if (Icon is null)
         {
-            var windowIcon = first.Icon;
+            var windowIcon = first.Icon ?? ShellIcons.GetWindowIcon(first.Handle);
             if (windowIcon is not null) Icon = windowIcon;
+        }
+
+        if (Icon is null)
+        {
+            Icon = ShellIcons.GetDefaultAppIcon();
+            _ = Task.Delay(350).ContinueWith(_ =>
+            {
+                Application.Current?.Dispatcher.BeginInvoke(() =>
+                {
+                    if (Windows.Count > 0)
+                    {
+                        var w = Windows.FirstOrDefault();
+                        if (w is not null)
+                        {
+                            var reloaded = (ExecutablePath is { } p ? ShellIcons.GetIcon(p, 96) : null)
+                                ?? w.Icon
+                                ?? ShellIcons.GetWindowIcon(w.Handle);
+                            if (reloaded is not null)
+                                Icon = reloaded;
+                        }
+                    }
+                });
+            });
         }
     }
 }
 
-/// <summary>ManagedShell görev listesini uygulama gruplarına dönüştürür.</summary>
+/// <summary>Converts ManagedShell task list into application groups.</summary>
 public sealed class RunningAppsService : IDisposable
 {
     private static readonly HashSet<string> WatchedProperties = new()
     {
-        "State", "Icon", "OverlayIcon", "ProgressState", "ProgressValue", "Title", "Category",
+        "State", "Icon", "OverlayIcon", "ProgressState", "ProgressValue", "Title", "Category", "WinFileName", "ProcId",
     };
 
     private readonly ICollectionView _view;
@@ -130,10 +153,10 @@ public sealed class RunningAppsService : IDisposable
         Rebuild();
     }
 
-    /// <summary>Açık uygulama grupları (ilk görülme sırasına göre).</summary>
+    /// <summary>Open application groups (ordered by first seen).</summary>
     public ObservableCollection<AppGroup> Groups { get; } = new();
 
-    /// <summary>Gruplar eklendiğinde/kaldırıldığında tetiklenir.</summary>
+    /// <summary>Raised when groups are added or removed.</summary>
     public event Action? GroupsChanged;
 
     public AppGroup? Find(string key) => _groups.TryGetValue(key, out var group) ? group : null;
@@ -166,11 +189,11 @@ public sealed class RunningAppsService : IDisposable
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Görev listesi okunamadı");
+            Log.Error(ex, "Failed to read task list");
             return;
         }
 
-        // Olay abonelikleri
+        // Event subscriptions
         foreach (var window in _subscribed.Except(windows).ToList())
         {
             window.PropertyChanged -= OnWindowPropertyChanged;

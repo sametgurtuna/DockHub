@@ -8,7 +8,7 @@ namespace CustomDock.Services;
 public sealed record AudioDeviceInfo(string Id, string Name, EndpointFormFactor FormFactor, bool IsDefault)
 {
     public bool IsHeadphone => FormFactor is EndpointFormFactor.Headphones or EndpointFormFactor.Headset
-        || Name.Contains("kulaklık", StringComparison.OrdinalIgnoreCase)
+        || Name.Contains("kulak", StringComparison.OrdinalIgnoreCase)
         || Name.Contains("headphone", StringComparison.OrdinalIgnoreCase)
         || Name.Contains("headset", StringComparison.OrdinalIgnoreCase)
         || Name.Contains("earphone", StringComparison.OrdinalIgnoreCase)
@@ -34,7 +34,7 @@ public sealed class AudioService : IMMNotificationClient, IAudioEndpointVolumeCa
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "AudioService başlatılamadı");
+            Log.Error(ex, "AudioService could not be initialized");
         }
     }
 
@@ -66,7 +66,7 @@ public sealed class AudioService : IMMNotificationClient, IAudioEndpointVolumeCa
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Ses seviyesi ayarlanamadı");
+                Log.Error(ex, "Failed to set volume level");
             }
         }
     }
@@ -100,7 +100,7 @@ public sealed class AudioService : IMMNotificationClient, IAudioEndpointVolumeCa
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Sessize alma durumu değiştirilemedi");
+                Log.Error(ex, "Failed to change mute state");
             }
         }
     }
@@ -124,7 +124,7 @@ public sealed class AudioService : IMMNotificationClient, IAudioEndpointVolumeCa
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"Varsayılan ses aygıtı ayarlanamadı: {deviceId}");
+            Log.Error(ex, $"Failed to set default audio device: {deviceId}");
         }
     }
 
@@ -144,7 +144,7 @@ public sealed class AudioService : IMMNotificationClient, IAudioEndpointVolumeCa
         SetDefaultDevice(Devices[nextIndex].Id);
     }
 
-    // ------------------------------------------------------------------ Uygulama bazlı ses oturumları (EarTrumpet tarzı)
+    // ------------------------------------------------------------------ Per-application audio sessions (EarTrumpet style)
 
     public sealed record AudioSessionInfo(
         uint ProcessId, string DisplayName, string ProcessName,
@@ -174,6 +174,8 @@ public sealed class AudioService : IMMNotificationClient, IAudioEndpointVolumeCa
             for (int i = 0; i < count; i++)
             {
                 if (enumerator.GetSession(i, out var session) != 0) continue;
+                bool keepVolumeControl = false;
+                ISimpleAudioVolume? vol = null;
                 try
                 {
                     session.GetState(out var state);
@@ -200,12 +202,11 @@ public sealed class AudioService : IMMNotificationClient, IAudioEndpointVolumeCa
                         catch { processName = $"PID {pid}"; }
                     }
 
-                    if (isSystem) displayName = "Sistem Sesleri";
+                    if (isSystem) displayName = "System Sounds";
                     if (string.IsNullOrWhiteSpace(displayName)) displayName = processName;
                     if (string.IsNullOrWhiteSpace(displayName)) continue;
 
-                    // ISimpleAudioVolume al
-                    ISimpleAudioVolume? vol = null;
+                    // Get ISimpleAudioVolume
                     if (session is ISimpleAudioVolume sav) vol = sav;
 
                     float volume = 1f;
@@ -220,15 +221,24 @@ public sealed class AudioService : IMMNotificationClient, IAudioEndpointVolumeCa
                     {
                         VolumeControl = vol,
                     });
+                    keepVolumeControl = true;
                 }
                 catch { }
+                finally
+                {
+                    if (!keepVolumeControl && vol is not null)
+                    {
+                        try { Marshal.ReleaseComObject(vol); } catch { }
+                    }
+                    try { Marshal.ReleaseComObject(session); } catch { }
+                }
             }
             Marshal.ReleaseComObject(enumerator);
             Marshal.ReleaseComObject(mgr);
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Ses oturumları listelenemedi");
+            Log.Error(ex, "Failed to enumerate audio sessions");
         }
 
         return result;
@@ -292,7 +302,7 @@ public sealed class AudioService : IMMNotificationClient, IAudioEndpointVolumeCa
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Ses aygıtları listelenemedi");
+            Log.Error(ex, "Failed to enumerate audio devices");
         }
 
         Devices = list;
@@ -329,7 +339,7 @@ public sealed class AudioService : IMMNotificationClient, IAudioEndpointVolumeCa
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Varsayılan ses seviyesi dinleyicisi kurulamadı");
+            Log.Error(ex, "Failed to hook default volume listener");
         }
 
         Application.Current?.Dispatcher.BeginInvoke(() => VolumeChanged?.Invoke(this, EventArgs.Empty));
@@ -347,13 +357,13 @@ public sealed class AudioService : IMMNotificationClient, IAudioEndpointVolumeCa
                     string name = Marshal.PtrToStringUni(pv.pwszVal) ?? "";
                     AudioPropertyKeys.PropVariantClear(ref pv);
                     Marshal.ReleaseComObject(store);
-                    return string.IsNullOrWhiteSpace(name) ? "Ses Aygıtı" : name;
+                    return string.IsNullOrWhiteSpace(name) ? "Audio Device" : name;
                 }
                 Marshal.ReleaseComObject(store);
             }
         }
         catch { }
-        return "Ses Aygıtı";
+        return "Audio Device";
     }
 
     private static EndpointFormFactor GetDeviceFormFactor(IMMDevice device)

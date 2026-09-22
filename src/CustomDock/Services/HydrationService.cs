@@ -33,7 +33,7 @@ public sealed class HydrationState
     public DateTime LastEvent { get; set; }
 }
 
-/// <summary>Günlük su sayacı ve aralıklı "su iç" bildirimleri.</summary>
+/// <summary>Daily water tracker and periodic hydration reminders.</summary>
 public sealed class HydrationService
 {
     private const string StoreName = "hydration";
@@ -48,7 +48,7 @@ public sealed class HydrationService
         _timer.Tick += (_, _) => OnTimer();
     }
 
-    /// <summary>Sayaç değiştiğinde tetiklenir.</summary>
+    /// <summary>Triggered when count changes.</summary>
     public event Action? Changed;
 
     public int Count
@@ -62,7 +62,7 @@ public sealed class HydrationService
 
     public HydrationSettings Settings => _settings;
 
-    /// <summary>Bir sonraki "su iç" hatırlatmasının zamanı (son içişten itibaren aralık kadar sonra).</summary>
+    /// <summary>Time for the next hydration reminder (interval duration after last event).</summary>
     public DateTime NextReminder => State.LastEvent == default
         ? DateTime.Now + TimeSpan.FromMinutes(_settings.IntervalMinutes)
         : State.LastEvent + TimeSpan.FromMinutes(_settings.IntervalMinutes);
@@ -123,7 +123,7 @@ public sealed class HydrationService
         Changed?.Invoke();
     }
 
-    /// <summary>Gün değiştiyse sayacı sıfırlar.</summary>
+    /// <summary>Resets count when the day changes.</summary>
     public void EnsureToday()
     {
         var today = DateTime.Today.ToString("yyyy-MM-dd");
@@ -145,7 +145,7 @@ public sealed class HydrationService
         int start = _settings.StartHour, end = _settings.EndHour;
         return start < end
             ? time.Hour >= start && time.Hour < end
-            : time.Hour >= start || time.Hour < end; // gece yarısını aşan aralık
+            : time.Hour >= start || time.Hour < end; // interval crosses midnight
     }
 
     private void OnTimer()
@@ -157,10 +157,10 @@ public sealed class HydrationService
             && State.Count < _settings.DailyGoal)
         {
             AppServices.Notifications.Show(
-                "Su içme zamanı 💧",
-                $"Bugün {State.Count}/{_settings.DailyGoal} bardak içtin. Bir bardak ({_settings.GlassMl} ml) daha?",
+                "Time for water 💧",
+                $"You've had {State.Count}/{_settings.DailyGoal} glasses today. Have another ({_settings.GlassMl} ml)?",
                 tag: "hydration",
-                new ToastAction("İçtim ✓", NotificationService.ActionHydrationDrink));
+                new ToastAction("Drank ✓", NotificationService.ActionHydrationDrink));
             State.LastEvent = now;
             Save();
         }
@@ -184,7 +184,7 @@ public sealed class HydrationService
         }
 
         var wait = due - now;
-        if (wait > TimeSpan.FromMinutes(30)) wait = TimeSpan.FromMinutes(30); // uyku / saat değişimine karşı
+        if (wait > TimeSpan.FromMinutes(30)) wait = TimeSpan.FromMinutes(30); // guard against sleep / time change
         if (wait < TimeSpan.FromSeconds(1)) wait = TimeSpan.FromSeconds(1);
         _timer.Interval = wait;
         _timer.Start();

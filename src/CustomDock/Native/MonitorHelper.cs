@@ -8,16 +8,16 @@ public sealed record MonitorInfo(IntPtr Handle, string DeviceName, RECT Bounds, 
     public int Index { get; init; }
 
     public string DisplayName =>
-        $"Ekran {Index} — {Bounds.Width}×{Bounds.Height}{(IsPrimary ? " (birincil)" : "")}";
+        $"Display {Index} — {Bounds.Width}×{Bounds.Height}{(IsPrimary ? " (Primary)" : "")}";
 
-    /// <summary>Monitörün DPI ölçeği (1.0 = %100).</summary>
+    /// <summary>Monitor DPI scale (1.0 = 100%).</summary>
     public double DpiScale =>
         Handle != IntPtr.Zero && GetDpiForMonitor(Handle, 0 /* MDT_EFFECTIVE_DPI */, out uint dpi, out _) == 0 && dpi > 0
             ? dpi / 96.0
             : 1.0;
 }
 
-/// <summary>Fiziksel piksel cinsinden monitör bilgileri.</summary>
+/// <summary>Monitor information in physical pixels.</summary>
 public static class MonitorHelper
 {
     public static List<MonitorInfo> GetAll()
@@ -30,7 +30,7 @@ public static class MonitorHelper
             return true;
         }, IntPtr.Zero);
 
-        // Birincil ekran önce, sonra soldan sağa.
+        // Primary display first, then left to right.
         return list
             .OrderByDescending(m => m.IsPrimary)
             .ThenBy(m => m.Bounds.Left)
@@ -46,7 +46,7 @@ public static class MonitorHelper
         return new MonitorInfo(handle, info.szDevice, info.rcMonitor, info.rcWork, (info.dwFlags & MONITORINFOF_PRIMARY) != 0);
     }
 
-    /// <summary>Kayıtlı aygıt adına göre monitörü bulur; yoksa birincil ekranı döndürür.</summary>
+    /// <summary>Finds monitor by saved device name; otherwise returns primary display.</summary>
     public static MonitorInfo GetPreferred(string? deviceName)
     {
         var all = GetAll();

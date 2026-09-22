@@ -2,7 +2,7 @@ using Microsoft.Win32;
 
 namespace CustomDock.Core;
 
-/// <summary>HKCU\...\Run anahtarı ile "Windows ile başlat" yönetimi (yönetici izni gerekmez).</summary>
+/// <summary>Manages "Start with Windows" via HKCU\...\Run registry key (no admin privileges required).</summary>
 public static class StartupManager
 {
     private const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
@@ -12,7 +12,7 @@ public static class StartupManager
 
     private static string Command => $"\"{Environment.ProcessPath}\" {StartupArgument}";
 
-    /// <summary>Kurulum sihirbazındaki "Windows ile başlat" seçimi (HKCU\Software\DockHub); yoksa null.</summary>
+    /// <summary>The "Start with Windows" selection from the installer wizard (HKCU\Software\DockHub); null if not set.</summary>
     public static bool? InstallerChoice()
     {
         try
@@ -47,7 +47,7 @@ public static class StartupManager
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Başlangıç kaydı güncellenemedi");
+            Log.Error(ex, "Failed to update startup registry entry");
         }
     }
 }

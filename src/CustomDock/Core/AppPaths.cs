@@ -1,20 +1,20 @@
 namespace CustomDock.Core;
 
-/// <summary>%AppData%\DockHub altındaki tüm dosya yolları.</summary>
+/// <summary>All file paths under %AppData%\DockHub.</summary>
 public static class AppPaths
 {
     private static readonly string AppData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
     private static readonly string LegacyRoot = Path.Combine(AppData, "CustomDock");
 
-    /// <summary>Varsayılan %AppData%\DockHub; DOCKHUB_HOME ortam değişkeniyle değiştirilebilir (test/taşınabilir kullanım).</summary>
+    /// <summary>Default %AppData%\DockHub; can be overridden via DOCKHUB_HOME environment variable (for testing/portable use).</summary>
     public static readonly string Root = CustomRoot() is { } custom ? Path.GetFullPath(custom) : Path.Combine(AppData, "DockHub");
 
     public static readonly string ConfigFile = Path.Combine(Root, "config.json");
 
-    /// <summary>Widget verileri (notlar, hatırlatıcılar, su sayacı...).</summary>
+    /// <summary>Widget data (notes, reminders, hydration counter...).</summary>
     public static readonly string DataDir = Path.Combine(Root, "data");
 
-    /// <summary>Taskbar gizleme durumunu çökmelere karşı saklayan dosya.</summary>
+    /// <summary>File preserving taskbar hide state against crashes.</summary>
     public static readonly string SessionFile = Path.Combine(Root, "session.json");
 
     public static readonly string LogFile = Path.Combine(Root, "log.txt");
@@ -31,7 +31,7 @@ public static class AppPaths
         Directory.CreateDirectory(DataDir);
     }
 
-    /// <summary>Eski adla (%AppData%\CustomDock) kaydedilmiş ayarları ve olası session.json'u yeni klasöre bir kez taşır.</summary>
+    /// <summary>One-time migration of settings and session.json saved under legacy name (%AppData%\CustomDock) to new directory.</summary>
     private static void MigrateLegacyFolder()
     {
         if (CustomRoot() is not null || Directory.Exists(Root) || !Directory.Exists(LegacyRoot))
@@ -48,7 +48,7 @@ public static class AppPaths
             }
             catch
             {
-                // Taşınamazsa varsayılan ayarlarla devam edilir.
+                // If migration fails, proceed with defaults.
             }
         }
     }

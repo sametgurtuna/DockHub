@@ -10,8 +10,8 @@ using CustomDock.Widgets;
 namespace CustomDock.Dock;
 
 /// <summary>
-/// Dock'ta bir widget'ı kart içinde barındırır; sağ tık menüsü ve sürükleme sağlar.
-/// Dikey dock'ta widget yerine özet kutucuğu gösterir; widget'ın tamamı tıklanınca bir panelde açılır.
+/// Hosts a widget inside a card on the dock; provides right-click menu and dragging.
+/// Shows a summary tile instead of widget on vertical dock; full widget opens in a panel when clicked.
 /// </summary>
 public sealed class WidgetItemView : WidgetCard
 {
@@ -24,7 +24,7 @@ public sealed class WidgetItemView : WidgetCard
 
     public WidgetItemView(DockItem item, WidgetBase widget, IWidgetHost host)
     {
-        // Örtük stiller türetilmiş türlere uygulanmaz; kart stilini açıkça bağla.
+        // Implicit styles don't apply to derived types; explicitly attach card style.
         SetResourceReference(StyleProperty, typeof(WidgetCard));
         Item = item;
         Widget = widget;
@@ -35,7 +35,7 @@ public sealed class WidgetItemView : WidgetCard
         widget.CardAppearanceChanged += ApplyAppearance;
         widget.CompactAnchor = this;
         widget.BeforeCompactPopup = CloseFlyout;
-        // Widget kendini gizlerse (ör. çalan yokken medya) kartı da gizle.
+        // If widget hides itself (e.g. media widget when nothing is playing), hide the card too.
         System.ComponentModel.DependencyPropertyDescriptor
             .FromProperty(VisibilityProperty, typeof(UIElement))
             .AddValueChanged(widget, OnWidgetVisibilityChanged);
@@ -62,6 +62,7 @@ public sealed class WidgetItemView : WidgetCard
             };
         }
         DockDragHelper.Attach(this, () => new DataObject(DockDragHelper.ItemFormat, item.Id));
+        MouseEnter += (_, _) => WindowPreviewWindow.Instance.HidePreview();
         Loaded += OnFirstLoaded;
     }
 
@@ -75,13 +76,13 @@ public sealed class WidgetItemView : WidgetCard
 
     public WidgetBase Widget { get; }
 
-    /// <summary>Sağ tık menüsündeki "Ayarlar…" komutu.</summary>
+    /// <summary>"Settings…" command in the right-click menu.</summary>
     public static event Action<DockItem>? SettingsRequested;
 
-    /// <summary>Widget kodundan (ör. panel içindeki dişli düğmesi) ayarlar sayfasını istemek için.</summary>
+    /// <summary>Used by widget code (e.g. gear button inside panel) to request settings page.</summary>
     public static void RequestSettings(DockItem item) => SettingsRequested?.Invoke(item);
 
-    /// <summary>Yatay dock'ta tam kart, dikey dock'ta özet kutucuk.</summary>
+    /// <summary>Full card on horizontal dock, summary tile on vertical dock.</summary>
     public void SetCompact(bool compact)
     {
         if (compact == _compact && Content is not null) return;
@@ -129,7 +130,7 @@ public sealed class WidgetItemView : WidgetCard
         card.Padding = compact ? new Thickness(0) : Widget.CardPadding;
     }
 
-    // ------------------------------------------------------------------ Kompakt mod: tıklama ve panel
+    // ------------------------------------------------------------------ Compact mode: click and panel
 
     protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
     {
@@ -137,13 +138,15 @@ public sealed class WidgetItemView : WidgetCard
         if (!_compact || DockDragHelper.JustDragged || e.Handled) return;
         e.Handled = true;
         if (Widget.OnCompactClick()) return;
-        // StaysOpen=false panel, kutucuğa basıldığı anda kapanır; aynı tıklama onu yeniden açmasın.
-        if (_flyout?.IsOpen == true) CloseFlyout();
-        else if (DateTime.UtcNow - _flyoutClosedAt > TimeSpan.FromMilliseconds(250)) OpenFlyout();
+        if (_flyout?.IsOpen == true || (_flyout is not null && PopupAnimationHelper.IsClosing(_flyout))) CloseFlyout();
+        else if (DateTime.UtcNow - _flyoutClosedAt > TimeSpan.FromMilliseconds(250) && !PopupAnimationHelper.IsClosing(_flyout!)) OpenFlyout();
     }
 
     private void OpenFlyout()
     {
+        if (_flyout is not null && PopupAnimationHelper.IsClosing(_flyout))
+            return;
+
         if (_flyout is null)
         {
             _flyoutCard = new WidgetCard { HoverEnabled = false };
@@ -163,7 +166,7 @@ public sealed class WidgetItemView : WidgetCard
             {
                 Child = frame,
                 AllowsTransparency = true,
-                StaysOpen = false,
+                StaysOpen = true,
                 PopupAnimation = PopupAnimation.None,
                 PlacementTarget = this,
             };
@@ -184,16 +187,16 @@ public sealed class WidgetItemView : WidgetCard
         }
 
         PopupPlacement.PlacePopup(_flyout, this, _host.Edge, gap: 2);
-        Motion.PopIn((FrameworkElement)_flyout.Child, PopupPlacement.EnterOffset(_host.Edge));
         _flyoutInteraction = true;
         _host.BeginInteraction();
         GlobalPopupDismissHook.RegisterPopup(_flyout);
-        _flyout.IsOpen = true;
+        PopupAnimationHelper.AnimateOpen(_flyout, _host.Edge, this);
     }
 
     private void CloseFlyout()
     {
-        if (_flyout is { IsOpen: true }) _flyout.IsOpen = false;
+        if (_flyout is { IsOpen: true } && !PopupAnimationHelper.IsClosing(_flyout))
+            PopupAnimationHelper.ClosePopup(_flyout, _host.Edge, this);
     }
 
     private void OnContextMenuOpening(object sender, ContextMenuEventArgs e)
@@ -212,15 +215,20 @@ public sealed class WidgetItemView : WidgetCard
         menu.Items.Add(DockMenu.Separator());
         if (descriptor.Variants.Count > 1)
         {
-            menu.Items.Add(DockMenu.Submenu("Görünüm", "\uE8A9", descriptor.Variants.Select(v =>
+            menu.Items.Add(DockMenu.Submenu("Appearance", "\uE8A9", descriptor.Variants.Select(v =>
                 DockMenu.Check(v.Name, Widget.Variant == v.Id, () =>
                 {
                     Item.Variant = v.Id;
                     AppServices.ConfigService.ScheduleSave();
                 }))));
         }
-        menu.Items.Add(DockMenu.Item("Widget ayarları…", "\uE713", () => SettingsRequested?.Invoke(Item)));
-        menu.Items.Add(DockMenu.Item("Dock'tan kaldır", "\uE77A", () => AppServices.ConfigService.RemoveItem(Item.Id)));
+        menu.Items.Add(DockMenu.Item("Widget settings…", "\uE713", () => SettingsRequested?.Invoke(Item)));
+        menu.Items.Add(DockMenu.Check("Pin to right edge", Item.PinnedEnd, () =>
+        {
+            Item.PinnedEnd = !Item.PinnedEnd;
+            AppServices.Config.NotifyItemsChanged();
+        }));
+        menu.Items.Add(DockMenu.Item("Remove from dock", "\uE77A", () => AppServices.ConfigService.RemoveItem(Item.Id)));
     }
 
     public void Detach()
@@ -235,7 +243,7 @@ public sealed class WidgetItemView : WidgetCard
     }
 }
 
-/// <summary>Öğeler arasındaki ince ayraç.</summary>
+/// <summary>Thin separator between items.</summary>
 public sealed class SeparatorView : Border
 {
     private readonly Border _line;
@@ -249,7 +257,7 @@ public sealed class SeparatorView : Border
         Child = _line;
         SetOrientation(vertical);
         ContextMenu = new ContextMenu();
-        ContextMenu.Items.Add(DockMenu.Item("Ayracı kaldır", "\uE77A", () => AppServices.ConfigService.RemoveItem(item.Id)));
+        ContextMenu.Items.Add(DockMenu.Item("Remove separator", "\uE77A", () => AppServices.ConfigService.RemoveItem(item.Id)));
         DockDragHelper.Attach(this, () => new DataObject(DockDragHelper.ItemFormat, item.Id));
     }
 
@@ -259,7 +267,7 @@ public sealed class SeparatorView : Border
     {
     }
 
-    /// <summary>Çalışan uygulamalar bölümünün başındaki otomatik ayraç için.</summary>
+    /// <summary>For the automatic separator at the beginning of the running applications section.</summary>
     public SeparatorView(bool vertical)
     {
         Background = Brushes.Transparent;

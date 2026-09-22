@@ -1,10 +1,12 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Threading;
 using CustomDock.Controls;
 using CustomDock.Core;
 using CustomDock.Native;
@@ -15,20 +17,28 @@ using ManagedShell.WindowsTasks;
 namespace CustomDock.Dock;
 
 /// <summary>
-/// Dock'taki uygulama düğmesi: sabitlenmiş öğe ve/veya çalışan pencere grubu.
-/// Göstergeler: çalışıyor noktası, etkin pencere çizgisi, dikkat (yanıp sönme), ilerleme çubuğu, rozet.
+/// Application button on the dock: pinned item and/or running window group.
+/// Indicators: running dot, active window bar, attention (flashing), progress bar, badge, live preview.
 /// </summary>
 public sealed class AppButton : Grid
 {
     private const double IconSize = 30;
 
+    private static readonly Regex BadgeRx = new(
+        @"(?:^|[\(\[])\s*(\d{1,4}\+?)\s*(?:[\)\]]|$)|[\(\[]\s*(\d{1,4}\+?)\s*[\)\]]",
+        RegexOptions.Compiled);
+
     private readonly Border _hover;
     private readonly Image _icon;
     private readonly Image _overlay;
+    private readonly Border _badgeBorder;
+    private readonly TextBlock _badgeText;
     private readonly Border _indicator;
     private readonly Grid _progressTrack;
     private readonly Border _progressFill;
     private readonly ScaleTransform _pressScale = new();
+    private readonly DispatcherTimer _previewTimer;
+    private readonly DispatcherTimer _dragActivateTimer;
     private AppGroup? _group;
 
     public AppButton(DockItem? item, AppGroup? group)
@@ -39,6 +49,7 @@ public sealed class AppButton : Grid
         Margin = new Thickness(1, 0, 1, 0);
         Background = Brushes.Transparent;
         Focusable = false;
+        AllowDrop = true;
         ToolTipService.SetInitialShowDelay(this, 450);
 
         _hover = new Border { CornerRadius = new CornerRadius(8), Margin = new Thickness(1, 3, 1, 3), Opacity = 0 };
@@ -67,6 +78,39 @@ public sealed class AppButton : Grid
         };
         RenderOptions.SetBitmapScalingMode(_overlay, BitmapScalingMode.HighQuality);
 
+        // Notification badge (Red pill / circle)
+        _badgeBorder = new Border
+        {
+            Background = new SolidColorBrush(Color.FromRgb(255, 59, 48)), // Vibrant notification red
+            BorderBrush = Brushes.White,
+            BorderThickness = new Thickness(1.5),
+            CornerRadius = new CornerRadius(8),
+            MinHeight = 16,
+            MinWidth = 16,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            VerticalAlignment = VerticalAlignment.Top,
+            Margin = new Thickness(0, 1, 1, 0),
+            Visibility = Visibility.Collapsed,
+            Padding = new Thickness(3.5, 0, 3.5, 0),
+        };
+        _badgeText = new TextBlock
+        {
+            Foreground = Brushes.White,
+            FontSize = 9.5,
+            FontWeight = FontWeights.Bold,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Typography = { NumeralAlignment = FontNumeralAlignment.Tabular },
+        };
+        _badgeBorder.Child = _badgeText;
+
+        _previewTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(280) };
+        _previewTimer.Tick += (_, _) =>
+        {
+            _previewTimer.Stop();
+            ShowThumbnailPreview();
+        };
+
         _indicator = new Border
         {
             Height = 3,
@@ -93,17 +137,60 @@ public sealed class AppButton : Grid
         Children.Add(_hover);
         Children.Add(_icon);
         Children.Add(_overlay);
+        Children.Add(_badgeBorder);
         Children.Add(_progressTrack);
         Children.Add(_indicator);
 
-        MouseEnter += (_, _) => { Motion.Fade(_hover, 1, 120); AnimatePress(HoverScale); };
-        MouseLeave += (_, _) => { Motion.Fade(_hover, 0, 220); AnimatePress(1); };
+        MouseEnter += (_, _) =>
+        {
+            Motion.Fade(_hover, 1, 120);
+            AnimatePress(HoverScale);
+            if (_group is { WindowCount: > 0 })
+            {
+                if (WindowPreviewWindow.Instance.IsVisible)
+                    ShowThumbnailPreview();
+                else
+                    _previewTimer.Start();
+            }
+            else
+            {
+                _previewTimer.Stop();
+                WindowPreviewWindow.Instance.HidePreview();
+            }
+        };
+        MouseLeave += (_, _) =>
+        {
+            Motion.Fade(_hover, 0, 220);
+            AnimatePress(1);
+            _previewTimer.Stop();
+            WindowPreviewWindow.Instance.ScheduleHide(100);
+        };
         MouseLeftButtonDown += (_, _) => AnimatePress(0.86);
         Loaded += OnFirstLoaded;
         MouseLeftButtonUp += OnLeftUp;
         MouseDown += OnMiddleDown;
         ContextMenu = new ContextMenu();
         ContextMenuOpening += OnContextMenuOpening;
+
+        _dragActivateTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(400) };
+        _dragActivateTimer.Tick += (_, _) =>
+        {
+            _dragActivateTimer.Stop();
+            if (_group is { WindowCount: > 0 })
+            {
+                var win = _group.PrimaryWindow ?? _group.Windows.FirstOrDefault();
+                if (win is not null)
+                {
+                    if (win.IsMinimized) win.Restore();
+                    win.BringToFront();
+                }
+            }
+        };
+
+        DragEnter += OnFileDragEnter;
+        DragOver += OnFileDragOver;
+        DragLeave += OnFileDragLeave;
+        Drop += OnFileDrop;
 
         if (item?.Path is { } path)
             _icon.Source = IconFor(path);
@@ -145,7 +232,7 @@ public sealed class AppButton : Grid
 
     private static ImageSource? IconFor(string path)
     {
-        // Kısayolun hedefi bir .exe ise onun ikonunu kullan (kısayol oku olmadan, daha net).
+        // If the shortcut target is an .exe, use its icon (clearer, without shortcut arrow).
         if (path.EndsWith(".lnk", StringComparison.OrdinalIgnoreCase) &&
             ShellIcons.ResolveShortcut(path) is { } target &&
             target.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) && File.Exists(target))
@@ -193,12 +280,70 @@ public sealed class AppButton : Grid
                 group.ProgressError ? "AccentOrangeBrush" : group.ProgressIndeterminate ? "TextSecondaryBrush" : "AccentGreenBrush");
         }
 
-        var tip = Title;
-        if (group is { WindowCount: > 1 })
-            tip += "\n" + string.Join("\n", group.Windows.Take(8).Select(w => "• " + Trim(w.Title, 60)));
-        else if (group?.Windows.FirstOrDefault() is { } window && !string.IsNullOrWhiteSpace(window.Title) && window.Title != Title)
-            tip += "\n" + Trim(window.Title, 80);
-        ToolTip = tip;
+        UpdateBadge(group);
+
+        // Live thumbnail preview already shows open windows; clean tooltip
+        ToolTip = group is { WindowCount: > 0 } ? null : Title;
+    }
+
+    private void ShowThumbnailPreview()
+    {
+        if (_group is not { WindowCount: > 0 }) return;
+        WindowPreviewWindow.Instance.ShowFor(this, _group, AppServices.Config.Edge);
+    }
+
+    private void UpdateBadge(AppGroup? group)
+    {
+        if (group is null || group.WindowCount == 0)
+        {
+            _badgeBorder.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        string? badgeText = null;
+        bool hasDot = false;
+
+        foreach (var window in group.Windows)
+        {
+            if (string.IsNullOrWhiteSpace(window.Title)) continue;
+
+            var match = BadgeRx.Match(window.Title);
+            if (match.Success)
+            {
+                badgeText = !string.IsNullOrEmpty(match.Groups[1].Value) ? match.Groups[1].Value : match.Groups[2].Value;
+                break;
+            }
+
+            if (window.Title.StartsWith("•") || window.Title.StartsWith("*") || window.Title.Contains(" • ") || window.Title.Contains(" * "))
+            {
+                hasDot = true;
+            }
+        }
+
+        if (!string.IsNullOrEmpty(badgeText))
+        {
+            _badgeText.Text = badgeText;
+            _badgeText.Visibility = Visibility.Visible;
+            _badgeBorder.MinWidth = 16;
+            _badgeBorder.MinHeight = 16;
+            _badgeBorder.CornerRadius = new CornerRadius(8);
+            _badgeBorder.Padding = new Thickness(3.5, 0, 3.5, 0);
+            _badgeBorder.Visibility = Visibility.Visible;
+        }
+        else if (hasDot || (group.OverlayIcon is not null && _overlay.Source is null))
+        {
+            _badgeText.Text = "";
+            _badgeText.Visibility = Visibility.Collapsed;
+            _badgeBorder.MinWidth = 10;
+            _badgeBorder.MinHeight = 10;
+            _badgeBorder.CornerRadius = new CornerRadius(5);
+            _badgeBorder.Padding = new Thickness(0);
+            _badgeBorder.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            _badgeBorder.Visibility = Visibility.Collapsed;
+        }
     }
 
     private static string Trim(string text, int max) => text.Length > max ? text[..(max - 1)] + "…" : text;
@@ -213,7 +358,7 @@ public sealed class AppButton : Grid
         Motion.Scale(_pressScale, scale, scale < 1 ? 90 : 260, easing);
     }
 
-    /// <summary>Dock'a yeni gelen düğme küçükten büyüyerek belirir.</summary>
+    /// <summary>Newly added dock button animates in from small to full size.</summary>
     private void OnFirstLoaded(object sender, RoutedEventArgs e)
     {
         Loaded -= OnFirstLoaded;
@@ -251,6 +396,9 @@ public sealed class AppButton : Grid
 
     private void OnContextMenuOpening(object sender, ContextMenuEventArgs e)
     {
+        WindowPreviewWindow.Instance.HidePreview();
+        _previewTimer.Stop();
+
         var menu = ContextMenu;
         menu.Items.Clear();
         menu.Items.Add(DockMenu.Header(Title));
@@ -263,27 +411,71 @@ public sealed class AppButton : Grid
             {
                 var w = window;
                 string title = string.IsNullOrWhiteSpace(w.Title) ? Title : Trim(w.Title, 50);
-                var item = DockMenu.Item(title, null, w.BringToFront);
+                var item = DockMenu.Item(title, null, () =>
+                {
+                    if (w.IsMinimized) w.Restore();
+                    w.BringToFront();
+                });
                 item.FontWeight = w.State == ApplicationWindow.WindowState.Active ? FontWeights.SemiBold : FontWeights.Normal;
                 menu.Items.Add(item);
             }
         }
 
-        menu.Items.Add(DockMenu.Separator());
-        menu.Items.Add(DockMenu.Item(windows.Count > 0 ? "Yeni pencere" : "Aç", "\uE8A7", StartNewInstance, LaunchPath is not null));
+        string? resolvedExe = null;
+        if (LaunchPath is { } lPath && !lPath.StartsWith("shell:", StringComparison.OrdinalIgnoreCase))
+            resolvedExe = lPath.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ? lPath : ShellIcons.ResolveShortcut(lPath);
 
-        if (LaunchPath is { } path && !path.StartsWith("shell:", StringComparison.OrdinalIgnoreCase))
+        // --- Jump List (Tasks) ---
+        var tasks = JumpListService.GetTasks(resolvedExe);
+        if (tasks.Count > 0)
         {
-            string? exe = path.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ? path : ShellIcons.ResolveShortcut(path);
-            if (exe is not null && exe.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
-                menu.Items.Add(DockMenu.Item("Yönetici olarak çalıştır", "\uE7EF", () => AppLauncher.RunAsAdmin(path)));
-            menu.Items.Add(DockMenu.Item("Dosya konumunu aç", "\uE8B7", () => AppLauncher.OpenLocation(path)));
+            menu.Items.Add(DockMenu.Separator());
+            foreach (var task in tasks)
+            {
+                menu.Items.Add(DockMenu.Item(task.Title, task.Glyph, task.Action));
+            }
+        }
+
+        // --- Jump List (Recent Items) ---
+        var recentItems = JumpListService.GetRecentItems(resolvedExe);
+        if (recentItems.Count > 0)
+        {
+            menu.Items.Add(DockMenu.Separator());
+            foreach (var recent in recentItems)
+            {
+                var r = recent;
+                var item = DockMenu.Item(r.Title, null, () =>
+                {
+                    try
+                    {
+                        Process.Start(new ProcessStartInfo(r.Path) { UseShellExecute = true });
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, $"Failed to open recent item: {r.Path}");
+                    }
+                });
+                if (r.Icon is not null)
+                {
+                    item.Icon = new Image { Source = r.Icon, Width = 16, Height = 16, Margin = new Thickness(0, 0, 8, 0) };
+                }
+                menu.Items.Add(item);
+            }
+        }
+
+        menu.Items.Add(DockMenu.Separator());
+        menu.Items.Add(DockMenu.Item(windows.Count > 0 ? "New window" : "Open", "\uE8A7", StartNewInstance, LaunchPath is not null));
+
+        if (resolvedExe is not null && resolvedExe.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+        {
+            menu.Items.Add(DockMenu.Item("Run as administrator", "\uE7EF", () => AppLauncher.RunAsAdmin(resolvedExe)));
+            menu.Items.Add(DockMenu.Item("Open file location", "\uE8B7", () => AppLauncher.OpenLocation(resolvedExe)));
         }
 
         menu.Items.Add(DockMenu.Separator());
         if (Item is not null)
         {
-            menu.Items.Add(DockMenu.Item("Sabitlemeyi kaldır", "\uE77A", () => AppServices.ConfigService.RemoveItem(Item.Id)));
+            menu.Items.Add(DockMenu.Item("Unpin from dock", "\uE77A", () => AppServices.ConfigService.RemoveItem(Item.Id)));
         }
         else if (_group is not null && AppLauncher.PinnablePath(_group) is { } pinPath)
         {
@@ -294,36 +486,129 @@ public sealed class AppButton : Grid
         if (windows.Count > 0)
         {
             menu.Items.Add(DockMenu.Separator());
-            menu.Items.Add(DockMenu.Item(windows.Count > 1 ? $"Tüm pencereleri kapat ({windows.Count})" : "Pencereyi kapat", "\uE711",
+            menu.Items.Add(DockMenu.Item(windows.Count > 1 ? $"Close all windows ({windows.Count})" : "Close window", "\uE711",
                 () => { foreach (var w in windows.ToList()) w.Close(); }));
-            menu.Items.Add(DockMenu.Item(windows.Count > 1 ? "İşlemleri sonlandır" : "İşlemi sonlandır", "",
-                () => { foreach (var w in windows.ToList()) KillProcess(w); }));
+            menu.Items.Add(DockMenu.Item(windows.Count > 1 ? "End processes" : "End process", "\uE9CE",
+                () => TerminateWindows(windows.ToList())));
         }
     }
 
-    /// <summary>Pencerenin ait olduğu işlemi doğrudan (kapanmayı beklemeden) sonlandırır; Görev Yöneticisi'ndeki "Görevi sonlandır" ile aynı.</summary>
-    private static void KillProcess(ApplicationWindow window)
+    /// <summary>Immediately and forcefully terminates processes owning the windows (like Task Manager "End Task").</summary>
+    private static void TerminateWindows(IReadOnlyList<ApplicationWindow> windows)
     {
-        try
+        foreach (var w in windows)
         {
-            NativeMethods.GetWindowThreadProcessId(window.Handle, out uint pid);
-            if (pid == 0) return;
-            using var process = Process.GetProcessById((int)pid);
-            process.Kill(true);
+            try
+            {
+                if (w.Handle != IntPtr.Zero)
+                    NativeMethods.EndTask(w.Handle, false, true);
+            }
+            catch { /* ignore */ }
         }
-        catch (Exception ex)
+
+        var pids = new HashSet<uint>();
+        foreach (var w in windows)
         {
-            Log.Error(ex, "İşlem sonlandırılamadı");
+            uint pid = w.ProcId ?? 0;
+            if (pid == 0)
+                NativeMethods.GetWindowThreadProcessId(w.Handle, out pid);
+
+            if (pid > 4 && pid != (uint)Environment.ProcessId)
+            {
+                pids.Add(pid);
+            }
         }
+
+        _ = Task.Run(() =>
+        {
+            foreach (uint pid in pids)
+            {
+                try
+                {
+                    using var process = Process.GetProcessById((int)pid);
+                    if (process.ProcessName.Equals("explorer", StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    process.Kill(true);
+                }
+                catch (Exception ex)
+                {
+                    Log.Warn($"Process {pid} could not be terminated directly, trying taskkill: {ex.Message}");
+                    try
+                    {
+                        using var p = Process.Start(new ProcessStartInfo
+                        {
+                            FileName = "taskkill",
+                            Arguments = $"/F /T /PID {pid}",
+                            CreateNoWindow = true,
+                            UseShellExecute = false,
+                        });
+                        p?.WaitForExit(1000);
+                    }
+                    catch (Exception taskKillEx)
+                    {
+                        Log.Error(taskKillEx, $"taskkill failed for PID {pid}");
+                    }
+                }
+            }
+        });
+    }
+
+    private void OnFileDragEnter(object sender, DragEventArgs e)
+    {
+        if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
+        e.Effects = DragDropEffects.Copy;
+        e.Handled = true;
+        Motion.Fade(_hover, 1, 100);
+        AnimatePress(HoverScale);
+        _dragActivateTimer.Stop();
+        _dragActivateTimer.Start();
+    }
+
+    private void OnFileDragOver(object sender, DragEventArgs e)
+    {
+        if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
+        e.Effects = DragDropEffects.Copy;
+        e.Handled = true;
+    }
+
+    private void OnFileDragLeave(object sender, DragEventArgs e)
+    {
+        _dragActivateTimer.Stop();
+        Motion.Fade(_hover, 0, 160);
+        AnimatePress(1);
+    }
+
+    private void OnFileDrop(object sender, DragEventArgs e)
+    {
+        _dragActivateTimer.Stop();
+        Motion.Fade(_hover, 0, 160);
+        AnimatePress(1);
+
+        if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
+        if (e.Data.GetData(DataFormats.FileDrop) is not string[] files || files.Length == 0) return;
+
+        e.Handled = true;
+        string? targetPath = LaunchPath;
+        if (string.IsNullOrWhiteSpace(targetPath)) return;
+
+        string? exeToRun = targetPath;
+        if (exeToRun.EndsWith(".lnk", StringComparison.OrdinalIgnoreCase))
+            exeToRun = ShellIcons.ResolveShortcut(exeToRun) ?? exeToRun;
+
+        string args = string.Join(" ", files.Select(f => $"\"{f}\""));
+        AppLauncher.Launch(exeToRun, args);
     }
 
     public void Detach()
     {
+        _previewTimer.Stop();
+        _dragActivateTimer.Stop();
         if (_group is not null) _group.PropertyChanged -= OnGroupChanged;
     }
 }
 
-/// <summary>Yeni sabitlenen uygulamaların ekleneceği konum: son uygulama öğesinin hemen arkası.</summary>
+/// <summary>Position for newly pinned applications: immediately after the last app item.</summary>
 public static class DockItemsIndex
 {
     public static int EndOfApps()

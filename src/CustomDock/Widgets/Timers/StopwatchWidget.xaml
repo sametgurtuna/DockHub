@@ -5,6 +5,6 @@
               Cursor="Hand">
     <StackPanel MinWidth="92" VerticalAlignment="Center" Background="Transparent" MouseLeftButtonUp="OnClick">
         <TextBlock x:Name="TimeText" Style="{StaticResource ValueText}" FontSize="19" LineHeight="22" HorizontalAlignment="Center" Text="0:00" />
-        <TextBlock x:Name="StatusText" Style="{StaticResource CaptionText}" HorizontalAlignment="Center" Text="Hazır" />
+        <TextBlock x:Name="StatusText" Style="{StaticResource CaptionText}" HorizontalAlignment="Center" Text="Ready" />
     </StackPanel>
 </w:WidgetBase>

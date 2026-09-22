@@ -3,7 +3,7 @@ using System.Windows.Media;
 
 namespace CustomDock.Controls;
 
-/// <summary>İnce dikey çizgilerden oluşan "barkod" ilerleme çubuğu (Dockset zaman ilerlemesi stili).</summary>
+/// <summary>"Barcode" progress bar composed of thin vertical tick marks (Dockset time progress style).</summary>
 public sealed class TickBar : FrameworkElement
 {
     public static readonly DependencyProperty ValueProperty = DependencyProperty.Register(
@@ -26,7 +26,7 @@ public sealed class TickBar : FrameworkElement
         nameof(Gap), typeof(double), typeof(TickBar),
         new FrameworkPropertyMetadata(2.0, FrameworkPropertyMetadataOptions.AffectsRender));
 
-    /// <summary>0-1 arası doluluk.</summary>
+    /// <summary>Fill ratio between 0 and 1.</summary>
     public double Value { get => (double)GetValue(ValueProperty); set => SetValue(ValueProperty, value); }
     public Brush OnBrush { get => (Brush)GetValue(OnBrushProperty); set => SetValue(OnBrushProperty, value); }
     public Brush OffBrush { get => (Brush)GetValue(OffBrushProperty); set => SetValue(OffBrushProperty, value); }

@@ -25,7 +25,7 @@ public sealed class StatusSettings : ObservableObject
     public bool ShowCpu { get => _showCpu; set => Set(ref _showCpu, value); }
 }
 
-/// <summary>Pil / disk / bellek / işlemci doluluk halkaları (Dockset "Status" görünümü).</summary>
+/// <summary>Battery / disk / memory / CPU utilization rings (Dockset "Status" view).</summary>
 public partial class StatusWidget : WidgetBase
 {
     private sealed class Cell
@@ -134,8 +134,8 @@ public partial class StatusWidget : WidgetBase
             string text = Math.Round(value).ToString(System.Globalization.CultureInfo.CurrentCulture);
             cell.Inner.Text = text;
             cell.Inner.FontSize = text.Length > 2 ? 7.5 : 8.5;
-            cell.Caption.Text = Variant == "percent" ? ShortLabel(cell.Kind, stats) : "%" + text;
-            tooltip.Add($"{label}: %{text}");
+            cell.Caption.Text = Variant == "percent" ? ShortLabel(cell.Kind, stats) : text + "%";
+            tooltip.Add($"{label}: {text}%");
 
             bool warn = cell.Kind == DeviceGlyphKind.Battery ? value < 20 && !stats.IsCharging : value >= 90;
             cell.Ring.SetResourceReference(RingGauge.FillProperty, warn ? "AccentRedBrush" : "AccentGreenBrush");
@@ -143,7 +143,7 @@ public partial class StatusWidget : WidgetBase
 
         if (stats.BatteryPercent is null && _cells.Any(c => c.Kind == DeviceGlyphKind.Battery) && stats.RamTotalGb > 0)
         {
-            // Pil yok (masaüstü bilgisayar): pil halkasını kaldır.
+            // No battery (desktop PC): remove battery ring.
             Rebuild();
             return;
         }
@@ -171,7 +171,7 @@ public partial class StatusWidget : WidgetBase
 
     private static string ShortLabel(DeviceGlyphKind kind, SystemStats stats) => kind switch
     {
-        DeviceGlyphKind.Battery => stats.IsCharging ? "Şarj" : "Pil",
+        DeviceGlyphKind.Battery => stats.IsCharging ? "Chg" : "Bat",
         DeviceGlyphKind.Disk => "Disk",
         DeviceGlyphKind.Memory => "RAM",
         _ => "CPU",
@@ -179,9 +179,9 @@ public partial class StatusWidget : WidgetBase
 
     private static (double Value, string Label) Describe(DeviceGlyphKind kind, SystemStats stats) => kind switch
     {
-        DeviceGlyphKind.Battery => (stats.BatteryPercent ?? 0, "Pil"),
-        DeviceGlyphKind.Disk => (stats.DiskPercent, "Disk (dolu)"),
-        DeviceGlyphKind.Memory => (stats.RamPercent, "Bellek"),
-        _ => (stats.CpuPercent, "İşlemci"),
+        DeviceGlyphKind.Battery => (stats.BatteryPercent ?? 0, "Battery"),
+        DeviceGlyphKind.Disk => (stats.DiskPercent, "Disk (used)"),
+        DeviceGlyphKind.Memory => (stats.RamPercent, "Memory"),
+        _ => (stats.CpuPercent, "CPU"),
     };
 }

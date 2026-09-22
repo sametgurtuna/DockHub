@@ -60,7 +60,7 @@ public sealed class RecycleBinService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Çöp Kutusu durumu sorgulanamadı");
+            Log.Error(ex, "Failed to query Recycle Bin status");
         }
     }
 
@@ -68,13 +68,13 @@ public sealed class RecycleBinService
     {
         try
         {
-            // SHERB_NOCONFIRMATION (onay penceresi açılmaz, ses çalar)
-            NativeMethods.SHEmptyRecycleBin(IntPtr.Zero, null, NativeMethods.SHERB_NOCONFIRMATION);
+            // Windows displays the user confirmation dialog (0: standard confirmation and sound).
+            NativeMethods.SHEmptyRecycleBin(IntPtr.Zero, null, 0);
             Refresh();
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Çöp Kutusu boşaltılamadı");
+            Log.Error(ex, "Failed to empty Recycle Bin");
         }
     }
 
@@ -86,7 +86,7 @@ public sealed class RecycleBinService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Çöp Kutusu açılamadı");
+            Log.Error(ex, "Failed to open Recycle Bin");
         }
     }
 
@@ -97,7 +97,7 @@ public sealed class RecycleBinService
             var validPaths = paths.Where(p => !string.IsNullOrWhiteSpace(p) && (File.Exists(p) || Directory.Exists(p))).ToList();
             if (validPaths.Count == 0) return;
 
-            // SHFileOperation için pFrom çift null ile sonlanan null ayrımlı string olmalı
+            // For SHFileOperation, pFrom must be a double-null-terminated string
             string pFrom = string.Join("\0", validPaths) + "\0\0";
 
             var op = new NativeMethods.SHFILEOPSTRUCT
@@ -117,7 +117,7 @@ public sealed class RecycleBinService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Dosyalar Çöp Kutusuna taşınamadı");
+            Log.Error(ex, "Failed to move files to Recycle Bin");
         }
     }
 }

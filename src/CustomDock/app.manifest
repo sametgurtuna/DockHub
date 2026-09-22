@@ -5,7 +5,7 @@
   <trustInfo xmlns="urn:schemas-microsoft-com:asm.v2">
     <security>
       <requestedPrivileges xmlns="urn:schemas-microsoft-com:asm.v3">
-        <!-- Yönetici yetkisi GEREKMEZ. Yükseltilmiş çalıştırmak Explorer'dan sürükle-bırakı (UIPI) engeller. -->
+        <!-- Admin privileges NOT required. Running elevated prevents drag-and-drop from Explorer (UIPI). -->
         <requestedExecutionLevel level="asInvoker" uiAccess="false" />
       </requestedPrivileges>
     </security>

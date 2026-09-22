@@ -57,7 +57,7 @@ public partial class BatteryDevicesWidget : WidgetBase
         var devices = AppServices.DeviceBattery.Devices;
         var primary = AppServices.DeviceBattery.PrimaryDevice;
 
-        // 1. Tekli görünüm
+        // 1. Single view
         if (primary is not null)
         {
             string shortName = primary.Name;
@@ -71,18 +71,18 @@ public partial class BatteryDevicesWidget : WidgetBase
 
             SingleIcon.Data = GetDeviceGeometry(primary);
             SingleDeviceName.Text = shortName;
-            SingleBatteryText.Text = primary.IsCharging ? $"%{primary.BatteryPercent} ⚡" : $"%{primary.BatteryPercent}";
+            SingleBatteryText.Text = primary.IsCharging ? $"⚡ {primary.BatteryPercent}%" : $"{primary.BatteryPercent}%";
         }
         else
         {
             SingleBatteryRing.Value = 0;
             SingleBatteryRing.SetResourceReference(RingGauge.FillProperty, "TextTertiaryBrush");
             SingleIcon.Data = BatteryGeometry;
-            SingleDeviceName.Text = "Aygıt Yok";
+            SingleDeviceName.Text = "No Devices";
             SingleBatteryText.Text = "—";
         }
 
-        // 2. Çoklu görünüm
+        // 2. Multi view
         MultiDevicesList.Items.Clear();
         if (devices.Count == 0)
         {
@@ -101,12 +101,12 @@ public partial class BatteryDevicesWidget : WidgetBase
         // Tooltip
         if (devices.Count > 0)
         {
-            var lines = devices.Select(d => $"{d.Name}: %{d.BatteryPercent}" + (d.IsCharging ? " (Şarj oluyor)" : ""));
+            var lines = devices.Select(d => $"{d.Name}: {d.BatteryPercent}%" + (d.IsCharging ? " (Charging)" : ""));
             ToolTip = string.Join("\n", lines);
         }
         else
         {
-            ToolTip = "Bağlı aygıt pili bulunamadı";
+            ToolTip = "No connected device battery found";
         }
 
         RefreshCompact();
@@ -158,7 +158,7 @@ public partial class BatteryDevicesWidget : WidgetBase
 
         var text = new TextBlock
         {
-            Text = $"%{dev.BatteryPercent}",
+            Text = $"{dev.BatteryPercent}%",
             Style = (Style)FindResource("CaptionText"),
             VerticalAlignment = VerticalAlignment.Center,
         };
@@ -183,7 +183,7 @@ public partial class BatteryDevicesWidget : WidgetBase
         {
             var (fillKey, trackKey) = GetBrushKeys(primary.BatteryPercent, primary.IsCharging);
             tile.ShowRing(primary.BatteryPercent, 100, fillKey, trackKey, primary.BatteryPercent.ToString(CultureInfo.CurrentCulture));
-            tile.Text = primary.IsHeadset ? "Kulaklık" : (primary.IsMouse ? "Fare" : "Pil");
+            tile.Text = primary.IsHeadset ? "Headset" : (primary.IsMouse ? "Mouse" : "Battery");
         }
         else
         {
@@ -200,8 +200,8 @@ public partial class BatteryDevicesWidget : WidgetBase
 
     public override void AddContextMenuItems(ItemCollection items)
     {
-        items.Add(DockMenu.Item("Şimdi yenile", "\uE72C", () => AppServices.DeviceBattery.Refresh()));
-        items.Add(DockMenu.Item("Bluetooth ayarları…", "\uE702", () =>
+        items.Add(DockMenu.Item("Refresh now", "\uE72C", () => AppServices.DeviceBattery.Refresh()));
+        items.Add(DockMenu.Item("Bluetooth settings…", "\uE702", () =>
         {
             try
             {

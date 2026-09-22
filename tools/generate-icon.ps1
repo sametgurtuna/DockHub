@@ -1,5 +1,5 @@
-# Uygulama ikonunu (Assets\DockHub.ico) üretir. PowerShell 7+ (Windows) gerektirir.
-# Kullanım: pwsh tools/generate-icon.ps1
+# Generates application icon (Assets\DockHub.ico). Requires PowerShell 7+ (Windows).
+# Usage: pwsh tools/generate-icon.ps1
 Add-Type -AssemblyName System.Drawing
 
 $out = Join-Path $PSScriptRoot '..\src\CustomDock\Assets\DockHub.ico'
@@ -29,12 +29,12 @@ function New-IconBitmap([int]$s) {
         [System.Drawing.Color]::FromArgb(255, 58, 58, 66), [System.Drawing.Color]::FromArgb(255, 18, 18, 22))
     $g.FillPath($grad, $body)
 
-    # "Dock" çubuğu
+    # "Dock" bar
     $barH = [single]($s * 0.34); $barY = [single]($s * 0.52); $barX = [single]($s * 0.14); $barW = [single]($s * 0.72)
     $bar = New-RoundedPath $barX $barY $barW $barH ([single]($barH * 0.3))
     $g.FillPath([System.Drawing.SolidBrush]::new([System.Drawing.Color]::FromArgb(70, 255, 255, 255)), $bar)
 
-    # Üç widget kutusu
+    # Three widget boxes
     $colors = @(
         [System.Drawing.Color]::FromArgb(255, 52, 199, 89),
         [System.Drawing.Color]::FromArgb(255, 255, 159, 10),
@@ -49,7 +49,7 @@ function New-IconBitmap([int]$s) {
         $g.FillPath([System.Drawing.SolidBrush]::new($colors[$i]), $cp)
     }
 
-    # Üstte saat çizgisi
+    # Top clock line
     $lineY = [single]($s * 0.26)
     $pen = [System.Drawing.Pen]::new([System.Drawing.Color]::FromArgb(230, 255, 255, 255), [single]([Math]::Max(1, $s * 0.07)))
     $pen.StartCap = 'Round'; $pen.EndCap = 'Round'

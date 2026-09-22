@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using CustomDock.Core;
 using CustomDock.Dock;
@@ -12,20 +13,23 @@ public sealed class MediaSettings : ObservableObject
 {
     private bool _hideWhenIdle;
 
-    /// <summary>Hiçbir medya oturumu yokken widget'ı dock'tan gizler.</summary>
+    /// <summary>Hides widget from the dock when there is no active media session.</summary>
     public bool HideWhenIdle { get => _hideWhenIdle; set => Set(ref _hideWhenIdle, value); }
 }
 
-/// <summary>Windows SMTC üzerinden şu an çalan medya ve oynatma kontrolleri.</summary>
+/// <summary>Now playing media and playback controls via Windows SMTC.</summary>
 public partial class MediaWidget : WidgetBase
 {
     private MediaSettings _settings = new();
     private bool _tickSubscribed;
+    private bool _isDraggingSeek;
+    private bool _updatingVolumeSlider;
 
     public MediaWidget()
     {
         InitializeComponent();
         FullTrack.SizeChanged += (_, _) => UpdateProgress();
+        MediaPopup.Closed += (_, _) => UpdateTickSubscription();
     }
 
     private static MediaService Media => AppServices.Media;
@@ -35,6 +39,7 @@ public partial class MediaWidget : WidgetBase
         _settings = GetSettings<MediaSettings>();
         _settings.PropertyChanged += OnSettingsChanged;
         Media.Changed += Render;
+        AppServices.Audio.VolumeChanged += OnVolumeChanged;
         await Media.EnsureStartedAsync();
     }
 
@@ -42,6 +47,7 @@ public partial class MediaWidget : WidgetBase
     {
         _settings.PropertyChanged -= OnSettingsChanged;
         Media.Changed -= Render;
+        AppServices.Audio.VolumeChanged -= OnVolumeChanged;
         SetTickSubscription(false);
     }
 
@@ -54,24 +60,40 @@ public partial class MediaWidget : WidgetBase
 
     private void OnSettingsChanged(object? sender, PropertyChangedEventArgs e) => Render();
 
+    private void OnVolumeChanged(object? sender, EventArgs e)
+    {
+        if (MediaPopup.IsOpen && !_updatingVolumeSlider)
+        {
+            _updatingVolumeSlider = true;
+            try
+            {
+                PopupVolumeSlider.Value = AppServices.Audio.VolumePercent;
+            }
+            finally
+            {
+                _updatingVolumeSlider = false;
+            }
+        }
+    }
+
     private void Render()
     {
         var state = Media.Current;
         Visibility = _settings.HideWhenIdle && !state.HasSession && !IsPreview ? Visibility.Collapsed : Visibility.Visible;
 
-        string title = !state.HasSession ? "Şu an çalan yok" : string.IsNullOrWhiteSpace(state.Title) ? "Bilinmeyen parça" : state.Title;
-        string artist = !state.HasSession ? "Bir oynatıcı başlatın" : string.IsNullOrWhiteSpace(state.Artist) ? state.SourceApp : state.Artist;
+        string title = !state.HasSession ? "Nothing playing" : string.IsNullOrWhiteSpace(state.Title) ? "Unknown track" : state.Title;
+        string artist = !state.HasSession ? "Start a media player" : string.IsNullOrWhiteSpace(state.Artist) ? state.SourceApp : state.Artist;
         FullTitle.Text = CompactTitle.Text = title;
         FullArtist.Text = CompactArtist.Text = artist;
 
         ToolTip = !state.HasSession
-            ? "Spotify, YouTube Music veya SMTC destekleyen bir oynatıcıda müzik başlatın."
+            ? "Play media in Spotify, YouTube Music, or any SMTC-supported player."
             : string.Join("\n", new[]
             {
                 state.Title,
                 state.Artist,
-                string.IsNullOrWhiteSpace(state.Album) ? null : $"Albüm: {state.Album}",
-                string.IsNullOrWhiteSpace(state.SourceApp) ? null : $"Kaynak: {state.SourceApp}",
+                string.IsNullOrWhiteSpace(state.Album) ? null : $"Album: {state.Album}",
+                string.IsNullOrWhiteSpace(state.SourceApp) ? null : $"Source: {state.SourceApp}",
             }.Where(s => !string.IsNullOrWhiteSpace(s)));
 
         SetArt(FullArt, FullArtGlyph, state.Thumbnail);
@@ -87,9 +109,12 @@ public partial class MediaWidget : WidgetBase
         bool hasTimeline = state.HasSession && state.Duration > TimeSpan.FromSeconds(1);
         FullDuration.Text = hasTimeline ? TimerFormat.Format(state.Duration) : "";
         FullPosition.Text = hasTimeline ? "0:00" : "";
-        SetTickSubscription(hasTimeline && state.IsPlaying && Variant == "full");
+        UpdateTickSubscription();
         UpdateProgress();
         RefreshCompact();
+
+        if (MediaPopup.IsOpen)
+            RenderPopup();
     }
 
     private Border? _compactArt;
@@ -110,6 +135,135 @@ public partial class MediaWidget : WidgetBase
         tile.Text = null;
     }
 
+    public override bool OnCompactClick()
+    {
+        ToggleMediaPopup();
+        return true;
+    }
+
+    private void OnWidgetMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (DockDragHelper.JustDragged) return;
+        if (e.OriginalSource is DependencyObject d && FindAncestor<Button>(d) is not null)
+            return;
+
+        ToggleMediaPopup();
+        e.Handled = true;
+    }
+
+    private void ToggleMediaPopup()
+    {
+        if (MediaPopup.IsOpen || Dock.PopupAnimationHelper.IsClosing(MediaPopup))
+        {
+            ClosePopup(MediaPopup);
+            return;
+        }
+
+        RenderPopup();
+        OpenPopup(MediaPopup);
+        UpdateTickSubscription();
+    }
+
+    private void RenderPopup()
+    {
+        var state = Media.Current;
+        string title = !state.HasSession ? "Nothing playing" : string.IsNullOrWhiteSpace(state.Title) ? "Unknown track" : state.Title;
+        string artist = !state.HasSession ? "Start a media player" : string.IsNullOrWhiteSpace(state.Artist) ? state.SourceApp : state.Artist;
+
+        PopupTitle.Text = title;
+        PopupArtist.Text = artist;
+
+        if (state.Thumbnail is not null)
+        {
+            PopupArtImage.Source = state.Thumbnail;
+            PopupArtImage.Visibility = Visibility.Visible;
+            PopupArtGlyph.Visibility = Visibility.Collapsed;
+        }
+        else
+        {
+            PopupArtImage.Source = null;
+            PopupArtImage.Visibility = Visibility.Collapsed;
+            PopupArtGlyph.Visibility = Visibility.Visible;
+        }
+
+        string playGlyph = state.IsPlaying ? "\uE769" : "\uE768";
+        PopupPlay.Content = playGlyph;
+        bool canPlay = state.HasSession && state.CanPlayPause;
+        PopupPlay.IsEnabled = canPlay;
+        PopupPrev.IsEnabled = state.HasSession && state.CanPrevious;
+        PopupNext.IsEnabled = state.HasSession && state.CanNext;
+
+        bool hasTimeline = state.HasSession && state.Duration > TimeSpan.FromSeconds(1);
+        PopupDuration.Text = hasTimeline ? TimerFormat.Format(state.Duration) : "0:00";
+        if (!_isDraggingSeek)
+        {
+            var position = state.EstimatedPosition;
+            PopupPosition.Text = hasTimeline ? TimerFormat.Format(position) : "0:00";
+            PopupSeekSlider.Maximum = hasTimeline ? state.Duration.TotalSeconds : 100;
+            PopupSeekSlider.Value = hasTimeline ? Math.Clamp(position.TotalSeconds, 0, state.Duration.TotalSeconds) : 0;
+            PopupSeekSlider.IsEnabled = hasTimeline;
+        }
+
+        _updatingVolumeSlider = true;
+        try
+        {
+            PopupVolumeSlider.Value = AppServices.Audio.VolumePercent;
+        }
+        finally
+        {
+            _updatingVolumeSlider = false;
+        }
+
+        string footer = "";
+        if (!string.IsNullOrWhiteSpace(state.Album))
+            footer = state.Album;
+        if (!string.IsNullOrWhiteSpace(state.SourceApp))
+            footer = string.IsNullOrEmpty(footer) ? state.SourceApp : $"{footer} · {state.SourceApp}";
+        PopupFooter.Text = footer;
+        PopupFooter.Visibility = string.IsNullOrWhiteSpace(footer) ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private void OnSeekSliderMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        _isDraggingSeek = true;
+    }
+
+    private async void OnSeekSliderMouseUp(object sender, MouseButtonEventArgs e)
+    {
+        _isDraggingSeek = false;
+        if (Media.Current.HasSession && Media.Current.Duration > TimeSpan.Zero)
+        {
+            var target = TimeSpan.FromSeconds(PopupSeekSlider.Value);
+            await Media.SeekAsync(target);
+        }
+    }
+
+    private void OnPopupVolumeChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_updatingVolumeSlider) return;
+        AppServices.Audio.VolumePercent = (int)Math.Round(e.NewValue);
+    }
+
+    private void OnPopupCloseClick(object sender, RoutedEventArgs e)
+    {
+        ClosePopup(MediaPopup);
+    }
+
+    private void OnPopupMixerClick(object sender, RoutedEventArgs e)
+    {
+        AppLauncher.Launch("ms-settings:sound", newInstance: false);
+    }
+
+    private static T? FindAncestor<T>(DependencyObject current) where T : DependencyObject
+    {
+        while (current is not null)
+        {
+            if (current is T match) return match;
+            current = VisualTreeHelper.GetParent(current);
+        }
+        return null;
+    }
+
     private static void SetArt(Border border, TextBlock glyph, ImageSource? thumbnail)
     {
         if (thumbnail is not null)
@@ -122,6 +276,14 @@ public partial class MediaWidget : WidgetBase
             border.SetResourceReference(Border.BackgroundProperty, "SubtleFillBrush");
             glyph.Visibility = Visibility.Visible;
         }
+    }
+
+    private void UpdateTickSubscription()
+    {
+        var state = Media.Current;
+        bool hasTimeline = state.HasSession && state.Duration > TimeSpan.FromSeconds(1);
+        bool shouldTick = hasTimeline && (state.IsPlaying || MediaPopup.IsOpen) && (Variant == "full" || MediaPopup.IsOpen);
+        SetTickSubscription(shouldTick);
     }
 
     private void SetTickSubscription(bool subscribe)
@@ -140,12 +302,25 @@ public partial class MediaWidget : WidgetBase
         if (!state.HasSession || state.Duration <= TimeSpan.Zero)
         {
             FullFill.Width = 0;
+            if (MediaPopup.IsOpen && !_isDraggingSeek)
+            {
+                PopupPosition.Text = "0:00";
+                PopupSeekSlider.Value = 0;
+            }
             return;
         }
         var position = state.EstimatedPosition;
-        FullPosition.Text = TimerFormat.Format(position);
+        string posText = TimerFormat.Format(position);
+        FullPosition.Text = posText;
         double fraction = Math.Clamp(position.TotalSeconds / state.Duration.TotalSeconds, 0, 1);
         FullFill.Width = FullTrack.ActualWidth * fraction;
+
+        if (MediaPopup.IsOpen && !_isDraggingSeek)
+        {
+            PopupPosition.Text = posText;
+            PopupSeekSlider.Maximum = state.Duration.TotalSeconds;
+            PopupSeekSlider.Value = position.TotalSeconds;
+        }
     }
 
     private async void OnPlayPauseClick(object sender, RoutedEventArgs e) => await Media.PlayPauseAsync();
@@ -157,10 +332,10 @@ public partial class MediaWidget : WidgetBase
     public override void AddContextMenuItems(ItemCollection items)
     {
         var state = Media.Current;
-        items.Add(DockMenu.Item(state.IsPlaying ? "Duraklat" : "Oynat", state.IsPlaying ? "\uE769" : "\uE768",
+        items.Add(DockMenu.Item(state.IsPlaying ? "Pause" : "Play", state.IsPlaying ? "\uE769" : "\uE768",
             () => _ = Media.PlayPauseAsync(), state.HasSession));
-        items.Add(DockMenu.Item("Sonraki", "\uE893", () => _ = Media.NextAsync(), state.CanNext));
-        items.Add(DockMenu.Item("Önceki", "\uE892", () => _ = Media.PreviousAsync(), state.CanPrevious));
-        items.Add(DockMenu.Check("Çalan yokken gizle", _settings.HideWhenIdle, () => _settings.HideWhenIdle = !_settings.HideWhenIdle));
+        items.Add(DockMenu.Item("Next", "\uE893", () => _ = Media.NextAsync(), state.CanNext));
+        items.Add(DockMenu.Item("Previous", "\uE892", () => _ = Media.PreviousAsync(), state.CanPrevious));
+        items.Add(DockMenu.Check("Hide when idle", _settings.HideWhenIdle, () => _settings.HideWhenIdle = !_settings.HideWhenIdle));
     }
 }

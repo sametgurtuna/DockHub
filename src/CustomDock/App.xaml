@@ -5,7 +5,7 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <!-- İlk sözlük tema sözlüğüdür; ThemeManager çalışma anında değiştirir. -->
+                <!-- First dictionary is the theme dictionary; ThemeManager swaps it at runtime. -->
                 <ResourceDictionary Source="Themes/Dark.xaml" />
                 <ResourceDictionary Source="Themes/Controls.xaml" />
             </ResourceDictionary.MergedDictionaries>

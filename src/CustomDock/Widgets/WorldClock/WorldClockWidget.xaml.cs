@@ -3,8 +3,10 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Globalization;
 using System.Windows;
+using System.Windows.Input;
 using CustomDock.Core;
 using CustomDock.Controls;
+using CustomDock.Dock;
 
 namespace CustomDock.Widgets;
 
@@ -14,7 +16,7 @@ public sealed class WorldCity : ObservableObject
 
     public string Label { get => _label; set => Set(ref _label, value); }
 
-    /// <summary>Windows saat dilimi kimliği (ör. "Tokyo Standard Time") veya IANA kimliği.</summary>
+    /// <summary>Windows time zone ID (e.g. "Tokyo Standard Time") or IANA ID.</summary>
     public string TimeZoneId { get; set; } = "UTC";
 }
 
@@ -24,32 +26,32 @@ public sealed class WorldClockSettings : ObservableObject
 
     public ObservableCollection<WorldCity> Cities { get; set; } = new()
     {
-        new WorldCity { Label = "Londra", TimeZoneId = "GMT Standard Time" },
+        new WorldCity { Label = "London", TimeZoneId = "GMT Standard Time" },
         new WorldCity { Label = "New York", TimeZoneId = "Eastern Standard Time" },
         new WorldCity { Label = "Tokyo", TimeZoneId = "Tokyo Standard Time" },
     };
 
     public bool Use24Hour { get => _use24Hour; set => Set(ref _use24Hour, value); }
 
-    /// <summary>Şehir listesi değiştiğinde çağrılır (koleksiyon değişiklikleri PropertyChanged üretmez).</summary>
+    /// <summary>Called when cities list changes (collection changes do not trigger PropertyChanged).</summary>
     public void NotifyCitiesChanged() => OnPropertyChanged(nameof(Cities));
 
     public static IReadOnlyList<Option<string>> PopularCities { get; } = new List<Option<string>>
     {
-        new("Turkey Standard Time", "İstanbul"),
-        new("GMT Standard Time", "Londra"),
+        new("Turkey Standard Time", "Istanbul"),
+        new("GMT Standard Time", "London"),
         new("W. Europe Standard Time", "Berlin"),
         new("Romance Standard Time", "Paris"),
         new("W. Europe Standard Time", "Amsterdam"),
-        new("Russian Standard Time", "Moskova"),
-        new("Azerbaijan Standard Time", "Bakü"),
+        new("Russian Standard Time", "Moscow"),
+        new("Azerbaijan Standard Time", "Baku"),
         new("Arabian Standard Time", "Dubai"),
-        new("India Standard Time", "Yeni Delhi"),
-        new("Singapore Standard Time", "Singapur"),
-        new("China Standard Time", "Pekin"),
+        new("India Standard Time", "New Delhi"),
+        new("Singapore Standard Time", "Singapore"),
+        new("China Standard Time", "Beijing"),
         new("Tokyo Standard Time", "Tokyo"),
-        new("Korea Standard Time", "Seul"),
-        new("AUS Eastern Standard Time", "Sidney"),
+        new("Korea Standard Time", "Seoul"),
+        new("AUS Eastern Standard Time", "Sydney"),
         new("E. South America Standard Time", "São Paulo"),
         new("Eastern Standard Time", "New York"),
         new("Eastern Standard Time", "Toronto"),
@@ -66,7 +68,7 @@ public sealed class WorldClockSettings : ObservableObject
     }
 }
 
-/// <summary>Widget'ta gösterilen tek bir şehir.</summary>
+/// <summary>A single city displayed in the widget.</summary>
 public sealed class WorldClockItem : ObservableObject
 {
     private DateTime _time;
@@ -96,7 +98,7 @@ public sealed class WorldClockItem : ObservableObject
         if (Zone is null)
         {
             TimeText = "--:--";
-            Details = $"{City.Label}: saat dilimi bulunamadı ({City.TimeZoneId})";
+            Details = $"{City.Label}: timezone not found ({City.TimeZoneId})";
             return;
         }
 
@@ -106,15 +108,15 @@ public sealed class WorldClockItem : ObservableObject
         TimeText = use24Hour ? local.ToString("H:mm", culture) : local.ToString("h:mm tt", culture);
 
         var diff = Zone.GetUtcOffset(utcNow) - TimeZoneInfo.Local.GetUtcOffset(utcNow);
-        string offset = diff == TimeSpan.Zero ? "yerel saatle aynı"
-            : $"{(diff > TimeSpan.Zero ? "+" : "−")}{Math.Abs(diff.TotalHours):0.##} sa";
+        string offset = diff == TimeSpan.Zero ? "same as local time"
+            : $"{(diff > TimeSpan.Zero ? "+" : "−")}{Math.Abs(diff.TotalHours):0.##} hr";
         int dayDiff = (local.Date - DateTime.Now.Date).Days;
-        string day = dayDiff switch { > 0 => " · yarın", < 0 => " · dün", _ => "" };
+        string day = dayDiff switch { > 0 => " · tomorrow", < 0 => " · yesterday", _ => "" };
         Details = $"{City.Label} — {local.ToString("dddd HH:mm", culture)}\n{offset}{day}";
     }
 }
 
-/// <summary>Bir veya birden fazla şehrin saati.</summary>
+/// <summary>Clock for one or more cities.</summary>
 public partial class WorldClockWidget : WidgetBase
 {
     private readonly ObservableCollection<WorldClockItem> _items = new();
@@ -124,6 +126,7 @@ public partial class WorldClockWidget : WidgetBase
     {
         InitializeComponent();
         Layout_multi.ItemsSource = _items;
+        ClockPopup.Closed += (_, _) => UpdateTickSubscription();
     }
 
     protected override void OnAttached()
@@ -139,6 +142,8 @@ public partial class WorldClockWidget : WidgetBase
         _settings.PropertyChanged -= OnSettingsChanged;
         _settings.Cities.CollectionChanged -= OnCitiesChanged;
         AppServices.Clock.MinuteTick -= OnTick;
+        AppServices.Clock.SecondTick -= OnTick;
+        _secondTickSubscribed = false;
     }
 
     protected override void OnVariantChanged()
@@ -151,7 +156,97 @@ public partial class WorldClockWidget : WidgetBase
 
     private void OnCitiesChanged(object? sender, NotifyCollectionChangedEventArgs e) => Rebuild();
 
-    private void OnTick(object? sender, DateTime e) => Update();
+    private void OnTick(object? sender, DateTime e)
+    {
+        Update();
+        if (ClockPopup.IsOpen)
+            RenderPopup();
+    }
+
+    private void OnWidgetMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (DockDragHelper.JustDragged) return;
+        ToggleClockPopup();
+        e.Handled = true;
+    }
+
+    public override bool OnCompactClick()
+    {
+        ToggleClockPopup();
+        return true;
+    }
+
+    private void ToggleClockPopup()
+    {
+        if (ClockPopup.IsOpen || Dock.PopupAnimationHelper.IsClosing(ClockPopup))
+        {
+            ClosePopup(ClockPopup);
+            return;
+        }
+
+        RenderPopup();
+        OpenPopup(ClockPopup);
+        UpdateTickSubscription();
+    }
+
+    private void RenderPopup()
+    {
+        var first = _items.FirstOrDefault();
+        var zone = first?.Zone ?? TimeZoneInfo.Local;
+        var nowUtc = DateTime.UtcNow;
+        var cityTime = TimeZoneInfo.ConvertTimeFromUtc(nowUtc, zone);
+        var culture = CultureInfo.CurrentCulture;
+
+        PopupClockTime.Text = _settings.Use24Hour ? cityTime.ToString("HH:mm:ss", culture) : cityTime.ToString("hh:mm:ss", culture);
+        PopupClockDate.Text = cityTime.ToString("dddd, MMMM d", culture);
+
+        var offset = zone.GetUtcOffset(cityTime);
+        string gmt = $"GMT{(offset >= TimeSpan.Zero ? "+" : "-")}{Math.Abs(offset.Hours):D2}:{Math.Abs(offset.Minutes):D2}";
+        string cityName = first?.Label ?? GetLocalCityName();
+        PopupClockZone.Text = $"{cityName} · {gmt}";
+    }
+
+    private void OnPopupCloseClick(object sender, RoutedEventArgs e)
+    {
+        ClosePopup(ClockPopup);
+    }
+
+    private static string GetLocalCityName()
+    {
+        var local = TimeZoneInfo.Local;
+        string displayName = local.DisplayName;
+        int closeParen = displayName.IndexOf(')');
+        if (closeParen >= 0 && closeParen < displayName.Length - 1)
+        {
+            string c = displayName[(closeParen + 1)..].Trim();
+            int comma = c.IndexOf(',');
+            if (comma > 0) c = c[..comma].Trim();
+            if (!string.IsNullOrWhiteSpace(c)) return c;
+        }
+        string name = local.StandardName;
+        if (name.EndsWith(" Standard Time", StringComparison.OrdinalIgnoreCase))
+            name = name[..^14].Trim();
+        return string.IsNullOrWhiteSpace(name) ? "Local" : name;
+    }
+
+    private bool _secondTickSubscribed;
+
+    private void UpdateTickSubscription()
+    {
+        bool shouldSecondTick = ClockPopup.IsOpen;
+        if (shouldSecondTick == _secondTickSubscribed) return;
+        _secondTickSubscribed = shouldSecondTick;
+        if (shouldSecondTick)
+        {
+            AppServices.Clock.MinuteTick -= OnTick;
+            AppServices.Clock.SecondTick += OnTick;
+        }
+        else
+        {
+            AppServices.Clock.SecondTick -= OnTick;
+            AppServices.Clock.MinuteTick += OnTick;
+        }
+    }
 
     private void Rebuild()
     {
@@ -170,13 +265,13 @@ public partial class WorldClockWidget : WidgetBase
 
         if (Variant != "single")
         {
-            ToolTip = _items.Count == 0 ? "Şehir ekleyin" : string.Join("\n\n", _items.Select(i => i.Details));
+            ToolTip = _items.Count == 0 ? "Add a city" : string.Join("\n\n", _items.Select(i => i.Details));
             RefreshCompact();
             return;
         }
         var first = _items.FirstOrDefault();
         SingleTime.Text = first?.TimeText ?? "--:--";
-        SingleCity.Text = first?.Label ?? "Şehir ekleyin";
+        SingleCity.Text = first?.Label ?? "Add a city";
         SingleClock.Time = first?.Time ?? DateTime.Now;
         ToolTip = first?.Details;
         Layout_single.Visibility = Visibility.Visible;

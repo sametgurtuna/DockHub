@@ -8,10 +8,10 @@ using static CustomDock.Native.NativeMethods;
 namespace CustomDock.Native;
 
 /// <summary>
-/// Pencere efektleri.
-/// Not: Windows 11'in DWM "system backdrop" (Mica/Acrylic) efekti yalnızca etkin pencerede çalışır;
-/// dock asla etkin pencere olmadığından dock için SetWindowCompositionAttribute tabanlı blur kullanılır.
-/// Bu blur pencere bölgesini (region) yok sayar ama DWM köşe yuvarlamasına uyar.
+/// Window effects.
+/// Note: Windows 11 DWM "system backdrop" (Mica/Acrylic) effect only works on the active window;
+/// since dock is never the active window, SetWindowCompositionAttribute-based blur is used for dock.
+/// This blur ignores window regions but respects DWM corner rounding.
 /// </summary>
 public static class WindowEffects
 {
@@ -31,14 +31,14 @@ public static class WindowEffects
         DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ref value, sizeof(int));
     }
 
-    /// <summary>0: varsayılan, 1: yuvarlama yok, 2: yuvarlak, 3: küçük yuvarlak.</summary>
+    /// <summary>0: default, 1: do not round, 2: round, 3: round small.</summary>
     public static void SetCornerPreference(IntPtr hwnd, int preference)
     {
         if (!IsWindows11) return;
         DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, ref preference, sizeof(int));
     }
 
-    /// <summary>DWM kenarlık rengi. null = kenarlık yok.</summary>
+    /// <summary>DWM border color. null = no border.</summary>
     public static void SetBorderColor(IntPtr hwnd, Color? color)
     {
         if (!IsWindows11) return;
@@ -46,7 +46,7 @@ public static class WindowEffects
         DwmSetWindowAttribute(hwnd, DWMWA_BORDER_COLOR, ref value, sizeof(uint));
     }
 
-    /// <summary>Katmansız pencerenin istemci alanını cama çevirir (WPF arka planı saydam çizilir).</summary>
+    /// <summary>Extends glass into client area of non-layered window (WPF background drawn transparently).</summary>
     public static void ExtendGlass(IntPtr hwnd)
     {
         if (HwndSource.FromHwnd(hwnd) is { CompositionTarget: { } target })
@@ -55,7 +55,7 @@ public static class WindowEffects
         DwmExtendFrameIntoClientArea(hwnd, ref margins);
     }
 
-    /// <summary>Dock arka planı: bulanık cam / acrylic / düz.</summary>
+    /// <summary>Dock backdrop: blurred glass / acrylic / flat.</summary>
     public static void ApplyDockBackdrop(IntPtr hwnd, BackdropKind kind, Color tint)
     {
         switch (kind)
@@ -74,7 +74,7 @@ public static class WindowEffects
         }
     }
 
-    /// <summary>Etkin pencereler için Windows 11 Mica (ayarlar penceresi).</summary>
+    /// <summary>Windows 11 Mica for active windows (settings window).</summary>
     public static bool TryApplyMica(IntPtr hwnd)
     {
         if (!SupportsSystemBackdrop) return false;
@@ -99,7 +99,7 @@ public static class WindowEffects
         }
     }
 
-    /// <summary>Pencereyi Alt+Tab ve görev listesinden gizler; isteğe bağlı olarak tıklamayla etkinleşmez.</summary>
+    /// <summary>Hides window from Alt+Tab and task list; optionally non-activating on click.</summary>
     public static void MakeToolWindow(IntPtr hwnd, bool noActivate = false, bool clickThrough = false)
     {
         long ex = GetExStyle(hwnd);

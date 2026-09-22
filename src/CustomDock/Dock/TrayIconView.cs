@@ -8,8 +8,8 @@ using TrayIcon = ManagedShell.WindowsTray.NotifyIcon;
 namespace CustomDock.Dock;
 
 /// <summary>
-/// Tek bir sistem tepsisi ikonu. Fare olaylarını sahibi uygulamaya iletir (sağ tık menüsü, çift tık vb. uygulamanın kendisindedir).
-/// Davranış RetroBar'dan (Apache-2.0) uyarlanmıştır.
+/// A single system tray icon. Forwards mouse events to the owning application (context menu, double click, etc. belong to the app itself).
+/// Behavior adapted from RetroBar (Apache-2.0).
 /// </summary>
 public sealed class TrayIconView : Border
 {
@@ -57,11 +57,11 @@ public sealed class TrayIconView : Border
         MouseDown += OnMouseDownIcon;
         MouseUp += OnMouseUpIcon;
         DataContextChanged += (_, _) => Bind();
-        // Sağ tık uygulamanın kendi menüsünü açar; dock menüsü açılmasın.
+        // Right-click opens application's own menu; prevent dock menu from opening.
         ContextMenuOpening += (_, e) => e.Handled = true;
     }
 
-    /// <summary>Tıklamadan önce çağrılır (Başlat/uygulama menüleri konumlansın diye).</summary>
+    /// <summary>Called before clicking (so Start/app menus can position properly).</summary>
     public static event Action? Interacting;
 
     private TrayIcon? Icon => DataContext as TrayIcon;
@@ -78,15 +78,20 @@ public sealed class TrayIconView : Border
         e.Handled = true;
         if (Icon is not { } icon || PresentationSource.FromVisual(this) is not { } source) return;
 
-        // Shell_NotifyIconGetRect için ikon konumu
+        // Icon location for Shell_NotifyIconGetRect
         var location = PointToScreen(new Point(0, 0));
         double scale = source.CompositionTarget.TransformToDevice.M11;
+        int left = (int)Math.Round(location.X);
+        int top = (int)Math.Round(location.Y);
+        int width = (int)Math.Round(ActualWidth * scale);
+        int height = (int)Math.Round(ActualHeight * scale);
+
         icon.Placement = new ManagedShell.Interop.NativeMethods.Rect
         {
-            Top = (int)location.Y,
-            Left = (int)location.X,
-            Bottom = (int)(ActualHeight * scale),
-            Right = (int)(ActualWidth * scale),
+            Left = left,
+            Top = top,
+            Right = left + width,
+            Bottom = top + height,
         };
         icon.IconMouseEnter(MouseHelper.GetCursorPositionParam());
     }

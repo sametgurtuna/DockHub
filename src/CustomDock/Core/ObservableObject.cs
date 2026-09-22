@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace CustomDock.Core;
 
-/// <summary>Minimal INotifyPropertyChanged tabanı (harici MVVM kütüphanesi gerektirmez).</summary>
+/// <summary>Minimal INotifyPropertyChanged base (requires no external MVVM library).</summary>
 public abstract class ObservableObject : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;

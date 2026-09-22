@@ -12,7 +12,7 @@ public sealed record BatteryDeviceInfo(string Id, string Name, int BatteryPercen
 
     public bool IsHeadset => Name.Contains("cloud", StringComparison.OrdinalIgnoreCase)
         || Name.Contains("headset", StringComparison.OrdinalIgnoreCase)
-        || Name.Contains("kulaklık", StringComparison.OrdinalIgnoreCase)
+        || Name.Contains("kulak", StringComparison.OrdinalIgnoreCase)
         || Name.Contains("headphone", StringComparison.OrdinalIgnoreCase)
         || Name.Contains("buds", StringComparison.OrdinalIgnoreCase);
 
@@ -39,7 +39,7 @@ public sealed class DeviceBatteryService
         _timer.Tick += (_, _) => Refresh();
         _timer.Start();
 
-        // İlk tarama
+        // Initial scan
         Refresh();
     }
 
@@ -49,17 +49,21 @@ public sealed class DeviceBatteryService
 
     public event EventHandler? Updated;
 
-    public async void Refresh()
+    private bool _isRefreshing;
+
+    public Task RefreshAsync() => Task.Run(async () =>
     {
+        if (_isRefreshing) return;
+        _isRefreshing = true;
         try
         {
             var list = new List<BatteryDeviceInfo>();
 
-            // 1. HyperX Cloud II Wireless ve 2.4 GHz USB Dongle taraması
-            var dongleDevices = await Task.Run(ScanUsbDongles);
+            // 1. HyperX Cloud II Wireless and 2.4 GHz USB Dongle scan
+            var dongleDevices = ScanUsbDongles();
             list.AddRange(dongleDevices);
 
-            // 2. Windows Bluetooth bağlı aygıtları taraması
+            // 2. Windows Bluetooth connected devices scan
             var btDevices = await ScanBluetoothDevicesAsync();
             list.AddRange(btDevices);
 
@@ -68,9 +72,15 @@ public sealed class DeviceBatteryService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Aygıt pilleri taranamadı");
+            Log.Error(ex, "Failed to scan device batteries");
         }
-    }
+        finally
+        {
+            _isRefreshing = false;
+        }
+    });
+
+    public void Refresh() => _ = RefreshAsync();
 
     private static async Task<List<BatteryDeviceInfo>> ScanBluetoothDevicesAsync()
     {
@@ -88,7 +98,7 @@ public sealed class DeviceBatteryService
                     int percent = Convert.ToInt32(val);
                     if (percent >= 0 && percent <= 100)
                     {
-                        string name = string.IsNullOrWhiteSpace(dev.Name) ? "Bluetooth Aygıtı" : dev.Name;
+                        string name = string.IsNullOrWhiteSpace(dev.Name) ? "Bluetooth Device" : dev.Name;
                         result.Add(new BatteryDeviceInfo(dev.Id, name, percent, false, false));
                     }
                 }
@@ -98,7 +108,7 @@ public sealed class DeviceBatteryService
         return result;
     }
 
-    /// <summary>HyperX Cloud II Wireless ve benzeri 2.4GHz RF USB Dongle aygıtlarını HID üzerinden tarar.</summary>
+    /// <summary>Scans HyperX Cloud II Wireless and similar 2.4GHz RF USB Dongle devices via HID.</summary>
     private static List<BatteryDeviceInfo> ScanUsbDongles()
     {
         var result = new List<BatteryDeviceInfo>();
@@ -124,7 +134,7 @@ public sealed class DeviceBatteryService
                     IntPtr detailData = Marshal.AllocHGlobal(reqSize);
                     try
                     {
-                        // x64'te SP_DEVICE_INTERFACE_DETAIL_DATA cbSize = 8 (x86'da 5 veya 6)
+                        // In x64, SP_DEVICE_INTERFACE_DETAIL_DATA cbSize = 8 (5 or 6 in x86)
                         Marshal.WriteInt32(detailData, IntPtr.Size == 8 ? 8 : 4 + Marshal.SystemDefaultCharSize);
                         if (HidInterop.SetupDiGetDeviceInterfaceDetail(devInfo, ref ifData, detailData, reqSize, ref reqSize, IntPtr.Zero))
                         {
@@ -152,7 +162,7 @@ public sealed class DeviceBatteryService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "USB Dongle HID taraması sırasında hata");
+            Log.Error(ex, "Error during USB Dongle HID scan");
         }
 
         return result;
@@ -196,35 +206,47 @@ public sealed class DeviceBatteryService
                 0x0186 => "HyperX Cloud Core Wireless",
                 0x0188 => "HyperX Cloud Alpha Wireless",
                 0x0914 or 0x0185 => "HyperX Cloud Flight",
-                _ => $"HyperX Kulaklık ({pid:X4})",
+                _ => $"HyperX Headset ({pid:X4})",
             };
 
             int battery = -1;
             bool isCharging = false;
 
-            // Strateji 1: Cloud II Wireless donanım el sıkışması ve Overlapped ReadFile ile gerçek pil okuma
+            // Strategy 1: Cloud II Wireless hardware handshake and Overlapped ReadFile for real battery reading
             HidInterop.HidD_SetNumInputBuffers(handle, 64);
-            IntPtr readEv = HidInterop.CreateEvent(IntPtr.Zero, false, false, null);
-            var readOl = new HidInterop.OVERLAPPED { hEvent = readEv };
+            byte[] rep6 = new byte[62];
+            rep6[0] = 6;
+            HidInterop.HidD_GetInputReport(handle, rep6, 62);
 
             byte[] rawBuf = new byte[128];
             GCHandle pin = GCHandle.Alloc(rawBuf, GCHandleType.Pinned);
             IntPtr pBuf = pin.AddrOfPinnedObject();
 
+            IntPtr readEv = HidInterop.CreateEvent(IntPtr.Zero, true, false, null);
             try
             {
-                // Dongle'ı tetikle: Input Report 6 sorgusu (HyperX protokolü el sıkışması)
-                byte[] rep6 = new byte[62];
-                rep6[0] = 6;
-                HidInterop.HidD_GetInputReport(handle, rep6, 62);
-
-                for (int attempt = 0; attempt < 6; attempt++)
+                for (int attempt = 0; attempt < 8; attempt++)
                 {
+                    HidInterop.ResetEvent(readEv);
+                    var readOl = new HidInterop.OVERLAPPED { hEvent = readEv };
+
                     bool rOk = HidInterop.ReadFile(handle, pBuf, 62, out uint bytesRead, ref readOl);
                     int rErr = Marshal.GetLastWin32Error();
+
                     if (!rOk && rErr == 997) // ERROR_IO_PENDING
                     {
-                        HidInterop.GetOverlappedResultEx(handle, ref readOl, out bytesRead, 600, false);
+                        uint waitRes = HidInterop.WaitForSingleObject(readEv, 400);
+                        if (waitRes == 0) // WAIT_OBJECT_0
+                        {
+                            HidInterop.GetOverlappedResult(handle, ref readOl, out bytesRead, false);
+                        }
+                        else
+                        {
+                            // Timeout: cancel pending I/O and wait for completion
+                            HidInterop.CancelIoEx(handle, ref readOl);
+                            HidInterop.GetOverlappedResult(handle, ref readOl, out _, true);
+                            continue;
+                        }
                     }
                     else if (rOk && bytesRead == 0)
                     {
@@ -234,10 +256,11 @@ public sealed class DeviceBatteryService
                     if (bytesRead > 0 && rawBuf[0] == 0x0B && rawBuf[2] == 0xBB && rawBuf[3] == 0x02)
                     {
                         int level = rawBuf[7];
-                        if (level > 0 && level <= 100)
+                        if (level >= 0 && level <= 100)
                         {
                             battery = level;
                             isCharging = rawBuf[4] == 1 || rawBuf[4] == 2;
+                            Log.Info($"HyperX battery read: {devName} -> {battery}% (Charging: {isCharging})");
                             break;
                         }
                     }
@@ -249,7 +272,7 @@ public sealed class DeviceBatteryService
                 HidInterop.CloseHandle(readEv);
             }
 
-            // Strateji 2: Report ID 0x21 (Feature Report destekleyen Cloud Flight / Alpha vb. modeller için)
+            // Strategy 2: Report ID 0x21 (For models like Cloud Flight / Alpha supporting Feature Report)
             if (battery < 0)
             {
                 byte[] report = new byte[32];
@@ -275,7 +298,7 @@ public sealed class DeviceBatteryService
                 }
             }
 
-            if (battery > 0 && battery <= 100)
+            if (battery >= 0 && battery <= 100)
             {
                 s_lastKnownBattery[pid] = (battery, isCharging);
                 return new BatteryDeviceInfo($"hyperx-{pid:X4}", devName, battery, isCharging, true);
@@ -289,7 +312,7 @@ public sealed class DeviceBatteryService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"CheckHyperXDevice hatası: {devicePath}");
+            Log.Error(ex, $"CheckHyperXDevice error: {devicePath}");
             return null;
         }
         finally

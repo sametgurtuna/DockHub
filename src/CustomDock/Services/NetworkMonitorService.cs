@@ -6,7 +6,7 @@ namespace CustomDock.Services;
 
 public readonly record struct NetworkStats(double DownBytesPerSec, double UpBytesPerSec);
 
-/// <summary>Tüm etkin ağ arabirimlerinin toplam indirme/yükleme hızı (saniyede bir, yalnızca abone varken).</summary>
+/// <summary>Total download/upload speed across all active network interfaces (once per second, only while subscribed).</summary>
 public sealed class NetworkMonitorService
 {
     public const int HistoryLength = 40;
@@ -44,45 +44,65 @@ public sealed class NetworkMonitorService
         }
     }
 
-    private void Sample()
+    private bool _sampling;
+
+    private async void Sample()
     {
-        long received = 0, sent = 0;
+        if (_sampling) return;
+        _sampling = true;
+
         try
         {
-            foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
+            var (received, sent) = await Task.Run(() =>
             {
-                if (nic.OperationalStatus != OperationalStatus.Up ||
-                    nic.NetworkInterfaceType is NetworkInterfaceType.Loopback or NetworkInterfaceType.Tunnel)
-                    continue;
-                var stats = nic.GetIPStatistics();
-                received += stats.BytesReceived;
-                sent += stats.BytesSent;
+                long r = 0, s = 0;
+                try
+                {
+                    foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
+                    {
+                        if (nic.OperationalStatus != OperationalStatus.Up ||
+                            nic.NetworkInterfaceType is NetworkInterfaceType.Loopback or NetworkInterfaceType.Tunnel)
+                            continue;
+                        try
+                        {
+                            var stats = nic.GetIPStatistics();
+                            r += stats.BytesReceived;
+                            s += stats.BytesSent;
+                        }
+                        catch { }
+                    }
+                }
+                catch { }
+                return (r, s);
+            });
+
+            var now = DateTime.UtcNow;
+            if (_lastReceived >= 0)
+            {
+                double seconds = Math.Max(0.25, (now - _lastSample).TotalSeconds);
+                Current = new NetworkStats(
+                    Math.Max(0, received - _lastReceived) / seconds,
+                    Math.Max(0, sent - _lastSent) / seconds);
+                _history.Enqueue(Current);
+                while (_history.Count > HistoryLength) _history.Dequeue();
             }
+
+            _lastReceived = received;
+            _lastSent = sent;
+            _lastSample = now;
+            _updated?.Invoke(this, Current);
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Ağ istatistikleri okunamadı");
-            return;
+            Log.Error(ex, "Failed to read network statistics");
         }
-
-        var now = DateTime.UtcNow;
-        if (_lastReceived >= 0)
+        finally
         {
-            double seconds = Math.Max(0.25, (now - _lastSample).TotalSeconds);
-            Current = new NetworkStats(
-                Math.Max(0, received - _lastReceived) / seconds,
-                Math.Max(0, sent - _lastSent) / seconds);
-            _history.Enqueue(Current);
-            while (_history.Count > HistoryLength) _history.Dequeue();
+            _sampling = false;
         }
-
-        _lastReceived = received;
-        _lastSent = sent;
-        _lastSample = now;
-        _updated?.Invoke(this, Current);
     }
 
-    /// <summary>Hızı okunur biçime çevirir: (değer, birim).</summary>
+    /// <summary>Formats speed into human-readable format: (value, unit).</summary>
     public static (string Value, string Unit) Format(double bytesPerSec)
     {
         double kb = bytesPerSec / 1024;

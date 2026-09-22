@@ -4,7 +4,7 @@ using CustomDock.Core;
 
 namespace CustomDock.Services;
 
-/// <summary>Hava durumu konumu (widget ayarlarından).</summary>
+/// <summary>Weather location (from widget settings).</summary>
 public sealed record WeatherLocation(bool UseDevice, double Latitude, double Longitude, string Name, bool Fahrenheit)
 {
     public string Key => UseDevice
@@ -13,8 +13,8 @@ public sealed record WeatherLocation(bool UseDevice, double Latitude, double Lon
 }
 
 /// <summary>
-/// Birden fazla hava durumu widget'ı (dock + galeri önizlemeleri) aynı konum için tek istek yapsın diye
-/// paylaşılan önbellek. Veriler 30 dakikada bir yenilenir ve diske kaydedilir.
+/// Shared cache so multiple weather widgets (dock + gallery previews) make only one request
+/// for the same location. Data is refreshed every 30 minutes and cached to disk.
 /// </summary>
 public sealed class WeatherHub
 {
@@ -91,13 +91,13 @@ public sealed class WeatherHub
                 var device = await AppServices.Weather.GetDeviceLocationAsync();
                 if (device is null)
                 {
-                    entry.Error = "Konum kapalı";
+                    entry.Error = "Location disabled";
                     entry.Raise();
                     Schedule(entry, RetryInterval);
                     return;
                 }
                 (lat, lon) = device.Value;
-                name = "Konumum";
+                name = "My Location";
             }
 
             var data = await AppServices.Weather.GetForecastAsync(lat, lon, location.Fahrenheit);
@@ -109,8 +109,8 @@ public sealed class WeatherHub
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Hava durumu alınamadı");
-            entry.Error = "Bağlantı yok";
+            Log.Error(ex, "Failed to get weather data");
+            entry.Error = "No connection";
             Schedule(entry, RetryInterval);
         }
         entry.Raise();

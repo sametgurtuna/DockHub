@@ -3,14 +3,14 @@ using CustomDock.Shell;
 
 namespace CustomDock.Core;
 
-/// <summary>Uygulama genelinde paylaşılan servisler. UI iş parçacığında erişilmelidir.</summary>
+/// <summary>Application-wide shared services. Must be accessed on the UI thread.</summary>
 public static class AppServices
 {
     public static ConfigService ConfigService { get; } = new();
 
     public static AppConfig Config => ConfigService.Config;
 
-    /// <summary>Kabuk servisleri (görev listesi, sistem tepsisi, görev çubuğu). Başlangıçta oluşturulur.</summary>
+    /// <summary>Shell services (task list, system tray, taskbar). Initialized on startup.</summary>
     public static ShellHost Shell { get; set; } = null!;
 
     public static ClockService Clock { get; } = new();
@@ -18,6 +18,8 @@ public static class AppServices
     public static SystemMonitorService SystemMonitor { get; } = new();
 
     public static NetworkMonitorService Network { get; } = new();
+
+    public static NetworkStatusService NetworkStatus { get; } = new();
 
     public static MediaService Media { get; } = new();
 

@@ -4,16 +4,18 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Interop;
+using System.Windows.Media;
+using CustomDock.Core;
 using CustomDock.Native;
 using static CustomDock.Native.NativeMethods;
 
 namespace CustomDock.Dock;
 
 /// <summary>
-/// Masaüstüne veya başka bir uygulamaya tıklandığında açık olan tüm ContextMenu
-/// ve Popup'ların (Dock WS_EX_NOACTIVATE kipinde olduğu için normalde kapanmayan pencereler)
-/// anında ve pürüzsüzce kapanmasını sağlayan düşük seviyeli kanca.
-/// Yalnızca en az bir menü veya popup açıkken etkindir, diğer zamanlarda sıfır kaynak tüketir.
+/// Low-level hook ensuring all open ContextMenus and Popups
+/// (which normally do not close because Dock is in WS_EX_NOACTIVATE mode)
+/// close instantly and smoothly when the desktop or another application is clicked.
+/// Active only while at least one menu or popup is open; consumes zero resources otherwise.
 /// </summary>
 public static class GlobalPopupDismissHook
 {
@@ -66,6 +68,9 @@ public static class GlobalPopupDismissHook
     public static void RegisterPopup(Popup popup)
     {
         if (popup is null) return;
+        popup.AllowsTransparency = true;
+        popup.PopupAnimation = PopupAnimation.None;
+        popup.StaysOpen = true;
         if (s_activePopups.Add(popup))
         {
             popup.Closed += OnPopupClosed;
@@ -157,23 +162,33 @@ public static class GlobalPopupDismissHook
                 var hookStruct = Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam);
                 int x = hookStruct.pt.x;
                 int y = hookStruct.pt.y;
+                var pt = new POINT { X = x, Y = y };
+                IntPtr clickedHwnd = WindowFromPoint(pt);
+
+                bool clickedOurPopupRoot = false;
+                if (clickedHwnd != IntPtr.Zero)
+                {
+                    GetWindowThreadProcessId(clickedHwnd, out uint clickPid);
+                    if (clickPid == (uint)Environment.ProcessId)
+                    {
+                        var hwndSource = HwndSource.FromHwnd(clickedHwnd);
+                        if (hwndSource?.RootVisual is DependencyObject root)
+                        {
+                            if (root.GetType().Name == "PopupRoot")
+                                clickedOurPopupRoot = true;
+                        }
+                    }
+                }
 
                 bool clickedInsidePopup = false;
                 foreach (var p in s_activePopups.ToList())
                 {
                     if (p.IsOpen && p.Child is FrameworkElement fe)
                     {
-                        var source = PresentationSource.FromVisual(fe) as HwndSource;
-                        if (source is not null && !source.IsDisposed)
+                        if (IsPointInVisual(fe, x, y))
                         {
-                            if (GetWindowRect(source.Handle, out RECT r))
-                            {
-                                if (x >= r.Left && x <= r.Right && y >= r.Top && y <= r.Bottom)
-                                {
-                                    clickedInsidePopup = true;
-                                    break;
-                                }
-                            }
+                            clickedInsidePopup = true;
+                            break;
                         }
                     }
                 }
@@ -181,24 +196,23 @@ public static class GlobalPopupDismissHook
                 bool clickedInsideMenu = false;
                 foreach (var m in s_activeMenus.ToList())
                 {
-                    if (m.IsOpen)
+                    if (IsPointInMenuOrSubmenus(m, x, y))
                     {
-                        var source = PresentationSource.FromVisual(m) as HwndSource;
-                        if (source is not null && !source.IsDisposed)
-                        {
-                            if (GetWindowRect(source.Handle, out RECT r))
-                            {
-                                if (x >= r.Left && x <= r.Right && y >= r.Top && y <= r.Bottom)
-                                {
-                                    clickedInsideMenu = true;
-                                    break;
-                                }
-                            }
-                        }
+                        clickedInsideMenu = true;
+                        break;
                     }
                 }
 
-                // Dışarıya (örneğin masaüstüne veya başka bir pencereye) tıklandıysa kapat
+                if (!clickedInsideMenu && clickedOurPopupRoot && s_activeMenus.Count > 0 && clickedHwnd != IntPtr.Zero)
+                {
+                    var hwndSource = HwndSource.FromHwnd(clickedHwnd);
+                    if (hwndSource?.RootVisual is DependencyObject root && FindVisualChildren<MenuItem>(root).Any())
+                    {
+                        clickedInsideMenu = true;
+                    }
+                }
+
+                // Dismiss if clicked outside (e.g. desktop or another window)
                 if (!clickedInsideMenu && s_activeMenus.Count > 0)
                 {
                     var menus = s_activeMenus.ToList();
@@ -211,20 +225,83 @@ public static class GlobalPopupDismissHook
                         });
                 }
 
-                if (!clickedInsidePopup && s_activePopups.Count > 0)
+                if (!clickedInsidePopup && s_activePopups.Count > 0 && !clickedOurPopupRoot)
                 {
                     var popups = s_activePopups.ToList();
                     Application.Current?.Dispatcher.BeginInvoke(
                         System.Windows.Threading.DispatcherPriority.Input,
                         () =>
                         {
+                            var edge = AppServices.Config.Edge;
                             foreach (var p in popups)
-                                if (p.IsOpen) p.IsOpen = false;
+                            {
+                                if (p.IsOpen && !PopupAnimationHelper.IsClosing(p))
+                                    PopupAnimationHelper.ClosePopup(p, edge);
+                            }
                         });
                 }
             }
         }
 
         return CallNextHookEx(s_hook, nCode, wParam, lParam);
+    }
+
+    private static bool IsPointInVisual(Visual visual, int x, int y)
+    {
+        var source = PresentationSource.FromVisual(visual) as HwndSource;
+        if (source is not null && !source.IsDisposed)
+        {
+            if (GetWindowRect(source.Handle, out RECT r))
+            {
+                return x >= r.Left && x <= r.Right && y >= r.Top && y <= r.Bottom;
+            }
+        }
+        return false;
+    }
+
+    private static bool IsPointInMenuOrSubmenus(ContextMenu menu, int x, int y)
+    {
+        if (!menu.IsOpen) return false;
+        if (IsPointInVisual(menu, x, y)) return true;
+
+        return CheckSubmenus(menu, x, y);
+    }
+
+    private static bool CheckSubmenus(ItemsControl parent, int x, int y)
+    {
+        for (int i = 0; i < parent.Items.Count; i++)
+        {
+            var item = parent.Items[i];
+            MenuItem? mi = item as MenuItem;
+            if (mi is null && parent.ItemContainerGenerator is { } icg)
+                mi = icg.ContainerFromIndex(i) as MenuItem ?? icg.ContainerFromItem(item) as MenuItem;
+
+            if (mi is not null && mi.IsSubmenuOpen)
+            {
+                foreach (var popup in FindVisualChildren<Popup>(mi))
+                {
+                    if (popup.IsOpen && popup.Child is Visual child && IsPointInVisual(child, x, y))
+                        return true;
+                }
+
+                if (CheckSubmenus(mi, x, y))
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    private static IEnumerable<T> FindVisualChildren<T>(DependencyObject parent) where T : DependencyObject
+    {
+        int count = VisualTreeHelper.GetChildrenCount(parent);
+        for (int i = 0; i < count; i++)
+        {
+            var child = VisualTreeHelper.GetChild(parent, i);
+            if (child is T typed)
+                yield return typed;
+
+            foreach (var descendant in FindVisualChildren<T>(child))
+                yield return descendant;
+        }
     }
 }

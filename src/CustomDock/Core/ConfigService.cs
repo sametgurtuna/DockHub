@@ -6,7 +6,7 @@ using CustomDock.Widgets;
 
 namespace CustomDock.Core;
 
-/// <summary>config.json'ı yükler/taşır, değişiklikleri gecikmeli kaydeder ve öğe başına widget ayarlarını yönetir.</summary>
+/// <summary>Loads/migrates config.json, debounces saves on change, and manages per-item widget settings.</summary>
 public sealed class ConfigService
 {
     private readonly DispatcherTimer _saveTimer;
@@ -20,7 +20,7 @@ public sealed class ConfigService
 
     public AppConfig Config { get; private set; } = new();
 
-    /// <summary>Yüklenmemiş (varsayılan) yapılandırma asla diske yazılmaz; ör. ikinci örnek kapanırken.</summary>
+    /// <summary>An unloaded (default) configuration is never written to disk; e.g. when a second instance exits.</summary>
     public bool IsLoaded { get; private set; }
 
     public void Load()
@@ -59,15 +59,15 @@ public sealed class ConfigService
             }) as JsonObject;
             if (node is null) return new AppConfig { Items = DefaultItems.Create() };
 
-            // v1 enum değerlerini yeni değerlere çevir (aksi halde JSON okunamaz)
+            // Map v1 enum values to new values (otherwise JSON cannot be deserialized)
             MapEnum(node, "taskbarMode", ("HideTaskbar", "Replace"));
             MapEnum(node, "backdrop", ("Mica", "Blur"), ("Transparent", "Solid"));
             return node.Deserialize<AppConfig>(JsonStore.Options) ?? new AppConfig();
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "config.json okunamadı, varsayılanlar kullanılıyor");
-            try { File.Copy(AppPaths.ConfigFile, $"{AppPaths.ConfigFile}.corrupt-{DateTime.Now:yyyyMMddHHmmss}", overwrite: true); } catch { /* yoksay */ }
+            Log.Error(ex, "Failed to read config.json, using defaults");
+            try { File.Copy(AppPaths.ConfigFile, $"{AppPaths.ConfigFile}.corrupt-{DateTime.Now:yyyyMMddHHmmss}", overwrite: true); } catch { /* ignore */ }
             var config = new AppConfig { Items = DefaultItems.Create() };
             return config;
         }
@@ -85,10 +85,10 @@ public sealed class ConfigService
         }
     }
 
-    /// <summary>v1 (sabit widget listesi + pinned-apps.json) → v2 (serbest öğe listesi).</summary>
+    /// <summary>v1 (fixed widget list + pinned-apps.json) → v2 (freeform items list).</summary>
     private static void MigrateFromV1(AppConfig config)
     {
-        Log.Info("config.json v1 → v2 taşınıyor.");
+        Log.Info("Migrating config.json v1 → v2.");
         var items = new List<DockItem>();
 
         var pinned = JsonStore.LoadData<LegacyPinnedStore>("pinned-apps");
@@ -126,27 +126,35 @@ public sealed class ConfigService
             items.Add(DockItem.Separator());
         items.AddRange(widgetItems);
 
-        // Eski tek not dosyasını ilk not öğesine taşı
+        // Migrate legacy single notes file to first notes item
         if (widgetItems.FirstOrDefault(i => i.Widget == "notes") is { } noteItem && File.Exists(JsonStore.DataPath("notes")))
         {
-            try { File.Copy(JsonStore.DataPath("notes"), JsonStore.DataPath("notes-" + noteItem.Id), overwrite: true); } catch { /* yoksay */ }
+            try { File.Copy(JsonStore.DataPath("notes"), JsonStore.DataPath("notes-" + noteItem.Id), overwrite: true); } catch { /* ignore */ }
         }
 
         config.Items = items;
         config.Widgets = null;
         config.WidgetSettings = null;
         config.ReserveSpace = null;
-        // Kullanıcı DockHub'ın görev çubuğunun yerini almasını istiyor.
+        // User wants DockHub to replace the taskbar.
         config.TaskbarMode = TaskbarMode.Replace;
         if (config.Backdrop == BackdropKind.Acrylic) config.Backdrop = BackdropKind.Blur;
-        // v1 çok yer kaplıyordu: Windows görev çubuğu kalınlığında (48 DIP) küçük dock ile başla.
+        // v1 took too much space: start with a small dock matching Windows taskbar thickness (48 DIP).
         config.Size = DockSize.Small;
         config.EdgeMargin = Math.Min(config.EdgeMargin, 6);
     }
 
-    // ------------------------------------------------------------------ Öğeler
+    // ------------------------------------------------------------------ Items
 
-    public DockItem? FindItem(string id) => Config.Items.FirstOrDefault(i => i.Id == id);
+    public DockItem? FindItem(string id) =>
+        Config.Items.FirstOrDefault(i => i.Id == id)
+        ?? Config.Items.Where(i => i.Kind == DockItemKind.Group)
+            .SelectMany(g => g.Children ?? Enumerable.Empty<DockItem>())
+            .FirstOrDefault(i => i.Id == id);
+
+    /// <summary>Finds the group that contains the given item id.</summary>
+    public DockItem? FindParentGroup(string itemId) =>
+        Config.Items.FirstOrDefault(g => g.Kind == DockItemKind.Group && g.Children?.Any(c => c.Id == itemId) == true);
 
     public void AddItem(DockItem item, int index = -1)
     {
@@ -157,18 +165,47 @@ public sealed class ConfigService
 
     public void RemoveItem(string id)
     {
+        // Try top-level first
         if (Config.Items.RemoveAll(i => i.Id == id) > 0)
         {
             _itemSettings.Remove(id);
             Config.NotifyItemsChanged();
+            return;
+        }
+        // Try inside groups
+        foreach (var group in Config.Items.Where(i => i.Kind == DockItemKind.Group))
+        {
+            if (group.Children?.RemoveAll(i => i.Id == id) > 0)
+            {
+                _itemSettings.Remove(id);
+                // Auto-delete empty groups
+                if (group.Children.Count == 0)
+                    Config.Items.RemoveAll(i => i.Id == group.Id);
+                Config.NotifyItemsChanged();
+                return;
+            }
         }
     }
 
-    /// <summary>Öğeyi <paramref name="newIndex"/> konumuna taşır (taşıma öncesi listeye göre ekleme indeksi).</summary>
+    /// <summary>Moves item to <paramref name="newIndex"/> position (insertion index relative to pre-move list).</summary>
     public void MoveItem(string id, int newIndex)
     {
         int oldIndex = Config.Items.FindIndex(i => i.Id == id);
-        if (oldIndex < 0) return;
+        if (oldIndex < 0)
+        {
+            // Item might be inside a group -- pull it out to top level
+            var parentGroup = FindParentGroup(id);
+            if (parentGroup is null) return;
+            var child = parentGroup.Children!.FirstOrDefault(c => c.Id == id);
+            if (child is null) return;
+            parentGroup.Children!.Remove(child);
+            if (parentGroup.Children.Count == 0)
+                Config.Items.RemoveAll(i => i.Id == parentGroup.Id);
+            newIndex = Math.Clamp(newIndex, 0, Config.Items.Count);
+            Config.Items.Insert(newIndex, child);
+            Config.NotifyItemsChanged();
+            return;
+        }
         var item = Config.Items[oldIndex];
         Config.Items.RemoveAt(oldIndex);
         if (newIndex > oldIndex) newIndex--;
@@ -183,11 +220,59 @@ public sealed class ConfigService
         Config.NotifyItemsChanged();
     }
 
-    // ------------------------------------------------------------------ Widget ayarları
+    // ------------------------------------------------------------------ Group operations
+
+    /// <summary>Adds an item to an existing group.</summary>
+    public void AddToGroup(string groupId, DockItem item, int index = -1)
+    {
+        var group = Config.Items.FirstOrDefault(g => g.Id == groupId && g.Kind == DockItemKind.Group);
+        if (group is null) return;
+        group.Children ??= new List<DockItem>();
+        if (index < 0 || index > group.Children.Count) group.Children.Add(item);
+        else group.Children.Insert(index, item);
+        Config.NotifyItemsChanged();
+    }
+
+    /// <summary>Creates a new group from two existing top-level items at the position of the first one.</summary>
+    public DockItem CreateGroupFromItems(string name, string itemId1, string itemId2)
+    {
+        int idx1 = Config.Items.FindIndex(i => i.Id == itemId1);
+        int idx2 = Config.Items.FindIndex(i => i.Id == itemId2);
+        if (idx1 < 0 || idx2 < 0) return DockItem.Group(name);
+
+        var item1 = Config.Items[idx1];
+        var item2 = Config.Items[idx2];
+        int insertAt = Math.Min(idx1, idx2);
+
+        Config.Items.Remove(item1);
+        Config.Items.Remove(item2);
+
+        var group = DockItem.Group(name, new List<DockItem> { item1, item2 });
+        insertAt = Math.Clamp(insertAt, 0, Config.Items.Count);
+        Config.Items.Insert(insertAt, group);
+        Config.NotifyItemsChanged();
+        return group;
+    }
+
+    /// <summary>Dissolves a group, moving all children back to the dock at the group's position.</summary>
+    public void UngroupAll(string groupId)
+    {
+        int index = Config.Items.FindIndex(i => i.Id == groupId);
+        if (index < 0) return;
+        var group = Config.Items[index];
+        if (group.Kind != DockItemKind.Group) return;
+        Config.Items.RemoveAt(index);
+        var children = group.Children ?? new List<DockItem>();
+        for (int i = 0; i < children.Count; i++)
+            Config.Items.Insert(index + i, children[i]);
+        Config.NotifyItemsChanged();
+    }
+
+    // ------------------------------------------------------------------ Widget settings
 
     /// <summary>
-    /// Bir öğenin ayar nesnesini döndürür. Aynı örnek widget ve ayarlar penceresi arasında paylaşılır;
-    /// değişiklikler öğenin <see cref="DockItem.Settings"/> alanına yazılır.
+    /// Returns the settings object for an item. The same instance is shared between widget and settings window;
+    /// changes are serialized back into the item's <see cref="DockItem.Settings"/> property.
     /// </summary>
     public T GetItemSettings<T>(DockItem item) where T : ObservableObject, new()
         => (T)GetItemSettings(item, typeof(T));
@@ -206,7 +291,7 @@ public sealed class ConfigService
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"Widget ayarı okunamadı: {item.Widget}/{item.Id}");
+                Log.Error(ex, $"Failed to read widget settings: {item.Widget}/{item.Id}");
             }
         }
 

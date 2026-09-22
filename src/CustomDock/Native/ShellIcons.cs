@@ -10,15 +10,17 @@ using static CustomDock.Native.NativeMethods;
 
 namespace CustomDock.Native;
 
-/// <summary>Yüksek çözünürlüklü kabuk ikonları ve kısayol (.lnk) bilgileri.</summary>
+/// <summary>High-resolution shell icons and shortcut (.lnk) information.</summary>
 public static class ShellIcons
 {
     private static readonly Dictionary<string, ImageSource?> IconCache = new(StringComparer.OrdinalIgnoreCase);
     private static readonly Dictionary<string, (string? Target, string? AppId)> LinkCache = new(StringComparer.OrdinalIgnoreCase);
 
-    /// <summary>Dosya, klasör, kısayol veya "shell:AppsFolder\AUMID" için ikon (piksel boyutu).</summary>
+    /// <summary>Icon (pixel size) for a file, folder, shortcut, or "shell:AppsFolder\AUMID".</summary>
     public static ImageSource? GetIcon(string path, int sizePx = 96)
     {
+        if (string.IsNullOrWhiteSpace(path)) return null;
+
         string key = $"{sizePx}|{path}";
         if (IconCache.TryGetValue(key, out var cached)) return cached;
 
@@ -26,14 +28,90 @@ public static class ShellIcons
         try
         {
             image = GetShellItemImage(path, sizePx) ?? GetFileInfoIcon(path);
+            if (image is null && File.Exists(path))
+            {
+                try
+                {
+                    using var sysIcon = System.Drawing.Icon.ExtractAssociatedIcon(path);
+                    if (sysIcon is not null)
+                    {
+                        var bs = Imaging.CreateBitmapSourceFromHIcon(sysIcon.Handle, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+                        bs.Freeze();
+                        image = bs;
+                    }
+                }
+                catch { /* ignore */ }
+            }
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"İkon alınamadı: {path}");
+            Log.Error(ex, $"Failed to retrieve icon: {path}");
         }
 
-        IconCache[key] = image;
+        if (image is not null)
+            IconCache[key] = image;
+
         return image;
+    }
+
+    /// <summary>Retrieves icon from window handle (HWND) via WM_GETICON and window class.</summary>
+    public static ImageSource? GetWindowIcon(IntPtr hwnd)
+    {
+        if (hwnd == IntPtr.Zero) return null;
+        try
+        {
+            IntPtr hIcon = SendMessage(hwnd, WM_GETICON, new IntPtr(ICON_BIG), IntPtr.Zero);
+            if (hIcon == IntPtr.Zero)
+                hIcon = SendMessage(hwnd, WM_GETICON, new IntPtr(ICON_SMALL2), IntPtr.Zero);
+            if (hIcon == IntPtr.Zero)
+                hIcon = SendMessage(hwnd, WM_GETICON, new IntPtr(ICON_SMALL), IntPtr.Zero);
+            if (hIcon == IntPtr.Zero)
+                hIcon = GetClassLongPtr(hwnd, GCLP_HICON);
+            if (hIcon == IntPtr.Zero)
+                hIcon = GetClassLongPtr(hwnd, GCLP_HICONSM);
+
+            if (hIcon != IntPtr.Zero)
+            {
+                var source = Imaging.CreateBitmapSourceFromHIcon(hIcon, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+                source.Freeze();
+                return source;
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to retrieve window icon");
+        }
+        return null;
+    }
+
+    private static ImageSource? s_defaultAppIcon;
+
+    /// <summary>Elegant default application icon for custom apps whose icons cannot be found.</summary>
+    public static ImageSource GetDefaultAppIcon()
+    {
+        if (s_defaultAppIcon is not null) return s_defaultAppIcon;
+
+        var visual = new DrawingVisual();
+        using (var dc = visual.RenderOpen())
+        {
+            var bgBrush = new SolidColorBrush(Color.FromRgb(48, 54, 68));
+            bgBrush.Freeze();
+            dc.DrawRoundedRectangle(bgBrush, null, new Rect(0, 0, 96, 96), 22, 22);
+
+            var barBrush = new SolidColorBrush(Color.FromArgb(140, 255, 255, 255));
+            barBrush.Freeze();
+            dc.DrawRoundedRectangle(barBrush, null, new Rect(18, 18, 60, 12), 4, 4);
+
+            var bodyBrush = new SolidColorBrush(Color.FromArgb(50, 255, 255, 255));
+            bodyBrush.Freeze();
+            dc.DrawRoundedRectangle(bodyBrush, null, new Rect(18, 34, 60, 44), 4, 4);
+        }
+
+        var rtb = new RenderTargetBitmap(96, 96, 96, 96, PixelFormats.Pbgra32);
+        rtb.Render(visual);
+        rtb.Freeze();
+        s_defaultAppIcon = rtb;
+        return s_defaultAppIcon;
     }
 
     public static void ClearCache(string path)
@@ -68,7 +146,7 @@ public static class ShellIcons
         }
     }
 
-    /// <summary>Alfa kanalını koruyarak HBITMAP → BitmapSource.</summary>
+    /// <summary>Preserves alpha channel when converting HBITMAP -> BitmapSource.</summary>
     private static BitmapSource? BitmapFromHBitmap(IntPtr hbitmap)
     {
         var dib = new DIBSECTION();
@@ -124,7 +202,7 @@ public static class ShellIcons
         }
     }
 
-    /// <summary>Kısayolun hedef yolu ve AppUserModelID'si.</summary>
+    /// <summary>Target path and AppUserModelID of shortcut.</summary>
     public static (string? Target, string? AppId) ReadShortcut(string lnkPath)
     {
         if (LinkCache.TryGetValue(lnkPath, out var cached)) return cached;
@@ -159,7 +237,7 @@ public static class ShellIcons
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"Kısayol okunamadı: {lnkPath}");
+            Log.Error(ex, $"Failed to read shortcut: {lnkPath}");
         }
         finally
         {

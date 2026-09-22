@@ -2,8 +2,10 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Globalization;
 using System.Windows;
+using System.Windows.Input;
 using CustomDock.Core;
 using CustomDock.Controls;
+using CustomDock.Dock;
 
 namespace CustomDock.Widgets;
 
@@ -46,7 +48,7 @@ public sealed class ClockSettings : ObservableObject
     }
 }
 
-/// <summary>Saat ve tarih (analog / dijital / takvim).</summary>
+/// <summary>Clock and date (analog / digital / calendar).</summary>
 public partial class ClockWidget : WidgetBase
 {
     private ClockSettings _settings = new();
@@ -54,6 +56,8 @@ public partial class ClockWidget : WidgetBase
     public ClockWidget()
     {
         InitializeComponent();
+        Cursor = Cursors.Hand;
+        ClockPopup.Closed += (_, _) => Subscribe();
     }
 
     protected override void OnAttached()
@@ -88,7 +92,7 @@ public partial class ClockWidget : WidgetBase
     private void Subscribe()
     {
         Unsubscribe();
-        if (_settings.ShowSeconds && Variant != "calendar")
+        if ((_settings.ShowSeconds && Variant != "calendar") || ClockPopup.IsOpen)
             AppServices.Clock.SecondTick += OnTick;
         else
             AppServices.Clock.MinuteTick += OnTick;
@@ -100,7 +104,79 @@ public partial class ClockWidget : WidgetBase
         AppServices.Clock.MinuteTick -= OnTick;
     }
 
-    private void OnTick(object? sender, DateTime now) => Render(now);
+    private void OnTick(object? sender, DateTime now)
+    {
+        Render(now);
+        if (ClockPopup.IsOpen)
+            RenderPopup(now);
+    }
+
+    protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
+    {
+        base.OnMouseLeftButtonUp(e);
+        if (DockDragHelper.JustDragged) return;
+        ToggleClockPopup();
+        e.Handled = true;
+    }
+
+    public override bool OnCompactClick()
+    {
+        ToggleClockPopup();
+        return true;
+    }
+
+    private void ToggleClockPopup()
+    {
+        if (ClockPopup.IsOpen || Dock.PopupAnimationHelper.IsClosing(ClockPopup))
+        {
+            ClosePopup(ClockPopup);
+            return;
+        }
+
+        RenderPopup(DateTime.Now);
+        OpenPopup(ClockPopup);
+        Subscribe();
+    }
+
+    private void RenderPopup(DateTime now)
+    {
+        var culture = CultureInfo.CurrentCulture;
+        PopupClockTime.Text = _settings.Use24Hour ? now.ToString("HH:mm:ss", culture) : now.ToString("hh:mm:ss", culture);
+        PopupClockDate.Text = now.ToString("dddd, MMMM d", culture);
+        PopupClockZone.Text = GetLocalZoneString();
+    }
+
+    private void OnPopupCloseClick(object sender, RoutedEventArgs e)
+    {
+        ClosePopup(ClockPopup);
+    }
+
+    private static string GetLocalZoneString()
+    {
+        var local = TimeZoneInfo.Local;
+        var offset = local.GetUtcOffset(DateTime.Now);
+        string gmt = $"GMT{(offset >= TimeSpan.Zero ? "+" : "-")}{Math.Abs(offset.Hours):D2}:{Math.Abs(offset.Minutes):D2}";
+
+        string city = "";
+        string displayName = local.DisplayName;
+        int closeParen = displayName.IndexOf(')');
+        if (closeParen >= 0 && closeParen < displayName.Length - 1)
+        {
+            city = displayName[(closeParen + 1)..].Trim();
+            int comma = city.IndexOf(',');
+            if (comma > 0)
+                city = city[..comma].Trim();
+        }
+
+        if (string.IsNullOrWhiteSpace(city))
+        {
+            city = local.StandardName;
+            if (city.EndsWith(" Standard Time", StringComparison.OrdinalIgnoreCase))
+                city = city[..^14].Trim();
+        }
+
+        return $"{city} · {gmt}";
+    }
 
     private void Render(DateTime now)
     {
@@ -163,7 +239,7 @@ public partial class ClockWidget : WidgetBase
         if (next is null)
         {
             EventDot.Visibility = Visibility.Collapsed;
-            EventTitle.Text = "Bugün boş";
+            EventTitle.Text = "No events today";
             EventTime.Text = now.ToString("MMMM yyyy", CultureInfo.CurrentCulture);
             return;
         }

@@ -15,8 +15,8 @@ public sealed class AIUsageData
 }
 
 /// <summary>
-/// Claude Code aboneliğinin kullanım oranını izler. "claude -p /usage" komutunu görünmez bir
-/// arka plan işleminde (pencere açılmadan) çalıştırıp çıktısını ayrıştırır. Yalnızca abone varken çalışır.
+/// Monitors Claude Code subscription usage. Runs "claude -p /usage" in an invisible
+/// background process (without opening a window) and parses its output. Only runs when there is an active subscriber.
 /// </summary>
 public sealed class AIUsageService
 {
@@ -34,6 +34,7 @@ public sealed class AIUsageService
     private readonly DispatcherTimer _timer = new(DispatcherPriority.Background);
     private EventHandler<AIUsageData>? _updated;
     private bool _refreshing;
+    private int _consecutiveErrors;
 
     public AIUsageService()
     {
@@ -69,39 +70,82 @@ public sealed class AIUsageService
         _refreshing = true;
         try
         {
+            if (!IsClaudeExecutablePresent())
+            {
+                Error = "Claude CLI not found";
+                _timer.Interval = TimeSpan.FromHours(1);
+                return;
+            }
+
             var output = await RunClaudeUsageAsync().ConfigureAwait(true);
             if (!string.IsNullOrWhiteSpace(output))
             {
                 var parsed = Parse(output);
                 if (parsed.SessionPercent is null && parsed.WeekPercent is null)
                 {
-                    // Süreç çalıştı ama beklenen satırlar bulunamadı (ör. "claude" bulunamadı, giriş gerekiyor).
+                    // Process executed but expected lines were not found (e.g. "claude" not found, login required).
                     Error = output.Length > 160 ? output[..160].Trim() + "…" : output.Trim();
+                    ApplyBackoff();
                 }
                 else
                 {
                     Current = parsed;
                     Error = null;
+                    _consecutiveErrors = 0;
+                    _timer.Interval = PollInterval;
                 }
             }
             else
             {
-                Error = "Yanıt alınamadı";
+                Error = "No response received";
+                ApplyBackoff();
             }
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Claude kullanım bilgisi alınamadı");
+            Log.Error(ex, "Failed to retrieve Claude usage information");
             Error = ex.Message;
+            ApplyBackoff();
         }
         finally
         {
             _refreshing = false;
+            _updated?.Invoke(this, Current);
         }
-        _updated?.Invoke(this, Current);
     }
 
-    /// <summary>"claude -p /usage" komutunu tamamen gizli (pencere göstermeden) çalıştırır ve çıktısını döner.</summary>
+    private void ApplyBackoff()
+    {
+        _consecutiveErrors++;
+        _timer.Interval = _consecutiveErrors switch
+        {
+            1 => TimeSpan.FromMinutes(10),
+            2 => TimeSpan.FromMinutes(20),
+            _ => TimeSpan.FromHours(1),
+        };
+    }
+
+    private static bool IsClaudeExecutablePresent()
+    {
+        var augmentedPath = BuildAugmentedPath();
+        var extensions = new[] { ".cmd", ".exe", ".bat", "" };
+        foreach (var dir in augmentedPath.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            try
+            {
+                if (!Directory.Exists(dir)) continue;
+                foreach (var ext in extensions)
+                {
+                    if (File.Exists(Path.Combine(dir, "claude" + ext)))
+                        return true;
+                }
+            }
+            catch { /* access permissions etc. */ }
+        }
+        return false;
+    }
+
+    /// <summary>Runs the "claude -p /usage" command completely hidden (without showing a window) and returns its output.</summary>
     private static async Task<string?> RunClaudeUsageAsync()
     {
         var psi = new ProcessStartInfo
@@ -115,8 +159,8 @@ public sealed class AIUsageService
             RedirectStandardInput = true,
             WindowStyle = ProcessWindowStyle.Hidden,
         };
-        // DockHub genelde oturum açılışında başlar; "claude" komutu daha sonra kurulmuş olabilir.
-        // Sürecin PATH'i kalıntı (stale) olabileceğinden, kayıt defterindeki güncel PATH ile birleştirilir.
+        // DockHub typically starts on user login; "claude" command might have been installed afterwards.
+        // Since the process PATH could be stale, merge with current PATH from registry.
         psi.EnvironmentVariables["Path"] = BuildAugmentedPath();
 
         using var process = new Process { StartInfo = psi, EnableRaisingEvents = false };
@@ -133,7 +177,7 @@ public sealed class AIUsageService
         }
         catch (OperationCanceledException)
         {
-            try { process.Kill(true); } catch { /* zaten kapanmış olabilir */ }
+            try { process.Kill(true); } catch { /* may already be closed */ }
             return null;
         }
 
@@ -142,7 +186,7 @@ public sealed class AIUsageService
         return string.IsNullOrWhiteSpace(stdout) ? stderr : stdout;
     }
 
-    /// <summary>Sürecin kendi PATH'ini, kullanıcı ve makine PATH kayıtlarıyla (tekrarsız) birleştirir.</summary>
+    /// <summary>Merges process PATH with user and machine PATH entries (without duplicates).</summary>
     private static string BuildAugmentedPath()
     {
         string process = Environment.GetEnvironmentVariable("PATH") ?? "";

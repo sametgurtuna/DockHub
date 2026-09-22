@@ -2,13 +2,15 @@ using System.Diagnostics;
 
 namespace CustomDock.Core;
 
-/// <summary>Basit, boyutu sınırlı dosya logu.</summary>
+/// <summary>Simple, size-limited file logger.</summary>
 public static class Log
 {
     private const long MaxSize = 512 * 1024;
     private static readonly object Gate = new();
 
     public static void Info(string message) => Write("INFO", message);
+
+    public static void Warn(string message) => Write("WARN", message);
 
     public static void Error(Exception ex, string context) => Write("ERROR", $"{context}: {ex}");
 
@@ -27,7 +29,7 @@ public static class Log
         }
         catch
         {
-            // Log yazılamazsa uygulamayı düşürmeyelim.
+            // Do not crash application if logging fails.
         }
     }
 }

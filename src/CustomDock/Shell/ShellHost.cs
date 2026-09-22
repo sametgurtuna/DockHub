@@ -12,13 +12,14 @@ using static CustomDock.Native.NativeMethods;
 namespace CustomDock.Shell;
 
 /// <summary>
-/// Kabuk servislerini (ManagedShell) barındırır: çalışan pencereler, sistem tepsisi, tam ekran algılama,
-/// Explorer görev çubuğunu gizleme ve Başlat/Arama/Bildirim merkezi gibi sistem arayüzlerini açma.
+/// Hosts shell services (ManagedShell): running windows, system tray, full screen detection,
+/// hiding Explorer taskbar, and invoking system interfaces like Start/Search/Notification center.
 /// </summary>
 public sealed class ShellHost : IDisposable
 {
     private readonly AppVisibilityHelper _appVisibility;
     private readonly DispatcherTimer _launcherPoller;
+    private readonly EventHandler _launcherTickHandler;
     private bool _launcherVisible;
 
     public ShellHost(bool replaceTaskbar, IEnumerable<string>? pinnedTrayIcons)
@@ -28,8 +29,8 @@ public sealed class ShellHost : IDisposable
         ShellLogger.Severity = LogSeverity.Warning;
         ShellLogger.Attach(new LogBridge());
 
-        // TasksService, Win tuşu mesajlarını (SC_TASKLIST) kendi penceresine yönlendirir.
-        // Explorer'ın Başlat menüsünü açabilmesi için eski "taskman" penceresini geri vereceğiz.
+        // TasksService redirects Win key messages (SC_TASKLIST) to its own window.
+        // We restore the old "taskman" window so Explorer can open the Start menu.
         var originalTaskman = GetTaskmanWindow();
 
         var config = ShellManager.DefaultShellConfig;
@@ -45,15 +46,16 @@ public sealed class ShellHost : IDisposable
         if (originalTaskman != IntPtr.Zero && IsWindow(originalTaskman) && GetTaskmanWindow() != originalTaskman)
         {
             SetTaskmanWindow(originalTaskman);
-            Log.Info("Taskman penceresi Explorer'a geri verildi.");
+            Log.Info("Taskman window returned to Explorer.");
         }
 
         _appVisibility = new AppVisibilityHelper(false);
         Taskbar = new TaskbarController(() => Manager.NotificationArea?.Handle ?? IntPtr.Zero, () => _launcherVisible);
         RunningApps = new RunningAppsService(Manager);
 
+        _launcherTickHandler = (_, _) => PollLauncher();
         _launcherPoller = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(200) };
-        _launcherPoller.Tick += (_, _) => PollLauncher();
+        _launcherPoller.Tick += _launcherTickHandler;
         _launcherPoller.Start();
     }
 
@@ -67,7 +69,7 @@ public sealed class ShellHost : IDisposable
 
     public NotificationArea? Tray => Manager.NotificationArea;
 
-    /// <summary>Başlat menüsü veya Arama açık mı?</summary>
+    /// <summary>Is Start menu or Search open?</summary>
     public bool IsLauncherVisible => _launcherVisible;
 
     public event Action<bool>? LauncherVisibilityChanged;
@@ -89,7 +91,7 @@ public sealed class ShellHost : IDisposable
         LauncherVisibilityChanged?.Invoke(visible);
     }
 
-    // ------------------------------------------------------------------ Sistem arayüzleri
+    // ------------------------------------------------------------------ System interfaces
 
     public void ShowStartMenu(IntPtr anchorWindow) => StartMenuLauncher.Show(anchorWindow);
 
@@ -99,7 +101,7 @@ public sealed class ShellHost : IDisposable
 
     public void ShowTaskView() => InputHelper.SendKeyCombo(InputHelper.VK_LWIN, InputHelper.VK_TAB);
 
-    /// <summary>Bildirim merkezi + takvim (saat tıklaması).</summary>
+    /// <summary>Notification center + calendar (clock click).</summary>
     public void ShowNotificationCenter()
     {
         try
@@ -108,12 +110,12 @@ public sealed class ShellHost : IDisposable
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Bildirim merkezi açılamadı");
+            Log.Error(ex, "Failed to open notification center");
             InputHelper.SendKeyCombo(InputHelper.VK_LWIN, InputHelper.VK_N);
         }
     }
 
-    /// <summary>Hızlı ayarlar (ağ, ses, pil).</summary>
+    /// <summary>Quick settings (network, volume, battery).</summary>
     public void ShowQuickSettings()
     {
         try
@@ -122,7 +124,7 @@ public sealed class ShellHost : IDisposable
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Hızlı ayarlar açılamadı");
+            Log.Error(ex, "Failed to open quick settings");
             InputHelper.SendKeyCombo(InputHelper.VK_LWIN, InputHelper.VK_A);
         }
     }
@@ -130,7 +132,7 @@ public sealed class ShellHost : IDisposable
     public void ToggleDesktop() => Taskbar.ToggleDesktop();
 
     /// <summary>
-    /// Başlat menüsü, hızlı ayarlar ve bildirimler bu dikdörtgeni "görev çubuğu" kabul ederek konumlanır.
+    /// Start menu, quick settings, and notifications align assuming this rectangle is the "taskbar".
     /// </summary>
     public void SetTrayHost(RECT rect, DockEdge edge)
     {
@@ -150,7 +152,8 @@ public sealed class ShellHost : IDisposable
     public void Dispose()
     {
         _launcherPoller.Stop();
-        Taskbar.Restore();
+        _launcherPoller.Tick -= _launcherTickHandler;
+        Taskbar.Dispose();
         RunningApps.Dispose();
         try
         {
@@ -159,12 +162,12 @@ public sealed class ShellHost : IDisposable
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "ManagedShell kapatılamadı");
+            Log.Error(ex, "Failed to shut down ManagedShell");
         }
         _appVisibility.Dispose();
     }
 
-    /// <summary>ManagedShell uyarı/hata günlüklerini uygulama günlüğüne yönlendirir.</summary>
+    /// <summary>Redirects ManagedShell warning/error logs to application log.</summary>
     private sealed class LogBridge : ILog
     {
         public void Log(object sender, LogEventArgs e)

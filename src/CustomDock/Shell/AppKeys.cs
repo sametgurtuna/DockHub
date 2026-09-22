@@ -5,9 +5,9 @@ using ManagedShell.WindowsTasks;
 namespace CustomDock.Shell;
 
 /// <summary>
-/// Pencereleri ve sabitlenmiş uygulamaları aynı "uygulama anahtarı" ile eşleştirir.
-/// Kural: normal masaüstü uygulamaları .exe yoluna göre, UWP ve PWA (Chrome/Edge web uygulamaları)
-/// AppUserModelID'ye göre gruplanır.
+/// Matches windows and pinned applications with the same "application key".
+/// Rule: standard desktop apps are grouped by .exe path, UWP and PWA (Chrome/Edge web apps)
+/// are grouped by AppUserModelID.
 /// </summary>
 public static class AppKeys
 {
@@ -20,13 +20,20 @@ public static class AppKeys
             return "aumid:" + aumid.ToLowerInvariant();
 
         string? exe = SafeGet(() => window.WinFileName);
+        if (string.IsNullOrEmpty(exe))
+        {
+            uint pid = SafeGet(() => window.ProcId) ?? 0;
+            if (pid == 0) NativeMethods.GetWindowThreadProcessId(window.Handle, out pid);
+            if (pid != 0) exe = NativeMethods.GetProcessPath(pid);
+        }
+
         if (!string.IsNullOrEmpty(exe))
             return "exe:" + exe.ToLowerInvariant();
 
         return "hwnd:" + window.Handle;
     }
 
-    /// <summary>Sabitlenmiş öğe için anahtar (eşleşme yoksa yola dayalı benzersiz anahtar).</summary>
+    /// <summary>Key for pinned item (path-based unique key if no match).</summary>
     public static string ForItem(DockItem item)
     {
         var path = item.Path ?? "";
@@ -48,7 +55,7 @@ public static class AppKeys
         return "path:" + path.ToLowerInvariant();
     }
 
-    /// <summary>Anahtar bir .exe'yi temsil ediyorsa yolunu döndürür.</summary>
+    /// <summary>Returns executable path if the key represents an .exe.</summary>
     public static string? ExecutableOf(string key)
         => key.StartsWith("exe:", StringComparison.Ordinal) ? key[4..] : null;
 
@@ -64,7 +71,7 @@ public static class AppKeys
     }
 }
 
-/// <summary>ManagedShell pencerelerini uygulama anahtarına göre kategorize eder.</summary>
+/// <summary>Categorizes ManagedShell windows by application key.</summary>
 public sealed class AppCategoryProvider : ITaskCategoryProvider
 {
     public string GetCategory(ApplicationWindow window) => AppKeys.ForWindow(window);

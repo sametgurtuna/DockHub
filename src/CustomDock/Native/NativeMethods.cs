@@ -173,7 +173,7 @@ public struct INPUT
 {
     public uint type;
     public KEYBDINPUT ki;
-    // INPUT birliğinin en büyük üyesi (MOUSEINPUT) için dolgu
+    // Padding for largest member of INPUT union (MOUSEINPUT)
     private readonly long _padding;
 }
 
@@ -209,7 +209,7 @@ internal static class NativeMethods
     public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
     public delegate bool MonitorEnumProc(IntPtr hMonitor, IntPtr hdc, ref RECT rect, IntPtr data);
 
-    // --- Pencere stilleri ---
+    // --- Window styles ---
     public const int GWL_STYLE = -16;
     public const int GWL_EXSTYLE = -20;
     public const long WS_CAPTION = 0x00C00000L;
@@ -253,7 +253,7 @@ internal static class NativeMethods
     public static bool IsCloaked(IntPtr hwnd)
         => DwmGetWindowAttribute(hwnd, DWMWA_CLOAKED, out int cloaked, sizeof(int)) == 0 && cloaked != 0;
 
-    /// <summary>Birincil ekranın yenileme hızı (Hz).</summary>
+    /// <summary>Primary display refresh rate (Hz).</summary>
     public static int GetRefreshRate()
     {
         var hdc = GetDC(IntPtr.Zero);
@@ -261,7 +261,7 @@ internal static class NativeMethods
         finally { if (hdc != IntPtr.Zero) ReleaseDC(IntPtr.Zero, hdc); }
     }
 
-    // --- Mesajlar ---
+    // --- Messages ---
     public const int WM_SETTINGCHANGE = 0x001A;
     public const int WM_DISPLAYCHANGE = 0x007E;
     public const int WM_MOUSEACTIVATE = 0x0021;
@@ -283,7 +283,7 @@ internal static class NativeMethods
     public const int ABE_RIGHT = 2;
     public const int ABE_BOTTOM = 3;
 
-    // --- Monitör ---
+    // --- Monitor ---
     public const uint MONITOR_DEFAULTTONEAREST = 2;
     public const uint MONITOR_DEFAULTTOPRIMARY = 1;
     public const uint MONITORINFOF_PRIMARY = 1;
@@ -295,11 +295,17 @@ internal static class NativeMethods
     public const int DWMWA_SYSTEMBACKDROP_TYPE = 38;
     public const int DWMWA_MICA_EFFECT = 1029;
 
-    // --- Proses ---
+    // --- Process ---
     public const uint PROCESS_QUERY_LIMITED_INFORMATION = 0x1000;
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     public static extern IntPtr FindWindow(string? lpClassName, string? lpWindowName);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    public static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string? lpszClass, string? lpszWindow);
+
+    [DllImport("user32.dll")]
+    public static extern bool ScreenToClient(IntPtr hWnd, ref POINT lpPoint);
 
     [DllImport("user32.dll")]
     public static extern bool EnumWindows(EnumWindowsProc callback, IntPtr lParam);
@@ -331,6 +337,28 @@ internal static class NativeMethods
     [DllImport("user32.dll")]
     public static extern IntPtr GetWindow(IntPtr hWnd, uint uCmd);
 
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool EndTask(IntPtr hWnd, bool fShutDown, bool fForce);
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr WindowFromPoint(POINT point);
+
+    public const int WM_GETICON = 0x007F;
+    public const int ICON_SMALL = 0;
+    public const int ICON_BIG = 1;
+    public const int ICON_SMALL2 = 2;
+    public const int GCLP_HICON = -14;
+    public const int GCLP_HICONSM = -34;
+
+    [DllImport("user32.dll", EntryPoint = "GetClassLongPtrW")]
+    private static extern IntPtr GetClassLongPtr64(IntPtr hWnd, int nIndex);
+
+    [DllImport("user32.dll", EntryPoint = "GetClassLongW")]
+    private static extern int GetClassLong32(IntPtr hWnd, int nIndex);
+
+    public static IntPtr GetClassLongPtr(IntPtr hWnd, int nIndex) =>
+        IntPtr.Size == 8 ? GetClassLongPtr64(hWnd, nIndex) : new IntPtr(GetClassLong32(hWnd, nIndex));
+
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     public static extern int GetClassName(IntPtr hWnd, StringBuilder className, int maxCount);
 
@@ -351,6 +379,21 @@ internal static class NativeMethods
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     public static extern int RegisterWindowMessage(string message);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+
+    public const int WM_HOTKEY = 0x0312;
+    public const int WM_DPICHANGED = 0x02E0;
+
+    public const uint MOD_ALT = 0x0001;
+    public const uint MOD_CONTROL = 0x0002;
+    public const uint MOD_SHIFT = 0x0004;
+    public const uint MOD_WIN = 0x0008;
+    public const uint MOD_NOREPEAT = 0x4000;
 
     public static readonly IntPtr HWND_BROADCAST = new(0xFFFF);
 
@@ -405,6 +448,45 @@ internal static class NativeMethods
     [DllImport("dwmapi.dll")]
     public static extern int DwmExtendFrameIntoClientArea(IntPtr hwnd, ref MARGINS margins);
 
+    // --- DWM Thumbnail API ---
+    public const uint DWM_TNP_RECTDESTINATION = 0x00000001;
+    public const uint DWM_TNP_RECTSOURCE = 0x00000002;
+    public const uint DWM_TNP_OPACITY = 0x00000004;
+    public const uint DWM_TNP_VISIBLE = 0x00000008;
+    public const uint DWM_TNP_SOURCECLIENTAREAONLY = 0x00000010;
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct DWM_THUMBNAIL_PROPERTIES
+    {
+        public uint dwFlags;
+        public RECT rcDestination;
+        public RECT rcSource;
+        public byte opacity;
+        [MarshalAs(UnmanagedType.Bool)]
+        public bool fVisible;
+        [MarshalAs(UnmanagedType.Bool)]
+        public bool fSourceClientAreaOnly;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct PSIZE
+    {
+        public int x;
+        public int y;
+    }
+
+    [DllImport("dwmapi.dll")]
+    public static extern int DwmRegisterThumbnail(IntPtr hwndDestination, IntPtr hwndSource, out IntPtr phThumbnailId);
+
+    [DllImport("dwmapi.dll")]
+    public static extern int DwmUnregisterThumbnail(IntPtr hThumbnailId);
+
+    [DllImport("dwmapi.dll")]
+    public static extern int DwmUpdateThumbnailProperties(IntPtr hThumbnailId, ref DWM_THUMBNAIL_PROPERTIES ptnProperties);
+
+    [DllImport("dwmapi.dll")]
+    public static extern int DwmQueryThumbnailSourceSize(IntPtr hThumbnailId, out PSIZE pSize);
+
     [DllImport("shcore.dll")]
     public static extern int GetDpiForMonitor(IntPtr hmonitor, int dpiType, out uint dpiX, out uint dpiY);
 
@@ -457,7 +539,7 @@ internal static class NativeMethods
         }
     }
 
-    // ------------------------------------------------------------------ Çöp Kutusu (Recycle Bin)
+    // ------------------------------------------------------------------ Recycle Bin
 
     public const uint FO_DELETE = 0x0003;
     public const ushort FOF_ALLOWUNDO = 0x0040;

@@ -24,14 +24,14 @@ No admin rights. Your original taskbar always comes back.
 
 <br>
 
-<img src="docs/images/dock-overview.jpg" alt="DockHub floating at the bottom of a Windows 11 desktop with apps, clock, media, weather, CPU and memory rings, water tracker and a sticky note" width="100%">
+<img src="docs/images/dock-overview.jpg" alt="DockHub running on a Windows 11 desktop with pinned apps, a sticky note, headset battery, media controls, clock, AI usage rings, an app folder and weather" width="100%">
 
 </div>
 
 <br>
 
 > [!NOTE]
-> The screenshots in this README are rendered from the [interactive web demo](https://sametgurtuna.github.io/dockhub-website/), which recreates DockHub's interface in the browser. The app's interface is currently in Turkish.
+> Every screenshot below is a real capture of DockHub running on Windows 11. To try it without installing, open the [interactive web demo](https://sametgurtuna.github.io/dockhub-website/).
 
 ## Contents
 
@@ -56,31 +56,41 @@ No admin rights. Your original taskbar always comes back.
 ## Highlights
 
 - **Replaces the taskbar, keeps Windows intact.** The Start button opens the real Windows Start menu, and the Windows key, search, notification center and quick settings work exactly as before.
-- **15 widgets, many layouts each.** Clocks, timers, reminders, sticky notes, now playing, system monitors and weather. Add the same widget as many times as you like; every copy keeps its own settings.
-- **Fluent to the core.** Blurred glass, Acrylic or solid backgrounds, light and dark themes, and your Windows accent color. Animations run at your display's refresh rate.
+- **19 widgets, many layouts each.** Clocks, timers, reminders, sticky notes, now playing, audio, system monitors, AI usage and weather. Add the same widget as many times as you like; every copy keeps its own settings.
+- **Live app buttons.** Hover for a real window thumbnail, right-click for a Jump List, watch badge counts and progress, and drag apps together into a folder.
+- **Fluent to the core.** Blurred glass, Acrylic or solid backgrounds, light and dark themes, and your Windows accent color. Popups, folders and widgets animate with macOS-inspired genie, zoom and fan effects, all at your display's refresh rate.
 - **Any edge, any shape.** Bottom, top, left or right; floating or attached; small, medium or large. On vertical docks, widgets collapse into compact tiles.
 - **Safe by design.** No admin rights. When DockHub exits, crashes, or the session ends, the Windows taskbar and its tray icons come back.
 - **Starts with Windows.** The installer enables autostart by default, and you can turn it off at any time.
+- **A global hotkey** to summon the dock instantly from anywhere.
 
 ## Screenshots
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/images/start-menu.jpg" alt="Start menu with search, pinned apps and recommendations"><br><sub><b>Start menu.</b> Opens from the dock's Start button.</sub></td>
-    <td width="50%"><img src="docs/images/widget-panel.jpg" alt="Weather widget panel with hourly and five day forecast"><br><sub><b>Widget panels.</b> Click any widget to see the full view.</sub></td>
+    <td width="50%"><img src="docs/images/groups-folder.jpg" alt="An app folder named AI opened from the dock, showing Claude, Codex and Antigravity with a color palette"><br><sub><b>Folders.</b> Drag items together, then click to fan them out. Rename and recolor from the popup.</sub></td>
+    <td width="50%"><img src="docs/images/window-preview.jpg" alt="Live thumbnail preview of a File Explorer window above the dock"><br><sub><b>Live window previews.</b> Hover a running app for a real thumbnail with a close button.</sub></td>
   </tr>
   <tr>
-    <td width="50%"><img src="docs/images/light-vertical.jpg" alt="Light theme with a vertical dock on the left edge and the media panel open"><br><sub><b>Light theme, vertical dock.</b> Widgets become compact tiles.</sub></td>
-    <td width="50%"><img src="docs/images/widget-gallery.jpg" alt="Widget gallery flyout with categories and add buttons"><br><sub><b>Widget gallery.</b> Pick a widget and a layout, and it grows into the dock.</sub></td>
+    <td width="50%"><img src="docs/images/jump-list.jpg" alt="Jump list for File Explorer with recent folders and app actions"><br><sub><b>Jump Lists.</b> Right-click an app for its recent items and tasks.</sub></td>
+    <td width="50%"><img src="docs/images/widget-panel.jpg" alt="Clock widget panel showing seconds, the date and the time zone"><br><sub><b>Widget panels.</b> Click any widget for the full view.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/images/start-menu.jpg" alt="The Windows 11 Start menu opened from the dock's Start button"><br><sub><b>Start menu.</b> The real Windows Start menu, opened from the dock.</sub></td>
+    <td width="50%"><img src="docs/images/light-vertical.jpg" alt="Light theme with a vertical dock on the left edge showing compact widget tiles"><br><sub><b>Light theme, vertical dock.</b> Widgets become compact tiles.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/images/widget-gallery.jpg" alt="Widget gallery in the settings window with live previews and add buttons"><br><sub><b>Widget gallery.</b> Live previews; press + and the widget grows into the dock.</sub></td>
+    <td width="50%"><img src="docs/images/settings.jpg" alt="DockHub settings window showing appearance options"><br><sub><b>Settings.</b> A Mica window for every option.</sub></td>
   </tr>
   <tr>
     <td width="50%"><img src="docs/images/explorer-pin.jpg" alt="File Explorer context menu with the Pin to DockHub command"><br><sub><b>Pin from File Explorer.</b> Right-click any .exe or shortcut.</sub></td>
-    <td width="50%"><img src="docs/images/settings.jpg" alt="DockHub settings window with appearance options"><br><sub><b>Settings.</b> A Mica window for every option.</sub></td>
+    <td width="50%"><img src="docs/images/dock-menu.jpg" alt="Dock context menu with add widget, pin application, create group and position commands"><br><sub><b>Dock menu.</b> Right-click empty space for widgets, groups and position.</sub></td>
   </tr>
 </table>
 
 <p align="center">
-  <img src="docs/images/widgets-grid.jpg" alt="Grid of live widget previews: clock, world clock, stopwatch, focus timer, countdown, alarm, time progress, hydration and reminders" width="100%">
+  <img src="docs/images/widgets-grid.jpg" alt="Widget gallery previews for network speed, status rings, recycle bin, device batteries, weather and AI usage" width="100%">
 </p>
 
 ## Installation
@@ -113,11 +123,16 @@ The installer is self-contained. It ships the .NET runtime, so there is nothing 
 - **Running apps**
   - Pinned apps are matched with their open windows, and windows of the same app are grouped into one button.
   - Other open apps are listed after a separator.
-  - Active, attention-requesting and progress states (for example, download bars) are shown.
-  - Clicking brings a window to the front, minimizes it, or cycles through the app's windows. Shift+click or middle-click opens a new window. Right-click shows the window list plus *Run as administrator*, *Open file location*, *Pin/Unpin* and *Close all windows*.
+  - Active, attention-requesting and progress states (for example, download bars) are shown, along with taskbar-style badge counts.
+  - Hovering a button shows a live thumbnail preview of its window(s), like the Windows taskbar.
+  - Right-click shows the window list, the app's Jump List (recent files and tasks, when the app provides one), plus *Run as administrator*, *Open file location*, *Pin/Unpin* and *Close all windows*.
+  - Clicking brings a window to the front, minimizes it, or cycles through the app's windows. Shift+click or middle-click opens a new window.
   - Pin a running app by dragging it into the dock or with the *Pin to DockHub* command.
   - **Pin from File Explorer:** right-click an `.exe` or shortcut and choose *Pin to DockHub*. On Windows 11 the command appears under *Show more options* (or Shift+right-click), because the new compact menu only lists commands from packaged apps.
+  - **Groups (folders):** drag an app or widget onto another to create a folder. Folders can be renamed, given a custom accent color, and open with a staggered fan animation.
 - **System tray.** App icons live in the dock and receive clicks, right-clicks and hover. Hidden icons sit in the overflow menu, and you choose which icons are always visible. Your Windows tray preferences are imported on first launch.
+
+  <img src="docs/images/tray-overflow.jpg" alt="Tray overflow flyout above the dock showing hidden tray icons" width="46%">
 - **Clock.** Clicking it opens the notification center. Its context menu offers quick settings, date and time settings, and seconds and date options. A thin strip at the far end shows the desktop.
 - **Reserved screen space.** An invisible AppBar reserves the dock's area, so maximized windows never slide under it.
 
@@ -133,7 +148,8 @@ The installer is self-contained. It ships the .NET runtime, so there is nothing 
 - **Hide in full screen:** the dock steps aside for games, videos and F11 mode.
 - **Multi-monitor and DPI:** choose the monitor for the dock; per-monitor DPI (PerMonitorV2) is supported.
 - **Drag and drop:** reorder apps, widgets and separators on the dock. Dropping an `.exe` or `.lnk` from File Explorer pins it.
-- **Smooth motion:** scrolling, auto-hide and flyouts use frame-synchronized transitions at your display's refresh rate, including above 60 Hz. Hover highlights fade in, app icons grow slightly under the pointer, and new items grow into place.
+- **Smooth motion:** scrolling, auto-hide and flyouts use frame-synchronized transitions at your display's refresh rate, including above 60 Hz. Hover highlights fade in, app icons grow slightly under the pointer, new items grow into place, and widget/folder popups open with macOS-style genie, zoom and shrink animations.
+- **Global hotkey:** summon the dock or bring it to the front from anywhere, configurable in *Settings › General*.
 - **Menus:** context menus and widget panels always open outside the dock, next to the pointer or the item.
 - **Dock menu** (right-click an empty area): Add widget, Pin app, Add separator, Task Manager, Quick settings, Auto-hide, Hide Windows taskbar, Position, Settings, Exit.
 
@@ -154,12 +170,20 @@ Every widget can be added more than once, and each copy has its own settings. Ch
 | | **Reminders** | List, Next, Count | Toast notifications with a "Snooze 10 min" action. |
 | Notes | **Sticky note** | Single | A preview lives in the dock; clicking opens a large paper in six colors with adjustable text size. Saves automatically. |
 | Media | **Now playing** | Full, Compact, Mini | Windows media controls (SMTC): Spotify, browsers, VLC and more. Cover art, progress, previous, play and next. |
+| | **Audio device** | Compact, Slider | Switch between output devices, scroll to adjust volume, click to mute. |
 | System | **CPU and memory** | Numbers, Rings, Bars | Refresh interval from 1 to 10 seconds. |
 | | **Network** | Numbers only, With graph | Live download and upload speed. |
 | | **Status** | Rings, Percentage ring, Icons only | Battery, disk, memory and processor. |
+| | **Recycle bin** | Icon only, Detailed | Drag files onto it to delete them, click to open, right-click to empty. |
+| | **Device batteries** | Single device, Multiple devices | Battery levels for Bluetooth and USB peripherals (wireless headsets, mice, keyboards). |
+| AI | **AI usage** | Numbers, Rings, Bars | Claude Code 5-hour and weekly usage limits, refreshed in the background every 5 minutes. |
 | Weather | **Weather** | Current, Condition, Hourly forecast | [Open-Meteo](https://open-meteo.com/), no API key needed. Uses a city or your Windows location. |
 
-To add a widget, press **+** next to its preview in *Settings › Widget gallery*, or right-click an empty area of the dock and choose **Add widget**.
+To add a widget, press **+** next to its preview in *Settings › Widget gallery*, or right-click an empty area of the dock and choose **Add widget**. Right-clicking a widget on the dock gives it its own actions, layouts and settings.
+
+<p align="center">
+  <img src="docs/images/widget-menu.jpg" alt="Right-click menu of the hydration widget with drink a glass, reset today, appearance and widget settings" width="62%">
+</p>
 
 ## How the taskbar replacement works
 
@@ -174,6 +198,10 @@ With *Settings › General › Replace the taskbar* set to **DockHub** (the defa
 5. An invisible, click-through AppBar reserves the dock's thickness at the screen edge.
 
 In **Both** mode, the Windows taskbar is left untouched and the tray is not taken over; the dock sits above the taskbar. Switching modes restarts the app.
+
+<p align="center">
+  <img src="docs/images/settings-general.jpg" alt="DockHub settings General page with the replace taskbar switch, autostart options and the restore taskbar button" width="88%">
+</p>
 
 ### The Windows taskbar always comes back
 
@@ -346,20 +374,23 @@ src/CustomDock/              Produces DockHub.exe
 │   ├── TaskbarController.cs   Hiding and restoring the Windows taskbar, crash recovery
 │   ├── StartMenuLauncher.cs   Start menu through IImmersiveLauncher
 │   ├── RunningAppsService.cs  Grouping windows by app
+│   ├── JumpListService.cs     Reads an app's Jump List (recent/pinned tasks) for the right-click menu
 │   └── AppKeys.cs, TrayPreferences.cs, DefaultItems.cs
 ├── Services/                Clock, system and network monitors, media (SMTC), weather (with WeatherHub cache),
 │                            notifications, reminders, hydration, app launcher
 ├── Dock/                    DockWindow (zones, scrolling, drag and drop, position, auto-hide), AppButton,
-│                            WidgetItemView (card, vertical tile and panel), TrayIconView, SpaceReserver,
-│                            EdgeTriggerWindow, TrayIconManager
+│                            WidgetItemView (card, vertical tile and panel), GroupItemView (folders),
+│                            WindowPreviewWindow (live thumbnails), GenieEffectHelper, PopupAnimationHelper,
+│                            TrayIconView, SpaceReserver, EdgeTriggerWindow, TrayIconManager
 ├── Controls/                WidgetCard, DockZonesPanel, RingGauge, AnalogClock, WeatherIcon, TickBar, Sparkline,
 │                            Glyphs, SettingRow
 ├── Settings/                Settings window (Mica), widget gallery, app picker, widget settings templates
 ├── Themes/                  Dark.xaml, Light.xaml (colors), Controls.xaml (styles)
 └── Widgets/                 WidgetBase, WidgetRegistry, CompactTile and one folder per widget
     ├── Clock/  WorldClock/  Timers/ (stopwatch, focus, countdown, alarm)  TimeProgress/
-    ├── Hydration/  Reminders/  Notes/  Media/
-    └── System/ (CPU and memory, network, status)  Weather/
+    ├── Hydration/  Reminders/  Notes/  Media/  Audio/
+    ├── System/ (CPU and memory, network, status)  RecycleBin/  BatteryDevices/
+    └── AI/ (AI usage)  Weather/
 tools/generate-icon.ps1      Renders Assets/DockHub.ico
 docs/images/                 README artwork
 ```
@@ -459,7 +490,7 @@ The widget then shows up in the gallery automatically. Other helpers:
 - **Window effects.** The blurred glass effect uses `SetWindowCompositionAttribute`, so it works even when the window is inactive. Corner rounding comes from DWM (about 8 px); corners stay square on Windows 10.
 - **Shell integration.** Windows 11's XAML tray items (network, volume and battery quick settings, language bar) belong to Explorer, so the dock shows the classic tray icons. The per-app taskbar progress indicator may not appear for some apps, because the Windows key stays with Explorer.
 - **Multiple monitors.** The dock appears on one monitor; the Windows taskbar is hidden on secondary monitors as well.
-- **Language.** The interface is currently in Turkish.
+- **Language.** The interface is English only; dates and numbers follow your Windows locale. The installer is available in English and Turkish.
 
 ## FAQ
 

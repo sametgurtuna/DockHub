@@ -64,14 +64,14 @@ public partial class AudioWidget : WidgetBase
         var dev = AppServices.Audio.DefaultDevice;
         bool muted = AppServices.Audio.IsMuted;
         int vol = AppServices.Audio.VolumePercent;
-        string name = dev?.Name ?? "Ses Aygıtı";
+        string name = dev?.Name ?? "Audio Device";
 
         string shortName = name;
         int paren = shortName.IndexOf('(');
         if (paren > 3) shortName = shortName[..paren].Trim();
 
         Geometry icon = muted ? MuteGeometry : (dev?.IsHeadphone == true ? HeadphoneGeometry : SpeakerGeometry);
-        string volText = muted ? "Sessiz" : $"%{vol}";
+        string volText = muted ? "Muted" : $"{vol}%";
 
         CompactIcon.Data = icon;
         CompactDeviceName.Text = shortName;
@@ -87,8 +87,7 @@ public partial class AudioWidget : WidgetBase
             AnimateBar(SliderBar, targetWidth);
         }
 
-        // Bilgilendirici maddeler kaldırıldı, yalnızca aygıt ve ses bilgisi
-        ToolTip = $"{name}\nSes: {volText}";
+        ToolTip = $"{name}\nVolume: {volText}";
         RefreshCompact();
     }
 
@@ -105,17 +104,19 @@ public partial class AudioWidget : WidgetBase
         });
     }
 
-    // ------------------------------------------------------------------ Etkileşim
+    // ------------------------------------------------------------------ Interaction
 
     protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
     {
         base.OnPreviewMouseWheel(e);
         if (MixerPopup.IsOpen)
         {
-            // Mixer penceresi açıkken tekerlek mikser içeriğini kaydırsın, dock ses adımını tetiklemesin
+            // While mixer window is open, mouse wheel scrolls mixer content, doesn't change dock volume
             return;
         }
-        AppServices.Audio.StepVolume(e.Delta > 0 ? 0.02f : -0.02f);
+        float step = (float)Math.Round(e.Delta / 120.0 * 0.02, 3);
+        if (Math.Abs(step) < 0.01f) step = e.Delta > 0 ? 0.01f : -0.01f;
+        AppServices.Audio.StepVolume(step);
         e.Handled = true;
     }
 
@@ -146,21 +147,20 @@ public partial class AudioWidget : WidgetBase
         }
     }
 
-    // ------------------------------------------------------------------ Ses Mikseri Popup (EarTrumpet tarzı)
+    // ------------------------------------------------------------------ Audio Mixer Popup (EarTrumpet style)
 
     private void ToggleMixer()
     {
-        if (MixerPopup.IsOpen)
+        if (MixerPopup.IsOpen || Dock.PopupAnimationHelper.IsClosing(MixerPopup))
         {
-            MixerPopup.IsOpen = false;
+            ClosePopup(MixerPopup);
             return;
         }
-        // Tıklama ile yeni kapanmışsa tekrar açılmasını engelle (toggle hissi)
+        // Prevent reopen if newly closed by click (toggle feel)
         if (DateTime.UtcNow - _mixerClosedAt < TimeSpan.FromMilliseconds(250))
             return;
 
         BuildMixerUI();
-        GlobalPopupDismissHook.RegisterPopup(MixerPopup);
         OpenPopup(MixerPopup);
     }
 
@@ -172,13 +172,13 @@ public partial class AudioWidget : WidgetBase
         var dev = AppServices.Audio.DefaultDevice;
         bool masterMuted = AppServices.Audio.IsMuted;
         int masterVol = AppServices.Audio.VolumePercent;
-        string devName = dev?.Name ?? "Ana Ses Çıkışı";
+        string devName = dev?.Name ?? "Master Audio Output";
 
-        // 1. Başlık Çubuğu
+        // 1. Header Bar
         var headerGrid = new Grid { Margin = new Thickness(0, 0, 0, 10) };
         var titleText = new TextBlock
         {
-            Text = "Ses Mikseri",
+            Text = "Volume Mixer",
             FontWeight = FontWeights.SemiBold,
             FontSize = 13.5,
             VerticalAlignment = VerticalAlignment.Center,
@@ -188,7 +188,7 @@ public partial class AudioWidget : WidgetBase
         headerGrid.Children.Add(titleText);
         MixerPanel.Children.Add(headerGrid);
 
-        // 2. Ana Aygıt Kartı (Master Volume Card)
+        // 2. Master Device Card (Master Volume Card)
         var masterCard = new Border
         {
             CornerRadius = new CornerRadius(10),
@@ -199,7 +199,7 @@ public partial class AudioWidget : WidgetBase
 
         var masterStack = new StackPanel();
 
-        // Ana aygıt üst satır: İkon + İsim + Yüzde
+        // Master device top row: Icon + Name + Percent
         var masterTop = new Grid { Margin = new Thickness(0, 0, 0, 6) };
         masterTop.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         masterTop.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -246,7 +246,7 @@ public partial class AudioWidget : WidgetBase
 
         var masterVolLabel = new TextBlock
         {
-            Text = masterMuted ? "Sessiz" : $"%{masterVol}",
+            Text = masterMuted ? "Muted" : $"{masterVol}%",
             FontSize = 11.5,
             FontWeight = FontWeights.SemiBold,
             HorizontalAlignment = HorizontalAlignment.Right,
@@ -258,7 +258,7 @@ public partial class AudioWidget : WidgetBase
 
         masterStack.Children.Add(masterTop);
 
-        // Ana aygıt alt satır: Master Slider
+        // Master device bottom row: Master Slider
         var masterSlider = new Slider
         {
             Minimum = 0,
@@ -271,13 +271,13 @@ public partial class AudioWidget : WidgetBase
         masterSlider.ValueChanged += (_, e) =>
         {
             AppServices.Audio.Volume = (float)(e.NewValue / 100.0);
-            masterVolLabel.Text = $"%{Math.Round(e.NewValue)}";
+            masterVolLabel.Text = $"{Math.Round(e.NewValue)}%";
         };
         masterStack.Children.Add(masterSlider);
         masterCard.Child = masterStack;
         MixerPanel.Children.Add(masterCard);
 
-        // 3. Uygulamalar Başlığı
+        // 3. Apps Header
         var sessions = AppServices.Audio.GetAudioSessions();
         var appsHeader = new Grid { Margin = new Thickness(2, 2, 2, 6) };
         appsHeader.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -285,7 +285,7 @@ public partial class AudioWidget : WidgetBase
 
         var appsLabel = new TextBlock
         {
-            Text = "Uygulama Sesleri",
+            Text = "App Volume",
             FontSize = 11.5,
             FontWeight = FontWeights.SemiBold,
         };
@@ -314,7 +314,7 @@ public partial class AudioWidget : WidgetBase
         }
         MixerPanel.Children.Add(appsHeader);
 
-        // 4. Uygulama Ses Oturumları Listesi
+        // 4. App Audio Sessions List
         if (sessions.Count == 0)
         {
             _appsScroller = null;
@@ -326,7 +326,7 @@ public partial class AudioWidget : WidgetBase
             emptyBorder.SetResourceReference(Border.BackgroundProperty, "SurfaceLightBrush");
             var emptyText = new TextBlock
             {
-                Text = "Şu anda ses çalan bir uygulama yok",
+                Text = "No apps currently playing audio",
                 FontSize = 11.5,
                 HorizontalAlignment = HorizontalAlignment.Center,
             };
@@ -365,14 +365,14 @@ public partial class AudioWidget : WidgetBase
 
         var root = new StackPanel();
 
-        // Üst satır: Rozet + Uygulama Adı + Mute Butonu + Yüzde
+        // Top row: Badge + App Name + Mute Button + Percent
         var topGrid = new Grid { Margin = new Thickness(0, 0, 0, 4) };
         topGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         topGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         topGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         topGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(38) });
 
-        // Rozet
+        // Badge
         string displayName = session.DisplayName;
         int dotIndex = displayName.LastIndexOf('.');
         if (dotIndex > 0 && dotIndex < displayName.Length - 1)
@@ -401,7 +401,7 @@ public partial class AudioWidget : WidgetBase
         Grid.SetColumn(badge, 0);
         topGrid.Children.Add(badge);
 
-        // Uygulama Adı
+        // App Name
         var nameBlock = new TextBlock
         {
             Text = displayName,
@@ -415,10 +415,10 @@ public partial class AudioWidget : WidgetBase
         Grid.SetColumn(nameBlock, 1);
         topGrid.Children.Add(nameBlock);
 
-        // Yüzde Metni
+        // Percent Text
         var volText = new TextBlock
         {
-            Text = session.IsMuted ? "Sessiz" : $"%{Math.Round(session.Volume * 100)}",
+            Text = session.IsMuted ? "Muted" : $"{Math.Round(session.Volume * 100)}%",
             FontSize = 10.5,
             FontWeight = FontWeights.SemiBold,
             HorizontalAlignment = HorizontalAlignment.Right,
@@ -428,7 +428,7 @@ public partial class AudioWidget : WidgetBase
         Grid.SetColumn(volText, 3);
         topGrid.Children.Add(volText);
 
-        // Mute İkon Butonu
+        // Mute Icon Button
         var muteBtn = new Border
         {
             Width = 20, Height = 20, CornerRadius = new CornerRadius(10),
@@ -453,7 +453,7 @@ public partial class AudioWidget : WidgetBase
             AppServices.Audio.SetSessionMute(session, newMuted);
             muteIcon.Text = newMuted ? "\uE74F" : "\uE767";
             muteIcon.SetResourceReference(TextBlock.ForegroundProperty, newMuted ? "AccentRedBrush" : "TextSecondaryBrush");
-            volText.Text = newMuted ? "Sessiz" : $"%{Math.Round(session.Volume * 100)}";
+            volText.Text = newMuted ? "Muted" : $"{Math.Round(session.Volume * 100)}%";
             volText.SetResourceReference(TextBlock.ForegroundProperty, newMuted ? "AccentRedBrush" : "TextSecondaryBrush");
         };
         Grid.SetColumn(muteBtn, 2);
@@ -461,7 +461,7 @@ public partial class AudioWidget : WidgetBase
 
         root.Children.Add(topGrid);
 
-        // Alt satır: Slider
+        // Bottom row: Slider
         var slider = new Slider
         {
             Minimum = 0,
@@ -477,7 +477,7 @@ public partial class AudioWidget : WidgetBase
             if (s is Slider { Tag: AudioService.AudioSessionInfo sess })
             {
                 AppServices.Audio.SetSessionVolume(sess, (float)(e.NewValue / 100.0));
-                volText.Text = $"%{Math.Round(e.NewValue)}";
+                volText.Text = $"{Math.Round(e.NewValue)}%";
                 volText.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondaryBrush");
                 muteIcon.Text = "\uE767";
                 muteIcon.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondaryBrush");
@@ -489,7 +489,7 @@ public partial class AudioWidget : WidgetBase
         return card;
     }
 
-    // ------------------------------------------------------------------ Kompakt ve Sağ tık
+    // ------------------------------------------------------------------ Compact and Context menu
 
     protected override void UpdateCompact(CompactTile tile)
     {
@@ -497,7 +497,7 @@ public partial class AudioWidget : WidgetBase
         bool muted = AppServices.Audio.IsMuted;
         Geometry icon = muted ? MuteGeometry : (dev?.IsHeadphone == true ? HeadphoneGeometry : SpeakerGeometry);
         tile.ShowGlyph(icon, muted ? "AccentRedBrush" : "AccentCyanBrush");
-        tile.Text = muted ? "Sessiz" : $"%{AppServices.Audio.VolumePercent}";
+        tile.Text = muted ? "Muted" : $"{AppServices.Audio.VolumePercent}%";
     }
 
     public override bool OnCompactClick()
@@ -511,7 +511,7 @@ public partial class AudioWidget : WidgetBase
         var devices = AppServices.Audio.Devices;
         if (devices.Count > 0)
         {
-            items.Add(DockMenu.Header("Çıkış Aygıtı"));
+            items.Add(DockMenu.Header("Output Device"));
             foreach (var dev in devices)
             {
                 items.Add(DockMenu.Check(dev.Name, dev.IsDefault, () => AppServices.Audio.SetDefaultDevice(dev.Id)));
@@ -520,6 +520,6 @@ public partial class AudioWidget : WidgetBase
         }
 
         bool muted = AppServices.Audio.IsMuted;
-        items.Add(DockMenu.Item(muted ? "Sesi aç" : "Sessize al", muted ? "\uE74F" : "\uE767", () => AppServices.Audio.ToggleMute()));
+        items.Add(DockMenu.Item(muted ? "Unmute" : "Mute", muted ? "\uE74F" : "\uE767", () => AppServices.Audio.ToggleMute()));
     }
 }

@@ -3,7 +3,7 @@ using System.Windows.Media;
 
 namespace CustomDock.Controls;
 
-/// <summary>Küçük analog saat. Gündüz açık, gece koyu kadran kullanır.</summary>
+/// <summary>Small analog clock. Uses light dial during the day, dark dial at night.</summary>
 public sealed class AnalogClock : FrameworkElement
 {
     public static readonly DependencyProperty TimeProperty = DependencyProperty.Register(
@@ -30,7 +30,7 @@ public sealed class AnalogClock : FrameworkElement
         nameof(AlwaysDark), typeof(bool), typeof(AnalogClock),
         new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender));
 
-    /// <summary>Gündüz/gece ayrımı yapmadan her zaman koyu kadran kullanır.</summary>
+    /// <summary>Always uses dark dial regardless of daytime/nighttime.</summary>
     public bool AlwaysDark { get => (bool)GetValue(AlwaysDarkProperty); set => SetValue(AlwaysDarkProperty, value); }
 
     private static readonly Brush DarkInk = Frozen(Color.FromRgb(0x1C, 0x1C, 0x1E));
@@ -68,7 +68,7 @@ public sealed class AnalogClock : FrameworkElement
         var c = new Point(ActualWidth / 2, ActualHeight / 2);
         double r = size / 2;
 
-        // İnce çerçeve: açık kadran açık zeminde de seçilebilsin.
+        // Subtle outline: ensures light dial remains discernible against light backgrounds.
         dc.DrawEllipse(day ? DayFace : NightFace, new Pen(FaceOutline, 1), c, r - 0.5, r - 0.5);
 
         var tickPen = new Pen(ticks, Math.Max(1, size / 36));

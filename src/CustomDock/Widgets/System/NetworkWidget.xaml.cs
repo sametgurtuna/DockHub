@@ -4,7 +4,7 @@ using CustomDock.Services;
 
 namespace CustomDock.Widgets;
 
-/// <summary>Anlık indirme / yükleme hızı, isteğe bağlı grafik.</summary>
+/// <summary>Real-time download / upload speed, optional chart.</summary>
 public partial class NetworkWidget : WidgetBase
 {
     public NetworkWidget()
@@ -33,7 +33,7 @@ public partial class NetworkWidget : WidgetBase
             Chart.SetData(history.Select(h => h.DownBytesPerSec).ToList(), history.Select(h => h.UpBytesPerSec).ToList());
         }
 
-        ToolTip = $"İndirme: {DownValue.Text} {DownUnit.Text}\nYükleme: {UpValue.Text} {UpUnit.Text}";
+        ToolTip = $"Download: {DownValue.Text} {DownUnit.Text}\nUpload: {UpValue.Text} {UpUnit.Text}";
         RefreshCompact();
     }
 

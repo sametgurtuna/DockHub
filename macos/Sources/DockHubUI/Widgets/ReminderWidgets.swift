@@ -26,7 +26,7 @@ struct HydrationWidget: View {
             Image(systemName: sayac >= hedef ? "drop.fill" : "drop")
                 .font(.system(size: style.iconSize * 0.55))
                 .foregroundStyle(sayac >= hedef ? .green : Color(nsColor: .controlAccentColor))
-            if item.effectiveVariant == "goal" {
+            if item.effectiveVariant == "progress" {
                 VStack(alignment: .leading, spacing: 1) {
                     Text("\(sayac)/\(hedef)")
                         .font(.system(size: style.height * 0.24, weight: .semibold)).monospacedDigit()

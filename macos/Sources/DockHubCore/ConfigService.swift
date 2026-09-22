@@ -9,7 +9,19 @@ public final class ConfigService: @unchecked Sendable {
 
     public init(url: URL = AppPaths.config) {
         self.url = url
-        if let loaded = JSONStore.load(AppConfig.self, from: url) {
+        if var loaded = JSONStore.load(AppConfig.self, from: url) {
+            // Windows'la esitlemeden onceki widget kimlikleri bir kez tasinir
+            // ve dosyaya yazilir (WidgetRegistry.migrateLegacyIds).
+            let tasima = WidgetRegistry.migrateLegacyIds(loaded.items)
+            if tasima.changed {
+                loaded.items = tasima.items
+                do {
+                    try JSONStore.save(loaded, to: url)
+                    Log.info("Eski widget kimlikleri Windows kimliklerine tasindi")
+                } catch {
+                    Log.error("Tasinan config yazilamadi", error)
+                }
+            }
             self.config = loaded
             self.didCreateDefaults = false
         } else {

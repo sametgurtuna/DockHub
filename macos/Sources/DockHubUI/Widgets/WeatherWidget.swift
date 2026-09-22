@@ -77,7 +77,7 @@ struct WeatherWidget: View {
             Image(systemName: r.symbolName)
                 .font(.system(size: style.iconSize * 0.58))
                 .symbolRenderingMode(.multicolor)
-            if item.effectiveVariant == "condition" {
+            if item.effectiveVariant == "conditions" {
                 VStack(alignment: .leading, spacing: 0) {
                     Text(r.description).font(.system(size: style.height * 0.2, weight: .medium))
                     if let p = r.place {

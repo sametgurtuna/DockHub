@@ -42,7 +42,7 @@ struct NetworkWidget: View {
                 satir("arrow.down", store.sample.downBytesPerSec, .blue)
                 satir("arrow.up", store.sample.upBytesPerSec, .orange)
             }
-            if item.effectiveVariant == "graph" { grafik }
+            if item.effectiveVariant == "chart" { grafik }
         }
         .onAppear { store.start(interval: item.numberSetting("interval", default: 2)) }
     }

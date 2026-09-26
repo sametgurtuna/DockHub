@@ -80,6 +80,7 @@ public partial class MediaWidget : WidgetBase
     {
         var state = Media.Current;
         Visibility = _settings.HideWhenIdle && !state.HasSession && !IsPreview ? Visibility.Collapsed : Visibility.Visible;
+        SetIdle(!state.HasSession);
 
         string title = !state.HasSession ? "Nothing playing" : string.IsNullOrWhiteSpace(state.Title) ? "Unknown track" : state.Title;
         string artist = !state.HasSession ? "Start a media player" : string.IsNullOrWhiteSpace(state.Artist) ? state.SourceApp : state.Artist;

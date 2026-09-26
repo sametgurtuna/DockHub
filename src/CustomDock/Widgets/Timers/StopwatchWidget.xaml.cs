@@ -51,6 +51,7 @@ public partial class StopwatchWidget : WidgetBase
         var elapsed = _stopwatch.Elapsed;
         TimeText.Text = TimerFormat.Format(elapsed);
         StatusText.Text = _stopwatch.IsRunning ? "Running" : elapsed > TimeSpan.Zero ? "Paused" : "Ready";
+        SetIdle(!_stopwatch.IsRunning && elapsed == TimeSpan.Zero);
         ToolTip = _stopwatch.IsRunning ? "Click to pause" : "Click to start · Right-click: reset";
         RefreshCompact();
     }

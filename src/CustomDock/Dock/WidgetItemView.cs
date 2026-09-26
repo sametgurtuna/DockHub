@@ -35,6 +35,8 @@ public sealed class WidgetItemView : WidgetCard
         widget.CardAppearanceChanged += ApplyAppearance;
         widget.CompactAnchor = this;
         widget.BeforeCompactPopup = CloseFlyout;
+        widget.IdleChanged += OnWidgetIdleChanged;
+        item.PropertyChanged += OnIdleSettingChanged;
         // If widget hides itself (e.g. media widget when nothing is playing), hide the card too.
         System.ComponentModel.DependencyPropertyDescriptor
             .FromProperty(VisibilityProperty, typeof(UIElement))
@@ -82,8 +84,27 @@ public sealed class WidgetItemView : WidgetCard
     /// <summary>Used by widget code (e.g. gear button inside panel) to request settings page.</summary>
     public static void RequestSettings(DockItem item) => SettingsRequested?.Invoke(item);
 
-    /// <summary>Full card on horizontal dock, summary tile on vertical dock.</summary>
-    public void SetCompact(bool compact)
+    private bool _verticalDock;
+
+    /// <summary>Full card on horizontal dock, summary tile on vertical dock (and while idle, if the item asks for it).</summary>
+    public void SetCompact(bool vertical)
+    {
+        _verticalDock = vertical;
+        UpdateCompactMode();
+    }
+
+    private bool CollapsedWhileIdle => Item.CollapseWhenIdle && Widget.IsIdle;
+
+    private void UpdateCompactMode() => SetCompactCore(_verticalDock || CollapsedWhileIdle);
+
+    private void OnWidgetIdleChanged() => Dispatcher.BeginInvoke(UpdateCompactMode);
+
+    private void OnIdleSettingChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(DockItem.CollapseWhenIdle)) UpdateCompactMode();
+    }
+
+    private void SetCompactCore(bool compact)
     {
         if (compact == _compact && Content is not null) return;
         _compact = compact;
@@ -223,6 +244,12 @@ public sealed class WidgetItemView : WidgetCard
                 }))));
         }
         menu.Items.Add(DockMenu.Item("Widget settings…", "\uE713", () => SettingsRequested?.Invoke(Item)));
+        if (Widget.SupportsIdle)
+            menu.Items.Add(DockMenu.Check("Collapse when idle", Item.CollapseWhenIdle, () =>
+            {
+                Item.CollapseWhenIdle = !Item.CollapseWhenIdle;
+                AppServices.ConfigService.ScheduleSave();
+            }));
         menu.Items.Add(DockMenu.Check("Pin to right edge", Item.PinnedEnd, () =>
         {
             Item.PinnedEnd = !Item.PinnedEnd;
@@ -235,6 +262,8 @@ public sealed class WidgetItemView : WidgetCard
     {
         CloseFlyout();
         Widget.CardAppearanceChanged -= ApplyAppearance;
+        Widget.IdleChanged -= OnWidgetIdleChanged;
+        Item.PropertyChanged -= OnIdleSettingChanged;
         Widget.CompactAnchor = null;
         Widget.BeforeCompactPopup = null;
         System.ComponentModel.DependencyPropertyDescriptor

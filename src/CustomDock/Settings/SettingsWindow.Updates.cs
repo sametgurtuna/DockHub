@@ -76,6 +76,8 @@ public partial class SettingsWindow
         }
     }
 
+    private void OnShowWelcomeClick(object sender, RoutedEventArgs e) => App.Instance.ShowWelcome();
+
     private void OnReleaseNotesClick(object sender, RoutedEventArgs e)
     {
         string url = AppServices.Updates.Available?.PageUrl ?? "https://github.com/sametgurtuna/DockHub/releases";

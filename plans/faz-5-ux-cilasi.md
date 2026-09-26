@@ -98,4 +98,15 @@ Faz 1.7'deki `AIUsageStatus` kullanılarak:
 
 ## Uygulama notları
 
-_(Faz uygulanırken doldurulacak.)_
+
+### 2026-09-26 — tamamlandı (kapsam notlarıyla)
+
+- **5.1 Karşılama:** `WelcomeWindow` 4 adımdan oluşuyor: tanıtım, mod, kenar ve preset, ipuçları. Değişiklikler anında uygulanıyor. Mod değişikliği en sona bırakılıyor (yeniden başlatma onayı). Ayarlar › About'ta "Show again" var. Ekran görüntüsüyle doğrulandı.
+- **5.2 Ayarlarda arama:** kenar çubuğunda arama kutusu (Ctrl+F). Tüm `SettingRow`'ları ve widget'ları tarıyor, anahtar kelime eşlemesi var (TR/EN). Bulunan satır accent çerçeveyle vurgulanıyor.
+- **5.3 Canlı önizleme:** `MiniDockPreview` duvar kağıdı üzerinde kenar, boyut, şekil, genişlik, hizalama ve tint değişikliklerini anında gösteriyor. "Sticky" yapılmadı, sayfanın üstünde duruyor.
+- **5.4 Widget genişlik standardı: ertelendi.** 19 widget × varyantın görsel denetimini gerektiriyor; kırpma riski yüksek. Faz 9 kapsamına not edildi.
+- **5.5 Boş durumlar:** `WidgetBase.SetIdle` (media, notes, reminders, stopwatch, countdown, focus) ve `DockItem.CollapseWhenIdle` eklendi. Yeni eklenen media, notes ve reminders widget'larında varsayılan açık. Boştayken compact tile gösteriliyor, tıklanınca panel açılıyor. Menüye "Collapse when idle" eklendi.
+- **5.6** Kaydırma okları kaydırma alanının iki ucuna taşındı.
+- **5.7** AI Usage: tooltip başlığı eklendi, %90 üzerinde kırmızı, veri yoksa soluk görünüm.
+- **5.8** Dock items: filtre kutusu (klasör içi dahil), eksik dosya uyarısı. Ağaç görünümü ve çoklu seçim yapılmadı.
+- **5.9** Kalan `MessageBox` → `ConfirmDialog`. Ayarlar'daki taşıma ve pin içe aktarma işlemleri undo geçmişine yazılıyor.

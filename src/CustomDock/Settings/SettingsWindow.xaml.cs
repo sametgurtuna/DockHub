@@ -60,7 +60,17 @@ public partial class SettingsWindow : Window
         LoadHotkeys();
         LoadPresets();
         LoadUpdates();
+        DockPreview.Bind(_config);
         PreviewKeyDown += OnUndoKey;
+        PreviewKeyDown += (_, e) =>
+        {
+            if (e.Key == System.Windows.Input.Key.F && System.Windows.Input.Keyboard.Modifiers == System.Windows.Input.ModifierKeys.Control)
+            {
+                SettingsSearchBox.Focus();
+                SettingsSearchBox.SelectAll();
+                e.Handled = true;
+            }
+        };
         ItemList.ItemsSource = _rows;
         LoadItems();
         NavList.SelectedIndex = 0;

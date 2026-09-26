@@ -218,6 +218,10 @@ public sealed class AppConfig : ObservableObject
         OnPropertyChanged(nameof(Hotkeys));
     }
 
+    /// <summary>The first-run welcome screen was completed or closed.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool WelcomeShown { get; set; }
+
     // ---------------- Diagnostics
 
     /// <summary>Writes verbose icon/window diagnostics to log.txt. Only editable in config.json.</summary>
@@ -287,6 +291,15 @@ public sealed class DockItem : ObservableObject
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool PinnedEnd { get => _pinnedEnd; set => Set(ref _pinnedEnd, value); }
 
+    private bool _collapseWhenIdle;
+
+    /// <summary>Widgets only: show the small tile while the widget has nothing to show (see WidgetBase.IsIdle).</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool CollapseWhenIdle { get => _collapseWhenIdle; set => Set(ref _collapseWhenIdle, value); }
+
+    /// <summary>Widgets that start collapsed while idle when newly added.</summary>
+    private static readonly HashSet<string> CollapseByDefault = new() { "media", "notes", "reminders" };
+
     // ---- Group
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -303,7 +316,8 @@ public sealed class DockItem : ObservableObject
 
     public static DockItem App(string path, string? name = null) => new() { Kind = DockItemKind.App, Path = path, Name = name };
 
-    public static DockItem ForWidget(string widget, string? variant = null) => new() { Kind = DockItemKind.Widget, Widget = widget, Variant = variant };
+    public static DockItem ForWidget(string widget, string? variant = null)
+        => new() { Kind = DockItemKind.Widget, Widget = widget, Variant = variant, CollapseWhenIdle = CollapseByDefault.Contains(widget) };
 
     public static DockItem Separator() => new() { Kind = DockItemKind.Separator };
 

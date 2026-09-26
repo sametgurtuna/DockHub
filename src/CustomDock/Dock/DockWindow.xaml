@@ -74,6 +74,9 @@
                 <Button x:Name="TaskViewButton" Style="{StaticResource DockButton}" ToolTip="Task view" Content="&#xE7C4;" FontSize="17"
                         Click="OnTaskViewClick" />
                 <dock:SeparatorView x:Name="StartSeparator" />
+                <!-- Scroll arrows sit at the two ends of the scrollable item area -->
+                <Button x:Name="ScrollBackButton" Style="{StaticResource DockButton}" Width="26" FontSize="11" Content="&#xE76B;"
+                        ToolTip="Scroll back" Click="OnScrollBackClick" Visibility="Collapsed" />
             </StackPanel>
 
             <!-- Items (scrollable) -->
@@ -94,8 +97,6 @@
             <!-- End zone -->
             <StackPanel x:Name="EndZone" Orientation="Horizontal" AllowDrop="True"
                         DragOver="OnEndItemsDragOver" DragLeave="OnEndItemsDragLeave" Drop="OnEndItemsDrop">
-                <Button x:Name="ScrollBackButton" Style="{StaticResource DockButton}" Width="26" FontSize="11" Content="&#xE76B;"
-                        ToolTip="Scroll back" Click="OnScrollBackClick" Visibility="Collapsed" />
                 <Grid>
                     <Button x:Name="ScrollForwardButton" Style="{StaticResource DockButton}" Width="26" FontSize="11" Content="&#xE76C;"
                             ToolTip="Scroll forward" Click="OnScrollForwardClick" Visibility="Collapsed" />

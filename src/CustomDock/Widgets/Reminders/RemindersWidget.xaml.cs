@@ -49,6 +49,7 @@ public partial class RemindersWidget : WidgetBase
     private void Render()
     {
         RenderCore();
+        SetIdle(Reminders.Items.Count == 0);
         RefreshCompact();
     }
 

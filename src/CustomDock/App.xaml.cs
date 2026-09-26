@@ -122,8 +122,8 @@ public partial class App : Application
         ProcessPinRequests();
         SystemEvents.SessionEnding += (_, _) => Cleanup();
 
-        if (config.IsFirstRun)
-            ShowSettings("gallery");
+        if (config.IsFirstRun && !config.WelcomeShown)
+            ShowWelcome();
 
         Log.Info($"DockHub started (v{typeof(App).Assembly.GetName().Version}, mode: {config.TaskbarMode}).");
 
@@ -420,6 +420,8 @@ public partial class App : Application
     }
 
     /// <param name="targetGroupId">Folder to add the picked apps to; null pins them to the dock.</param>
+    public void ShowWelcome() => new WelcomeWindow().Show();
+
     public void ShowAppPicker(string? targetGroupId = null)
     {
         if (_appPicker is null)

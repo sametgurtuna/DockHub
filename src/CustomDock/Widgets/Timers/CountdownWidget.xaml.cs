@@ -107,6 +107,7 @@ public partial class CountdownWidget : WidgetBase
     {
         var remaining = _running ? _endsAt - DateTime.Now : _remaining;
         TimeText.Text = TimerFormat.FormatRemaining(remaining);
+        SetIdle(!_running && !_finished && remaining == Total);
         LabelText.Text = _finished ? "Time's up" : _running || remaining == Total ? _settings.Label : "Paused";
         string brush = _finished ? "AccentOrangeBrush" : _running ? "AccentYellowBrush" : "TextPrimaryBrush";
         Icon.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, brush);

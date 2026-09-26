@@ -96,7 +96,16 @@ public partial class AIUsageWidget : WidgetBase
                 break;
         }
 
-        var tooltip = new List<string>();
+        // Near a limit the ring or bar turns red; without data the widget dims.
+        string sessionBrush = session >= 90 ? "AccentRedBrush" : "AccentOrangeBrush";
+        string weekBrush = week >= 90 ? "AccentRedBrush" : "AccentBlueBrush";
+        SessionRing.SetResourceReference(RingGauge.FillProperty, sessionBrush);
+        WeekRing.SetResourceReference(RingGauge.FillProperty, weekBrush);
+        SessionBar.SetResourceReference(System.Windows.Controls.Border.BackgroundProperty, sessionBrush);
+        WeekBar.SetResourceReference(System.Windows.Controls.Border.BackgroundProperty, weekBrush);
+        Opacity = data.SessionPercent is null && data.WeekPercent is null && AppServices.AIUsage.Status != AIUsageStatus.Pending ? 0.55 : 1;
+
+        var tooltip = new List<string> { "Claude Code usage" };
         tooltip.Add(data.SessionPercent is null
             ? "5-hour: unknown"
             : $"5-hour: {sessionText}" + (data.SessionResets is null ? "" : $" (resets: {data.SessionResets})"));

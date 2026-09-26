@@ -199,6 +199,7 @@ public partial class FocusWidget : WidgetBase
         string time = TimerFormat.FormatRemaining(remaining);
         TimeText.Text = time;
         PopupTime.Text = time;
+        SetIdle(!_running && remaining == PhaseLength);
 
         Ring.Value = PhaseLength.TotalSeconds <= 0 ? 0 : Math.Clamp(remaining.TotalSeconds / PhaseLength.TotalSeconds, 0, 1);
         string fillKey = _isBreak ? "AccentGreenBrush" : "AccentOrangeBrush";

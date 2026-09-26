@@ -82,6 +82,30 @@ public abstract class WidgetBase : UserControl
     /// <summary>Name of widget-specific persistent state key.</summary>
     protected string StateKey => $"{Descriptor.Id}-{Item.Id}";
 
+    // ------------------------------------------------------------------ Idle state
+
+    private bool _isIdle;
+
+    /// <summary>
+    /// Nothing to show right now (no media playing, empty note, no reminders, timer not started). With
+    /// <see cref="DockItem.CollapseWhenIdle"/> the dock shows the small tile instead of the full card.
+    /// </summary>
+    public bool IsIdle => _isIdle && !IsPreview;
+
+    /// <summary>True once the widget has reported an idle state (only those widgets offer "Collapse when idle").</summary>
+    public bool SupportsIdle { get; private set; }
+
+    public event Action? IdleChanged;
+
+    /// <summary>Widgets call this whenever their content changes.</summary>
+    protected void SetIdle(bool idle)
+    {
+        SupportsIdle = true;
+        if (_isIdle == idle) return;
+        _isIdle = idle;
+        IdleChanged?.Invoke();
+    }
+
     internal void Attach(IWidgetHost host)
     {
         if (IsAttached) return;

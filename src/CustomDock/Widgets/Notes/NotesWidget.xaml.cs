@@ -147,6 +147,12 @@ public partial class NotesWidget : WidgetBase
 
     private void UpdatePreview()
     {
+        SetIdle(string.IsNullOrWhiteSpace(NoteBox.Text));
+        UpdatePreviewCore();
+    }
+
+    private void UpdatePreviewCore()
+    {
         var text = NoteBox.Text.Trim();
         PreviewText.Text = text;
         PlaceholderText.Visibility = text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;

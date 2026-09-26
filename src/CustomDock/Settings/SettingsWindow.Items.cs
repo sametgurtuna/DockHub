@@ -24,7 +24,7 @@ public sealed class ItemRow
             case DockItemKind.App:
                 Icon = item.Path is null ? null : AppIcons.For(item, 48, out _);
                 Title = !string.IsNullOrWhiteSpace(item.Name) ? item.Name! : AppDisplayName(item.Path ?? "");
-                Subtitle = "Application";
+                Subtitle = IsMissing(item.Path) ? "Application · file not found, check the Target below" : "Application";
                 break;
             case DockItemKind.Widget:
                 var descriptor = WidgetRegistry.Find(item.Widget);
@@ -54,6 +54,15 @@ public sealed class ItemRow
     public Brush? GlyphBrush { get; }
     public string Title { get; }
     public string Subtitle { get; }
+
+    /// <summary>A pinned file or program that no longer exists (shell: and URL targets can't be checked).</summary>
+    private static bool IsMissing(string? path)
+        => !string.IsNullOrWhiteSpace(path) && Path.IsPathFullyQualified(path) && !File.Exists(path) && !Directory.Exists(path);
+
+    /// <summary>Text the Dock items filter searches: title, subtitle and the names inside folders.</summary>
+    public string SearchText => Item.Kind == DockItemKind.Group
+        ? $"{Title} {Subtitle} " + string.Join(" ", (Item.Children ?? new()).Select(c => new ItemRow(c).Title))
+        : $"{Title} {Subtitle} {Item.Path}";
 
     public static string AppDisplayName(string path)
     {
@@ -90,6 +99,15 @@ public partial class SettingsWindow
     }
 
     private void OnItemSelectionChanged(object sender, SelectionChangedEventArgs e) => ShowDetail(ItemList.SelectedItem as ItemRow);
+
+    private void OnItemFilterChanged(object sender, TextChangedEventArgs e)
+    {
+        var view = System.Windows.Data.CollectionViewSource.GetDefaultView(_rows);
+        string query = ItemFilterBox.Text.Trim();
+        view.Filter = query.Length == 0
+            ? null
+            : o => o is ItemRow row && row.SearchText.Contains(query, StringComparison.CurrentCultureIgnoreCase);
+    }
 
     private void ShowDetail(ItemRow? row)
     {
@@ -279,16 +297,17 @@ public partial class SettingsWindow
     private void OnImportPinsClick(object sender, RoutedEventArgs e)
     {
         var existing = _config.Items.Where(i => i.Kind == DockItemKind.App).Select(i => i.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        int index = DockItemsIndex.EndOfApps();
-        int added = 0;
-        foreach (var item in DefaultItems.ImportTaskbarPins().Where(i => !existing.Contains(i.Path)))
+        var newPins = DefaultItems.ImportTaskbarPins().Where(i => !existing.Contains(i.Path)).ToList();
+        if (newPins.Count > 0)
         {
-            _config.Items.Insert(index++, item);
-            added++;
+            AppServices.ConfigService.History.Push(_config, "Imported taskbar pins");
+            int index = DockItemsIndex.EndOfApps();
+            foreach (var item in newPins) _config.Items.Insert(index++, item);
+            _config.NotifyItemsChanged();
         }
-        if (added > 0) _config.NotifyItemsChanged();
-        MessageBox.Show(this, added > 0 ? (added == 1 ? "1 application added." : $"{added} applications added.") : "No new pins found to import.", "DockHub",
-            MessageBoxButton.OK, MessageBoxImage.Information);
+        ConfirmDialog.Show("Import taskbar pins",
+            newPins.Count switch { 0 => "No new pins found to import.", 1 => "1 application added.", _ => $"{newPins.Count} applications added." },
+            "", this, new DialogButton("ok", "OK", DialogButtonKind.Primary));
     }
 
     private void OnRemoveItemClick(object sender, RoutedEventArgs e)
@@ -312,6 +331,7 @@ public partial class SettingsWindow
         int from = _config.Items.IndexOf(row.Item);
         int to = Math.Clamp(from + delta, 0, _config.Items.Count - 1);
         if (from < 0 || from == to) return;
+        AppServices.ConfigService.History.Push(_config, $"Moved {ConfigService.Describe(row.Item)}");
         _config.Items.RemoveAt(from);
         _config.Items.Insert(to, row.Item);
         _config.NotifyItemsChanged();

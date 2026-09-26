@@ -69,6 +69,28 @@
                     <TextBlock x:Name="VersionText" Foreground="{DynamicResource TextTertiaryBrush}" FontSize="11.5" />
                 </StackPanel>
 
+                <Grid DockPanel.Dock="Top" Margin="0,0,0,12">
+                    <TextBox x:Name="SettingsSearchBox" MinHeight="32" VerticalContentAlignment="Center" Padding="30,0,8,0"
+                             TextChanged="OnSettingsSearchChanged" PreviewKeyDown="OnSettingsSearchKeyDown"
+                             ToolTip="Search settings and widgets (Ctrl+F)" />
+                    <TextBlock Text="&#xE721;" Style="{StaticResource IconText}" FontSize="12" Margin="11,0,0,0" IsHitTestVisible="False"
+                               VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="{DynamicResource TextTertiaryBrush}" />
+                    <TextBlock x:Name="SettingsSearchHint" Text="Find a setting" Margin="30,0,0,0" IsHitTestVisible="False"
+                               VerticalAlignment="Center" Foreground="{DynamicResource TextTertiaryBrush}" />
+                </Grid>
+
+                <ListBox x:Name="SearchResults" DockPanel.Dock="Top" Style="{StaticResource PlainListBox}" ItemContainerStyle="{StaticResource NavItem}"
+                         Visibility="Collapsed" SelectionChanged="OnSearchResultSelected">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Margin="0,1">
+                                <TextBlock Text="{Binding Header}" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding Location}" FontSize="11" Foreground="{DynamicResource TextTertiaryBrush}" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
                 <ListBox x:Name="NavList" Style="{StaticResource PlainListBox}" ItemContainerStyle="{StaticResource NavItem}"
                          SelectionChanged="OnNavigationChanged">
                     <ListBoxItem Tag="general">
@@ -271,6 +293,8 @@
                     <TextBlock Text="Appearance" Style="{StaticResource PageTitle}" />
                     <TextBlock Text="Theme, glass effect, size, and layout." Style="{StaticResource PageSubtitle}" />
 
+                    <ctl:MiniDockPreview x:Name="DockPreview" Margin="0,4,0,6" />
+
                     <TextBlock Text="Layout presets" Style="{StaticResource SectionHeader}" />
                     <UniformGrid x:Name="PresetPanel" Columns="4" Margin="0,0,0,6" />
 
@@ -445,6 +469,12 @@
                                 <TextBlock Text="Import taskbar pins" Margin="8,0,0,0" />
                             </StackPanel>
                         </Button>
+                        <Grid Margin="8,0,0,0" Width="210">
+                            <TextBox x:Name="ItemFilterBox" VerticalContentAlignment="Center" Padding="28,0,8,0" MinHeight="32"
+                                     TextChanged="OnItemFilterChanged" ToolTip="Filter by name (folder contents included)" />
+                            <TextBlock Text="&#xE721;" Style="{StaticResource IconText}" FontSize="12" Margin="10,0,0,0" IsHitTestVisible="False"
+                                       VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="{DynamicResource TextTertiaryBrush}" />
+                        </Grid>
                     </WrapPanel>
 
                     <Border Grid.Row="3" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource SurfaceBorderBrush}"
@@ -609,6 +639,9 @@
                         <Button Content="Open website" Tag="https://open-meteo.com/" Click="OnOpenLinkClick" />
                     </ctl:SettingRow>
                     <TextBlock Text="Troubleshooting" Style="{StaticResource SectionHeader}" />
+                    <ctl:SettingRow Glyph="&#xE7BE;" Header="Welcome screen" Description="The first-run tour: taskbar mode, screen edge, a layout and a few tips.">
+                        <Button Content="Show again" Click="OnShowWelcomeClick" />
+                    </ctl:SettingRow>
                     <ctl:SettingRow Glyph="&#xEBE8;" Header="Copy diagnostics"
                                     Description="Copies how DockHub sees open windows and pinned apps to the clipboard (and log.txt). Useful when an app doesn't show up on the dock or its icon is missing.">
                         <Button x:Name="DiagnosticsButton" Content="Copy" Click="OnCopyDiagnosticsClick" />

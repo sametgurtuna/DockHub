@@ -224,10 +224,10 @@ public static class WidgetRegistry
         new()
         {
             Id = "ai-usage", Name = "AI usage", Category = WidgetCategories.AI,
-            Description = "Claude Code subscription usage: 5-hour and weekly limits (updates in background every 5 minutes via 'claude -p /usage').",
+            Description = "Claude Code subscription usage: 5-hour and weekly limits. Checked in the background with the local Claude CLI ('claude -p /usage').",
             IconPath = "M12,3 L14.2,9.2 L20.8,9.2 L15.5,13.1 L17.5,19.3 L12,15.6 L6.5,19.3 L8.5,13.1 L3.2,9.2 L9.8,9.2 Z", AccentKey = "AccentOrangeBrush",
             Variants = new[] { new WidgetVariant("numbers", "Numbers"), new WidgetVariant("rings", "Rings"), new WidgetVariant("bars", "Bars") },
-            Factory = () => new AIUsageWidget(),
+            Factory = () => new AIUsageWidget(), SettingsType = typeof(AIUsageSettings),
         },
 
         // ------------------------------------------------ Audio and Hardware

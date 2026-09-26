@@ -303,7 +303,8 @@
                             </StackPanel>
                         </Border>
                     </ctl:SettingRow>
-                    <ctl:SettingRow Glyph="&#xE8C4;" Header="Edge margin">
+                    <ctl:SettingRow Glyph="&#xE8C4;" Header="Edge margin" Description="Gap between the dock and the screen edge. Only applies to the floating shape."
+                                    IsEnabled="{Binding Layout, Converter={StaticResource EnumEq}, ConverterParameter=Floating}">
                         <StackPanel Orientation="Horizontal">
                             <Slider x:Name="MarginSlider" Width="200" Minimum="0" Maximum="24" SmallChange="1" LargeChange="2"
                                     IsSnapToTickEnabled="True" TickFrequency="1" Value="{Binding EdgeMargin}" />

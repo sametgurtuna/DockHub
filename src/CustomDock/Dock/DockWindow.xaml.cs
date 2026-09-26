@@ -431,7 +431,7 @@ public partial class DockWindow : Window, IWidgetHost
         var menu = ClockButton.ContextMenu;
         menu.Items.Clear();
         menu.Items.Add(DockMenu.Item("Notification center", "\uE91C", _shell.ShowNotificationCenter));
-        menu.Items.Add(DockMenu.Item("Quick settings", "\uE9E9", _shell.ShowQuickSettings));
+        menu.Items.Add(DockMenu.Item("Quick settings", "\uE9E9", () => { UpdateTrayHost(); _shell.ShowQuickSettings(); }));
         menu.Items.Add(DockMenu.Separator());
         menu.Items.Add(DockMenu.Item("Adjust date and time", "\uE787",
             () => Process.Start(new ProcessStartInfo("ms-settings:dateandtime") { UseShellExecute = true })));
@@ -487,7 +487,7 @@ public partial class DockWindow : Window, IWidgetHost
         menu.Items.Add(DockMenu.Item("Create group", "\uE8B7", () => AppServices.ConfigService.AddItem(DockItem.Group("New group"))));
         menu.Items.Add(DockMenu.Separator());
         menu.Items.Add(DockMenu.Item("Task Manager", "\uE9D9", () => Process.Start(new ProcessStartInfo("taskmgr.exe") { UseShellExecute = true })));
-        menu.Items.Add(DockMenu.Item("Windows Settings", "", () => Process.Start(new ProcessStartInfo("ms-settings:") { UseShellExecute = true })));
+        menu.Items.Add(DockMenu.Item("Windows Settings", "\uE770", () => Process.Start(new ProcessStartInfo("ms-settings:") { UseShellExecute = true })));
         menu.Items.Add(DockMenu.Item("Quick settings", "\uE9E9", () => { UpdateTrayHost(); _shell.ShowQuickSettings(); }));
         menu.Items.Add(DockMenu.Check("Auto-hide", _config.AutoHide, () => _config.AutoHide = !_config.AutoHide));
         menu.Items.Add(DockMenu.Check("Hide Windows taskbar", _config.TaskbarMode == TaskbarMode.Replace,

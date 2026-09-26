@@ -123,4 +123,11 @@ Dosya: [Services/AIUsageService.cs](../src/CustomDock/Services/AIUsageService.cs
 
 ## Uygulama notları
 
-_(Faz uygulanırken doldurulacak.)_
+
+### 2026-09-26 — tamamlandı
+
+- `ConfirmDialog` (tema uyumlu, çok butonlu) eklendi. Klasör silme ve görev çubuğu modu değişimi onun üzerinden onaylanıyor. Mod onayı `App.OnConfigChanged` içinde olduğundan hem dock menüsünü hem ayarlar sayfasını kapsıyor; iptal edilince eski değer geri yükleniyor.
+- Klasör menüsündeki "Add application…" artık picker'ı o klasörü hedefleyecek şekilde açıyor (başlık: "Add to “X”", klasörde zaten olanlar "Pinned" görünüyor).
+- Silinen widget verileri `data/trash` altına taşınıyor. Widget'lar detach sırasında son bir kez kaydettiği için taşıma dock yeniden kurulduktan sonra yapılıyor. `LastTrashedFiles` Faz 4'teki geri alma için tutuluyor.
+- AI Usage: `AIUsageStatus`, widget başına aralık (5/15/30/60 dk, varsayılan 15; servis en kısasını kullanıyor), "Refresh now" menüsü, invariant `TryParse`, timeout sonrası pipe temizliği. Regex'e `Multiline` eklendi (satır sonundaki "resets" metni artık yakalanıyor).
+- README'deki kısayol cümlesi Faz 3'te kısayollar gerçekten ayarlanabilir olacağı için değiştirilmedi. Gizlilik, çoklu monitör, veri tablosu ve SSS güncellendi.

@@ -22,7 +22,7 @@ public sealed class ItemRow
         switch (item.Kind)
         {
             case DockItemKind.App:
-                Icon = item.Path is null ? null : ShellIcons.GetIcon(item.Path, 48);
+                Icon = item.Path is null ? null : AppIcons.For(item, 48, out _);
                 Title = !string.IsNullOrWhiteSpace(item.Name) ? item.Name! : AppDisplayName(item.Path ?? "");
                 Subtitle = "Application";
                 break;
@@ -31,7 +31,7 @@ public sealed class ItemRow
                 Glyph = descriptor?.Icon;
                 GlyphBrush = descriptor is null ? null : Application.Current.TryFindResource(descriptor.AccentKey) as Brush;
                 Title = descriptor?.Name ?? item.Widget ?? "Widget";
-                Subtitle = descriptor is null ? "" : $"Widget · {descriptor.VariantName(item.Variant)}";
+                Subtitle = descriptor is null ? "Not supported in this version of DockHub" : $"Widget · {descriptor.VariantName(item.Variant)}";
                 break;
             case DockItemKind.Group:
                 Glyph = Geometry.Parse("M3,7 H21 V19 A2,2 0 0 1 19,21 H5 A2,2 0 0 1 3,19 Z M3,7 L7,3 H13 L15,5");
@@ -111,7 +111,7 @@ public partial class SettingsWindow
         DetailGlyph.Data = row.Glyph;
         DetailGlyph.Stroke = row.GlyphBrush;
         AppDetail.Visibility = item.Kind == DockItemKind.App ? Visibility.Visible : Visibility.Collapsed;
-        WidgetDetail.Visibility = item.Kind == DockItemKind.Widget ? Visibility.Visible : Visibility.Collapsed;
+        WidgetDetail.Visibility = item.Kind == DockItemKind.Widget && WidgetRegistry.Find(item.Widget) is not null ? Visibility.Visible : Visibility.Collapsed;
         GroupDetail.Visibility = item.Kind == DockItemKind.Group ? Visibility.Visible : Visibility.Collapsed;
 
         switch (item.Kind)
@@ -294,7 +294,12 @@ public partial class SettingsWindow
     private void OnRemoveItemClick(object sender, RoutedEventArgs e)
     {
         if ((sender as FrameworkElement)?.DataContext is ItemRow row)
-            AppServices.ConfigService.RemoveItem(row.Item.Id);
+        {
+            if (row.Item.Kind == DockItemKind.Group)
+                Dock.GroupItemView.ConfirmRemoveFolder(row.Item, this);
+            else
+                AppServices.ConfigService.RemoveItem(row.Item.Id);
+        }
     }
 
     private void OnMoveUpClick(object sender, RoutedEventArgs e) => MoveRow(sender, -1);

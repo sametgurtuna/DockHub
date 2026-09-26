@@ -40,7 +40,7 @@ public sealed class ConfigService
             MigrateFromV1(Config);
         }
 
-        Config.Items.RemoveAll(i => i.Kind == DockItemKind.Widget && WidgetRegistry.Find(i.Widget) is null);
+        // Widgets unknown to this version (e.g. after a downgrade) stay in the config; the dock just skips them.
         RepairAppPaths(Config.Items);
         Config.Version = AppConfig.CurrentVersion;
         Config.PropertyChanged += (_, _) => ScheduleSave();
@@ -204,25 +204,41 @@ public sealed class ConfigService
     public void RemoveItem(string id)
     {
         // Try top-level first
-        if (Config.Items.RemoveAll(i => i.Id == id) > 0)
+        var topLevel = Config.Items.FirstOrDefault(i => i.Id == id);
+        if (topLevel is not null)
         {
-            _itemSettings.Remove(id);
+            Config.Items.Remove(topLevel);
+            OnItemsRemoved(new[] { topLevel });
             Config.NotifyItemsChanged();
             return;
         }
         // Try inside groups
         foreach (var group in Config.Items.Where(i => i.Kind == DockItemKind.Group))
         {
-            if (group.Children?.RemoveAll(i => i.Id == id) > 0)
-            {
-                _itemSettings.Remove(id);
-                // Auto-delete empty groups
-                if (group.Children.Count == 0)
-                    Config.Items.RemoveAll(i => i.Id == group.Id);
-                Config.NotifyItemsChanged();
-                return;
-            }
+            var child = group.Children?.FirstOrDefault(i => i.Id == id);
+            if (child is null) continue;
+            group.Children!.Remove(child);
+            OnItemsRemoved(new[] { child });
+            // Auto-delete empty groups
+            if (group.Children.Count == 0)
+                Config.Items.RemoveAll(i => i.Id == group.Id);
+            Config.NotifyItemsChanged();
+            return;
         }
+    }
+
+    /// <summary>Data files moved to the trash by the most recent removal (for undo).</summary>
+    public List<(string Original, string Trashed)> LastTrashedFiles { get; private set; } = new();
+
+    /// <summary>Forgets cached settings of removed items (and folder contents) and trashes their data files.</summary>
+    private void OnItemsRemoved(IReadOnlyList<DockItem> removed)
+    {
+        foreach (var item in ItemDataStore.Flatten(removed))
+            _itemSettings.Remove(item.Id);
+
+        // Widgets save their state once more when the dock detaches them, so trash after the dock has rebuilt.
+        Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.Background, () =>
+            LastTrashedFiles = ItemDataStore.Trash(removed));
     }
 
     /// <summary>Moves item to <paramref name="newIndex"/> position (insertion index relative to pre-move list).</summary>

@@ -737,7 +737,7 @@ public sealed class GroupItemView : Grid
             }))));
 
         menu.Items.Add(DockMenu.Separator());
-        menu.Items.Add(DockMenu.Item("Add application…", "\uE710", () => App.Instance.ShowAppPicker()));
+        menu.Items.Add(DockMenu.Item("Add application…", "\uE710", () => App.Instance.ShowAppPicker(_item.Id)));
 
         var children = _item.Children ?? new List<DockItem>();
         if (children.Count > 0)
@@ -746,7 +746,40 @@ public sealed class GroupItemView : Grid
             menu.Items.Add(DockMenu.Item("Ungroup all", "\uE8C8", () => AppServices.ConfigService.UngroupAll(_item.Id)));
         }
 
-        menu.Items.Add(DockMenu.Item("Remove folder", "\uE77A", () => AppServices.ConfigService.RemoveItem(_item.Id)));
+        menu.Items.Add(DockMenu.Item("Remove folder…", "\uE77A", () => ConfirmRemoveFolder(_item, Window.GetWindow(this))));
+    }
+
+    /// <summary>
+    /// Removing a folder with items asks what to do with them; moving them back to the dock is the default,
+    /// so a stray click never deletes apps and widgets (with their settings) at once.
+    /// </summary>
+    public static void ConfirmRemoveFolder(DockItem folder, Window? owner)
+    {
+        var service = AppServices.ConfigService;
+        int count = folder.Children?.Count ?? 0;
+        if (count == 0)
+        {
+            service.RemoveItem(folder.Id);
+            return;
+        }
+
+        string? choice = ConfirmDialog.Show(
+            $"Remove “{folder.GroupName ?? "Folder"}”",
+            count == 1 ? "This folder contains 1 item." : $"This folder contains {count} items.",
+            "", owner,
+            new DialogButton("cancel", "Cancel", IsCancel: true),
+            new DialogButton("delete", "Delete all", DialogButtonKind.Danger),
+            new DialogButton("move", "Move items to dock", DialogButtonKind.Primary));
+
+        switch (choice)
+        {
+            case "move":
+                service.UngroupAll(folder.Id);
+                break;
+            case "delete":
+                service.RemoveItem(folder.Id);
+                break;
+        }
     }
 
     // ------------------------------------------------------------------ Drag and Drop handling

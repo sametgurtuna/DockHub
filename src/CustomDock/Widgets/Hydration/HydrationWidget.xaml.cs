@@ -24,6 +24,9 @@ public static class WidgetOptions
 
     public static IReadOnlyList<Option<int>> SystemIntervals { get; } =
         Options.Of((1, "1 second"), (2, "2 seconds"), (3, "3 seconds"), (5, "5 seconds"), (10, "10 seconds"));
+
+    public static IReadOnlyList<Option<int>> AIUsageIntervals { get; } =
+        Options.Of((5, "5 minutes"), (15, "15 minutes"), (30, "30 minutes"), (60, "1 hour"));
 }
 
 /// <summary>Hydration: countdown to next reminder or daily goal ring. Click → +1 glass.</summary>

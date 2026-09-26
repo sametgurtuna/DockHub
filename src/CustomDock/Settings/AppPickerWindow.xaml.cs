@@ -75,12 +75,39 @@ public partial class AppPickerWindow : Window
         };
     }
 
-    private void LoadApps()
+    /// <summary>Folder the picked apps are added to; null adds them to the dock.</summary>
+    public string? TargetGroupId { get; private set; }
+
+    private DockItem? TargetGroup => TargetGroupId is null ? null : AppServices.ConfigService.FindItem(TargetGroupId);
+
+    /// <summary>Switches between adding to the dock and adding to a folder.</summary>
+    public void SetTarget(string? groupId)
     {
-        var pinned = AppServices.Config.Items
-            .Where(i => i.Kind == DockItemKind.App && i.Path is not null)
+        TargetGroupId = groupId is not null && AppServices.ConfigService.FindItem(groupId) is { Kind: DockItemKind.Group } ? groupId : null;
+        string header = TargetGroup is { } group ? $"Add to “{group.GroupName ?? "Folder"}”" : "Pin application";
+        HeaderText.Text = header;
+        Title = header;
+        StatusText.Text = "";
+        if (_entries.Count > 0)
+        {
+            var pinned = PinnedPaths();
+            foreach (var entry in _entries) entry.IsPinned = pinned.Contains(entry.DockPath);
+            _view?.Refresh();
+        }
+    }
+
+    /// <summary>Apps already in the target (the folder, or the dock's top level).</summary>
+    private HashSet<string> PinnedPaths()
+    {
+        var items = TargetGroup?.Children ?? AppServices.Config.Items;
+        return items.Where(i => i.Kind == DockItemKind.App && i.Path is not null)
             .Select(i => i.Path!)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
+    }
+
+    private void LoadApps()
+    {
+        var pinned = PinnedPaths();
 
         try
         {
@@ -167,8 +194,23 @@ public partial class AppPickerWindow : Window
 
     private void Add(string path, string? name)
     {
+        string display = name ?? Path.GetFileNameWithoutExtension(path);
+        if (TargetGroup is { } group)
+        {
+            var newItem = DockItem.App(path, name);
+            string key = AppKeys.ForItem(newItem);
+            if (group.Children?.Any(c => c.Kind == DockItemKind.App && AppKeys.ForItem(c) == key) == true)
+            {
+                StatusText.Text = $"{display} is already in this folder";
+                return;
+            }
+            AppServices.ConfigService.AddToGroup(group.Id, newItem);
+            StatusText.Text = $"{display} added to {group.GroupName ?? "the folder"}";
+            return;
+        }
+
         AppServices.ConfigService.AddItem(DockItem.App(path, name), DockItemsIndex.EndOfApps());
-        StatusText.Text = $"{name ?? Path.GetFileNameWithoutExtension(path)} added";
+        StatusText.Text = $"{display} added";
     }
 
     private void OnBrowseClick(object sender, RoutedEventArgs e)

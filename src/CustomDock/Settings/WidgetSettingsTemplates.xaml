@@ -163,6 +163,16 @@
         </StackPanel>
     </DataTemplate>
 
+    <!-- AI usage -->
+    <DataTemplate DataType="{x:Type w:AIUsageSettings}">
+        <StackPanel>
+            <ctl:SettingRow Header="Check usage every" Description="Each check runs the Claude CLI briefly in the background. Right-click the widget to refresh now.">
+                <ComboBox Width="140" ItemsSource="{x:Static w:WidgetOptions.AIUsageIntervals}"
+                          DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding RefreshMinutes}" />
+            </ctl:SettingRow>
+        </StackPanel>
+    </DataTemplate>
+
     <!-- Status -->
     <DataTemplate DataType="{x:Type w:StatusSettings}">
         <StackPanel>

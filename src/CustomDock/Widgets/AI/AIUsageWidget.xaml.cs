@@ -1,23 +1,66 @@
+using System.ComponentModel;
 using System.Globalization;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media.Animation;
 using CustomDock.Controls;
 using CustomDock.Core;
+using CustomDock.Dock;
 using CustomDock.Services;
 
 namespace CustomDock.Widgets;
 
+public sealed class AIUsageSettings : ObservableObject
+{
+    private int _refreshMinutes = 15;
+
+    /// <summary>How often the Claude CLI is asked for usage (each check starts a short background process).</summary>
+    public int RefreshMinutes { get => _refreshMinutes; set => Set(ref _refreshMinutes, Math.Clamp(value, 5, 120)); }
+}
+
 /// <summary>Claude Code subscription usage: 5-hour and weekly limits (numbers / rings / bars).</summary>
 public partial class AIUsageWidget : WidgetBase
 {
+    private AIUsageSettings _settings = new();
+
     public AIUsageWidget()
     {
         InitializeComponent();
     }
 
-    protected override void OnAttached() => AppServices.AIUsage.Updated += OnUpdated;
+    protected override void OnAttached()
+    {
+        _settings = GetSettings<AIUsageSettings>();
+        _settings.PropertyChanged += OnSettingsChanged;
+        AppServices.AIUsage.RequestInterval(this, TimeSpan.FromMinutes(_settings.RefreshMinutes));
+        AppServices.AIUsage.Updated += OnUpdated;
+    }
 
-    protected override void OnDetached() => AppServices.AIUsage.Updated -= OnUpdated;
+    protected override void OnDetached()
+    {
+        _settings.PropertyChanged -= OnSettingsChanged;
+        AppServices.AIUsage.RequestInterval(this, null);
+        AppServices.AIUsage.Updated -= OnUpdated;
+    }
+
+    private void OnSettingsChanged(object? sender, PropertyChangedEventArgs e)
+        => AppServices.AIUsage.RequestInterval(this, TimeSpan.FromMinutes(_settings.RefreshMinutes));
+
+    public override void AddContextMenuItems(ItemCollection items)
+    {
+        items.Add(DockMenu.Item("Refresh now", "", () => _ = AppServices.AIUsage.RefreshAsync(), !AppServices.AIUsage.IsRefreshing));
+    }
+
+    /// <summary>Explains a failed update in plain words.</summary>
+    private static string? StatusMessage(AIUsageService service) => service.Status switch
+    {
+        AIUsageStatus.CliNotFound => "Claude Code CLI not found. Install it and sign in to see your limits.",
+        AIUsageStatus.NotLoggedIn => "Not signed in. Run \"claude\" in a terminal and log in.",
+        AIUsageStatus.Timeout => "The Claude CLI didn't answer in time. Retrying later.",
+        AIUsageStatus.ParseFailed => "Couldn't read the usage output of the Claude CLI.",
+        AIUsageStatus.Unknown => "Couldn't update usage. Retrying later.",
+        _ => null,
+    };
 
     protected override void OnVariantChanged()
     {
@@ -60,8 +103,10 @@ public partial class AIUsageWidget : WidgetBase
         tooltip.Add(data.WeekPercent is null
             ? "Weekly: unknown"
             : $"Weekly: {weekText}" + (data.WeekResets is null ? "" : $" (resets: {data.WeekResets})"));
-        if (AppServices.AIUsage.Error is { } error)
-            tooltip.Add($"Error: {error}");
+        if (StatusMessage(AppServices.AIUsage) is { } status)
+            tooltip.Add(status);
+        if (data.FetchedAt != default)
+            tooltip.Add($"Updated {data.FetchedAt:t}");
         ToolTip = string.Join("\n", tooltip);
 
         RefreshCompact();

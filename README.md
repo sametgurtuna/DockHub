@@ -299,6 +299,7 @@ The `DOCKHUB_HOME` environment variable changes the settings and data folder, wh
 | `%AppData%\DockHub\data\reminders.json` | Pending reminders |
 | `%AppData%\DockHub\data\hydration.json` | Daily water counter |
 | `%AppData%\DockHub\data\weather-cache.json` | Latest weather per location, for an instant first paint |
+| `%AppData%\DockHub\data\trash\` | Data of removed widgets (for example sticky notes), kept for 7 days |
 | `%AppData%\DockHub\session.json` | Taskbar restore information (exists only while the taskbar is hidden) |
 | `%AppData%\DockHub\pin-requests.txt` | Pending pin requests from File Explorer (temporary) |
 | `%AppData%\DockHub\log.txt` | Log file (rotates at 512 KB) |
@@ -354,7 +355,7 @@ An app item's `path` can be an `.exe`, an `.lnk` shortcut, any file, or a Store 
 - **Location** (weather set to *Automatic*). Both location services and *Let desktop apps access your location* must be on in *Windows Settings › Privacy & security › Location*. Otherwise the widget asks for a city.
 - **Notifications.** No extra permission. The app registers its AUMID under HKCU on first use. With *Do not disturb* on, notifications collect in the notification center; if a toast cannot be shown, a tray balloon is used instead.
 - **Media (SMTC).** No permission or account. The player only needs to support Windows media controls.
-- **Network.** The only requests go to `api.open-meteo.com` for weather and `geocoding-api.open-meteo.com` for city search. There is no telemetry.
+- **Network.** DockHub itself only contacts `api.open-meteo.com` (weather) and `geocoding-api.open-meteo.com` (city search). The *AI usage* widget, if you add it, runs your locally installed Claude CLI (`claude -p /usage`) at the interval you choose, and that CLI talks to Anthropic with your own login. There is no telemetry.
 
 ## Project structure
 
@@ -489,7 +490,7 @@ The widget then shows up in the gallery automatically. Other helpers:
 
 - **Window effects.** The blurred glass effect uses `SetWindowCompositionAttribute`, so it works even when the window is inactive. Corner rounding comes from DWM (about 8 px); corners stay square on Windows 10.
 - **Shell integration.** Windows 11's XAML tray items (network, volume and battery quick settings, language bar) belong to Explorer, so the dock shows the classic tray icons. The per-app taskbar progress indicator may not appear for some apps, because the Windows key stays with Explorer.
-- **Multiple monitors.** The dock appears on one monitor; the Windows taskbar is hidden on secondary monitors as well.
+- **Multiple monitors.** The main dock (with widgets and tray icons) lives on one display; with *Show on all displays* the other displays get a dock with apps. The Windows taskbar is hidden on every display.
 - **Language.** The interface is English only; dates and numbers follow your Windows locale. The installer is available in English and Turkish.
 
 ## FAQ
@@ -515,7 +516,15 @@ No. DockHub installs and runs as a normal user.
 <details>
 <summary><b>Does it send any data?</b></summary>
 
-Only weather and city search requests to Open-Meteo. There is no account and no telemetry.
+Only weather and city search requests to Open-Meteo. If you add the AI usage widget, your local Claude CLI checks your usage with your own account. There is no DockHub account and no telemetry.
+</details>
+
+<details>
+<summary><b>An app doesn't show up on the dock, or its icon is missing. What can I do?</b></summary>
+
+Open *Settings › About › Copy diagnostics* and paste the result into an issue. It lists every window DockHub knows about, why it is or isn't shown, and whether each pinned app's icon and path were found. From a terminal, `plans/tools/window-diag.ps1 -ProcessName <name>` shows the same window details for one app. Setting `"debugLogging": true` in `config.json` (or `DOCKHUB_DEBUG=1`) writes extra detail to `log.txt`.
+
+Pins of apps that update themselves into versioned folders (Discord, Slack, Microsoft Store apps) are repaired automatically on start.
 </details>
 
 <details>

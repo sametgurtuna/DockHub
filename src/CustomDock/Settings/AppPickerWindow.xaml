@@ -19,7 +19,7 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TextBlock Text="Pin application" FontFamily="{StaticResource DisplayFont}" FontSize="22" FontWeight="SemiBold" />
+        <TextBlock x:Name="HeaderText" Text="Pin application" FontFamily="{StaticResource DisplayFont}" FontSize="22" FontWeight="SemiBold" />
         <TextBox x:Name="SearchBox" Grid.Row="1" Margin="0,12,0,10" Tag="Search applications…" TextChanged="OnSearchChanged"
                  PreviewKeyDown="OnSearchKeyDown" />
 

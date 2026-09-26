@@ -101,6 +101,7 @@ public partial class App : Application
         AppServices.Notifications.Fallback = (title, body) => _tray?.ShowBalloon(title, body);
         AppServices.Notifications.Initialize();
         AppServices.Reminders.Start();
+        ItemDataStore.PurgeOld();
 
         CreateDock();
         ApplyTaskbarMode();
@@ -247,6 +248,15 @@ public partial class App : Application
                 ThemeManager.Apply(config.Theme);
                 break;
             case nameof(AppConfig.TaskbarMode):
+                if (_revertingTaskbarMode) break;
+                if (!ConfirmTaskbarModeRestart(config.TaskbarMode))
+                {
+                    // Cancelled: put the previous mode back without asking again.
+                    _revertingTaskbarMode = true;
+                    config.TaskbarMode = config.TaskbarMode == TaskbarMode.Replace ? TaskbarMode.ShowBoth : TaskbarMode.Replace;
+                    _revertingTaskbarMode = false;
+                    break;
+                }
                 // System tray is only taken over when replacing taskbar; reinitialize shell services.
                 AppServices.ConfigService.SaveNow();
                 RestartApplication();
@@ -269,6 +279,19 @@ public partial class App : Application
                 foreach (var dock in DockWindow.All.ToList()) dock.ApplySettings();
                 break;
         }
+    }
+
+    private bool _revertingTaskbarMode;
+
+    /// <summary>Switching the taskbar mode restarts DockHub; make sure that's what the user wants.</summary>
+    private bool ConfirmTaskbarModeRestart(TaskbarMode newMode)
+    {
+        string message = newMode == TaskbarMode.Replace
+            ? "DockHub will restart and hide the Windows taskbar. It comes back whenever DockHub exits."
+            : "DockHub will restart and show the Windows taskbar next to the dock.";
+        return ConfirmDialog.Show("Restart DockHub?", message, "", _settings,
+            new DialogButton("cancel", "Cancel", IsCancel: true),
+            new DialogButton("restart", "Restart", DialogButtonKind.Primary)) == "restart";
     }
 
     private static string? PinArgumentPath(string[] args)
@@ -322,7 +345,8 @@ public partial class App : Application
         _settings.Activate();
     }
 
-    public void ShowAppPicker()
+    /// <param name="targetGroupId">Folder to add the picked apps to; null pins them to the dock.</param>
+    public void ShowAppPicker(string? targetGroupId = null)
     {
         if (_appPicker is null)
         {
@@ -330,6 +354,7 @@ public partial class App : Application
             _appPicker.Closed += (_, _) => _appPicker = null;
             _appPicker.Show();
         }
+        _appPicker.SetTarget(targetGroupId);
         _appPicker.Activate();
     }
 

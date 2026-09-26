@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Windows.Threading;
 using CustomDock.Core;
@@ -14,37 +15,65 @@ public sealed class AIUsageData
     public DateTime FetchedAt { get; set; }
 }
 
+public enum AIUsageStatus
+{
+    /// <summary>Nothing fetched yet.</summary>
+    Pending,
+    Ok,
+    /// <summary>The <c>claude</c> command isn't installed (or not on PATH).</summary>
+    CliNotFound,
+    /// <summary>The CLI asks the user to sign in.</summary>
+    NotLoggedIn,
+    Timeout,
+    /// <summary>The CLI answered but the usage lines weren't found (output format changed?).</summary>
+    ParseFailed,
+    Unknown,
+}
+
 /// <summary>
 /// Monitors Claude Code subscription usage. Runs "claude -p /usage" in an invisible
-/// background process (without opening a window) and parses its output. Only runs when there is an active subscriber.
+/// background process (without opening a window) and parses its output. Only runs while a widget is subscribed.
 /// </summary>
 public sealed class AIUsageService
 {
-    private static readonly TimeSpan PollInterval = TimeSpan.FromMinutes(5);
+    public static readonly TimeSpan DefaultInterval = TimeSpan.FromMinutes(15);
     private static readonly TimeSpan ProcessTimeout = TimeSpan.FromSeconds(45);
 
     private static readonly Regex SessionRx = new(
         @"current\s+session[^\r\n%]*?(\d{1,3})%\s*used[^\r\n(]*?resets\s+([^\r\n(]+?)\s*(?:\(|$)",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.Multiline);
 
     private static readonly Regex WeekRx = new(
         @"current\s+week[^\r\n%]*?(\d{1,3})%\s*used[^\r\n(]*?resets\s+([^\r\n(]+?)\s*(?:\(|$)",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.Multiline);
+
+    private static readonly Regex LoginRx = new(
+        @"\b(log\s*in|login|sign\s*in|authenticat|/login|not\s+logged)\b",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private readonly DispatcherTimer _timer = new(DispatcherPriority.Background);
+    private readonly Dictionary<object, TimeSpan> _requestedIntervals = new();
     private EventHandler<AIUsageData>? _updated;
     private bool _refreshing;
     private int _consecutiveErrors;
 
     public AIUsageService()
     {
-        _timer.Interval = PollInterval;
+        _timer.Interval = DefaultInterval;
         _timer.Tick += (_, _) => _ = RefreshAsync();
     }
 
     public AIUsageData Current { get; private set; } = new();
 
+    public AIUsageStatus Status { get; private set; } = AIUsageStatus.Pending;
+
+    /// <summary>Short technical detail for the last failure (tooltip), or null.</summary>
     public string? Error { get; private set; }
+
+    public bool IsRefreshing => _refreshing;
+
+    /// <summary>Poll interval: the shortest one requested by the subscribed widgets.</summary>
+    public TimeSpan PollInterval => _requestedIntervals.Count == 0 ? DefaultInterval : _requestedIntervals.Values.Min();
 
     public event EventHandler<AIUsageData> Updated
     {
@@ -64,6 +93,15 @@ public sealed class AIUsageService
         }
     }
 
+    /// <summary>Each widget asks for its own interval; the service polls at the shortest one.</summary>
+    public void RequestInterval(object owner, TimeSpan? interval)
+    {
+        if (interval is { } value) _requestedIntervals[owner] = value < TimeSpan.FromMinutes(1) ? TimeSpan.FromMinutes(1) : value;
+        else _requestedIntervals.Remove(owner);
+        if (_consecutiveErrors == 0 && Status != AIUsageStatus.CliNotFound)
+            _timer.Interval = PollInterval;
+    }
+
     public async Task RefreshAsync()
     {
         if (_refreshing) return;
@@ -72,38 +110,48 @@ public sealed class AIUsageService
         {
             if (!IsClaudeExecutablePresent())
             {
+                Status = AIUsageStatus.CliNotFound;
                 Error = "Claude CLI not found";
                 _timer.Interval = TimeSpan.FromHours(1);
                 return;
             }
 
-            var output = await RunClaudeUsageAsync().ConfigureAwait(true);
-            if (!string.IsNullOrWhiteSpace(output))
+            var (output, timedOut) = await RunClaudeUsageAsync().ConfigureAwait(true);
+            if (timedOut)
+            {
+                Status = AIUsageStatus.Timeout;
+                Error = $"No answer within {ProcessTimeout.TotalSeconds:0} seconds";
+                ApplyBackoff();
+            }
+            else if (string.IsNullOrWhiteSpace(output))
+            {
+                Status = AIUsageStatus.Unknown;
+                Error = "No response received";
+                ApplyBackoff();
+            }
+            else
             {
                 var parsed = Parse(output);
                 if (parsed.SessionPercent is null && parsed.WeekPercent is null)
                 {
-                    // Process executed but expected lines were not found (e.g. "claude" not found, login required).
+                    Status = LoginRx.IsMatch(output) ? AIUsageStatus.NotLoggedIn : AIUsageStatus.ParseFailed;
                     Error = output.Length > 160 ? output[..160].Trim() + "…" : output.Trim();
                     ApplyBackoff();
                 }
                 else
                 {
                     Current = parsed;
+                    Status = AIUsageStatus.Ok;
                     Error = null;
                     _consecutiveErrors = 0;
                     _timer.Interval = PollInterval;
                 }
             }
-            else
-            {
-                Error = "No response received";
-                ApplyBackoff();
-            }
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Failed to retrieve Claude usage information");
+            Status = AIUsageStatus.Unknown;
             Error = ex.Message;
             ApplyBackoff();
         }
@@ -117,12 +165,13 @@ public sealed class AIUsageService
     private void ApplyBackoff()
     {
         _consecutiveErrors++;
-        _timer.Interval = _consecutiveErrors switch
+        var backoff = _consecutiveErrors switch
         {
             1 => TimeSpan.FromMinutes(10),
             2 => TimeSpan.FromMinutes(20),
             _ => TimeSpan.FromHours(1),
         };
+        _timer.Interval = backoff > PollInterval ? backoff : PollInterval;
     }
 
     private static bool IsClaudeExecutablePresent()
@@ -146,7 +195,7 @@ public sealed class AIUsageService
     }
 
     /// <summary>Runs the "claude -p /usage" command completely hidden (without showing a window) and returns its output.</summary>
-    private static async Task<string?> RunClaudeUsageAsync()
+    private static async Task<(string? Output, bool TimedOut)> RunClaudeUsageAsync()
     {
         var psi = new ProcessStartInfo
         {
@@ -164,7 +213,7 @@ public sealed class AIUsageService
         psi.EnvironmentVariables["Path"] = BuildAugmentedPath();
 
         using var process = new Process { StartInfo = psi, EnableRaisingEvents = false };
-        if (!process.Start()) return null;
+        if (!process.Start()) return (null, false);
         process.StandardInput.Close();
 
         var stdoutTask = process.StandardOutput.ReadToEndAsync();
@@ -178,12 +227,14 @@ public sealed class AIUsageService
         catch (OperationCanceledException)
         {
             try { process.Kill(true); } catch { /* may already be closed */ }
-            return null;
+            // Let the readers finish so the pipes are released before the process object is disposed.
+            try { await Task.WhenAll(stdoutTask, stderrTask).WaitAsync(TimeSpan.FromSeconds(5)).ConfigureAwait(true); } catch { /* ignore */ }
+            return (null, true);
         }
 
         string stdout = await stdoutTask.ConfigureAwait(true);
         string stderr = await stderrTask.ConfigureAwait(true);
-        return string.IsNullOrWhiteSpace(stdout) ? stderr : stdout;
+        return (string.IsNullOrWhiteSpace(stdout) ? stderr : stdout, false);
     }
 
     /// <summary>Merges process PATH with user and machine PATH entries (without duplicates).</summary>
@@ -202,21 +253,22 @@ public sealed class AIUsageService
         return string.Join(';', parts);
     }
 
-    private static AIUsageData Parse(string text)
+    /// <summary>Parses the "/usage" output of the Claude CLI.</summary>
+    internal static AIUsageData Parse(string text)
     {
         var data = new AIUsageData { FetchedAt = DateTime.Now };
 
         var sessionMatch = SessionRx.Match(text);
-        if (sessionMatch.Success)
+        if (sessionMatch.Success && double.TryParse(sessionMatch.Groups[1].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out double session))
         {
-            data.SessionPercent = double.Parse(sessionMatch.Groups[1].Value);
+            data.SessionPercent = Math.Clamp(session, 0, 100);
             data.SessionResets = sessionMatch.Groups[2].Value.Trim();
         }
 
         var weekMatch = WeekRx.Match(text);
-        if (weekMatch.Success)
+        if (weekMatch.Success && double.TryParse(weekMatch.Groups[1].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out double week))
         {
-            data.WeekPercent = double.Parse(weekMatch.Groups[1].Value);
+            data.WeekPercent = Math.Clamp(week, 0, 100);
             data.WeekResets = weekMatch.Groups[2].Value.Trim();
         }
 

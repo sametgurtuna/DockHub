@@ -7,7 +7,6 @@ using CustomDock.Native;
 using ManagedShell.AppBar;
 using Microsoft.Win32;
 using static CustomDock.Native.NativeMethods;
-using Forms = System.Windows.Forms;
 
 namespace CustomDock.Dock;
 
@@ -138,13 +137,20 @@ public partial class DockWindow
             view.HoverEnabled = _config.HoverEffect;
     }
 
+    /// <summary>Band the reserver keeps free: the bar plus its floating margins, in DIP.</summary>
+    private double ReservedThicknessDip => ThicknessDip + 2 * MarginDip;
+
     private void UpdateReserver()
     {
         bool needed = !_config.AutoHide && !_closing;
-        double thickness = ThicknessDip + 2 * MarginDip;
-        var key = (_monitor.DeviceName, _config.Edge, thickness);
+        // A new display or edge needs a new AppBar; size and DPI changes only move the existing one.
+        var key = (_monitor.DeviceName, _config.Edge, _monitor.Bounds);
 
-        if (needed && _reserver is not null && _reserverKey == key) return;
+        if (needed && _reserver is not null && _reserverKey == key)
+        {
+            _reserver.Update(ReservedThicknessDip, _monitor.DpiScale);
+            return;
+        }
 
         if (_reserver is not null)
         {
@@ -156,8 +162,6 @@ public partial class DockWindow
 
         if (!needed) return;
 
-        var screen = Forms.Screen.AllScreens.FirstOrDefault(s => string.Equals(s.DeviceName, _monitor.DeviceName, StringComparison.OrdinalIgnoreCase))
-                     ?? Forms.Screen.PrimaryScreen!;
         var edge = _config.Edge switch
         {
             DockEdge.Top => AppBarEdge.Top,
@@ -168,7 +172,7 @@ public partial class DockWindow
 
         try
         {
-            _reserver = new SpaceReserver(_shell.Manager, AppBarScreen.FromScreen(screen), edge, thickness);
+            _reserver = new SpaceReserver(_shell.Manager, ToAppBarScreen(_monitor), edge, ReservedThicknessDip, _monitor.DpiScale);
             _reserver.RectChanged += QueueReposition;
             _reserver.Show();
             _reserverKey = key;
@@ -178,6 +182,41 @@ public partial class DockWindow
             Log.Error(ex, "Failed to reserve screen area");
             _reserver = null;
         }
+    }
+
+    /// <summary>Built from the dock's own monitor data so the AppBar and the dock always agree on the display.</summary>
+    private static AppBarScreen ToAppBarScreen(MonitorInfo monitor) => new()
+    {
+        Bounds = new System.Drawing.Rectangle(monitor.Bounds.Left, monitor.Bounds.Top, monitor.Bounds.Width, monitor.Bounds.Height),
+        WorkingArea = new System.Drawing.Rectangle(monitor.WorkArea.Left, monitor.WorkArea.Top, monitor.WorkArea.Width, monitor.WorkArea.Height),
+        DeviceName = monitor.DeviceName,
+        Primary = monitor.IsPrimary,
+        HMonitor = monitor.Handle,
+    };
+
+    /// <summary>Checks once the layout has settled that Windows really keeps maximized windows out of the dock's band.</summary>
+    private void ScheduleReservationCheck()
+    {
+        if (_reserver is null || _closing) return;
+        if (_reservationCheckTimer is null)
+        {
+            _reservationCheckTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromSeconds(1.5) };
+            _reservationCheckTimer.Tick += (_, _) =>
+            {
+                _reservationCheckTimer?.Stop();
+                CheckReservation();
+            };
+        }
+        _reservationCheckTimer.Stop();
+        _reservationCheckTimer.Start();
+    }
+
+    private void CheckReservation()
+    {
+        // A full-screen app legitimately covers the whole display.
+        if (_closing || _fullscreen || _reserver is not { Handle: not 0 } reserver) return;
+        if (MonitorHelper.TryGet(_monitor.Handle) is { } monitor && reserver.Verify(monitor))
+            ScheduleReservationCheck();
     }
 
     private void QueueReposition()
@@ -213,6 +252,8 @@ public partial class DockWindow
         double dpi = _monitor.DpiScale;
         int barPx = (int)Math.Round(ThicknessDip * dpi);
         int marginPx = (int)Math.Round(MarginDip * dpi);
+        // Keep the reserved band in step with the dock (DPI changes do not always reach the AppBar).
+        _reserver?.Update(ReservedThicknessDip, dpi);
 
         RECT area;
         if (_reserver is { Handle: not 0 } reserver && reserver.Rect.Width > 0 && reserver.Rect.Height > 0)
@@ -242,6 +283,7 @@ public partial class DockWindow
         if (s_trayHostOwner is null ? IsMain : s_trayHostOwner == this)
             UpdateTrayHost();
         UpdateFadeMask();
+        ScheduleReservationCheck();
     }
 
     private static RECT Rect(int x, int y, int w, int h) => new(x, y, x + w, y + h);
@@ -275,6 +317,8 @@ public partial class DockWindow
         {
             if (_closing) return;
             _monitor = ResolveMonitor();
+            // The reserver no longer handles display changes itself; keep ManagedShell's screen cache fresh.
+            _shell.Manager.FullScreenHelper.NotifyScreensChanged();
             ApplyBackdrop();
             UpdateReserver();
             QueueReposition();

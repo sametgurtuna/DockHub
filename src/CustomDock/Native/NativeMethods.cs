@@ -269,6 +269,11 @@ internal static class NativeMethods
     public const int WM_DISPLAYCHANGE = 0x007E;
     public const int WM_MOUSEACTIVATE = 0x0021;
     public const int SPI_SETWORKAREA = 0x002F;
+    public const int SPIF_SENDCHANGE = 0x0002;
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool SystemParametersInfo(int action, int param, ref RECT value, int winIni);
 
     // --- AppBar ---
     public const int ABM_NEW = 0x00;

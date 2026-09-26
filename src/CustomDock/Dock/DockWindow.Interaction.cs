@@ -23,6 +23,7 @@ public partial class DockWindow
         _fullscreen = fullscreen;
         UpdateVisibility(animate: false);
         UpdateTrigger();
+        if (!fullscreen) ScheduleReservationCheck();
     }
 
     private void OnLauncherVisibilityChanged(bool visible)

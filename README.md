@@ -137,7 +137,7 @@ The installer is self-contained. It ships the .NET runtime, so there is nothing 
 
   <img src="docs/images/tray-overflow.jpg" alt="Tray overflow flyout above the dock showing hidden tray icons" width="46%">
 - **Clock.** Clicking it opens the notification center. Its context menu offers quick settings, date and time settings, and seconds and date options. A thin strip at the far end shows the desktop.
-- **Reserved screen space.** An invisible AppBar reserves the dock's area, so maximized windows never slide under it.
+- **Reserved screen space.** Like the Windows taskbar, the dock keeps its band of the screen to itself: maximized windows stop at the dock instead of sliding under it, at any display scaling and on every display that has a dock.
 
 ### The dock
 
@@ -205,7 +205,7 @@ With *Settings › General › Replace the taskbar* set to **DockHub** (the defa
 2. Explorer's "taskman" window is handed back, so the **Windows key** keeps opening Start.
 3. The Windows taskbar state (`ABM_GETSTATE`) is written to `%AppData%\DockHub\session.json`. The taskbar is then switched to auto-hide and the `Shell_TrayWnd` / `Shell_SecondaryTrayWnd` windows are hidden.
 4. A lightweight watcher running every 250 ms hides the Explorer taskbar again if it reappears on its own. It stays out of the way while Start, search or a shell menu is open.
-5. An invisible, click-through AppBar reserves the dock's thickness at the screen edge.
+5. An invisible, click-through AppBar reserves the dock's thickness at the screen edge, sized with the DPI of the dock's display. It registers again when Explorer restarts, and if Windows still leaves the dock's band in the work area, DockHub trims the work area itself (and undoes that when it exits).
 
 In **Both** mode, the Windows taskbar is left untouched and the tray is not taken over; the dock sits above the taskbar. Switching modes restarts the app.
 

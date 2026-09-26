@@ -755,6 +755,12 @@
                                 <TextBlock Text="Install widget…" Margin="8,0,0,0" />
                             </StackPanel>
                         </Button>
+                        <Button Margin="0,0,8,0" Click="OnInstallFromLinkClick" ToolTip="Install a web widget from a manifest.json, .dockwidget or GitHub folder link">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE71B;" Style="{StaticResource IconText}" FontSize="12" />
+                                <TextBlock Text="Install from link…" Margin="8,0,0,0" />
+                            </StackPanel>
+                        </Button>
                         <Button Click="OnOpenWidgetsFolderClick">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="&#xE838;" Style="{StaticResource IconText}" FontSize="12" />
@@ -762,6 +768,21 @@
                             </StackPanel>
                         </Button>
                     </WrapPanel>
+                    <Border x:Name="WidgetLinkCard" Style="{StaticResource SettingCard}" Visibility="Collapsed" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="Install from link" Style="{StaticResource SettingTitle}" />
+                            <TextBlock Text="Paste a link to a manifest.json, a .dockwidget file or a GitHub folder that contains a widget. You see its permissions before anything is installed."
+                                       Style="{StaticResource SettingDescription}" />
+                            <DockPanel Margin="0,10,0,0">
+                                <Button x:Name="WidgetLinkInstallButton" DockPanel.Dock="Right" Content="Install" Margin="8,0,0,0" Padding="14,4"
+                                        Style="{StaticResource AccentButton}" Click="OnInstallLinkConfirmClick" />
+                                <TextBox x:Name="WidgetLinkBox" KeyDown="OnWidgetLinkKeyDown" />
+                            </DockPanel>
+                            <TextBlock x:Name="WidgetLinkStatus" Style="{StaticResource SettingDescription}" Margin="0,6,0,0" Visibility="Collapsed" />
+                        </StackPanel>
+                    </Border>
+                    <TextBlock Text="Featured web widgets" FontFamily="{DynamicResource DisplayFont}" FontSize="17" FontWeight="SemiBold" Margin="2,6,0,10" />
+                    <StackPanel x:Name="FeaturedWidgetsPanel" />
                     <StackPanel x:Name="GalleryPanel" />
                 </StackPanel>
 

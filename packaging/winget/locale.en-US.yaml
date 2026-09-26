@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.6.0.schema.json
+PackageIdentifier: SametGurtuna.DockHub
+PackageVersion: {VERSION}
+PackageLocale: en-US
+Publisher: DockHub
+PublisherUrl: https://github.com/sametgurtuna
+PublisherSupportUrl: https://github.com/sametgurtuna/DockHub/issues
+PackageName: DockHub
+PackageUrl: https://github.com/sametgurtuna/DockHub
+License: Proprietary
+ShortDescription: A glassy, widget-rich dock that replaces the Windows taskbar.
+Description: |-
+  DockHub puts Start, search, running apps, the system tray and live widgets in one floating dock.
+  It needs no admin rights and the original taskbar always comes back when it closes.
+Moniker: dockhub
+Tags:
+  - dock
+  - taskbar
+  - widgets
+  - launcher
+  - productivity
+ReleaseNotesUrl: https://github.com/sametgurtuna/DockHub/releases/tag/v{VERSION}
+ManifestType: defaultLocale
+ManifestVersion: 1.6.0

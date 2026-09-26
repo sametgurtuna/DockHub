@@ -48,6 +48,8 @@ public sealed class WebWidgetManifest
     [JsonPropertyName("variants")] public List<WebWidgetVariant> Variants { get; set; } = new() { new() };
     [JsonPropertyName("settings")] public List<WebWidgetSetting> Settings { get; set; } = new();
     [JsonPropertyName("permissions")] public WebWidgetPermissions Permissions { get; set; } = new();
+    /// <summary>Extra files (relative paths) fetched next to manifest.json when installed from a link.</summary>
+    [JsonPropertyName("files")] public List<string> Files { get; set; } = new();
 
     [JsonIgnore] public string Folder { get; set; } = "";
 
@@ -99,12 +101,8 @@ public static class WebWidgetCatalog
         error = null;
         string path = Path.Combine(folder, "manifest.json");
         if (!File.Exists(path)) { error = "manifest.json is missing."; return null; }
-        WebWidgetManifest? manifest;
-        try { manifest = JsonSerializer.Deserialize<WebWidgetManifest>(File.ReadAllText(path), Options); }
-        catch (Exception ex) { error = $"manifest.json is invalid: {ex.Message}"; return null; }
-        if (manifest is null) { error = "manifest.json is empty."; return null; }
-        if (!IdRx.IsMatch(manifest.Id)) { error = "The id must use lower-case letters, digits, dots and dashes."; return null; }
-        if (string.IsNullOrWhiteSpace(manifest.Name)) { error = "The name is missing."; return null; }
+        var manifest = Parse(File.ReadAllText(path), out error);
+        if (manifest is null) return null;
         string entry = Path.GetFullPath(Path.Combine(folder, manifest.Entry));
         if (!entry.StartsWith(Path.GetFullPath(folder), StringComparison.OrdinalIgnoreCase) || !File.Exists(entry))
         {
@@ -119,6 +117,19 @@ public static class WebWidgetCatalog
         }
         if (manifest.Variants.Count == 0) manifest.Variants.Add(new WebWidgetVariant());
         manifest.Folder = folder;
+        return manifest;
+    }
+
+    /// <summary>Parses and checks the id and name of a manifest (the files are checked by <see cref="Read"/>).</summary>
+    public static WebWidgetManifest? Parse(string json, out string? error)
+    {
+        error = null;
+        WebWidgetManifest? manifest;
+        try { manifest = JsonSerializer.Deserialize<WebWidgetManifest>(json, Options); }
+        catch (Exception ex) { error = $"manifest.json is invalid: {ex.Message}"; return null; }
+        if (manifest is null) { error = "manifest.json is empty."; return null; }
+        if (!IdRx.IsMatch(manifest.Id)) { error = "The id must use lower-case letters, digits, dots and dashes."; return null; }
+        if (string.IsNullOrWhiteSpace(manifest.Name)) { error = "The name is missing."; return null; }
         return manifest;
     }
 

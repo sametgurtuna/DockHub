@@ -2,10 +2,13 @@
 
 Build a DockHub widget with HTML, CSS and JavaScript. It runs in Microsoft Edge WebView2 inside a dock card, follows the dock's theme, and talks to DockHub through a small `window.dockhub` API. No C#, no build step.
 
-Two complete examples live in [`samples/widgets`](../samples/widgets):
+Three complete examples live in [`samples/widgets`](../samples/widgets):
 
 - `hello-world`: settings, per-widget storage, a context menu item and a notification.
 - `github-stars`: network access to one declared host.
+- `github-pulls`: pull requests waiting for your review, your open pull requests or unread notifications, with an optional token and a notification for new items.
+
+All three are also listed under *Settings › Widget gallery › Featured web widgets* and install with one click.
 
 ## Try it in two minutes
 
@@ -18,6 +21,14 @@ While developing, set `"debugLogging": true` in `%AppData%\DockHub\config.json`.
 ## Package and share
 
 A `.dockwidget` file is a zip of the widget folder (the files can be at the zip's root or inside one folder). Users install it with *Settings › Widget gallery › Install widget…*. DockHub shows the name, version, author and the permissions before installing. Installing a package with the same `id` replaces the older version and keeps each widget's settings and storage.
+
+You can also share a link. *Settings › Widget gallery › Install from link…* accepts:
+
+- a link to a `.dockwidget` or `.zip` file (for example a GitHub release asset),
+- a link to a `manifest.json`: DockHub downloads the `entry` file and everything listed in `files` from the same folder,
+- a GitHub folder link such as `https://github.com/you/widgets/tree/main/pomodoro-plus`.
+
+Links must use HTTPS. Every file must sit next to `manifest.json` (no `..`, no other hosts), a single file can be up to 5 MB and a package up to 20 MB. The same permission prompt appears before anything is installed.
 
 ## manifest.json
 
@@ -40,7 +51,8 @@ A `.dockwidget` file is a zip of the widget folder (the files can be at the zip'
     { "key": "mode", "type": "choice", "label": "Mode", "options": ["Work", "Study"], "default": "Work" },
     { "key": "label", "type": "text", "label": "Label", "description": "Shown under the timer." }
   ],
-  "permissions": { "network": ["api.example.com", "*.example.org"], "notifications": true }
+  "permissions": { "network": ["api.example.com", "*.example.org"], "notifications": true },
+  "files": ["style.css", "img/tomato.svg"]
 }
 ```
 
@@ -52,6 +64,7 @@ A `.dockwidget` file is a zip of the widget folder (the files can be at the zip'
 | `settings` | Shown in *Settings › Dock items* when the widget is selected. Types: `text`, `number` (`min`, `max`), `toggle`, `choice` (`options`). |
 | `permissions.network` | The only hosts `fetch`, images and scripts may load from (HTTPS or WSS). Everything else is blocked. `*.example.org` also matches `example.org`. |
 | `permissions.notifications` | Allows `dockhub.notify`. |
+| `files` | Optional. Other files of the widget (relative paths) that DockHub downloads when the widget is installed from a `manifest.json` link. Packages don't need it. |
 
 ## The widget's page
 

@@ -1,0 +1,65 @@
+name: Winget
+
+on:
+  release:
+    types: [released]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag, for example v0.8.0
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  submit:
+    runs-on: windows-latest
+    env:
+      WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+      PACKAGE_ID: SametGurtuna.DockHub
+    steps:
+      - name: No token
+        if: env.WINGET_TOKEN == ''
+        run: echo "::notice::The WINGET_TOKEN secret is not set, so nothing was submitted to winget-pkgs (see packaging/winget/README.md)."
+
+      - uses: actions/checkout@v4
+        if: env.WINGET_TOKEN != ''
+
+      - name: Submit to winget-pkgs
+        if: env.WINGET_TOKEN != ''
+        shell: pwsh
+        env:
+          EVENT_TAG: ${{ github.event.release.tag_name }}
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+        run: |
+          $tag = if ($env:EVENT_TAG) { $env:EVENT_TAG } else { $env:INPUT_TAG }
+          if ($tag -notmatch '^v\d+\.\d+\.\d+$') { throw "Unexpected tag '$tag'" }
+          $version = $tag.TrimStart('v')
+          $url = "https://github.com/${{ github.repository }}/releases/download/$tag/DockHub-Setup-$version-x64.exe"
+          Invoke-WebRequest https://aka.ms/wingetcreate/latest -OutFile wingetcreate.exe
+
+          $exists = $true
+          try {
+            Invoke-RestMethod "https://api.github.com/repos/microsoft/winget-pkgs/contents/manifests/s/SametGurtuna/DockHub" `
+              -Headers @{ Authorization = "Bearer $env:WINGET_TOKEN" } | Out-Null
+          } catch {
+            $exists = $false
+          }
+
+          if ($exists) {
+            ./wingetcreate.exe update $env:PACKAGE_ID --version $version --urls $url --submit --token $env:WINGET_TOKEN
+          } else {
+            # First version: fill the templates with the real installer hash and submit them as a new package.
+            Invoke-WebRequest $url -OutFile setup.exe
+            $sha = (Get-FileHash setup.exe -Algorithm SHA256).Hash
+            $out = "winget/manifests/s/SametGurtuna/DockHub/$version"
+            New-Item -ItemType Directory -Force $out | Out-Null
+            $names = @{ 'version.yaml' = "$env:PACKAGE_ID.yaml"; 'installer.yaml' = "$env:PACKAGE_ID.installer.yaml"; 'locale.en-US.yaml' = "$env:PACKAGE_ID.locale.en-US.yaml" }
+            foreach ($name in $names.Keys) {
+              (Get-Content "packaging/winget/$name" -Raw).Replace('{VERSION}', $version).Replace('{URL}', $url).Replace('{SHA256}', $sha) |
+                Set-Content -Path (Join-Path $out $names[$name]) -Encoding utf8NoBOM
+            }
+            ./wingetcreate.exe submit --token $env:WINGET_TOKEN $out
+          }
+          if ($LASTEXITCODE -ne 0) { throw "wingetcreate failed ($LASTEXITCODE)" }

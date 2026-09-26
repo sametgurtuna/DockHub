@@ -1,0 +1,113 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
+  body {
+    font-family: var(--dh-font, "Segoe UI", sans-serif); color: var(--dh-text, #fff);
+    display: flex; align-items: center; gap: 9px; padding: 0 12px; box-sizing: border-box; cursor: pointer; user-select: none;
+  }
+  .badge {
+    flex: none; min-width: 26px; height: 26px; padding: 0 6px; box-sizing: border-box; border-radius: 13px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--dh-accent, #60cdff); color: #000; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums;
+  }
+  .badge.zero { background: rgba(127, 127, 127, .25); color: var(--dh-text-secondary, #aaa); }
+  .text { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
+  .label { font-size: 12px; font-weight: 600; }
+  .detail { font-size: 11px; color: var(--dh-text-secondary, #aaa); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  html[data-size="compact"] body { justify-content: center; padding: 0; }
+  html[data-size="compact"] .text { display: none; }
+</style>
+</head>
+<body>
+  <div class="badge" id="count">…</div>
+  <div class="text">
+    <div class="label" id="label">GitHub</div>
+    <div class="detail" id="detail"></div>
+  </div>
+<script>
+  const MODES = {
+    'Review requests': { label: 'to review', page: 'https://github.com/pulls/review-requested', query: login => `is:open is:pr archived:false review-requested:${login}` },
+    'My pull requests': { label: 'open pull requests', page: 'https://github.com/pulls', query: login => `is:open is:pr archived:false author:${login}` },
+    'Notifications': { label: 'unread', page: 'https://github.com/notifications' },
+  };
+  let settings = { show: 'Review requests', user: '', token: '', minutes: 10, notify: true };
+  let timer;
+  let seen = null; // ids from the previous refresh; null until the first one, so old items don't notify
+
+  const mode = () => MODES[settings.show] || MODES['Review requests'];
+
+  async function api(path) {
+    const headers = { Accept: 'application/vnd.github+json' };
+    if (settings.token) headers.Authorization = `Bearer ${settings.token.trim()}`;
+    const response = await fetch(`https://api.github.com${path}`, { headers });
+    if (response.status === 401) throw new Error('The token was not accepted.');
+    if (response.status === 403) throw new Error('GitHub rate limit reached. Add a token or refresh less often.');
+    if (!response.ok) throw new Error(`GitHub answered ${response.status}.`);
+    return response.json();
+  }
+
+  async function login() {
+    if (settings.user) return settings.user.trim();
+    if (!settings.token) throw new Error('Set your GitHub user name or a token in the widget settings.');
+    return (await api('/user')).login;
+  }
+
+  async function fetchItems() {
+    if (settings.show === 'Notifications') {
+      if (!settings.token) throw new Error('Notifications need a personal access token.');
+      const list = await api('/notifications?per_page=50');
+      return list.map(n => ({ id: n.id, title: n.subject.title, repo: n.repository.full_name }));
+    }
+    const user = await login();
+    const result = await api(`/search/issues?per_page=20&sort=updated&q=${encodeURIComponent(mode().query(user))}`);
+    return result.items.map(i => ({ id: String(i.id), title: i.title, repo: i.repository_url.split('/').slice(-2).join('/'), url: i.html_url }));
+  }
+
+  function render(items, error) {
+    const count = document.getElementById('count');
+    count.textContent = error ? '!' : items.length > 99 ? '99+' : items.length;
+    count.classList.toggle('zero', !error && items.length === 0);
+    document.getElementById('label').textContent = error ? 'GitHub' : mode().label;
+    document.getElementById('detail').textContent = error || (items[0] ? items[0].title : 'Nothing waiting');
+    document.body.title = error || (items.length
+      ? items.slice(0, 8).map(i => `• ${i.title} (${i.repo})`).join('\n')
+      : 'Nothing waiting');
+  }
+
+  async function load() {
+    try {
+      const items = await fetchItems();
+      if (seen && settings.notify) {
+        const fresh = items.filter(i => !seen.has(i.id));
+        if (fresh.length === 1) dockhub.notify({ title: settings.show === 'Review requests' ? 'New review request' : 'New on GitHub', body: `${fresh[0].title} (${fresh[0].repo})` });
+        else if (fresh.length > 1) dockhub.notify({ title: 'New on GitHub', body: `${fresh.length} new items` });
+      }
+      seen = new Set(items.map(i => i.id));
+      render(items);
+    } catch (e) {
+      render([], e.message);
+    }
+  }
+
+  function schedule() {
+    clearInterval(timer);
+    timer = setInterval(load, Math.max(2, Number(settings.minutes) || 10) * 60 * 1000);
+  }
+
+  (async () => {
+    settings = { ...settings, ...(await dockhub.settings.get()) };
+    document.documentElement.dataset.size = dockhub.size;
+    dockhub.onSize(size => document.documentElement.dataset.size = size);
+    dockhub.settings.onChange(values => { settings = { ...settings, ...values }; seen = null; load(); schedule(); });
+    document.body.addEventListener('click', () => dockhub.openUrl(mode().page));
+    await dockhub.contextMenu.set([{ id: 'refresh', label: 'Refresh now' }, { id: 'open', label: 'Open on GitHub' }]);
+    dockhub.contextMenu.onSelect(id => id === 'refresh' ? load() : dockhub.openUrl(mode().page));
+    load();
+    schedule();
+  })();
+</script>
+</body>
+</html>

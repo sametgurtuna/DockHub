@@ -145,6 +145,7 @@ public partial class SettingsWindow : Window
         {
             _galleryBuilt = true;
             BuildGallery();
+            BuildFeaturedWidgets();
         }
         if (tag == "taskbar") LoadTray();
     }

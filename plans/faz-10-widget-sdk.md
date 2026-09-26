@@ -96,4 +96,14 @@ dockhub.openUrl(url)                             // varsayılan tarayıcıda, ku
 
 ## Uygulama notları
 
-_(Faz uygulanırken doldurulacak.)_
+
+### 2026-09-26 — tamamlandı (MVP)
+
+- **Model:** planda önerilen B seçeneği (WebView2) uygulandı. `WebWidgetCatalog`, `%AppData%\DockHub\widgets` altındaki manifest'leri okuyup doğruluyor (id kuralı, entry'nin klasör dışına çıkmaması, `minDockHubVersion`) ve `WidgetRegistry.Register` ile açılışta ekliyor.
+- **Çalışma zamanı:** tüm widget'lar için ortak bir `CoreWebView2Environment` (`%LocalAppData%\DockHub\WebView2`) kullanılıyor. Dosyalar sanal host'tan (`<id>.widget.dockhub`) sunuluyor. Manifest dışındaki host'lara giden istekler 403 alıyor; yeni pencere, indirme ve izin istekleri kapalı. DevTools yalnızca `debugLogging` açıkken kullanılabiliyor.
+- **Köprü (`window.dockhub`, apiVersion 1):** settings.get/onChange (manifest varsayılanları ile birleşik), storage.get/set (256 KB), notify (izin gerekiyor), openUrl (yalnızca http(s), 2 s sınırı), contextMenu.set/onSelect (en fazla 8), onTheme (CSS değişkenleri), onSize.
+- **Arayüz:** galeriye "Install widget…" eklendi (izin özeti gösteren onay diyaloğuyla) ve "Open widgets folder". Manifest'te tanımlanan ayarlar dinamik olarak oluşturuluyor (text/number/toggle/choice).
+- **Belgeler ve örnekler:** `docs/widget-sdk.md`, `samples/widgets/hello-world`, `samples/widgets/github-stars`.
+- **Canlı test:** kullanıcı boşta iken geçici bir DOCKHUB_HOME ile iki örnek dock'ta çalıştırıldı. Saydam arka plan, accent rengi ve api.github.com'dan canlı veri doğrulandı; ardından kullanıcının dock'u geri başlatıldı.
+- **Yapılmayanlar:** `.dockwidget` dosya ilişkilendirmesi (installer), klasörden canlı yeniden yükleme, "güvenilir DLL eklentileri" (A seçeneği). Bilinen sınırlama: WebView2 bir HWND olduğundan dock'un hover büyütmesi bu kartlara uygulanmıyor.
+- Testler: 73.

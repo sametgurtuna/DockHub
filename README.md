@@ -417,6 +417,12 @@ tools/generate-icon.ps1      Renders Assets/DockHub.ico
 docs/images/                 README artwork
 ```
 
+## Web widgets (HTML and JavaScript)
+
+Anyone can build a widget with HTML, CSS and JavaScript, no C# needed. Web widgets run in Microsoft Edge WebView2, follow the dock theme and use a small `window.dockhub` API for settings, storage, notifications and their right-click menu. Each widget only reaches the internet hosts its manifest lists, and users see those permissions before installing a `.dockwidget` package from *Settings › Widget gallery › Install widget…*.
+
+See the [widget SDK guide](docs/widget-sdk.md) and the examples in [`samples/widgets`](samples/widgets).
+
 ## Writing a widget
 
 1. Add `Widgets/Sample/SampleWidget.xaml`. The root element must be `w:WidgetBase`. Use elements named `Layout_<variant>` for different layouts:

@@ -69,7 +69,7 @@ public static class AppLauncher
         catch (Exception ex)
         {
             Log.Error(ex, $"Failed to launch application: {path}");
-            AppServices.Notifications.Show("Could not launch app", $"{Path.GetFileName(path)}\n{ex.Message}");
+            AppServices.Notifications.Show(L.T("Could not launch app"), $"{Path.GetFileName(path)}\n{ex.Message}");
         }
     }
 

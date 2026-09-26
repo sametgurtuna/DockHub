@@ -496,7 +496,7 @@ public partial class DockWindow : Window, IWidgetHost
         menu.Items.Add(DockMenu.Item("Add widget…", "\uE710", () => App.Instance.ShowSettings("gallery")));
         menu.Items.Add(DockMenu.Item("Pin application…", "\uE718", () => App.Instance.ShowAppPicker()));
         menu.Items.Add(DockMenu.Item("Add separator", "\uE76F", () => AppServices.ConfigService.AddItem(DockItem.Separator())));
-        menu.Items.Add(DockMenu.Item("Create group", "\uE8B7", () => AppServices.ConfigService.AddItem(DockItem.Group("New group"))));
+        menu.Items.Add(DockMenu.Item("Create group", "\uE8B7", () => AppServices.ConfigService.AddItem(DockItem.Group(L.T("New group")))));
         menu.Items.Add(DockMenu.Separator());
         menu.Items.Add(DockMenu.Item("Task Manager", "\uE9D9", () => Process.Start(new ProcessStartInfo("taskmgr.exe") { UseShellExecute = true })));
         menu.Items.Add(DockMenu.Item("Windows Settings", "\uE770", () => Process.Start(new ProcessStartInfo("ms-settings:") { UseShellExecute = true })));

@@ -52,8 +52,8 @@ public partial class SettingsWindow : Window
         };
 
         var version = typeof(SettingsWindow).Assembly.GetName().Version?.ToString(3) ?? "1.0.0";
-        VersionText.Text = $"Version {version}";
-        AboutVersion.Text = $"Version {version} · .NET {Environment.Version.ToString(2)} · WPF";
+        VersionText.Text = L.T("Version {0}", version);
+        AboutVersion.Text = L.T("Version {0}", version) + $" · .NET {Environment.Version.ToString(2)} · WPF";
         ConfigFolderRow.Description = AppPaths.Root;
 
         LoadMonitors();
@@ -173,12 +173,12 @@ public partial class SettingsWindow : Window
             string report = WindowDiagnostics.Dump(shell, AppServices.Config);
             Log.Info("Diagnostics report:" + Environment.NewLine + report);
             Clipboard.SetText(report);
-            DiagnosticsButton.Content = "Copied";
+            DiagnosticsButton.Content = L.T("Copied");
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Failed to create diagnostics report");
-            DiagnosticsButton.Content = "Failed";
+            DiagnosticsButton.Content = L.T("Failed");
         }
     }
 
@@ -263,7 +263,7 @@ public partial class SettingsWindow : Window
             DisplaySizesPanel.Children.Add(new Controls.SettingRow
             {
                 Glyph = "",
-                Header = $"Size on {monitor.DisplayName}",
+                Header = L.T("Size on {0}", monitor.DisplayName),
                 Description = "Dock size on this display.",
                 Content = combo,
             });

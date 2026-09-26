@@ -110,7 +110,7 @@ public partial class App : Application
         AppServices.Notifications.Fallback = (title, body) => _tray?.ShowBalloon(title, body);
         AppServices.Notifications.Initialize();
         if (AppServices.ConfigService.RecoveredFromBackup is { } backupDate)
-            AppServices.Notifications.Show("Settings restored from backup", $"config.json was damaged, so DockHub loaded your backup from {backupDate:g}.");
+            AppServices.Notifications.Show(L.T("Settings restored from backup"), L.T("config.json was damaged, so DockHub loaded your backup from {0}.", backupDate.ToString("g")));
         AppServices.Reminders.Start();
         ItemDataStore.PurgeOld();
         AppServices.Updates.UpdateAvailable += release => AppServices.Notifications.Show(

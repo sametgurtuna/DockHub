@@ -98,7 +98,7 @@ public partial class HydrationWidget : WidgetBase
         double liters = count * _settings.GlassMl / 1000.0;
 
         var remaining = Hydration.NextReminder - DateTime.Now;
-        TimerText.Text = remaining > TimeSpan.Zero ? TimerFormat.FormatRemaining(remaining) : "Drink up!";
+        TimerText.Text = remaining > TimeSpan.Zero ? TimerFormat.FormatRemaining(remaining) : L.T("Drink up!");
         TimerCaption.Text = L.T("Water · {0}/{1}", count, goal);
 
         Ring.Maximum = goal;
@@ -106,11 +106,11 @@ public partial class HydrationWidget : WidgetBase
         Ring.SetResourceReference(Controls.RingGauge.FillProperty, count >= goal ? "AccentGreenBrush" : "AccentCyanBrush");
         CountRun.Text = count.ToString();
         GoalRun.Text = $"/{goal}";
-        ProgressCaption.Text = count >= goal ? "goal reached" : $"glasses · {liters:0.0#} L";
+        ProgressCaption.Text = count >= goal ? L.T("goal reached") : L.T("glasses · {0} L", liters.ToString("0.0#", System.Globalization.CultureInfo.CurrentCulture));
 
         string reminders = _settings.NotificationsEnabled
-            ? $"Reminder every {_settings.IntervalMinutes}m ({_settings.StartHour:00}:00–{_settings.EndHour:00}:00)"
-            : "Reminders off";
+            ? L.T("Reminder every {0} min ({1}:00 to {2}:00)", _settings.IntervalMinutes, _settings.StartHour.ToString("00"), _settings.EndHour.ToString("00"))
+            : L.T("Reminders off");
         ToolTip = L.T("Today {0}/{1} glasses ({2} L)\n{3}\nClick: +1 glass · Right-click: options", count, goal, liters.ToString("0.0#", System.Globalization.CultureInfo.CurrentCulture), reminders);
         RefreshCompact();
     }
@@ -124,7 +124,7 @@ public partial class HydrationWidget : WidgetBase
             var remaining = Hydration.NextReminder - DateTime.Now;
             tile.ShowGlyph(Descriptor.Icon, "TextOnColorBrush");
             tile.SetTextBrushKey("TextOnColorBrush");
-            tile.Text = remaining > TimeSpan.Zero ? TimerFormat.FormatRemaining(remaining) : "Drink!";
+            tile.Text = remaining > TimeSpan.Zero ? TimerFormat.FormatRemaining(remaining) : L.T("Drink!");
         }
         else
         {

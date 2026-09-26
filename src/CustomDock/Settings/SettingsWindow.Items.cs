@@ -24,26 +24,26 @@ public sealed class ItemRow
             case DockItemKind.App:
                 Icon = item.Path is null ? null : AppIcons.For(item, 48, out _);
                 Title = !string.IsNullOrWhiteSpace(item.Name) ? item.Name! : AppDisplayName(item.Path ?? "");
-                Subtitle = IsMissing(item.Path) ? "Application · file not found, check the Target below" : "Application";
+                Subtitle = IsMissing(item.Path) ? L.T("Application · file not found, check the Target below") : L.T("Application");
                 break;
             case DockItemKind.Widget:
                 var descriptor = WidgetRegistry.Find(item.Widget);
                 Glyph = descriptor?.Icon;
                 GlyphBrush = descriptor is null ? null : Application.Current.TryFindResource(descriptor.AccentKey) as Brush;
                 Title = descriptor?.Name ?? item.Widget ?? L.T("Widget");
-                Subtitle = descriptor is null ? "Not supported in this version of DockHub" : $"Widget · {descriptor.VariantName(item.Variant)}";
+                Subtitle = descriptor is null ? L.T("Not supported in this version of DockHub") : L.T("Widget · {0}", descriptor.VariantName(item.Variant));
                 break;
             case DockItemKind.Group:
                 Glyph = Geometry.Parse("M3,7 H21 V19 A2,2 0 0 1 19,21 H5 A2,2 0 0 1 3,19 Z M3,7 L7,3 H13 L15,5");
                 GlyphBrush = Application.Current.TryFindResource(item.GroupAccent ?? "AccentBlueBrush") as Brush;
                 Title = item.GroupName ?? L.T("Group");
-                Subtitle = $"Group · {item.Children?.Count ?? 0} items";
+                Subtitle = L.T("Group · {0} items", item.Children?.Count ?? 0);
                 break;
             default:
                 Glyph = Geometry.Parse("M12,3 V21");
                 GlyphBrush = Application.Current.TryFindResource("TextSecondaryBrush") as Brush;
                 Title = L.T("Separator");
-                Subtitle = "Groups items";
+                Subtitle = L.T("Groups items");
                 break;
         }
     }

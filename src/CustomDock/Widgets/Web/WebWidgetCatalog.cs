@@ -100,19 +100,19 @@ public static class WebWidgetCatalog
     {
         error = null;
         string path = Path.Combine(folder, "manifest.json");
-        if (!File.Exists(path)) { error = "manifest.json is missing."; return null; }
+        if (!File.Exists(path)) { error = L.T("manifest.json is missing."); return null; }
         var manifest = Parse(File.ReadAllText(path), out error);
         if (manifest is null) return null;
         string entry = Path.GetFullPath(Path.Combine(folder, manifest.Entry));
         if (!entry.StartsWith(Path.GetFullPath(folder), StringComparison.OrdinalIgnoreCase) || !File.Exists(entry))
         {
-            error = $"The entry file {manifest.Entry} doesn't exist.";
+            error = L.T("The entry file {0} doesn't exist.", manifest.Entry);
             return null;
         }
         if (manifest.MinDockHubVersion is { } min && Version.TryParse(min, out var required) &&
             Version.TryParse(AppInfo.Version, out var current) && current < required)
         {
-            error = $"Needs DockHub {min} or newer.";
+            error = L.T("Needs DockHub {0} or newer.", min);
             return null;
         }
         if (manifest.Variants.Count == 0) manifest.Variants.Add(new WebWidgetVariant());
@@ -126,10 +126,10 @@ public static class WebWidgetCatalog
         error = null;
         WebWidgetManifest? manifest;
         try { manifest = JsonSerializer.Deserialize<WebWidgetManifest>(json, Options); }
-        catch (Exception ex) { error = $"manifest.json is invalid: {ex.Message}"; return null; }
-        if (manifest is null) { error = "manifest.json is empty."; return null; }
-        if (!IdRx.IsMatch(manifest.Id)) { error = "The id must use lower-case letters, digits, dots and dashes."; return null; }
-        if (string.IsNullOrWhiteSpace(manifest.Name)) { error = "The name is missing."; return null; }
+        catch (Exception ex) { error = L.T("manifest.json is invalid: {0}", ex.Message); return null; }
+        if (manifest is null) { error = L.T("manifest.json is empty."); return null; }
+        if (!IdRx.IsMatch(manifest.Id)) { error = L.T("The id must use lower-case letters, digits, dots and dashes."); return null; }
+        if (string.IsNullOrWhiteSpace(manifest.Name)) { error = L.T("The name is missing."); return null; }
         return manifest;
     }
 
@@ -143,7 +143,7 @@ public static class WebWidgetCatalog
         }
         catch (Exception ex)
         {
-            error = $"The package can't be opened: {ex.Message}";
+            error = L.T("The package can't be opened: {0}", ex.Message);
             return null;
         }
         // Packages may contain the files directly or inside one folder.

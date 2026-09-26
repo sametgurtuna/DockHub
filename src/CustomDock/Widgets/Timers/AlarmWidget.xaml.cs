@@ -117,8 +117,8 @@ public partial class AlarmWidget : WidgetBase
         else
         {
             string day = next.Value.Date == DateTime.Today ? "Today" : "Tomorrow";
-            string label = string.IsNullOrWhiteSpace(_settings.Label) ? (_settings.RepeatDaily ? "Every day" : day) : _settings.Label;
-            SubText.Text = _settings.RepeatDaily && !string.IsNullOrWhiteSpace(_settings.Label) ? $"{label} · daily" : label;
+            string label = string.IsNullOrWhiteSpace(_settings.Label) ? (_settings.RepeatDaily ? L.T("Every day") : day) : _settings.Label;
+            SubText.Text = _settings.RepeatDaily && !string.IsNullOrWhiteSpace(_settings.Label) ? $"{label} · {L.T("daily")}" : label;
         }
         Bell.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, next is null ? "TextSecondaryBrush" : "AccentOrangeBrush");
         ToolTip = next is null ? L.T("Click to set alarm") : L.T("Next: {0}", next.Value.ToString("dddd HH:mm", System.Globalization.CultureInfo.CurrentCulture));

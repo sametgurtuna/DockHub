@@ -98,7 +98,7 @@ public partial class CountdownWidget : WidgetBase
             _finished = true;
             _remaining = TimeSpan.Zero;
             AppServices.Clock.SecondTick -= OnTick;
-            Notify("Time's up ⏱", $"{_settings.Label} ({TimerFormat.Format(Total)}) completed.", tag: "countdown-" + Item.Id);
+            Notify(L.T("Time's up ⏱"), L.T("{0} ({1}) completed.", _settings.Label, TimerFormat.Format(Total)), tag: "countdown-" + Item.Id);
         }
         Render();
     }

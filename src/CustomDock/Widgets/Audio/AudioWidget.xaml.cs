@@ -64,7 +64,7 @@ public partial class AudioWidget : WidgetBase
         var dev = AppServices.Audio.DefaultDevice;
         bool muted = AppServices.Audio.IsMuted;
         int vol = AppServices.Audio.VolumePercent;
-        string name = dev?.Name ?? "Audio Device";
+        string name = dev?.Name ?? L.T("Audio device");
 
         string shortName = name;
         int paren = shortName.IndexOf('(');

@@ -42,4 +42,6 @@ public static class AppServices
     public static DeviceBatteryService DeviceBattery { get; } = new();
 
     public static UpdateService Updates { get; } = new();
+
+    public static ClipboardHistoryService Clipboard { get; } = new();
 }

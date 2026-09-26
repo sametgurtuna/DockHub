@@ -1,0 +1,24 @@
+<w:WidgetBase x:Class="CustomDock.Widgets.CurrencyWidget"
+              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+              xmlns:w="clr-namespace:CustomDock.Widgets"
+              xmlns:ctl="clr-namespace:CustomDock.Controls"
+              Background="Transparent">
+    <Grid Background="Transparent">
+        <!-- One pair, large -->
+        <StackPanel x:Name="Layout_single" Orientation="Horizontal" VerticalAlignment="Center">
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock x:Name="PairText" Style="{StaticResource CaptionText}" />
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock x:Name="RateText" Style="{StaticResource TitleText}" FontSize="15" Typography.NumeralAlignment="Tabular" />
+                    <TextBlock x:Name="ChangeText" FontSize="11" Margin="6,2,0,0" VerticalAlignment="Center" Typography.NumeralAlignment="Tabular" />
+                </StackPanel>
+            </StackPanel>
+            <ctl:Sparkline x:Name="Trend" Width="54" Height="24" Margin="10,0,0,0" VerticalAlignment="Center"
+                           PrimaryStroke="{DynamicResource AccentGreenBrush}" SecondaryStroke="Transparent" />
+        </StackPanel>
+
+        <!-- Several pairs -->
+        <StackPanel x:Name="Layout_list" Orientation="Horizontal" VerticalAlignment="Center" />
+    </Grid>
+</w:WidgetBase>

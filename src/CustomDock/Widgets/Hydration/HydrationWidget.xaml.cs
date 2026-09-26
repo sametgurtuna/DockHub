@@ -25,6 +25,9 @@ public static class WidgetOptions
     public static IReadOnlyList<Option<int>> SystemIntervals { get; } =
         Options.Of((1, "1 second"), (2, "2 seconds"), (3, "3 seconds"), (5, "5 seconds"), (10, "10 seconds"));
 
+    public static IReadOnlyList<Option<int>> CalendarReminders { get; } =
+        Options.Of((0, "Off"), (1, "1 minute"), (5, "5 minutes"), (10, "10 minutes"), (15, "15 minutes"));
+
     public static IReadOnlyList<Option<int>> AIUsageIntervals { get; } =
         Options.Of((5, "5 minutes"), (15, "15 minutes"), (30, "30 minutes"), (60, "1 hour"));
 }

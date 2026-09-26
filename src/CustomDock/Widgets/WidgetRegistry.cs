@@ -78,8 +78,9 @@ public static class WidgetCategories
     public const string System = "System";
     public const string Weather = "Weather";
     public const string AI = "AI";
+    public const string Productivity = "Productivity";
 
-    public static readonly string[] Ordered = { Clocks, Reminders, Notes, Media, System, Weather, AI };
+    public static readonly string[] Ordered = { Clocks, Reminders, Productivity, Notes, Media, System, Weather, AI };
 }
 
 /// <summary>
@@ -226,6 +227,40 @@ public static class WidgetRegistry
             Variants = new[] { new WidgetVariant("current", "Current"), new WidgetVariant("conditions", "Conditions"), new WidgetVariant("hourly", "Hourly forecast") },
             Factory = () => new WeatherWidget(), SettingsType = typeof(WeatherSettings),
             SettingsViewFactory = s => new WeatherSettingsView((WeatherSettings)s),
+        },
+
+        // ------------------------------------------------ Productivity
+        new()
+        {
+            Id = "calendar", Name = "Calendar", Category = WidgetCategories.Productivity,
+            Description = "Your next meeting from Google, Outlook or any iCal (.ics) calendar link, with a Join button for Teams, Meet and Zoom and a reminder before it starts.",
+            IconPath = CalendarWidget.Icon, AccentKey = "AccentRedBrush",
+            Variants = new[] { new WidgetVariant("next", "Next event"), new WidgetVariant("compact", "Time until") },
+            Factory = () => new CalendarWidget(), SettingsType = typeof(CalendarSettings),
+        },
+        new()
+        {
+            Id = "clipboard", Name = "Clipboard history", Category = WidgetCategories.Productivity,
+            Description = "The last 25 things you copied, text and images. Click to copy again, pin the ones you need. Kept only in memory; password managers are never recorded.",
+            IconPath = ClipboardWidget.Icon, AccentKey = "AccentCyanBrush",
+            Variants = new[] { new WidgetVariant("latest", "Latest item"), new WidgetVariant("icon", "Icon only") },
+            Factory = () => new ClipboardWidget(),
+        },
+        new()
+        {
+            Id = "stack", Name = "Folder stack", Category = WidgetCategories.Productivity,
+            Description = "The newest files of your Downloads (or any) folder. Click to browse, drag files straight into other apps.",
+            IconPath = "M4,7.5 A1.5,1.5 0 0 1 5.5,6 H9.5 L11.5,8 H18.5 A1.5,1.5 0 0 1 20,9.5 V18 A1.5,1.5 0 0 1 18.5,19.5 H5.5 A1.5,1.5 0 0 1 4,18 Z M12,10.5 V16 M9.5,13.5 L12,16 L14.5,13.5", AccentKey = "AccentYellowBrush",
+            Variants = new[] { new WidgetVariant("stack", "Stack"), new WidgetVariant("details", "Detailed") },
+            Factory = () => new StackWidget(), SettingsType = typeof(StackSettings),
+        },
+        new()
+        {
+            Id = "currency", Name = "Exchange rates", Category = WidgetCategories.Productivity,
+            Description = "Daily exchange rates from the European Central Bank with the change since the previous day and a two-week trend.",
+            IconPath = CurrencyWidget.Icon, AccentKey = "AccentGreenBrush",
+            Variants = new[] { new WidgetVariant("single", "Single pair"), new WidgetVariant("list", "Several pairs") },
+            Factory = () => new CurrencyWidget(), SettingsType = typeof(CurrencySettings),
         },
 
         // ------------------------------------------------ AI

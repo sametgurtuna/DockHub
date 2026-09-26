@@ -80,3 +80,23 @@ _(Faz uygulanırken doldurulacak; hangi widget'ların yapıldığı işaretlenir
 | 8.4 GPU | ⬜ |
 | 8.5 Klasör yığını | ⬜ |
 | 8.6 AI Usage çoklu sağlayıcı | ⬜ |
+
+### 2026-09-26 — uygulama özeti
+
+Yeni "Productivity" kategorisinde dört widget eklendi. Her biri için Türkçe metinler, galeri önizlemesi (sahte veri), compact tile, boş durum (`SetIdle`), bağlam menüsü ve README satırı tamamlandı.
+
+- **8.1 Takvim:** `CalendarService` (Ical.Net 4.2.0; RRULE ve saat dilimi desteği, webcal:// linkleri, 15 dk önbellek). Sıradaki etkinlik veya kalan süre gösteriliyor; Teams/Meet/Zoom/Webex linki bulunursa 15 dk kala "Join" düğmesi çıkıyor. Bugün ve yarının ajandası var, etkinlikten önce ayarlanabilir bildirim gönderiliyor. 3 unit test.
+- **8.2 Pano geçmişi:** `ClipboardHistoryService` (`AddClipboardFormatListener`, message-only pencere). Son 25 öğe, sabitleme, tekrar kopyalama. `ExcludeClipboardContentFromMonitorProcessing` ve `CanIncludeInClipboardHistory=0` içeren içerik kaydedilmiyor. Yalnızca bellekte tutuluyor. `clipboard-history` kısayolu ilk widget'ın listesini açıyor.
+- **8.3 Döviz:** `CurrencyService`. Frankfurter artık `api.frankfurter.dev/v1` adresinde (eski alan 301 veriyor, curl ile doğrulandı). Tek bir tarih aralığı sorgusu hem son kuru, hem önceki günü, hem de 14 günlük sparkline verisini veriyor; 1 saat önbellek. CoinGecko (kripto) eklenmedi.
+- **8.5 Klasör yığını:** varsayılan klasör İndirilenler (`SHGetKnownFolderPath`). `FileSystemWatcher` 400 ms debounce ile çalışıyor; ağ sürücüsünde hata olursa 1 dk sonra yeniden bağlanıyor. `.crdownload`/`.part`/`.tmp` dosyaları gizleniyor. Grid popup'tan dosyalar sürüklenip başka uygulamalara bırakılabiliyor.
+- **8.4 GPU: yapılmadı.** Performans sayacı ("GPU Engine") örnek toplamayı başlatmak yavaş ve sürücüye bağlı; Faz 9'daki ölçüm çerçevesiyle birlikte ele alınmalı.
+- **8.6 AI Usage çoklu sağlayıcı: yapılmadı.** Codex/Gemini için kararlı bir kullanım kaynağı doğrulanamadı; plan kuralı gereği eklenmedi.
+
+| Widget | Durum |
+|---|---|
+| 8.1 Takvim | ✅ |
+| 8.2 Pano geçmişi | ✅ |
+| 8.3 Döviz | ✅ (kripto hariç) |
+| 8.4 GPU | ⬜ |
+| 8.5 Klasör yığını | ✅ |
+| 8.6 AI Usage çoklu sağlayıcı | ⬜ |

@@ -57,7 +57,7 @@ No admin rights. Your original taskbar always comes back.
 ## Highlights
 
 - **Replaces the taskbar, keeps Windows intact.** The Start button opens the real Windows Start menu, and the Windows key, search, notification center and quick settings work exactly as before.
-- **19 widgets, many layouts each.** Clocks, timers, reminders, sticky notes, now playing, audio, system monitors, AI usage and weather. Add the same widget as many times as you like; every copy keeps its own settings.
+- **23 widgets, many layouts each.** Clocks, timers, reminders, your calendar, clipboard history, a Downloads stack, exchange rates, sticky notes, now playing, audio, system monitors, AI usage and weather. Add the same widget as many times as you like; every copy keeps its own settings.
 - **Live app buttons.** Hover for a real window thumbnail, right-click for a Jump List, watch badge counts and progress, and drag apps together into a folder.
 - **Fluent to the core.** Blurred glass, Acrylic or solid backgrounds, light and dark themes, and your Windows accent color. Popups, folders and widgets animate with macOS-inspired genie, zoom and fan effects, all at your display's refresh rate.
 - **Any edge, any shape.** Bottom, top, left or right; floating or attached; small, medium or large. On vertical docks, widgets collapse into compact tiles.
@@ -184,6 +184,10 @@ Every widget can be added more than once, and each copy has its own settings. Ch
 | | **Device batteries** | Single device, Multiple devices | Battery levels for Bluetooth and USB peripherals (wireless headsets, mice, keyboards). |
 | AI | **AI usage** | Numbers, Rings, Bars | Claude Code 5-hour and weekly usage limits, refreshed in the background every 5 minutes. |
 | Weather | **Weather** | Current, Condition, Hourly forecast | [Open-Meteo](https://open-meteo.com/), no API key needed. Uses a city or your Windows location. |
+| Productivity | **Calendar** | Next event, Time until | Your next meeting from any iCal (.ics) link (Google, Outlook...), a **Join** button for Teams, Meet and Zoom, today's agenda and a reminder before events. |
+| | **Clipboard history** | Latest item, Icon only | The last 25 copied texts and images; click to copy again, pin favorites. Memory only; password managers are skipped. |
+| | **Folder stack** | Stack, Detailed | Newest files of Downloads (or any folder); drag files out into other apps. |
+| | **Exchange rates** | Single pair, Several pairs | Daily ECB rates via [Frankfurter](https://frankfurter.dev/), change since the previous day and a two-week trend. |
 
 To add a widget, press **+** next to its preview in *Settings › Widget gallery*, or right-click an empty area of the dock and choose **Add widget**. Right-clicking a widget on the dock gives it its own actions, layouts and settings.
 
@@ -372,7 +376,7 @@ An app item's `path` can be an `.exe`, an `.lnk` shortcut, any file, or a Store 
 - **Location** (weather set to *Automatic*). Both location services and *Let desktop apps access your location* must be on in *Windows Settings › Privacy & security › Location*. Otherwise the widget asks for a city.
 - **Notifications.** No extra permission. The app registers its AUMID under HKCU on first use. With *Do not disturb* on, notifications collect in the notification center; if a toast cannot be shown, a tray balloon is used instead.
 - **Media (SMTC).** No permission or account. The player only needs to support Windows media controls.
-- **Network.** DockHub itself only contacts `api.open-meteo.com` (weather), `geocoding-api.open-meteo.com` (city search) and, once a day unless you turn it off, `api.github.com` to look for a newer release. The *AI usage* widget, if you add it, runs your locally installed Claude CLI (`claude -p /usage`) at the interval you choose, and that CLI talks to Anthropic with your own login. There is no telemetry.
+- **Network.** DockHub itself only contacts `api.open-meteo.com` (weather), `geocoding-api.open-meteo.com` (city search), `api.frankfurter.dev` (only with the Exchange rates widget), the calendar links you enter (Calendar widget) and, once a day unless you turn it off, `api.github.com` to look for a newer release. The *AI usage* widget, if you add it, runs your locally installed Claude CLI (`claude -p /usage`) at the interval you choose, and that CLI talks to Anthropic with your own login. There is no telemetry.
 
 ## Project structure
 

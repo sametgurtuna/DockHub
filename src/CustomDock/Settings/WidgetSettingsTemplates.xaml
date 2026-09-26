@@ -163,6 +163,42 @@
         </StackPanel>
     </DataTemplate>
 
+    <!-- Calendar -->
+    <DataTemplate DataType="{x:Type w:CalendarSettings}">
+        <StackPanel>
+            <ctl:SettingRow Header="Calendar links"
+                            Description="One iCal (.ics) link per line. Google Calendar: Settings › your calendar › Secret address in iCal format. Outlook: Settings › Calendar › Shared calendars › Publish a calendar › ICS.">
+                <TextBox Width="320" Height="72" AcceptsReturn="True" TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto"
+                         Text="{Binding Feeds, UpdateSourceTrigger=LostFocus}" />
+            </ctl:SettingRow>
+            <ctl:SettingRow Header="Remind me" Description="A notification before each event.">
+                <ComboBox Width="160" ItemsSource="{x:Static w:WidgetOptions.CalendarReminders}"
+                          DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding RemindMinutes}" />
+            </ctl:SettingRow>
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- Exchange rates -->
+    <DataTemplate DataType="{x:Type w:CurrencySettings}">
+        <StackPanel>
+            <ctl:SettingRow Header="Base currency">
+                <ComboBox Width="120" ItemsSource="{x:Static svc:CurrencyService.Supported}" SelectedItem="{Binding Base}" />
+            </ctl:SettingRow>
+            <ctl:SettingRow Header="Show against" Description="Currency codes separated by commas, for example TRY, EUR, GBP.">
+                <TextBox Width="200" Text="{Binding Targets, UpdateSourceTrigger=LostFocus}" />
+            </ctl:SettingRow>
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- Folder stack -->
+    <DataTemplate DataType="{x:Type w:StackSettings}">
+        <StackPanel>
+            <ctl:SettingRow Header="Folder" Description="Leave empty for your Downloads folder.">
+                <TextBox Width="300" Text="{Binding Folder, UpdateSourceTrigger=LostFocus}" />
+            </ctl:SettingRow>
+        </StackPanel>
+    </DataTemplate>
+
     <!-- AI usage -->
     <DataTemplate DataType="{x:Type w:AIUsageSettings}">
         <StackPanel>

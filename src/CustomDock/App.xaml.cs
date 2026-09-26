@@ -277,6 +277,7 @@ public partial class App : Application
         RegisterHotkeyHandler(HotkeyActions.ToggleDock, DockWindow.ToggleAllDocks);
         RegisterHotkeyHandler(HotkeyActions.FocusDock, DockWindow.FocusMainDock);
         RegisterHotkeyHandler(HotkeyActions.NextProfile, AppServices.Profiles.SwitchToNext);
+        RegisterHotkeyHandler(HotkeyActions.ClipboardHistory, Widgets.ClipboardWidget.RequestOpen);
         RegisterHotkeyHandler(HotkeyActions.OpenSettings, () => ShowSettings());
         RegisterHotkeyHandler(HotkeyActions.PinApp, () => ShowAppPicker());
         RegisterHotkeyHandler(HotkeyActions.ToggleAutoHide, () => config.AutoHide = !config.AutoHide);

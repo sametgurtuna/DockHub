@@ -106,7 +106,7 @@ public sealed class ConfigHistory
         return live;
     }
 
-    private static JsonObject CaptureAppearance(AppConfig config)
+    public static JsonObject CaptureAppearance(AppConfig config)
     {
         var node = new JsonObject();
         foreach (var name in AppearanceProperties)
@@ -117,7 +117,7 @@ public sealed class ConfigHistory
         return node;
     }
 
-    private static void RestoreAppearance(AppConfig config, JsonObject appearance)
+    public static void RestoreAppearance(AppConfig config, JsonObject appearance)
     {
         foreach (var (name, value) in appearance)
         {

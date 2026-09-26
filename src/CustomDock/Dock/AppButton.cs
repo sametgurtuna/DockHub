@@ -309,20 +309,39 @@ public sealed class AppButton : Grid
         _overlay.Source = group?.OverlayIcon;
         _overlay.Visibility = group?.OverlayIcon is null ? Visibility.Collapsed : Visibility.Visible;
 
-        if (!running)
+        var style = AppServices.Config.RunningIndicator;
+        if (!running || style == RunningIndicatorStyle.Off)
         {
             _indicator.Visibility = Visibility.Collapsed;
+            if (_dots is not null) _dots.Visibility = Visibility.Collapsed;
         }
         else
         {
-            _indicator.Visibility = Visibility.Visible;
             string brush = group!.IsFlashing ? "AccentOrangeBrush" : group.IsActive ? "ActiveIndicatorBrush" : "IndicatorBrush";
-            _indicator.SetResourceReference(Border.BackgroundProperty, brush);
-            double width = group.IsActive || group.IsFlashing ? 14 : group.WindowCount > 1 ? 9 : 5;
-            _indicator.BeginAnimation(WidthProperty, new DoubleAnimation(width, TimeSpan.FromMilliseconds(220))
+            if (style == RunningIndicatorStyle.Dots)
             {
-                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
-            });
+                // One dot per window (up to three), macOS style.
+                _indicator.Visibility = Visibility.Collapsed;
+                EnsureDots();
+                _dots!.Visibility = Visibility.Visible;
+                for (int i = 0; i < _dots.Children.Count; i++)
+                {
+                    var dot = (System.Windows.Shapes.Ellipse)_dots.Children[i];
+                    dot.Visibility = i < Math.Min(group.WindowCount, 3) ? Visibility.Visible : Visibility.Collapsed;
+                    dot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, brush);
+                }
+            }
+            else
+            {
+                if (_dots is not null) _dots.Visibility = Visibility.Collapsed;
+                _indicator.Visibility = Visibility.Visible;
+                _indicator.SetResourceReference(Border.BackgroundProperty, brush);
+                double width = group.IsActive || group.IsFlashing ? 14 : group.WindowCount > 1 ? 9 : 5;
+                _indicator.BeginAnimation(WidthProperty, new DoubleAnimation(width, TimeSpan.FromMilliseconds(220))
+                {
+                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
+                });
+            }
         }
 
         bool progress = group is { HasProgress: true };
@@ -488,6 +507,24 @@ public sealed class AppButton : Grid
         ContextMenu.PlacementTarget = this;
         ContextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Top;
         ContextMenu.IsOpen = true;
+    }
+
+    private StackPanel? _dots;
+
+    private void EnsureDots()
+    {
+        if (_dots is not null) return;
+        _dots = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Bottom,
+            Margin = new Thickness(0, 0, 0, 2),
+            IsHitTestVisible = false,
+        };
+        for (int i = 0; i < 3; i++)
+            _dots.Children.Add(new System.Windows.Shapes.Ellipse { Width = 4, Height = 4, Margin = new Thickness(1, 0, 1, 0) });
+        Children.Add(_dots);
     }
 
     private Border? _numberBadge;

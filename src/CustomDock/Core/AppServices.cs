@@ -10,6 +10,8 @@ public static class AppServices
 
     public static AppConfig Config => ConfigService.Config;
 
+    public static ProfileService Profiles { get; } = new(ConfigService);
+
     /// <summary>Shell services (task list, system tray, taskbar). Initialized on startup.</summary>
     public static ShellHost Shell { get; set; } = null!;
 

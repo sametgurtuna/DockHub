@@ -182,6 +182,19 @@ public partial class DockWindow
             if (_itemViews.TryGetValue(item.Id, out var view) && view is AppButton button)
                 button.Group = _shell.RunningApps.Find(key);
         }
+        // Apps inside folders count as pinned too; the folder shows that they are running.
+        foreach (var folder in _config.Items.Where(i => i.Kind == DockItemKind.Group))
+        {
+            bool running = false;
+            foreach (var child in (folder.Children ?? new()).Where(c => c.Kind == DockItemKind.App))
+            {
+                var key = KeyFor(child);
+                pinnedKeys.Add(key);
+                running |= _shell.RunningApps.Find(key) is { WindowCount: > 0 };
+            }
+            if (_itemViews.TryGetValue(folder.Id, out var view) && view is GroupItemView groupView)
+                groupView.SetRunning(running);
+        }
 
         var unpinned = UnpinnedRunningGroups(pinnedKeys);
         _runningSignature = Signature(unpinned);
@@ -252,7 +265,9 @@ public partial class DockWindow
     private void RefreshRunningAppsIfMoved()
     {
         if (_closing || !FilterRunningByDisplay) return;
-        var pinnedKeys = _config.Items.Where(i => i.Kind == DockItemKind.App).Select(KeyFor).ToHashSet();
+        var pinnedKeys = _config.Items.Where(i => i.Kind == DockItemKind.App)
+            .Concat(_config.Items.Where(i => i.Kind == DockItemKind.Group).SelectMany(g => g.Children ?? new()).Where(c => c.Kind == DockItemKind.App))
+            .Select(KeyFor).ToHashSet();
         if (Signature(UnpinnedRunningGroups(pinnedKeys)) != _runningSignature)
             RefreshRunningApps();
     }

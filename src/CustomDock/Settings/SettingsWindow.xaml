@@ -189,6 +189,16 @@
                         </Border>
                     </ctl:SettingRow>
 
+                    <TextBlock Text="Profiles" Style="{StaticResource SectionHeader}" />
+                    <StackPanel x:Name="ProfileRows" />
+                    <ctl:SettingRow Glyph="&#xE77B;" Header="Save current setup as a profile"
+                                    Description="Profiles keep their own dock items and look, for example Work, Gaming or Laptop. Switch from the dock's right-click menu or with a shortcut, or let one switch in by itself when a number of displays is connected.">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBox x:Name="NewProfileName" Width="160" MinHeight="32" VerticalContentAlignment="Center" Margin="0,0,8,0" />
+                            <Button Content="Save" Click="OnSaveProfileClick" />
+                        </StackPanel>
+                    </ctl:SettingRow>
+
                     <TextBlock Text="Keyboard shortcuts" Style="{StaticResource SectionHeader}" />
                     <ctl:SettingRow Glyph="&#xE765;" Header="Win + number keys open dock apps"
                                     Description="Win+1…9 and Win+0 open or switch to the dock's apps, like the Windows taskbar. Add Shift for a new window, Ctrl+Shift to run as administrator, Alt for the jump list. Hold Win to see the numbers. Only when DockHub replaces the taskbar.">
@@ -361,6 +371,18 @@
                             </StackPanel>
                         </Border>
                     </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE7C4;" Header="Open app indicator" Description="Line: widens for the active app and several windows. Dots: one per window, up to three.">
+                        <Border Style="{StaticResource SegmentedHost}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Indicator" Content="Line"
+                                             IsChecked="{Binding RunningIndicator, Converter={StaticResource EnumEq}, ConverterParameter=Line}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Indicator" Content="Dots"
+                                             IsChecked="{Binding RunningIndicator, Converter={StaticResource EnumEq}, ConverterParameter=Dots}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Indicator" Content="Off"
+                                             IsChecked="{Binding RunningIndicator, Converter={StaticResource EnumEq}, ConverterParameter=Off}" />
+                            </StackPanel>
+                        </Border>
+                    </ctl:SettingRow>
                     <ctl:SettingRow Glyph="&#xE7B3;" Header="Card hover" Description="Widget card gently lights up when hovered.">
                         <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding HoverEffect}" />
                     </ctl:SettingRow>
@@ -452,6 +474,10 @@
                     <ctl:SettingRow Glyph="&#xE89F;" Header="Auto-hide"
                                     Description="The dock stays hidden until the mouse touches the screen edge. When disabled, windows do not overlap under the dock.">
                         <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding AutoHide}" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE8A7;" Header="Only hide when a window overlaps"
+                                    Description="With auto-hide on, the dock stays visible over the desktop and small windows, and slides away only while the active window covers its area.">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding SmartAutoHide}" IsEnabled="{Binding AutoHide}" />
                     </ctl:SettingRow>
                 </StackPanel>
 

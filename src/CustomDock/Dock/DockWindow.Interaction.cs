@@ -141,6 +141,7 @@ public partial class DockWindow
     {
         if (!_config.AutoHide || _interactionCount > 0 || !_shown) return;
         if (_shell.IsLauncherVisible || IsCursorOverDock()) return;
+        if (SmartHideActive && !ActiveWindowOverlapsDock()) return;
         if (_inputMode && IsActive) return;
 
         _revealed = false;

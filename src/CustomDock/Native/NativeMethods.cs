@@ -241,6 +241,9 @@ internal static class NativeMethods
     [DllImport("dwmapi.dll")]
     public static extern int DwmGetWindowAttribute(IntPtr hwnd, int attribute, out int value, int size);
 
+    [DllImport("dwmapi.dll")]
+    public static extern int DwmGetWindowAttribute(IntPtr hwnd, int attribute, out RECT value, int size);
+
     [DllImport("user32.dll")]
     public static extern IntPtr GetDC(IntPtr hWnd);
 

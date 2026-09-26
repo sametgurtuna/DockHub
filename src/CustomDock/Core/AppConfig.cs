@@ -29,6 +29,8 @@ public enum DockSize { Small, Medium, Large }
 
 public enum MotionPreference { System, Full, Reduced, Off }
 
+public enum RunningIndicatorStyle { Line, Dots, Off }
+
 public enum DockLayout
 {
     /// <summary>Floating bar with margins and rounded corners.</summary>
@@ -188,6 +190,16 @@ public sealed class AppConfig : ObservableObject
 
     public bool HoverEffect { get => _hoverEffect; set => Set(ref _hoverEffect, value); }
 
+    private RunningIndicatorStyle _runningIndicator = RunningIndicatorStyle.Line;
+
+    /// <summary>How open apps are marked: a line that widens with more windows, one dot per window, or nothing.</summary>
+    public RunningIndicatorStyle RunningIndicator { get => _runningIndicator; set => Set(ref _runningIndicator, value); }
+
+    private bool _smartAutoHide;
+
+    /// <summary>With auto-hide: the dock only hides while the active window overlaps it.</summary>
+    public bool SmartAutoHide { get => _smartAutoHide; set => Set(ref _smartAutoHide, value); }
+
     // ---------------- Accessibility
 
     private MotionPreference _motion = MotionPreference.System;
@@ -243,6 +255,14 @@ public sealed class AppConfig : ObservableObject
     /// <summary>Writes verbose icon/window diagnostics to log.txt. Only editable in config.json.</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool DebugLogging { get; set; }
+
+    // ---------------- Profiles
+
+    /// <summary>Saved dock setups (empty until the user creates one).</summary>
+    public List<DockProfile> Profiles { get; set; } = new();
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? ActiveProfileId { get; set; }
 
     // ---------------- Items
 

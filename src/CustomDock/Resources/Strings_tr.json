@@ -658,6 +658,28 @@
   "Running, {0} windows": "Çalışıyor, {0} pencere",
   "Folder: {0}, {1} items": "Klasör: {0}, {1} öğe",
 
+  // ---------------------------------------------------------------- Profiller ve dock davranışı
+  "Profile": "Profil",
+  "Profiles": "Profiller",
+  "Profile {0}": "Profil {0}",
+  "Default": "Varsayılan",
+  "Save current setup as a profile": "Mevcut düzeni profil olarak kaydet",
+  "Profiles keep their own dock items and look, for example Work, Gaming or Laptop. Switch from the dock's right-click menu or with a shortcut, or let one switch in by itself when a number of displays is connected.": "Profiller kendi dock öğelerini ve görünümünü saklar; örneğin İş, Oyun veya Dizüstü. Dock'un sağ tık menüsünden veya bir kısayolla geçin ya da belirli sayıda ekran bağlandığında otomatik geçsin.",
+  "Switch": "Geç",
+  "Active": "Etkin",
+  "The setup you are using now.": "Şu anda kullandığınız düzen.",
+  "No automatic switch": "Otomatik geçiş yok",
+  "With 1 display": "1 ekranla",
+  "With {0} displays": "{0} ekranla",
+  "Switch to this profile automatically when this many displays are connected.": "Bu sayıda ekran bağlandığında bu profile otomatik geç.",
+  "Open app indicator": "Açık uygulama göstergesi",
+  "Line: widens for the active app and several windows. Dots: one per window, up to three.": "Çizgi: etkin uygulamada ve birden çok pencerede genişler. Noktalar: pencere başına bir nokta, en fazla üç.",
+  "Line": "Çizgi",
+  "Dots": "Noktalar",
+  "Only hide when a window overlaps": "Yalnızca bir pencere örttüğünde gizle",
+  "With auto-hide on, the dock stays visible over the desktop and small windows, and slides away only while the active window covers its area.": "Otomatik gizleme açıkken dock masaüstünde ve küçük pencerelerde görünür kalır; yalnızca etkin pencere alanını örttüğünde kayarak gizlenir.",
+  "Filter this folder": "Bu klasörde filtrele",
+
   // ---------------------------------------------------------------- Seçenek listeleri
   "1 second": "1 saniye",
   "2 seconds": "2 saniye",

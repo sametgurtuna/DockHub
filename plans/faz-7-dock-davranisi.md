@@ -63,4 +63,13 @@ Ayar: Appearance → "Çalışan uygulama göstergesi": `Çizgi` (bugünkü, gen
 
 ## Uygulama notları
 
-_(Faz uygulanırken doldurulacak.)_
+
+### 2026-09-26 — tamamlandı (kapsam notlarıyla)
+
+- **7.1 Profiller:** `ProfileService` eklendi (öğeler ve görünüm). Aktif profil canlı config'te, diğerleri JSON olarak tutuluyor. Ekran sayısı kuralı (`AutoDisplayCount`) var; süreç ve saat kuralları yapılmadı. Yönetim Ayarlar › General › Profiles'ta, geçiş dock menüsünde (2+ profil varken) ve `next-profile` kısayoluyla yapılıyor.
+  - Plandan sapma: profil geçişi undo geçmişine yazılmıyor. Geri alındığında aktif profil kimliğiyle öğeler senkron dışı kalıp veri kaybına yol açabiliyordu; geri dönmek için önceki profile tekrar geçmek yeterli. v2 → v3 şema değişikliğine gerek kalmadı (yeni alanlar eklendi, eskileri korundu).
+- **7.2 Akıllı otomatik gizleme:** `SmartAutoHide` (bool, AutoHide'a bağlı). Ön plan ve konum WinEvent'leri dinleniyor (yalnızca etkin pencere için, 120 ms debounce) ve `DWMWA_EXTENDED_FRAME_BOUNDS` ile dock alanıyla kesişim hesaplanıyor. Plandaki enum yerine bool kullanıldı, config migration'a gerek kalmadı.
+- **7.3 Klasör:** 8'den fazla öğede arama kutusu, 12'den fazlada 6 sütun, kaydırılabilir alan. Klasör içindeki uygulamalar artık "sabitli" sayılıyor, sonda tekrar görünmüyor (Faz 0 bulgusu). Klasör çalışan uygulama göstergesi eklendi; çalışan klasör uygulamasına tıklamak onu öne getiriyor. Boş klasördeki "Add application" düğmesi o klasörü hedefliyor.
+- **7.4** Çalışan uygulama göstergesi: Çizgi / Noktalar / Kapalı.
+- **7.5 Önizleme iyileştirmeleri:** yapılmadı (peek ve tekerlekle gezinme).
+- Testler: 61.

@@ -22,7 +22,7 @@ Her faz tek başına yapılabilir, test edilebilir ve commit'lenebilir bir iş p
 | 4 | [Güvenlik ağı: geri alma, dışa/içe aktarma, preset, güncelleme](faz-4-guvenlik-agi.md) | 🟠 Yüksek | L | ✅ |
 | 5 | [UX cilası: onboarding, ayarlarda arama, canlı önizleme, dock düzeni](faz-5-ux-cilasi.md) | 🟡 Orta | L | ✅ |
 | 6 | [Erişilebilirlik ve Türkçe arayüz](faz-6-erisilebilirlik-ve-yerellestirme.md) | 🟡 Orta | L | ✅ |
-| 7 | [Dock davranışı: profiller, intellihide, klasör grid](faz-7-dock-davranisi.md) | 🟡 Orta | L | ⬜ |
+| 7 | [Dock davranışı: profiller, intellihide, klasör grid](faz-7-dock-davranisi.md) | 🟡 Orta | L | ✅ |
 | 8 | [Yeni widget'lar](faz-8-yeni-widgetlar.md) | 🟢 Düşük | XL | ⬜ |
 | 9 | [Performans ve kod sağlığı](faz-9-performans-ve-kod-sagligi.md) | 🟢 Düşük | M | ⬜ |
 | 10 | [Üçüncü taraf widget SDK'sı](faz-10-widget-sdk.md) | 🟢 Düşük | XL | ⬜ |

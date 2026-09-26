@@ -358,6 +358,7 @@ public partial class DockWindow : Window, IWidgetHost
         UpdateClock(DateTime.Now);
         SubscribeClock();
         UpdateReserver();
+        UpdateSmartHide();
         if (FilterRunningByDisplay) _displayFilterTimer.Start();
         else _displayFilterTimer.Stop();
 
@@ -493,6 +494,9 @@ public partial class DockWindow : Window, IWidgetHost
         menu.Items.Add(DockMenu.Check("Auto-hide", _config.AutoHide, () => _config.AutoHide = !_config.AutoHide));
         menu.Items.Add(DockMenu.Check("Hide Windows taskbar", _config.TaskbarMode == TaskbarMode.Replace,
             () => _config.TaskbarMode = _config.TaskbarMode == TaskbarMode.Replace ? TaskbarMode.ShowBoth : TaskbarMode.Replace));
+        if (AppServices.Profiles.Profiles.Count > 1)
+            menu.Items.Add(DockMenu.Submenu(L.T("Profile"), "\uE77B", AppServices.Profiles.Profiles.Select(p =>
+                DockMenu.Check(p.Name, p.Id == _config.ActiveProfileId, () => AppServices.Profiles.SwitchTo(p.Id))).ToList()));
         menu.Items.Add(DockMenu.Submenu("Position", "\uE8A0", new[]
         {
             DockMenu.Check("Bottom", _config.Edge == DockEdge.Bottom, () => _config.Edge = DockEdge.Bottom),
@@ -531,6 +535,7 @@ public partial class DockWindow : Window, IWidgetHost
         SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
         SystemEvents.PowerModeChanged -= OnPowerModeChanged;
         _iconRefreshTimer.Stop();
+        StopSmartHide();
         _config.ItemsChanged -= OnItemsChanged;
         _shell.RunningApps.GroupsChanged -= RefreshRunningApps;
         _shell.Manager.FullScreenHelper.FullScreenApps.CollectionChanged -= OnFullScreenAppsChanged;

@@ -59,6 +59,7 @@ public partial class SettingsWindow : Window
         LoadTray();
         LoadHotkeys();
         LoadPresets();
+        LoadProfiles();
         LoadUpdates();
         DockPreview.Bind(_config);
         PreviewKeyDown += OnUndoKey;

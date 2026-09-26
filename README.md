@@ -147,7 +147,9 @@ The installer is self-contained. It ships the .NET runtime, so there is nothing 
 - **Width and alignment:** full width or fit to content; items centered or aligned to the start.
 - **Position:** bottom, top, left or right. On vertical docks, widgets become compact tiles showing an icon or ring with a short value. Clicking a tile opens the full widget in a side panel, and timers, the water tracker and reminders run their main action directly.
 - **Scrolling:** when items don't fit, the mouse wheel scrolls the dock smoothly, the edges fade, and arrow buttons appear.
-- **Auto-hide:** the dock slides off the edge and returns when the pointer reaches it.
+- **Auto-hide:** the dock slides off the edge and returns when the pointer reaches it. With *Only hide when a window overlaps*, it stays up over the desktop and small windows and slides away only while the active window covers it.
+- **Profiles:** save your setup as a profile (Work, Gaming, Laptop...) with its own items and look, switch from the dock menu or a shortcut, or let a profile switch in when a given number of displays is connected.
+- **Open app indicator:** a line that widens for the active app and several windows, one dot per window, or none.
 - **Hide in full screen:** the dock steps aside for games, videos and F11 mode.
 - **Multi-monitor and DPI:** choose the monitor for the dock; per-monitor DPI (PerMonitorV2) is supported.
 - **Drag and drop:** reorder apps, widgets and separators on the dock. Dropping an `.exe` or `.lnk` from File Explorer pins it.

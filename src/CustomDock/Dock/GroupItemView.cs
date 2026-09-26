@@ -33,6 +33,17 @@ public sealed class GroupItemView : Grid
     private readonly IWidgetHost _host;
     private readonly Border _hover;
     private readonly Border _tileBorder;
+    private readonly Border _runningIndicator;
+
+    /// <summary>Folder apps behave like dock buttons: switch to the running app, or start it.</summary>
+    private static void ActivateChild(DockItem child)
+    {
+        var group = App.Instance.Shell?.RunningApps.Find(AppKeys.ForItem(child));
+        AppLauncher.Activate(child, group);
+    }
+
+    /// <summary>An app inside the folder has open windows.</summary>
+    public void SetRunning(bool running) => _runningIndicator.Visibility = running ? Visibility.Visible : Visibility.Collapsed;
     private readonly Grid _tileContent;
     private readonly TextBlock _emptyFolderGlyph;
     private readonly Grid _previewGrid;
@@ -143,6 +154,19 @@ public sealed class GroupItemView : Grid
 
         Children.Add(_hover);
         Children.Add(_tileBorder);
+        _runningIndicator = new Border
+        {
+            Height = 3,
+            Width = 5,
+            CornerRadius = new CornerRadius(1.5),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Bottom,
+            Margin = new Thickness(0, 0, 0, 2),
+            Visibility = Visibility.Collapsed,
+            IsHitTestVisible = false,
+        };
+        _runningIndicator.SetResourceReference(Border.BackgroundProperty, "IndicatorBrush");
+        Children.Add(_runningIndicator);
 
         MouseEnter += (_, _) => { Motion.Fade(_hover, 1, 120); AnimatePress(1.08); WindowPreviewWindow.Instance.HidePreview(); };
         MouseLeave += (_, _) => { Motion.Fade(_hover, 0, 220); AnimatePress(1); };
@@ -467,7 +491,7 @@ public sealed class GroupItemView : Grid
                 addAppBtn.Click += (_, _) =>
                 {
                     CloseFan();
-                    App.Instance.ShowAppPicker();
+                    App.Instance.ShowAppPicker(_item.Id);
                 };
 
                 emptyPanel.Children.Add(emptyMsg);
@@ -477,20 +501,61 @@ public sealed class GroupItemView : Grid
             }
             else
             {
-                int cols = Math.Clamp(children.Count, 2, 5);
+                // Large folders become a scrollable grid with a search box.
+                int cols = Math.Clamp(children.Count, 2, children.Count > 12 ? 6 : 5);
                 var itemsPanel = new WrapPanel
                 {
                     Orientation = Orientation.Horizontal,
                     MaxWidth = cols * 64 + 10,
                 };
 
+                var buttons = new List<(DockItem Child, FrameworkElement Button)>();
                 foreach (var child in children)
                 {
                     var btn = CreateChildButton(child);
+                    buttons.Add((child, btn));
                     itemsPanel.Children.Add(btn);
                 }
 
-                mainStack.Children.Add(itemsPanel);
+                if (children.Count > 8)
+                {
+                    var search = new TextBox
+                    {
+                        Margin = new Thickness(4, 0, 4, 8),
+                        MinHeight = 28,
+                        VerticalContentAlignment = VerticalAlignment.Center,
+                        ToolTip = L.T("Filter this folder"),
+                    };
+                    search.TextChanged += (_, _) =>
+                    {
+                        string query = search.Text.Trim();
+                        foreach (var (child, button) in buttons)
+                        {
+                            string name = child.Kind == DockItemKind.App
+                                ? (!string.IsNullOrWhiteSpace(child.Name) ? child.Name! : Path.GetFileNameWithoutExtension(child.Path ?? ""))
+                                : WidgetRegistry.Find(child.Widget)?.Name ?? "";
+                            button.Visibility = query.Length == 0 || name.Contains(query, StringComparison.CurrentCultureIgnoreCase)
+                                ? Visibility.Visible : Visibility.Collapsed;
+                        }
+                    };
+                    mainStack.Children.Add(search);
+                    // The dock doesn't take keyboard input by default; let it while the search box is used.
+                    search.PreviewMouseLeftButtonDown += (_, _) => (Window.GetWindow(this) as DockWindow)?.ActivateForInput();
+                    Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Input, () =>
+                    {
+                        (Window.GetWindow(this) as DockWindow)?.ActivateForInput();
+                        search.Focus();
+                    });
+                }
+
+                mainStack.Children.Add(new ScrollViewer
+                {
+                    Content = itemsPanel,
+                    MaxHeight = 4 * 84,
+                    VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                    HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+                    Focusable = false,
+                });
             }
 
             // 3. Footer Bar with Quick Colors & Manage
@@ -664,7 +729,7 @@ public sealed class GroupItemView : Grid
             e.Handled = true;
             CloseFan();
             if (child.Kind == DockItemKind.App && child.Path is not null)
-                AppLauncher.Launch(child);
+                ActivateChild(child);
             else if (child.Kind == DockItemKind.Widget)
                 WidgetItemView.RequestSettings(child);
         };
@@ -675,7 +740,7 @@ public sealed class GroupItemView : Grid
         {
             CloseFan();
             if (child.Kind == DockItemKind.App && child.Path is not null)
-                AppLauncher.Launch(child);
+                ActivateChild(child);
             else if (child.Kind == DockItemKind.Widget)
                 WidgetItemView.RequestSettings(child);
         }));

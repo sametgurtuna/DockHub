@@ -213,6 +213,7 @@ public partial class App : Application
         {
             if (_cleanedUp) return;
             SyncSecondaryDocks();
+            AppServices.Profiles.ApplyDisplayRule(Native.MonitorHelper.GetAll().Count());
         });
 
     /// <summary>Opens a dock on every display other than the main one, or closes them all.</summary>
@@ -275,6 +276,7 @@ public partial class App : Application
         var config = AppServices.Config;
         RegisterHotkeyHandler(HotkeyActions.ToggleDock, DockWindow.ToggleAllDocks);
         RegisterHotkeyHandler(HotkeyActions.FocusDock, DockWindow.FocusMainDock);
+        RegisterHotkeyHandler(HotkeyActions.NextProfile, AppServices.Profiles.SwitchToNext);
         RegisterHotkeyHandler(HotkeyActions.OpenSettings, () => ShowSettings());
         RegisterHotkeyHandler(HotkeyActions.PinApp, () => ShowAppPicker());
         RegisterHotkeyHandler(HotkeyActions.ToggleAutoHide, () => config.AutoHide = !config.AutoHide);

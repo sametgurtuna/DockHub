@@ -57,7 +57,7 @@ public partial class AIUsageWidget : WidgetBase
         AIUsageStatus.CliNotFound => "Claude Code CLI not found. Install it and sign in to see your limits.",
         AIUsageStatus.NotLoggedIn => "Not signed in. Run \"claude\" in a terminal and log in.",
         AIUsageStatus.Timeout => "The Claude CLI didn't answer in time. Retrying later.",
-        AIUsageStatus.ParseFailed => "Couldn't read the usage output of the Claude CLI.",
+        AIUsageStatus.ParseFailed => "Couldn't read the usage output of the Claude CLI. Automatic checks are paused; right-click › Refresh now to try again.",
         AIUsageStatus.Unknown => "Couldn't update usage. Retrying later.",
         _ => null,
     };

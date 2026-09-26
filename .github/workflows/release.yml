@@ -1,0 +1,54 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  installer:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Check version
+        shell: pwsh
+        run: |
+          [xml]$proj = Get-Content src/CustomDock/CustomDock.csproj
+          $version = ($proj.Project.PropertyGroup | Where-Object { $_.Version } | Select-Object -First 1).Version
+          $tag = '${{ github.ref_name }}'.TrimStart('v')
+          if ($version -ne $tag) { throw "Tag v$tag does not match CustomDock.csproj version $version" }
+          "VERSION=$version" >> $env:GITHUB_ENV
+
+      - name: Test
+        run: dotnet test CustomDock.sln -c Release
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y --no-progress
+
+      - name: Build installer
+        shell: pwsh
+        run: pwsh installer/build.ps1
+
+      - name: Checksum
+        shell: pwsh
+        run: |
+          $file = "installer/Output/DockHub-Setup-$env:VERSION-x64.exe"
+          $hash = (Get-FileHash $file -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  DockHub-Setup-$env:VERSION-x64.exe" | Out-File installer/Output/SHA256SUMS.txt -Encoding ascii
+
+      - name: Draft release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          name: DockHub ${{ env.VERSION }}
+          body_path: docs/release-notes/v${{ env.VERSION }}.md
+          files: |
+            installer/Output/DockHub-Setup-${{ env.VERSION }}-x64.exe
+            installer/Output/SHA256SUMS.txt

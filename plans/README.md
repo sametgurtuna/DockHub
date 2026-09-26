@@ -17,7 +17,7 @@ Her faz tek başına yapılabilir, test edilebilir ve commit'lenebilir bir iş p
 |---|---|---|---|---|
 | 0 | [Bildirilen hatalar: kaybolan ikonlar, preview orta tık, Discord](faz-0-bildirilen-hatalar.md) | 🔴 Kritik | M | ✅ |
 | 1 | [Doğruluk hataları ve veri güvenliği](faz-1-dogruluk-ve-veri-guvenligi.md) | 🔴 Kritik | M | ✅ |
-| 2 | [Test ve CI altyapısı](faz-2-test-ve-ci.md) | 🟠 Yüksek | M | ⬜ |
+| 2 | [Test ve CI altyapısı](faz-2-test-ve-ci.md) | 🟠 Yüksek | M | ✅ |
 | 3 | [Görev çubuğu eşitliği: Win+1..9, kısayollar, ses/pil ikonları](faz-3-gorev-cubugu-esitligi.md) | 🟠 Yüksek | L | ⬜ |
 | 4 | [Güvenlik ağı: geri alma, dışa/içe aktarma, preset, güncelleme](faz-4-guvenlik-agi.md) | 🟠 Yüksek | L | ⬜ |
 | 5 | [UX cilası: onboarding, ayarlarda arama, canlı önizleme, dock düzeni](faz-5-ux-cilasi.md) | 🟡 Orta | L | ⬜ |

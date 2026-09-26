@@ -1,0 +1,18 @@
+{
+  // v1 config written by CustomDock 0.1
+  "version": 1,
+  "taskbarMode": "HideTaskbar",
+  "backdrop": "Mica",
+  "edgeMargin": 20,
+  "size": "Large",
+  "widgets": [
+    { "id": "pinned-apps", "enabled": true },
+    { "id": "clock", "enabled": true },
+    { "id": "weather", "enabled": true },
+    { "id": "notes", "enabled": false },
+    { "id": "does-not-exist", "enabled": true }
+  ],
+  "widgetSettings": {
+    "clock": { "use24Hour": true, "showSeconds": true }
+  },
+}

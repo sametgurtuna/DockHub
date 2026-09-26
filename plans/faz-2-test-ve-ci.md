@@ -95,4 +95,11 @@ jobs:
 
 ## Uygulama notları
 
-_(Faz uygulanırken doldurulacak.)_
+
+### 2026-09-26 — tamamlandı
+
+- `tests/CustomDock.Tests` (xUnit, 48 test): `AppPathResolver`, `AppKeys`, `ConfigService` (ilk açılış, v1 migration, bozuk config, bilinmeyen widget, klasör ve taşıma işlemleri, widget ayarları, sürümlü pin onarımı), `ItemDataStore` ve `AIUsageService.Parse`.
+- AI Usage fixture'ları sentetik. Bu ortamda `claude -p "/usage"` iç içe oturum nedeniyle komut yerine modele gidiyor, yani gerçek bir çıktı alınamadı. Bu bulgu üzerine servise iki güvenlik önlemi eklendi: iki kez tanınmayan çıktıda otomatik sorgu duruyor, alt süreç `CLAUDE_CODE*` ve `CLAUDECODE` değişkenleri olmadan başlatılıyor.
+- `.lnk` testleri yazılmadı: kısayol oluşturmak COM ve Shell gerektiriyor, CI'da kırılgan olur.
+- CI: `ci.yml` (build `-warnaserror` + test) ve `release.yml` (`v*` tag → sürüm kontrolü, test, Inno Setup, SHA256, taslak release; notlar `docs/release-notes/v<sürüm>.md` dosyasından alınıyor).
+- `Directory.Build.props` eklenmedi, çünkü tek proje ayarları yeterli. `.editorconfig` yalnızca mevcut stili tarif ediyor.

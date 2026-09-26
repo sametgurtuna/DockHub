@@ -106,6 +106,8 @@ public sealed class AIUsageService
     {
         if (_refreshing) return;
         _refreshing = true;
+        // A manual refresh resumes polling that was paused after unrecognized output.
+        if (!_timer.IsEnabled && _updated is not null) _timer.Start();
         try
         {
             if (!IsClaudeExecutablePresent())
@@ -137,6 +139,13 @@ public sealed class AIUsageService
                     Status = LoginRx.IsMatch(output) ? AIUsageStatus.NotLoggedIn : AIUsageStatus.ParseFailed;
                     Error = output.Length > 160 ? output[..160].Trim() + "…" : output.Trim();
                     ApplyBackoff();
+                    // Some CLI versions pass "/usage" to the model as a prompt instead of running the command,
+                    // which would use the subscription on every poll. Stop polling until the user asks again.
+                    if (Status == AIUsageStatus.ParseFailed && _consecutiveErrors >= 2)
+                    {
+                        _timer.Stop();
+                        Log.Warn("AI usage: CLI output not recognized twice; automatic checks paused until 'Refresh now'.");
+                    }
                 }
                 else
                 {
@@ -211,6 +220,11 @@ public sealed class AIUsageService
         // DockHub typically starts on user login; "claude" command might have been installed afterwards.
         // Since the process PATH could be stale, merge with current PATH from registry.
         psi.EnvironmentVariables["Path"] = BuildAugmentedPath();
+        // If DockHub was started from inside a Claude Code session, don't let the CLI think it is nested.
+        foreach (var name in psi.Environment.Keys.Where(k =>
+                     k.StartsWith("CLAUDE_CODE", StringComparison.OrdinalIgnoreCase) ||
+                     k.Equals("CLAUDECODE", StringComparison.OrdinalIgnoreCase)).ToList())
+            psi.Environment.Remove(name);
 
         using var process = new Process { StartInfo = psi, EnableRaisingEvents = false };
         if (!process.Start()) return (null, false);

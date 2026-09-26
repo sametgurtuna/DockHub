@@ -39,3 +39,6 @@ website/
 
 # Installer output
 installer/Output/
+
+# Test output
+TestResults/

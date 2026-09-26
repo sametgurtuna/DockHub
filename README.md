@@ -15,6 +15,7 @@ No admin rights. Your original taskbar always comes back.
 [![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4?style=flat-square&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![WPF](https://img.shields.io/badge/UI-WPF-4CC2FF?style=flat-square)](#tech-stack)
 [![Latest release](https://img.shields.io/github/v/release/sametgurtuna/DockHub?style=flat-square&color=4CC2FF&label=release)](https://github.com/sametgurtuna/DockHub/releases/latest)
+[![CI](https://img.shields.io/github/actions/workflow/status/sametgurtuna/DockHub/ci.yml?branch=master&style=flat-square&label=build)](https://github.com/sametgurtuna/DockHub/actions/workflows/ci.yml)
 
 [**Download**](https://github.com/sametgurtuna/DockHub/releases/latest) &nbsp;·&nbsp;
 [**Live demo**](https://sametgurtuna.github.io/dockhub-website/) &nbsp;·&nbsp;
@@ -251,6 +252,14 @@ dotnet run --project src/CustomDock -c Release
 ```
 
 You can also open `CustomDock.sln` in Visual Studio 2022 and press F5.
+
+### Running tests
+
+```powershell
+dotnet test CustomDock.sln
+```
+
+The unit tests (`tests/CustomDock.Tests`) cover config loading and migration, dock item operations, app matching and pin repair, and parsing. They use a throwaway `DOCKHUB_HOME`, so your own settings are never touched. GitHub Actions runs the build and tests on every push, and a `v*` tag builds the installer into a draft release.
 
 ### Portable folder
 

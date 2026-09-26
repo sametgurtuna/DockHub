@@ -33,6 +33,7 @@
 
   <ItemGroup>
     <Resource Include="Assets\DockHub.ico" />
+    <InternalsVisibleTo Include="CustomDock.Tests" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,0 +1,1 @@
+`/usage` is a built-in Claude Code command, not a skill, so I can't run it from here. Type `/usage` yourself in the interactive prompt to see your plan usage and limits.

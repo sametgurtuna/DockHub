@@ -120,6 +120,8 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
                 <dock:NetworkStatusIconView x:Name="NetworkStatusIcon" VerticalAlignment="Center" />
+                <dock:VolumeStatusIconView x:Name="VolumeStatusIcon" VerticalAlignment="Center" />
+                <dock:BatteryStatusIconView x:Name="BatteryStatusIcon" VerticalAlignment="Center" />
 
                 <Button x:Name="ClockButton" Style="{StaticResource DockButton}" Width="Auto" Padding="9,0" Margin="2,0"
                         FontFamily="{StaticResource UiFont}" Click="OnClockClick">

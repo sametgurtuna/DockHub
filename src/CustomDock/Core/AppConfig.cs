@@ -113,6 +113,18 @@ public sealed class AppConfig : ObservableObject
 
     public bool ShowDesktopButton { get => _showDesktopButton; set => Set(ref _showDesktopButton, value); }
 
+    private bool _showNetworkIcon = true;
+    private bool _showVolumeIcon = true;
+    private bool _showBatteryIcon = true;
+
+    /// <summary>DockHub's own network / volume / battery icons next to the tray (Windows 11 keeps its own inside Explorer).</summary>
+    public bool ShowNetworkIcon { get => _showNetworkIcon; set => Set(ref _showNetworkIcon, value); }
+
+    public bool ShowVolumeIcon { get => _showVolumeIcon; set => Set(ref _showVolumeIcon, value); }
+
+    /// <summary>Only shown on devices with a battery.</summary>
+    public bool ShowBatteryIcon { get => _showBatteryIcon; set => Set(ref _showBatteryIcon, value); }
+
     /// <summary>IDs of tray icons that are always shown in the dock (null = import from Windows settings).</summary>
     public List<string>? PinnedTrayIcons { get; set; }
 
@@ -173,6 +185,28 @@ public sealed class AppConfig : ObservableObject
     public double EdgeMargin { get => _edgeMargin; set => Set(ref _edgeMargin, Math.Clamp(value, 0, 32)); }
 
     public bool HoverEffect { get => _hoverEffect; set => Set(ref _hoverEffect, value); }
+
+    // ---------------- Keyboard
+
+    private bool _winNumberHotkeys = true;
+
+    /// <summary>Win+1..9 / Win+0 open and switch dock apps (replace mode only).</summary>
+    public bool WinNumberHotkeys { get => _winNumberHotkeys; set => Set(ref _winNumberHotkeys, value); }
+
+    /// <summary>Global shortcuts by action id (<see cref="HotkeyActions"/>). Missing = default, empty string = off.</summary>
+    public Dictionary<string, string> Hotkeys { get; set; } = new();
+
+    public HotkeyGesture? GetHotkey(string actionId)
+    {
+        string? text = Hotkeys.TryGetValue(actionId, out var custom) ? custom : HotkeyActions.Find(actionId)?.DefaultGesture;
+        return HotkeyGesture.Parse(text);
+    }
+
+    public void SetHotkey(string actionId, HotkeyGesture? gesture)
+    {
+        Hotkeys[actionId] = gesture?.ToString() ?? "";
+        OnPropertyChanged(nameof(Hotkeys));
+    }
 
     // ---------------- Diagnostics
 

@@ -105,6 +105,7 @@ public partial class App : Application
 
         CreateDock();
         ApplyTaskbarMode();
+        StartKeyboardShortcuts();
 
         config.PropertyChanged += OnConfigChanged;
         WidgetItemView.SettingsRequested += item => ShowSettings("items", item.Id);
@@ -117,6 +118,18 @@ public partial class App : Application
             ShowSettings("gallery");
 
         Log.Info($"DockHub started (v{typeof(App).Assembly.GetName().Version}, mode: {config.TaskbarMode}).");
+
+        if (Log.DebugEnabled)
+        {
+            // Once windows and tray icons have settled, record how DockHub sees them.
+            var diagnosticsTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(10) };
+            diagnosticsTimer.Tick += (_, _) =>
+            {
+                diagnosticsTimer.Stop();
+                if (_shell is not null) Log.Debug("Startup diagnostics:" + Environment.NewLine + WindowDiagnostics.Dump(_shell, AppServices.Config));
+            };
+            diagnosticsTimer.Start();
+        }
     }
 
     private void StartShell()
@@ -230,6 +243,43 @@ public partial class App : Application
                 dock.ApplySettings();
     }
 
+    private HotkeyService? _hotkeys;
+    private WinNumberHotkeys? _winNumbers;
+
+    /// <summary>Configurable global shortcuts (null before startup finishes).</summary>
+    public HotkeyService? Hotkeys => _hotkeys;
+
+    /// <summary>Actions available to global shortcuts; later features add theirs here.</summary>
+    private readonly Dictionary<string, Action> _hotkeyHandlers = new();
+
+    public void RegisterHotkeyHandler(string actionId, Action handler) => _hotkeyHandlers[actionId] = handler;
+
+    public bool HasHotkeyHandler(string actionId) => _hotkeyHandlers.ContainsKey(actionId);
+
+    private void StartKeyboardShortcuts()
+    {
+        var config = AppServices.Config;
+        RegisterHotkeyHandler(HotkeyActions.ToggleDock, DockWindow.ToggleAllDocks);
+        RegisterHotkeyHandler(HotkeyActions.OpenSettings, () => ShowSettings());
+        RegisterHotkeyHandler(HotkeyActions.PinApp, () => ShowAppPicker());
+        RegisterHotkeyHandler(HotkeyActions.ToggleAutoHide, () => config.AutoHide = !config.AutoHide);
+        RegisterHotkeyHandler(HotkeyActions.ToggleMute, AppServices.Audio.ToggleMute);
+        RegisterHotkeyHandler(HotkeyActions.VolumeUp, () => AppServices.Audio.StepVolume(0.05f));
+        RegisterHotkeyHandler(HotkeyActions.VolumeDown, () => AppServices.Audio.StepVolume(-0.05f));
+        _hotkeys = new HotkeyService(config, _hotkeyHandlers);
+
+        _winNumbers = new WinNumberHotkeys(DockWindow.InvokeAppShortcut, DockWindow.ShowShortcutNumbers);
+        UpdateWinNumberHotkeys();
+    }
+
+    /// <summary>Win+number is only taken over when DockHub replaces the taskbar.</summary>
+    private void UpdateWinNumberHotkeys()
+    {
+        var config = AppServices.Config;
+        if (config.TaskbarMode == TaskbarMode.Replace && config.WinNumberHotkeys) _winNumbers?.Enable();
+        else _winNumbers?.Disable();
+    }
+
     private void ApplyTaskbarMode()
     {
         if (_shell is null) return;
@@ -266,6 +316,17 @@ public partial class App : Application
                 break;
             case nameof(AppConfig.ExplorerPinMenu):
                 ExplorerPinMenu.Set(config.ExplorerPinMenu);
+                break;
+            case nameof(AppConfig.ShowVolumeIcon):
+            case nameof(AppConfig.ShowNetworkIcon):
+            case nameof(AppConfig.ShowBatteryIcon):
+                TrayIconView.NotifySystemIconsChanged();
+                foreach (var dock in DockWindow.All.ToList()) dock.ApplySettings();
+                break;
+            case nameof(AppConfig.WinNumberHotkeys):
+                UpdateWinNumberHotkeys();
+                break;
+            case nameof(AppConfig.Hotkeys):
                 break;
             case nameof(AppConfig.PinnedTrayIcons):
                 break;
@@ -416,6 +477,8 @@ public partial class App : Application
                 _trayIconsChangedHandler = null;
             }
             _shell?.Dispose();
+            _winNumbers?.Dispose();
+            _hotkeys?.Dispose();
             AppServices.Reminders.Dispose();
             AppServices.Audio.Dispose();
             AppServices.Clock.Dispose();

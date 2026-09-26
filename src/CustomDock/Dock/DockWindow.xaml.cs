@@ -62,8 +62,6 @@ public partial class DockWindow : Window, IWidgetHost
     private string _runningSignature = "";
     private RECT _shownRect;
 
-    private const int HOTKEY_DOCK_TOGGLE = 0xD0C4;
-    private bool _hotkeyRegistered;
     private int _interactionCount;
     private bool _revealed = true;
     private bool _shown;
@@ -260,32 +258,36 @@ public partial class DockWindow : Window, IWidgetHost
         WindowEffects.MakeToolWindow(_hwnd, noActivate: true);
         WindowEffects.ExtendGlass(_hwnd);
         ApplyBackdrop();
-        if (IsMain) RegisterGlobalHotkey();
     }
 
-    private void RegisterGlobalHotkey()
+    /// <summary>App buttons of the main dock in the order Win+1..9 / Win+0 address them.</summary>
+    private static List<AppButton> ShortcutButtons()
     {
-        if (_hwnd == IntPtr.Zero) return;
-        // Win + Alt + D
-        bool success = RegisterHotKey(_hwnd, HOTKEY_DOCK_TOGGLE, MOD_WIN | MOD_ALT | MOD_NOREPEAT, 0x44 /* D */);
-        if (!success)
-        {
-            // Fallback: Ctrl + Alt + D
-            success = RegisterHotKey(_hwnd, HOTKEY_DOCK_TOGGLE, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, 0x44 /* D */);
-            if (success)
-                Log.Info("DockHub shortcut registered: Ctrl+Alt+D");
-            else
-                Log.Warn("Failed to register DockHub global shortcut.");
-        }
-        else
-        {
-            Log.Info("DockHub shortcut registered: Win+Alt+D");
-        }
-        _hotkeyRegistered = success;
+        var dock = s_docks.FirstOrDefault(d => d.IsMain);
+        return dock is null ? new List<AppButton>() : dock.ItemsPanel.Children.OfType<AppButton>().ToList();
+    }
+
+    /// <summary>Win+number: the (index + 1)th app button of the main dock.</summary>
+    public static void InvokeAppShortcut(int index, AppShortcutMode mode)
+    {
+        var buttons = ShortcutButtons();
+        if (index < 0 || index >= buttons.Count) return;
+        var dock = s_docks.First(d => d.IsMain);
+        dock.Reveal();
+        buttons[index].InvokeShortcut(mode);
+    }
+
+    /// <summary>While Win is held, shows 1..9, 0 on the first ten app buttons.</summary>
+    public static void ShowShortcutNumbers(bool show)
+    {
+        var buttons = ShortcutButtons();
+        for (int i = 0; i < buttons.Count; i++)
+            buttons[i].ShowShortcutNumber(show && i < 10 ? ((i + 1) % 10).ToString() : null);
+        if (show) s_docks.FirstOrDefault(d => d.IsMain)?.Reveal();
     }
 
     /// <summary>Global shortcut: toggles every dock.</summary>
-    private static void ToggleAllDocks()
+    public static void ToggleAllDocks()
     {
         foreach (var dock in s_docks.ToList())
             dock.ToggleDock();
@@ -323,12 +325,6 @@ public partial class DockWindow : Window, IWidgetHost
             SmoothScrollBy(delta * 0.9);
             handled = true;
             return new IntPtr(1);
-        }
-        if (msg == WM_HOTKEY && wParam.ToInt32() == HOTKEY_DOCK_TOGGLE)
-        {
-            ToggleAllDocks();
-            handled = true;
-            return IntPtr.Zero;
         }
         if (msg == WM_DPICHANGED)
         {
@@ -518,12 +514,6 @@ public partial class DockWindow : Window, IWidgetHost
         _revealTimer.Stop();
         _topmostTimer.Stop();
         if (_scrollAnimating) CompositionTarget.Rendering -= OnScrollFrame;
-
-        if (_hotkeyRegistered && _hwnd != IntPtr.Zero)
-        {
-            UnregisterHotKey(_hwnd, HOTKEY_DOCK_TOGGLE);
-            _hotkeyRegistered = false;
-        }
 
         foreach (var view in _itemViews.Values) DisposeView(view);
         foreach (var view in _runningViews.Values) view.Detach();

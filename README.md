@@ -63,7 +63,7 @@ No admin rights. Your original taskbar always comes back.
 - **Any edge, any shape.** Bottom, top, left or right; floating or attached; small, medium or large. On vertical docks, widgets collapse into compact tiles.
 - **Safe by design.** No admin rights. When DockHub exits, crashes, or the session ends, the Windows taskbar and its tray icons come back.
 - **Starts with Windows.** The installer enables autostart by default, and you can turn it off at any time.
-- **A global hotkey** to summon the dock instantly from anywhere.
+- **Keyboard first.** Win+1…9 open and switch dock apps like on the Windows taskbar, and every DockHub action can get its own global shortcut.
 
 ## Screenshots
 
@@ -132,6 +132,8 @@ The installer is self-contained. It ships the .NET runtime, so there is nothing 
   - **Pin from File Explorer:** right-click an `.exe` or shortcut and choose *Pin to DockHub*. On Windows 11 the command appears under *Show more options* (or Shift+right-click), because the new compact menu only lists commands from packaged apps.
   - **Groups (folders):** drag an app or widget onto another to create a folder. Folders can be renamed, given a custom accent color, and open with a staggered fan animation.
 - **System tray.** App icons live in the dock and receive clicks, right-clicks and hover. Hidden icons sit in the overflow menu, and you choose which icons are always visible. Your Windows tray preferences are imported on first launch.
+- **Network, volume and battery icons.** DockHub draws its own status icons next to the tray (Windows 11 keeps its real ones inside Explorer). Scroll the volume icon to change the volume, middle-click to mute, right-click to switch the output device; the battery icon only appears on devices with a battery.
+- **Win+1…9 and Win+0** open, switch to or minimize the dock's first ten apps. Add Shift for a new window, Ctrl+Shift to run as administrator, Alt for the jump list. Hold Win to see the numbers on the dock.
 
   <img src="docs/images/tray-overflow.jpg" alt="Tray overflow flyout above the dock showing hidden tray icons" width="46%">
 - **Clock.** Clicking it opens the notification center. Its context menu offers quick settings, date and time settings, and seconds and date options. A thin strip at the far end shows the desktop.
@@ -150,7 +152,7 @@ The installer is self-contained. It ships the .NET runtime, so there is nothing 
 - **Multi-monitor and DPI:** choose the monitor for the dock; per-monitor DPI (PerMonitorV2) is supported.
 - **Drag and drop:** reorder apps, widgets and separators on the dock. Dropping an `.exe` or `.lnk` from File Explorer pins it.
 - **Smooth motion:** scrolling, auto-hide and flyouts use frame-synchronized transitions at your display's refresh rate, including above 60 Hz. Hover highlights fade in, app icons grow slightly under the pointer, new items grow into place, and widget/folder popups open with macOS-style genie, zoom and shrink animations.
-- **Global hotkey:** summon the dock or bring it to the front from anywhere, configurable in *Settings › General*.
+- **Global shortcuts:** show the dock (Ctrl+Alt+D by default), open settings, pin an app, toggle auto-hide, mute or change the volume, all configurable in *Settings › General › Keyboard shortcuts*. Shortcuts another app already uses are flagged there.
 - **Menus:** context menus and widget panels always open outside the dock, next to the pointer or the item.
 - **Dock menu** (right-click an empty area): Add widget, Pin app, Add separator, Task Manager, Quick settings, Auto-hide, Hide Windows taskbar, Position, Settings, Exit.
 
@@ -227,7 +229,7 @@ DockHub.exe --restore-taskbar
 - Last resort: restart `explorer.exe` and turn off *Settings › Personalization › Taskbar › Automatically hide the taskbar* in Windows.
 
 > [!IMPORTANT]
-> Windows 11's network, volume and battery icons live inside Explorer, so the dock shows their classic equivalents. Reach the quick settings panel by right-clicking the clock or the dock, or with Win+A. Do not run other taskbar replacements (StartAllBack, ExplorerPatcher, RetroBar and similar) at the same time.
+> Windows 11's network, volume and battery icons live inside Explorer, so the dock shows its own equivalents. Reach the quick settings panel by right-clicking the clock or the dock, or with Win+A. Do not run other taskbar replacements (StartAllBack, ExplorerPatcher, RetroBar and similar) at the same time.
 
 ## Build from source
 
@@ -498,7 +500,7 @@ The widget then shows up in the gallery automatically. Other helpers:
 ## Known limitations
 
 - **Window effects.** The blurred glass effect uses `SetWindowCompositionAttribute`, so it works even when the window is inactive. Corner rounding comes from DWM (about 8 px); corners stay square on Windows 10.
-- **Shell integration.** Windows 11's XAML tray items (network, volume and battery quick settings, language bar) belong to Explorer, so the dock shows the classic tray icons. The per-app taskbar progress indicator may not appear for some apps, because the Windows key stays with Explorer.
+- **Shell integration.** Windows 11's XAML tray items (network, volume and battery quick settings, language bar) belong to Explorer, so the dock shows its own network, volume and battery icons and opens Windows' quick settings panel from them. The per-app taskbar progress indicator may not appear for some apps, because the Windows key stays with Explorer.
 - **Multiple monitors.** The main dock (with widgets and tray icons) lives on one display; with *Show on all displays* the other displays get a dock with apps. The Windows taskbar is hidden on every display.
 - **Language.** The interface is English only; dates and numbers follow your Windows locale. The installer is available in English and Turkish.
 

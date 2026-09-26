@@ -39,6 +39,11 @@ public static class WindowDiagnostics
             sb.AppendLine($"- {group.Key} \"{group.Title}\" windows: {group.WindowCount} exe: {group.ExecutablePath}");
         sb.AppendLine();
 
+        sb.AppendLine("== Tray icons");
+        foreach (var icon in shell.Tray?.TrayIcons.OfType<ManagedShell.WindowsTray.NotifyIcon>() ?? Enumerable.Empty<ManagedShell.WindowsTray.NotifyIcon>())
+            sb.AppendLine($"- \"{icon.Title}\" {icon.Path} guid: {icon.GUID} pinned: {icon.IsPinned} hidden: {icon.IsHidden} replaced: {Dock.TrayIconView.IsReplacedByDockHub(icon)}");
+        sb.AppendLine();
+
         sb.AppendLine("== Pinned apps");
         foreach (var item in Flatten(config.Items).Where(i => i.Kind == DockItemKind.App))
         {

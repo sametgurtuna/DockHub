@@ -57,6 +57,7 @@ public partial class SettingsWindow : Window
         LoadDisplaySizes();
         _config.PropertyChanged += OnDisplayConfigChanged;
         LoadTray();
+        LoadHotkeys();
         ItemList.ItemsSource = _rows;
         LoadItems();
         NavList.SelectedIndex = 0;
@@ -74,6 +75,7 @@ public partial class SettingsWindow : Window
         _config.ItemsChanged -= OnConfigItemsChanged;
         _config.PropertyChanged -= OnDisplayConfigChanged;
         foreach (var preview in _previews) preview.Detach();
+        if (App.Instance.Hotkeys is { } hotkeys) hotkeys.RegistrationChanged -= RefreshHotkeyStatus;
         ShowDetail(null);
     }
 

@@ -153,6 +153,13 @@
                         <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ExplorerPinMenu}" />
                     </ctl:SettingRow>
 
+                    <TextBlock Text="Keyboard shortcuts" Style="{StaticResource SectionHeader}" />
+                    <ctl:SettingRow Glyph="&#xE765;" Header="Win + number keys open dock apps"
+                                    Description="Win+1…9 and Win+0 open or switch to the dock's apps, like the Windows taskbar. Add Shift for a new window, Ctrl+Shift to run as administrator, Alt for the jump list. Hold Win to see the numbers. Only when DockHub replaces the taskbar.">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding WinNumberHotkeys}" />
+                    </ctl:SettingRow>
+                    <StackPanel x:Name="HotkeyRows" />
+
                     <TextBlock Text="Maintenance" Style="{StaticResource SectionHeader}" />
                     <ctl:SettingRow Glyph="&#xE777;" Header="Restore Windows taskbar"
                                     Description="If the taskbar remains hidden due to an issue. (Command line: DockHub.exe --restore-taskbar)">
@@ -222,6 +229,15 @@
                             </ItemsControl>
                         </StackPanel>
                     </Border>
+                    <ctl:SettingRow Glyph="&#xE701;" Header="Network icon" Description="Connection status. Click for quick settings.">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ShowNetworkIcon}" IsEnabled="{Binding ShowTray}" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE995;" Header="Volume icon" Description="Scroll to change the volume, middle-click to mute, right-click to switch the output device.">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ShowVolumeIcon}" IsEnabled="{Binding ShowTray}" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE83F;" Header="Battery icon" Description="Charge level and time left. Only on devices with a battery.">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ShowBatteryIcon}" IsEnabled="{Binding ShowTray}" />
+                    </ctl:SettingRow>
                     <ctl:SettingRow Glyph="&#xE823;" Header="Clock" Description="Click to open calendar and notifications.">
                         <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ShowClock}" />
                     </ctl:SettingRow>

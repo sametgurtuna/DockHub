@@ -86,7 +86,9 @@ public partial class DockWindow
 
         bool tray = HasTray;
         PinnedTray.Visibility = tray ? Visibility.Visible : Visibility.Collapsed;
-        NetworkStatusIcon.Visibility = tray ? Visibility.Visible : Visibility.Collapsed;
+        NetworkStatusIcon.Visibility = tray && _config.ShowNetworkIcon ? Visibility.Visible : Visibility.Collapsed;
+        VolumeStatusIcon.Visibility = tray && _config.ShowVolumeIcon ? Visibility.Visible : Visibility.Collapsed;
+        BatteryStatusIcon.Visibility = tray && _config.ShowBatteryIcon && BatteryStatusIconView.HasBattery ? Visibility.Visible : Visibility.Collapsed;
         ClockButton.Visibility = _config.ShowClock ? Visibility.Visible : Visibility.Collapsed;
         ShowDesktopButton.Visibility = _config.ShowDesktopButton ? Visibility.Visible : Visibility.Collapsed;
         UpdateTrayVisibility();

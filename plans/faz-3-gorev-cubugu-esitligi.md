@@ -102,4 +102,14 @@ Ayarlar → Taskbar → "Win + sayı tuşlarıyla dock uygulamalarını aç" (va
 
 ## Uygulama notları
 
-_(Faz uygulanırken doldurulacak.)_
+
+### 2026-09-26 — tamamlandı
+
+- **Win+1..9 / Win+0:** `Shell/WinNumberHotkeys.cs` (WH_KEYBOARD_LL; yalnızca Replace modunda ve ayar açıkken). Başlat menüsünün açılmasını önlemek için VK 0xE8 gönderiliyor. Sıra ana dock'taki `AppButton`'lar (pinli + çalışan). Win 800 ms basılı tutulunca numaralar görünüyor.
+  - **Otomatik test edilemedi:** hook enjekte edilmiş (`LLKHF_INJECTED`) tuşları bilerek yok sayıyor, bu yüzden SendInput ile denenemiyor. Hook'un kurulduğu log'da doğrulandı ("Win+number shortcuts enabled").
+- **Kısayollar:** `HotkeyService` (message-only pencere), `AppConfig.Hotkeys` (eksik = varsayılan, boş = kapalı), `HotkeyBox` kontrolü, Ayarlar › General › Keyboard shortcuts. Başka uygulamanın kullandığı kısayol uyarıyla gösteriliyor.
+  - Varsayılan "dock'u göster" artık **Ctrl+Alt+D**, çünkü Win+Alt+D Windows 11'de kayıt edilemiyordu (log'da görülmüştü). Sessiz fallback kaldırıldı.
+  - Ayarlarda yalnızca işleyicisi olan eylemler listeleniyor. `focus-dock`, `next-profile` ve `clipboard-history` sonraki fazlarda ekleniyor.
+- **Durum ikonları:** `StatusIconViewBase` + ağ / ses / pil. Windows'un klasik ses, ağ ve güç tray ikonları (GUID `7820ae73/74/75`) DockHub'ınkiler açıkken gizleniyor. Canlı test: güç ve ses kopyaları gizlendi, EarTrumpet (kullanıcının uygulaması) doğru şekilde kaldı.
+- **Plandan sapma:** ses ikonuna tıklamak Audio widget paneli yerine Windows hızlı ayarlarını açıyor (ağ ikonuyla tutarlı). Cihaz seçimi, mixer ve ayarlar sağ tık menüsünde.
+- `Log.DebugEnabled` açıkken açılıştan 10 s sonra tanılama raporu log'a yazılıyor. Rapora tray ikonları da eklendi.

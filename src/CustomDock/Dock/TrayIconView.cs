@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using CustomDock.Core;
 using ManagedShell.Common.Helpers;
 using TrayIcon = ManagedShell.WindowsTray.NotifyIcon;
 
@@ -57,6 +58,8 @@ public sealed class TrayIconView : Border
         MouseDown += OnMouseDownIcon;
         MouseUp += OnMouseUpIcon;
         DataContextChanged += (_, _) => Bind();
+        Loaded += (_, _) => { SystemIconsChanged += UpdateSystemIconVisibility; UpdateSystemIconVisibility(); };
+        Unloaded += (_, _) => SystemIconsChanged -= UpdateSystemIconVisibility;
         // Right-click opens application's own menu; prevent dock menu from opening.
         ContextMenuOpening += (_, e) => e.Handled = true;
     }
@@ -71,6 +74,32 @@ public sealed class TrayIconView : Border
         if (Icon is not { } icon) return;
         _image.SetBinding(Image.SourceProperty, new System.Windows.Data.Binding(nameof(TrayIcon.Icon)) { Source = icon, Mode = System.Windows.Data.BindingMode.OneWay });
         SetBinding(ToolTipProperty, new System.Windows.Data.Binding(nameof(TrayIcon.Title)) { Source = icon, Mode = System.Windows.Data.BindingMode.OneWay });
+        UpdateSystemIconVisibility();
+    }
+
+    // Windows' own system tray icons, which DockHub replaces with its status icons (see StatusIconViewBase).
+    private static readonly Guid VolumeGuid = new("7820ae73-23e3-4229-82c1-e41cb67d5b9c");
+    private static readonly Guid NetworkGuid = new("7820ae74-23e3-4229-82c1-e41cb67d5b9c");
+    private static readonly Guid PowerGuid = new("7820ae75-23e3-4229-82c1-e41cb67d5b9c");
+
+    /// <summary>Raised when the status icon settings change, so classic duplicates can hide or come back.</summary>
+    public static event Action? SystemIconsChanged;
+
+    public static void NotifySystemIconsChanged() => SystemIconsChanged?.Invoke();
+
+    /// <summary>True when DockHub shows its own icon for this classic system tray icon.</summary>
+    public static bool IsReplacedByDockHub(TrayIcon icon)
+    {
+        var config = AppServices.Config;
+        return (icon.GUID == VolumeGuid && config.ShowVolumeIcon)
+               || (icon.GUID == NetworkGuid && config.ShowNetworkIcon)
+               || (icon.GUID == PowerGuid && config.ShowBatteryIcon && BatteryStatusIconView.HasBattery);
+    }
+
+    private void UpdateSystemIconVisibility()
+    {
+        if (Icon is { } icon)
+            Visibility = IsReplacedByDockHub(icon) ? Visibility.Collapsed : Visibility.Visible;
     }
 
     private void OnMouseEnterIcon(MouseEventArgs e)

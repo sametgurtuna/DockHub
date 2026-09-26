@@ -54,7 +54,8 @@ public partial class DockWindow : Window, IWidgetHost
 
     private IntPtr _hwnd;
     private SpaceReserver? _reserver;
-    private (string Device, DockEdge Edge, double Thickness)? _reserverKey;
+    private (string Device, DockEdge Edge, RECT Bounds)? _reserverKey;
+    private DispatcherTimer? _reservationCheckTimer;
     private EdgeTriggerWindow? _trigger;
     private MonitorInfo _monitor;
     private readonly string? _secondaryDevice;
@@ -551,6 +552,7 @@ public partial class DockWindow : Window, IWidgetHost
         PinnedTray.ItemsSource = null;
         OverflowTray.ItemsSource = null;
 
+        _reservationCheckTimer?.Stop();
         if (_reserver is not null)
         {
             _reserver.RectChanged -= QueueReposition;

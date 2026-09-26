@@ -13,7 +13,7 @@ All three are also listed under *Settings › Widget gallery › Featured web wi
 ## Try it in two minutes
 
 1. Copy `samples/widgets/hello-world` to `%AppData%\DockHub\widgets\hello-world`.
-2. Restart DockHub (tray menu › Restart, or *Settings › General › Restart*).
+2. Restart DockHub (tray menu › Restart, or *Settings › Backup and troubleshooting › Restart DockHub*).
 3. Open *Settings › Widget gallery*: your widget is listed under **Web widgets**. Press **+**.
 
 While developing, set `"debugLogging": true` in `%AppData%\DockHub\config.json`. The widget's right-click menu then has **Developer tools** (the Edge DevTools for that widget), and **Reload** is always there.

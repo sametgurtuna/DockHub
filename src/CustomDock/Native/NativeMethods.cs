@@ -177,7 +177,7 @@ public struct INPUT
     private readonly long _padding;
 }
 
-internal static class NativeMethods
+internal static partial class NativeMethods
 {
     public const int WM_NCHITTEST = 0x0084;
     public const int WM_COMMAND = 0x0111;

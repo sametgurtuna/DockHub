@@ -67,7 +67,7 @@ public partial class RecycleBinWidget : WidgetBase
 
         DetailsIconPath.Data = geometry;
         DetailsIconPath.SetResourceReference(System.Windows.Shapes.Path.FillProperty, brushKey);
-        DetailsSubText.Text = empty ? "Empty" : $"{info.ItemCount} items · {info.FormattedSize}";
+        DetailsSubText.Text = empty ? L.T("Empty") : L.T("{0} items · {1}", info.ItemCount, info.FormattedSize);
 
         ToolTip = empty
             ? "Recycle Bin (Empty)"

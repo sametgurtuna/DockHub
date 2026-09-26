@@ -27,7 +27,7 @@ public partial class SettingsWindow
                 Width = 32,
                 Height = 32,
                 Margin = new Thickness(6, 0, 0, 0),
-                ToolTip = action.DefaultGesture is null ? "Clear" : $"Reset to {action.DefaultGesture}",
+                ToolTip = action.DefaultGesture is null ? L.T("Clear") : L.T("Reset to {0}", action.DefaultGesture),
             };
             reset.SetResourceReference(FontFamilyProperty, "IconFont");
             reset.Click += (_, _) =>

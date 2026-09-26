@@ -21,7 +21,7 @@ public partial class SettingsWindow
     {
         UpdateCard.Visibility = release is null ? Visibility.Collapsed : Visibility.Visible;
         if (release is null) return;
-        UpdateTitle.Text = $"DockHub {release.Version} is available";
+        UpdateTitle.Text = L.T("DockHub {0} is available", release.Version);
         var notes = release.Notes.Replace("\r", "").Split('\n').Where(l => l.Trim().Length > 0).Take(8);
         UpdateNotes.Text = string.Join("\n", notes);
         InstallUpdateButton.IsEnabled = release.InstallerUrl is not null;
@@ -30,7 +30,7 @@ public partial class SettingsWindow
     private async void OnCheckUpdatesClick(object sender, RoutedEventArgs e)
     {
         CheckUpdatesButton.IsEnabled = false;
-        CheckUpdatesButton.Content = "Checking…";
+        CheckUpdatesButton.Content = L.T("Checking…");
         try
         {
             var release = await AppServices.Updates.CheckAsync(userInitiated: true);
@@ -41,12 +41,12 @@ public partial class SettingsWindow
         }
         catch (Exception ex)
         {
-            UpdateStatusRow.Description = $"Couldn't reach GitHub: {ex.Message}";
+            UpdateStatusRow.Description = L.T("Couldn't reach GitHub: {0}", ex.Message);
         }
         finally
         {
             CheckUpdatesButton.IsEnabled = true;
-            CheckUpdatesButton.Content = "Check now";
+            CheckUpdatesButton.Content = L.T("Check now");
         }
     }
 
@@ -61,11 +61,11 @@ public partial class SettingsWindow
             return;
 
         InstallUpdateButton.IsEnabled = false;
-        var progress = new Progress<double>(p => UpdateProgress.Text = $"Downloading… {p:P0}");
+        var progress = new Progress<double>(p => UpdateProgress.Text = L.T("Downloading… {0}", p.ToString("P0", System.Globalization.CultureInfo.CurrentCulture)));
         try
         {
             await AppServices.Updates.DownloadAndInstallAsync(release, progress);
-            UpdateProgress.Text = "Installing…";
+            UpdateProgress.Text = L.T("Installing…");
         }
         catch (Exception ex)
         {

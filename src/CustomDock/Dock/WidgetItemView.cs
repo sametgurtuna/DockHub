@@ -131,8 +131,12 @@ public sealed class WidgetItemView : WidgetCard
 
     private void OnWidgetVisibilityChanged(object? sender, EventArgs e) => Visibility = Widget.Visibility;
 
+    /// <summary>Picks up a changed "Even widget widths" setting.</summary>
+    public void RefreshGrid() => SnapToGrid = AlignWidths && !_compact;
+
     private void ApplyAppearance()
     {
+        SnapToGrid = AlignWidths && !_compact;
         Apply(this, compact: _compact);
         if (_flyoutCard is not null) Apply(_flyoutCard, compact: false);
     }

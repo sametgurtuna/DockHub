@@ -37,6 +37,7 @@ public sealed class AppButton : Grid
     private readonly Grid _progressTrack;
     private readonly Border _progressFill;
     private readonly ScaleTransform _pressScale = new();
+    private readonly TranslateTransform _launchOffset = new();
     private readonly DispatcherTimer _previewTimer;
     private readonly DispatcherTimer _dragActivateTimer;
     private AppGroup? _group;
@@ -64,7 +65,7 @@ public sealed class AppButton : Grid
             VerticalAlignment = VerticalAlignment.Center,
             Margin = new Thickness(0, 0, 0, 2),
             RenderTransformOrigin = new Point(0.5, 0.5),
-            RenderTransform = _pressScale,
+            RenderTransform = new TransformGroup { Children = { _pressScale, _launchOffset } },
         };
         RenderOptions.SetBitmapScalingMode(_icon, BitmapScalingMode.HighQuality);
 
@@ -300,6 +301,7 @@ public sealed class AppButton : Grid
     {
         var group = _group;
         bool running = group is { WindowCount: > 0 };
+        if (_launching && (group?.WindowCount ?? 0) > _launchBaseline) EndLaunchFeedback();
 
         if (Item is null || _icon.Source is null)
             _icon.Source = group?.Icon ?? _icon.Source;
@@ -448,10 +450,73 @@ public sealed class AppButton : Grid
         if (DockDragHelper.JustDragged) return;
         if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) && Item is not null)
         {
+            BeginLaunchFeedback();
             AppLauncher.Launch(Item, newInstance: true);
             return;
         }
+        if (_group is not { WindowCount: > 0 } && Item is not null) BeginLaunchFeedback();
         AppLauncher.Activate(Item, _group);
+    }
+
+    // ------------------------------------------------------------------ Launch feedback
+
+    private static readonly TimeSpan LaunchTimeout = TimeSpan.FromSeconds(12);
+    private bool _launching;
+    private int _launchBaseline;
+    private DispatcherTimer? _launchTimer;
+
+    /// <summary>
+    /// The icon bounces (macOS style) until the app's window appears, so a slow app still shows the click landed.
+    /// With reduced motion it gently pulses instead; with animations off it just dims.
+    /// </summary>
+    private void BeginLaunchFeedback()
+    {
+        _launchBaseline = _group?.WindowCount ?? 0;
+        if (_launchTimer is null)
+        {
+            _launchTimer = new DispatcherTimer { Interval = LaunchTimeout };
+            _launchTimer.Tick += (_, _) => EndLaunchFeedback();
+        }
+        _launchTimer.Stop();
+        _launchTimer.Start();
+        if (_launching) return;
+        _launching = true;
+
+        switch (Motion.Level)
+        {
+            case MotionLevel.Full:
+                var bounce = new DoubleAnimationUsingKeyFrames { RepeatBehavior = RepeatBehavior.Forever };
+                bounce.KeyFrames.Add(new EasingDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.Zero)));
+                bounce.KeyFrames.Add(new EasingDoubleKeyFrame(-7, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(280)),
+                    new QuadraticEase { EasingMode = EasingMode.EaseOut }));
+                bounce.KeyFrames.Add(new EasingDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(560)),
+                    new QuadraticEase { EasingMode = EasingMode.EaseIn }));
+                bounce.KeyFrames.Add(new DiscreteDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(760))));
+                _launchOffset.BeginAnimation(TranslateTransform.YProperty, bounce);
+                break;
+            case MotionLevel.Reduced:
+                _icon.BeginAnimation(OpacityProperty, new DoubleAnimation(1, 0.45, TimeSpan.FromMilliseconds(650))
+                {
+                    AutoReverse = true,
+                    RepeatBehavior = RepeatBehavior.Forever,
+                });
+                break;
+            default:
+                _icon.Opacity = 0.55;
+                break;
+        }
+        System.Windows.Automation.AutomationProperties.SetHelpText(this, L.T("Starting"));
+    }
+
+    private void EndLaunchFeedback()
+    {
+        _launchTimer?.Stop();
+        if (!_launching) return;
+        _launching = false;
+        _launchOffset.BeginAnimation(TranslateTransform.YProperty, null);
+        _launchOffset.Y = 0;
+        _icon.BeginAnimation(OpacityProperty, null);
+        _icon.Opacity = 1;
     }
 
     private void OnMiddleDown(object sender, MouseButtonEventArgs e)
@@ -465,6 +530,7 @@ public sealed class AppButton : Grid
 
     private void StartNewInstance()
     {
+        BeginLaunchFeedback();
         if (Item is not null)
             AppLauncher.Launch(Item, newInstance: true);
         else if (_group is not null && AppLauncher.PinnablePath(_group) is { } path)
@@ -483,6 +549,7 @@ public sealed class AppButton : Grid
         switch (mode)
         {
             case AppShortcutMode.Activate:
+                if (_group is not { WindowCount: > 0 } && Item is not null) BeginLaunchFeedback();
                 AppLauncher.Activate(Item, _group);
                 break;
             case AppShortcutMode.NewInstance:
@@ -775,6 +842,7 @@ public sealed class AppButton : Grid
 
     public void Detach()
     {
+        EndLaunchFeedback();
         _previewTimer.Stop();
         _dragActivateTimer.Stop();
         _iconRetryTimer?.Stop();

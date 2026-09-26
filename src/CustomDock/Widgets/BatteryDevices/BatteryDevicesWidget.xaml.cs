@@ -78,7 +78,7 @@ public partial class BatteryDevicesWidget : WidgetBase
             SingleBatteryRing.Value = 0;
             SingleBatteryRing.SetResourceReference(RingGauge.FillProperty, "TextTertiaryBrush");
             SingleIcon.Data = BatteryGeometry;
-            SingleDeviceName.Text = "No Devices";
+            SingleDeviceName.Text = L.T("No Devices");
             SingleBatteryText.Text = "—";
         }
 
@@ -106,7 +106,7 @@ public partial class BatteryDevicesWidget : WidgetBase
         }
         else
         {
-            ToolTip = "No connected device battery found";
+            ToolTip = L.T("No connected device battery found");
         }
 
         RefreshCompact();
@@ -183,7 +183,7 @@ public partial class BatteryDevicesWidget : WidgetBase
         {
             var (fillKey, trackKey) = GetBrushKeys(primary.BatteryPercent, primary.IsCharging);
             tile.ShowRing(primary.BatteryPercent, 100, fillKey, trackKey, primary.BatteryPercent.ToString(CultureInfo.CurrentCulture));
-            tile.Text = primary.IsHeadset ? "Headset" : (primary.IsMouse ? "Mouse" : "Battery");
+            tile.Text = L.T(primary.IsHeadset ? "Headset" : (primary.IsMouse ? "Mouse" : "Battery"));
         }
         else
         {

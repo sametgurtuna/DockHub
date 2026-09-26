@@ -103,7 +103,7 @@ public partial class SettingsWindow
         {
             Content = "\uE710",
             Style = (Style)FindResource("IconButton"),
-            ToolTip = "Add to dock",
+            ToolTip = L.T("Add to dock"),
             Width = 28,
             Height = 28,
         };

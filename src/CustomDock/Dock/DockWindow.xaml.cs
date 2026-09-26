@@ -258,6 +258,8 @@ public partial class DockWindow : Window, IWidgetHost
         HwndSource.FromHwnd(_hwnd).AddHook(WndProc);
         WindowEffects.MakeToolWindow(_hwnd, noActivate: true);
         WindowEffects.ExtendGlass(_hwnd);
+        // The dock stays visible while a window preview peeks at one window, like the taskbar.
+        ManagedShell.Common.Helpers.WindowHelper.ExcludeWindowFromPeek(_hwnd);
         ApplyBackdrop();
     }
 
@@ -356,10 +358,12 @@ public partial class DockWindow : Window, IWidgetHost
         ApplyZoneVisibility();
         ApplyBackdrop();
         RebuildItems();
+        foreach (var view in _itemViews.Values.OfType<WidgetItemView>()) view.RefreshGrid();
         UpdateClock(DateTime.Now);
         SubscribeClock();
         UpdateReserver();
         UpdateSmartHide();
+        ApplyIndicatorSettings();
         if (FilterRunningByDisplay) _displayFilterTimer.Start();
         else _displayFilterTimer.Stop();
 
@@ -389,7 +393,7 @@ public partial class DockWindow : Window, IWidgetHost
         var culture = CultureInfo.CurrentCulture;
         ClockTime.Text = now.ToString(_config.ClockShowSeconds ? "HH:mm:ss" : "HH:mm", culture);
         ClockDate.Text = now.ToString(culture.DateTimeFormat.ShortDatePattern, culture);
-        ClockButton.ToolTip = now.ToString("D", culture);
+        ClockButton.ToolTip = ClockToolTip(now);
     }
 
     // ------------------------------------------------------------------ Buttons
@@ -409,6 +413,11 @@ public partial class DockWindow : Window, IWidgetHost
 
     private void OnSearchClick(object sender, RoutedEventArgs e)
     {
+        if (_config.SearchButtonAction == SearchButtonAction.Launcher)
+        {
+            LauncherWindow.Toggle();
+            return;
+        }
         UpdateTrayHost();
         _shell.ShowSearch();
     }
@@ -537,6 +546,7 @@ public partial class DockWindow : Window, IWidgetHost
         SystemEvents.PowerModeChanged -= OnPowerModeChanged;
         _iconRefreshTimer.Stop();
         StopSmartHide();
+        StopIndicators();
         DockVisibility.Report(this, false);
         _config.ItemsChanged -= OnItemsChanged;
         _shell.RunningApps.GroupsChanged -= RefreshRunningApps;

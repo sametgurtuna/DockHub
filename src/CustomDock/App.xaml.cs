@@ -91,6 +91,8 @@ public partial class App : Application
         if (config.DebugLogging) Log.DebugEnabled = true;
         L.Initialize(config.Language);
         ApplyMotionLevel();
+        TextScale.Initialize();
+        Controls.WidgetCard.AlignWidths = config.AlignWidgetWidths;
         Widgets.Web.WebWidgetCatalog.LoadAll();
         SystemEvents.UserPreferenceChanged += (_, e) =>
         {
@@ -120,6 +122,7 @@ public partial class App : Application
         CreateDock();
         ApplyTaskbarMode();
         StartKeyboardShortcuts();
+        StartProfileRules();
         UndoToast.Attach(AppServices.ConfigService.History);
 
         config.PropertyChanged += OnConfigChanged;
@@ -161,6 +164,29 @@ public partial class App : Application
             _trayIconsChangedHandler = (_, _) => TrayPreferences.ApplyNewIcons(tray);
             tray.TrayIcons.CollectionChanged += _trayIconsChangedHandler;
         }
+    }
+
+    /// <summary>Profiles that switch in while an app runs or during set hours.</summary>
+    private void StartProfileRules()
+    {
+        if (_shell is null) return;
+        var running = _shell.RunningApps;
+        AppServices.Profiles.StartRules(() =>
+        {
+            var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var group in running.Groups)
+                foreach (var window in group.Windows)
+                {
+                    try
+                    {
+                        if (!string.IsNullOrEmpty(window.WinFileName)) names.Add(ProfileRules.NormalizeApp(window.WinFileName));
+                    }
+                    catch { /* window closed meanwhile */ }
+                }
+            return names;
+        });
+        running.GroupsChanged += AppServices.Profiles.EvaluateRules;
+        AppServices.Clock.MinuteTick += (_, _) => AppServices.Profiles.EvaluateRules();
     }
 
     private void RegisterCrashHandlers()
@@ -285,6 +311,8 @@ public partial class App : Application
         RegisterHotkeyHandler(HotkeyActions.ToggleMute, AppServices.Audio.ToggleMute);
         RegisterHotkeyHandler(HotkeyActions.VolumeUp, () => AppServices.Audio.StepVolume(0.05f));
         RegisterHotkeyHandler(HotkeyActions.VolumeDown, () => AppServices.Audio.StepVolume(-0.05f));
+        RegisterHotkeyHandler(HotkeyActions.ToggleMicrophone, AppServices.Microphone.ToggleMute);
+        RegisterHotkeyHandler(HotkeyActions.OpenLauncher, Dock.LauncherWindow.Toggle);
         _hotkeys = new HotkeyService(config, _hotkeyHandlers);
 
         _winNumbers = new WinNumberHotkeys(DockWindow.InvokeAppShortcut, DockWindow.ShowShortcutNumbers);
@@ -345,6 +373,17 @@ public partial class App : Application
             case nameof(AppConfig.Motion):
                 ApplyMotionLevel();
                 break;
+            case nameof(AppConfig.TextScale):
+                TextScale.Update();
+                break;
+            case nameof(AppConfig.AlignWidgetWidths):
+                Controls.WidgetCard.AlignWidths = config.AlignWidgetWidths;
+                foreach (var dock in DockWindow.All.ToList()) dock.ApplySettings();
+                break;
+            case nameof(AppConfig.RunningAppsAllDesktops):
+                if (_shell is not null) _shell.RunningApps.IncludeAllDesktops = config.RunningAppsAllDesktops;
+                break;
+
             case nameof(AppConfig.Language):
                 if (ConfirmDialog.Show(L.T("Restart DockHub?"), L.T("The new language is used after a restart."), "", _settings,
                         new DialogButton("later", L.T("Later"), IsCancel: true),

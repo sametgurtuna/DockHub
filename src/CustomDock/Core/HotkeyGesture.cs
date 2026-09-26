@@ -79,15 +79,19 @@ public static class HotkeyActions
     public const string VolumeDown = "volume-down";
     public const string NextProfile = "next-profile";
     public const string ClipboardHistory = "clipboard-history";
+    public const string ToggleMicrophone = "toggle-microphone";
+    public const string OpenLauncher = "open-launcher";
 
     public static IReadOnlyList<HotkeyAction> All { get; } = new[]
     {
         new HotkeyAction(ToggleDock, "Show the dock", "Brings the dock up (or hides it when auto-hide is on).", "Ctrl+Alt+D"),
+        new HotkeyAction(OpenLauncher, "Open the quick launcher", "Search apps, settings and commands, or calculate.", "Win+Alt+Space"),
         new HotkeyAction(FocusDock, "Move focus to the dock", "Use the arrow keys, Enter and the menu key on the dock.", "Win+Alt+T"),
         new HotkeyAction(OpenSettings, "Open DockHub settings", "", null),
         new HotkeyAction(PinApp, "Pin an application", "Opens the app picker.", null),
         new HotkeyAction(ToggleAutoHide, "Toggle auto-hide", "", null),
         new HotkeyAction(ToggleMute, "Mute or unmute", "Default audio output.", null),
+        new HotkeyAction(ToggleMicrophone, "Mute or unmute the microphone", "Default recording device.", null),
         new HotkeyAction(VolumeUp, "Volume up", "", null),
         new HotkeyAction(VolumeDown, "Volume down", "", null),
         new HotkeyAction(NextProfile, "Switch to the next profile", "", null),

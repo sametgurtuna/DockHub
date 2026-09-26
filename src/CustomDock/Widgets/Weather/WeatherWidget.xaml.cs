@@ -99,7 +99,7 @@ public partial class WeatherWidget : WidgetBase
     {
         if (_entry is not null && !IsPreview)
         {
-            SubText.Text = "Refreshing…";
+            SubText.Text = L.T("Refreshing…");
             await WeatherHub.Instance.RefreshAsync(_entry);
         }
     }
@@ -137,7 +137,7 @@ public partial class WeatherWidget : WidgetBase
         if (data is null)
         {
             TempText.Text = "--°";
-            SubText.Text = _entry?.Error ?? "Loading…";
+            SubText.Text = _entry?.Error ?? L.T("Loading…");
             HourlyList.ItemsSource = null;
             return;
         }

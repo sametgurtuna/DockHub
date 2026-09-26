@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using CustomDock.Controls;
+using CustomDock.Core;
 
 namespace CustomDock.Dock;
 
@@ -140,7 +141,7 @@ public sealed class RenameFolderDialog : Window
         btnOk.Click += (_, _) =>
         {
             if (string.IsNullOrWhiteSpace(_textBox.Text))
-                _textBox.Text = "Folder";
+                _textBox.Text = L.T("Folder");
             DialogResult = true;
             Close();
         };

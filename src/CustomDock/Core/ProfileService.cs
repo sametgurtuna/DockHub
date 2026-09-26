@@ -17,6 +17,64 @@ public sealed class DockProfile
 
     /// <summary>Switch to this profile automatically when this many displays are connected (null = never).</summary>
     public int? AutoDisplayCount { get; set; }
+
+    /// <summary>Switch in while an app with this executable name (e.g. "steam") has a window open.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public string? AutoApp { get; set; }
+
+    /// <summary>Switch in between these times ("HH:mm"); the range may pass midnight.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public string? AutoTimeFrom { get; set; }
+
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public string? AutoTimeTo { get; set; }
+
+    /// <summary>The time rule only applies Monday to Friday.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+    public bool AutoWeekdaysOnly { get; set; }
+
+    internal bool HasTimeRule => ProfileRules.TryParseTime(AutoTimeFrom, out _) && ProfileRules.TryParseTime(AutoTimeTo, out _);
+}
+
+/// <summary>Matching logic of automatic profile switches (kept free of UI and shell types for tests).</summary>
+public static class ProfileRules
+{
+    public static bool TryParseTime(string? text, out TimeSpan time)
+    {
+        time = default;
+        return !string.IsNullOrWhiteSpace(text)
+               && TimeSpan.TryParseExact(text.Trim(), new[] { @"h\:mm", @"hh\:mm" }, System.Globalization.CultureInfo.InvariantCulture, out time)
+               && time < TimeSpan.FromDays(1);
+    }
+
+    /// <summary>Is <paramref name="now"/> inside the profile's time window?</summary>
+    public static bool InTimeWindow(DockProfile profile, DateTime now)
+    {
+        if (!TryParseTime(profile.AutoTimeFrom, out var from) || !TryParseTime(profile.AutoTimeTo, out var to) || from == to) return false;
+        // A window passing midnight belongs to the day it started.
+        var day = now.TimeOfDay >= from || from < to ? now.DayOfWeek : now.AddDays(-1).DayOfWeek;
+        if (profile.AutoWeekdaysOnly && day is DayOfWeek.Saturday or DayOfWeek.Sunday) return false;
+        var t = now.TimeOfDay;
+        return from < to ? t >= from && t < to : t >= from || t < to;
+    }
+
+    /// <summary>Normalizes "Steam.exe", "steam" and full paths to "steam".</summary>
+    public static string NormalizeApp(string app)
+    {
+        var name = app.Trim().Split('\\', '/').Last();
+        return (name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ? name[..^4] : name).ToLowerInvariant();
+    }
+
+    /// <summary>
+    /// The profile the rules ask for: an app rule wins over a time rule (a game started during work hours).
+    /// Returns null when no rule applies.
+    /// </summary>
+    public static DockProfile? Pick(IEnumerable<DockProfile> profiles, IReadOnlySet<string> runningApps, DateTime now)
+    {
+        var list = profiles.ToList();
+        return list.FirstOrDefault(p => !string.IsNullOrWhiteSpace(p.AutoApp) && runningApps.Contains(NormalizeApp(p.AutoApp!)))
+               ?? list.FirstOrDefault(p => InTimeWindow(p, now));
+    }
 }
 
 /// <summary>
@@ -37,6 +95,69 @@ public sealed class ProfileService
 
     public event Action? Changed;
 
+    /// <summary>Profile that was active before a rule switched another one in; returned to when the rule ends.</summary>
+    private string? _returnProfileId;
+    private string? _ruleProfileId;
+    private Func<IReadOnlySet<string>>? _runningApps;
+
+    /// <summary>Starts automatic switching by app and time (called once the shell runs).</summary>
+    public void StartRules(Func<IReadOnlySet<string>> runningApps)
+    {
+        _runningApps = runningApps;
+        EvaluateRules();
+    }
+
+    /// <summary>Applies app and time rules. Cheap; called when apps start or stop and every minute.</summary>
+    public void EvaluateRules()
+    {
+        if (_runningApps is null || Config.Profiles.Count < 2) return;
+        var wanted = ProfileRules.Pick(Config.Profiles, _runningApps(), DateTime.Now);
+
+        if (wanted is not null)
+        {
+            if (wanted.Id == Config.ActiveProfileId) return;
+            // Remember where to go back to, unless a rule had already switched (then keep the original).
+            if (_ruleProfileId is null) _returnProfileId = Config.ActiveProfileId;
+            _ruleProfileId = wanted.Id;
+            Log.Info($"Profile rule: switching to {wanted.Name}");
+            SwitchToCore(wanted.Id);
+        }
+        else if (_ruleProfileId is not null && _ruleProfileId == Config.ActiveProfileId)
+        {
+            // The rule ended: back to the profile the user had.
+            var back = _returnProfileId;
+            _ruleProfileId = null;
+            _returnProfileId = null;
+            if (back is not null && Config.Profiles.Any(p => p.Id == back))
+            {
+                Log.Info("Profile rule ended: switching back");
+                SwitchToCore(back);
+            }
+        }
+        else
+        {
+            _ruleProfileId = null;
+        }
+    }
+
+    public void SetAutoApp(string profileId, string? app)
+    {
+        if (Config.Profiles.FirstOrDefault(p => p.Id == profileId) is not { } profile) return;
+        profile.AutoApp = string.IsNullOrWhiteSpace(app) ? null : ProfileRules.NormalizeApp(app);
+        Save();
+        EvaluateRules();
+    }
+
+    public void SetAutoTime(string profileId, string? from, string? to, bool weekdaysOnly)
+    {
+        if (Config.Profiles.FirstOrDefault(p => p.Id == profileId) is not { } profile) return;
+        profile.AutoTimeFrom = string.IsNullOrWhiteSpace(from) ? null : from.Trim();
+        profile.AutoTimeTo = string.IsNullOrWhiteSpace(to) ? null : to.Trim();
+        profile.AutoWeekdaysOnly = weekdaysOnly;
+        Save();
+        EvaluateRules();
+    }
+
     /// <summary>Saves the current setup as a new profile and makes it active.</summary>
     public DockProfile SaveCurrentAs(string name)
     {
@@ -49,8 +170,16 @@ public sealed class ProfileService
         return profile;
     }
 
-    /// <summary>Switches to another profile (current setup is stored in the active profile first).</summary>
+    /// <summary>Switches to another profile by hand (current setup is stored in the active profile first).</summary>
     public void SwitchTo(string profileId)
+    {
+        // A manual choice wins over rules until they change again.
+        _ruleProfileId = null;
+        _returnProfileId = null;
+        SwitchToCore(profileId);
+    }
+
+    private void SwitchToCore(string profileId)
     {
         var target = Config.Profiles.FirstOrDefault(p => p.Id == profileId);
         if (target is null || target.Id == Config.ActiveProfileId) return;
@@ -112,7 +241,7 @@ public sealed class ProfileService
         if (match is not null && match.Id != Config.ActiveProfileId)
         {
             Log.Info($"{displayCount} display(s) connected: switching to profile {match.Name}");
-            SwitchTo(match.Id);
+            SwitchToCore(match.Id);
         }
     }
 

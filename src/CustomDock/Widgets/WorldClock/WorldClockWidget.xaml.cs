@@ -265,13 +265,13 @@ public partial class WorldClockWidget : WidgetBase
 
         if (Variant != "single")
         {
-            ToolTip = _items.Count == 0 ? "Add a city" : string.Join("\n\n", _items.Select(i => i.Details));
+            ToolTip = _items.Count == 0 ? L.T("Add a city") : string.Join("\n\n", _items.Select(i => i.Details));
             RefreshCompact();
             return;
         }
         var first = _items.FirstOrDefault();
         SingleTime.Text = first?.TimeText ?? "--:--";
-        SingleCity.Text = first?.Label ?? "Add a city";
+        SingleCity.Text = first?.Label ?? L.T("Add a city");
         SingleClock.Time = first?.Time ?? DateTime.Now;
         ToolTip = first?.Details;
         Layout_single.Visibility = Visibility.Visible;

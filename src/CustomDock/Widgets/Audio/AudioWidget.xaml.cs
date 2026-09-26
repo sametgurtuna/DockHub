@@ -453,7 +453,7 @@ public partial class AudioWidget : WidgetBase
             AppServices.Audio.SetSessionMute(session, newMuted);
             muteIcon.Text = newMuted ? "\uE74F" : "\uE767";
             muteIcon.SetResourceReference(TextBlock.ForegroundProperty, newMuted ? "AccentRedBrush" : "TextSecondaryBrush");
-            volText.Text = newMuted ? "Muted" : $"{Math.Round(session.Volume * 100)}%";
+            volText.Text = newMuted ? L.T("Muted") : $"{Math.Round(session.Volume * 100)}%";
             volText.SetResourceReference(TextBlock.ForegroundProperty, newMuted ? "AccentRedBrush" : "TextSecondaryBrush");
         };
         Grid.SetColumn(muteBtn, 2);
@@ -497,7 +497,7 @@ public partial class AudioWidget : WidgetBase
         bool muted = AppServices.Audio.IsMuted;
         Geometry icon = muted ? MuteGeometry : (dev?.IsHeadphone == true ? HeadphoneGeometry : SpeakerGeometry);
         tile.ShowGlyph(icon, muted ? "AccentRedBrush" : "AccentCyanBrush");
-        tile.Text = muted ? "Muted" : $"{AppServices.Audio.VolumePercent}%";
+        tile.Text = muted ? L.T("Muted") : $"{AppServices.Audio.VolumePercent}%";
     }
 
     public override bool OnCompactClick()

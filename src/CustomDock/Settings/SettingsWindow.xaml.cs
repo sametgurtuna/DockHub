@@ -45,6 +45,9 @@ public partial class SettingsWindow : Window
             ["appearance"] = AppearancePage,
             ["items"] = ItemsPage,
             ["gallery"] = GalleryPage,
+            ["profiles"] = ProfilesPage,
+            ["keyboard"] = KeyboardPage,
+            ["backup"] = BackupPage,
             ["about"] = AboutPage,
         };
 
@@ -61,6 +64,7 @@ public partial class SettingsWindow : Window
         LoadPresets();
         LoadProfiles();
         LoadUpdates();
+        LoadTextScale();
         DockPreview.Bind(_config);
         PreviewKeyDown += OnUndoKey;
         PreviewKeyDown += (_, e) =>

@@ -17,7 +17,8 @@ public partial class SettingsWindow
     private static readonly Dictionary<string, string> PageNames = new()
     {
         ["general"] = "General", ["taskbar"] = "Taskbar", ["appearance"] = "Appearance",
-        ["items"] = "Dock items", ["gallery"] = "Widget gallery", ["about"] = "About",
+        ["items"] = "Dock items", ["gallery"] = "Widget gallery", ["profiles"] = "Profiles",
+        ["keyboard"] = "Keyboard shortcuts", ["backup"] = "Backup and troubleshooting", ["about"] = "About",
     };
 
     /// <summary>Extra words people might search for.</summary>
@@ -33,6 +34,14 @@ public partial class SettingsWindow
         ["Win + number keys open dock apps"] = "hotkey shortcut keyboard kısayol",
         ["Export settings"] = "backup yedek",
         ["Check for updates"] = "update version güncelleme",
+        ["Input language"] = "keyboard layout klavye dil",
+        ["Microphone icon"] = "mic mute mikrofon sessiz",
+        ["Virtual desktop number"] = "virtual desktops sanal masaüstü",
+        ["Apps from all desktops"] = "virtual desktops sanal masaüstü",
+        ["Text size"] = "font scale accessibility yazı boyutu",
+        ["Theme file"] = "share export import tema paylaş",
+        ["Search button opens"] = "launcher spotlight başlatıcı",
+        ["Notifications next to the clock"] = "do not disturb focus rahatsız etme bildirim",
     };
 
     private List<SearchHit>? _searchIndex;

@@ -239,7 +239,7 @@ public partial class ClockWidget : WidgetBase
         if (next is null)
         {
             EventDot.Visibility = Visibility.Collapsed;
-            EventTitle.Text = "No events today";
+            EventTitle.Text = L.T("No events today");
             EventTime.Text = now.ToString("MMMM yyyy", CultureInfo.CurrentCulture);
             return;
         }

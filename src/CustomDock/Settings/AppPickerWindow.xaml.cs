@@ -84,7 +84,7 @@ public partial class AppPickerWindow : Window
     public void SetTarget(string? groupId)
     {
         TargetGroupId = groupId is not null && AppServices.ConfigService.FindItem(groupId) is { Kind: DockItemKind.Group } ? groupId : null;
-        string header = TargetGroup is { } group ? $"Add to “{group.GroupName ?? "Folder"}”" : "Pin application";
+        string header = TargetGroup is { } group ? L.T("Add to “{0}”", group.GroupName ?? L.T("Folder")) : L.T("Pin application");
         HeaderText.Text = header;
         Title = header;
         StatusText.Text = "";
@@ -140,7 +140,7 @@ public partial class AppPickerWindow : Window
         _view.Filter = Matches;
         AppList.ItemsSource = _view;
         LoadingText.Visibility = _entries.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        LoadingText.Text = "No applications found. Use 'Browse file' to select an .exe or shortcut.";
+        LoadingText.Text = L.T("No applications found. Use 'Browse file' to select an .exe or shortcut.");
         if (_entries.Count > 0) AppList.SelectedIndex = 0;
     }
 
@@ -217,7 +217,7 @@ public partial class AppPickerWindow : Window
     {
         var dialog = new OpenFileDialog
         {
-            Title = "Select application to add to dock",
+            Title = L.T("Select application to add to dock"),
             Filter = "Applications and shortcuts (*.exe;*.lnk;*.url)|*.exe;*.lnk;*.url|All files (*.*)|*.*",
             DereferenceLinks = false,
             Multiselect = true,

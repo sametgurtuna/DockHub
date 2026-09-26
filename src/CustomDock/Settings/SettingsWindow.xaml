@@ -123,6 +123,24 @@
                             <TextBlock Text="Widget gallery" Margin="14,0,0,0" />
                         </StackPanel>
                     </ListBoxItem>
+                    <ListBoxItem Tag="profiles">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE77B;" Style="{StaticResource NavGlyph}" />
+                            <TextBlock Text="Profiles" Margin="14,0,0,0" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem Tag="keyboard">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE765;" Style="{StaticResource NavGlyph}" />
+                            <TextBlock Text="Keyboard shortcuts" Margin="14,0,0,0" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem Tag="backup">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE90F;" Style="{StaticResource NavGlyph}" />
+                            <TextBlock Text="Backup and troubleshooting" Margin="14,0,0,0" />
+                        </StackPanel>
+                    </ListBoxItem>
                     <ListBoxItem Tag="about">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE946;" Style="{StaticResource NavGlyph}" />
@@ -139,7 +157,7 @@
                 <!-- ============ General ============ -->
                 <StackPanel x:Name="GeneralPage" Style="{StaticResource Page}">
                     <TextBlock Text="General" Style="{StaticResource PageTitle}" />
-                    <TextBlock Text="Startup, Windows taskbar, and maintenance." Style="{StaticResource PageSubtitle}" />
+                    <TextBlock Text="Windows taskbar, startup and language." Style="{StaticResource PageSubtitle}" />
 
                     <TextBlock Text="Windows taskbar" Style="{StaticResource SectionHeader}" />
                     <ctl:SettingRow Glyph="&#xE75B;" Header="Replace taskbar"
@@ -189,23 +207,41 @@
                         </Border>
                     </ctl:SettingRow>
 
-                    <TextBlock Text="Profiles" Style="{StaticResource SectionHeader}" />
+                </StackPanel>
+
+                <!-- ============ Profiles ============ -->
+                <StackPanel x:Name="ProfilesPage" Style="{StaticResource Page}">
+                    <TextBlock Text="Profiles" Style="{StaticResource PageTitle}" />
+                    <TextBlock Text="Separate dock setups that switch by hand or by themselves." Style="{StaticResource PageSubtitle}" />
                     <StackPanel x:Name="ProfileRows" />
                     <ctl:SettingRow Glyph="&#xE77B;" Header="Save current setup as a profile"
-                                    Description="Profiles keep their own dock items and look, for example Work, Gaming or Laptop. Switch from the dock's right-click menu or with a shortcut, or let one switch in by itself when a number of displays is connected.">
+                                    Description="Profiles keep their own dock items and look, for example Work, Gaming or Laptop. Switch from the dock's right-click menu or with a shortcut, or let one switch in by itself: when a number of displays is connected, while an app runs, or during set hours.">
                         <StackPanel Orientation="Horizontal">
                             <TextBox x:Name="NewProfileName" Width="160" MinHeight="32" VerticalContentAlignment="Center" Margin="0,0,8,0" />
                             <Button Content="Save" Click="OnSaveProfileClick" />
                         </StackPanel>
                     </ctl:SettingRow>
 
-                    <TextBlock Text="Keyboard shortcuts" Style="{StaticResource SectionHeader}" />
+                </StackPanel>
+
+                <!-- ============ Keyboard shortcuts ============ -->
+                <StackPanel x:Name="KeyboardPage" Style="{StaticResource Page}">
+                    <TextBlock Text="Keyboard shortcuts" Style="{StaticResource PageTitle}" />
+                    <TextBlock Text="Win+number keys and global shortcuts for DockHub actions." Style="{StaticResource PageSubtitle}" />
+                    <TextBlock Text="Taskbar keys" Style="{StaticResource SectionHeader}" />
                     <ctl:SettingRow Glyph="&#xE765;" Header="Win + number keys open dock apps"
                                     Description="Win+1…9 and Win+0 open or switch to the dock's apps, like the Windows taskbar. Add Shift for a new window, Ctrl+Shift to run as administrator, Alt for the jump list. Hold Win to see the numbers. Only when DockHub replaces the taskbar.">
                         <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding WinNumberHotkeys}" />
                     </ctl:SettingRow>
+                    <TextBlock Text="DockHub shortcuts" Style="{StaticResource SectionHeader}" />
                     <StackPanel x:Name="HotkeyRows" />
 
+                </StackPanel>
+
+                <!-- ============ Backup and troubleshooting ============ -->
+                <StackPanel x:Name="BackupPage" Style="{StaticResource Page}">
+                    <TextBlock Text="Backup and troubleshooting" Style="{StaticResource PageTitle}" />
+                    <TextBlock Text="Keep a copy of your setup, and fix things when something goes wrong." Style="{StaticResource PageSubtitle}" />
                     <TextBlock Text="Backup and restore" Style="{StaticResource SectionHeader}" />
                     <ctl:SettingRow Glyph="&#xE78C;" Header="Export settings"
                                     Description="Saves your dock, widgets, notes and reminders to a .zip file.">
@@ -248,14 +284,38 @@
                     <ctl:SettingRow Glyph="&#xE721;" Header="Search">
                         <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ShowSearchButton}" />
                     </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE721;" Header="Search button opens"
+                                    Description="The quick launcher finds apps, settings and DockHub commands, and does quick math. It also opens with its own shortcut."
+                                    IsEnabled="{Binding ShowSearchButton}">
+                        <Border Style="{StaticResource SegmentedHost}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="SearchAction" Content="Windows Search"
+                                             IsChecked="{Binding SearchButtonAction, Converter={StaticResource EnumEq}, ConverterParameter=WindowsSearch}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="SearchAction" Content="Quick launcher"
+                                             IsChecked="{Binding SearchButtonAction, Converter={StaticResource EnumEq}, ConverterParameter=Launcher}" />
+                            </StackPanel>
+                        </Border>
+                    </ctl:SettingRow>
                     <ctl:SettingRow Glyph="&#xE7C4;" Header="Task view">
                         <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ShowTaskViewButton}" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE7F4;" Header="Virtual desktop number"
+                                    Description="Shows which desktop you are on when you have more than one. Scroll it to switch desktops, right-click to add or close one.">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ShowDesktopIndicator}" />
                     </ctl:SettingRow>
 
                     <TextBlock Text="Applications" Style="{StaticResource SectionHeader}" />
                     <ctl:SettingRow Glyph="&#xE8A9;" Header="Show unpinned running apps"
                                     Description="Running applications that are not pinned to the dock appear after a separator. Right-click to pin or drag and drop anywhere.">
                         <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ShowRunningApps}" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE7F4;" Header="Apps from all desktops"
+                                    Description="Lists open windows of every virtual desktop. Clicking one switches to its desktop.">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding RunningAppsAllDesktops}" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE7B3;" Header="Peek at windows"
+                                    Description="Resting the pointer on a window preview shows that window and fades the others. Scroll over a preview to switch between an app's windows.">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding PreviewPeek}" />
                     </ctl:SettingRow>
 
                     <TextBlock Text="Right side" Style="{StaticResource SectionHeader}" />
@@ -289,6 +349,24 @@
                             </ItemsControl>
                         </StackPanel>
                     </Border>
+                    <ctl:SettingRow Glyph="&#xF2B7;" Header="Input language"
+                                    Description="Shows the keyboard language (TUR, ENG) when more than one is installed. Click or scroll to switch, right-click for the list.">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ShowKeyboardLayout}" IsEnabled="{Binding ShowTray}" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE720;" Header="Microphone icon"
+                                    Description="Click it to mute or unmute the microphone. When in use: shown while an app records, like Windows."
+                                    IsEnabled="{Binding ShowTray}">
+                        <Border Style="{StaticResource SegmentedHost}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Mic" Content="When in use"
+                                             IsChecked="{Binding MicrophoneIcon, Converter={StaticResource EnumEq}, ConverterParameter=WhenInUse}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Mic" Content="Always"
+                                             IsChecked="{Binding MicrophoneIcon, Converter={StaticResource EnumEq}, ConverterParameter=Always}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Mic" Content="Off"
+                                             IsChecked="{Binding MicrophoneIcon, Converter={StaticResource EnumEq}, ConverterParameter=Off}" />
+                            </StackPanel>
+                        </Border>
+                    </ctl:SettingRow>
                     <ctl:SettingRow Glyph="&#xE701;" Header="Network icon" Description="Connection status. Click for quick settings.">
                         <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ShowNetworkIcon}" IsEnabled="{Binding ShowTray}" />
                     </ctl:SettingRow>
@@ -307,6 +385,10 @@
                     <ctl:SettingRow Glyph="&#xE916;" Header="Show seconds">
                         <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ClockShowSeconds}" IsEnabled="{Binding ShowClock}" />
                     </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xEA8F;" Header="Notifications next to the clock"
+                                    Description="How many notifications wait in the notification center, and a moon while Do Not Disturb is on.">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ShowNotificationIndicator}" IsEnabled="{Binding ShowClock}" />
+                    </ctl:SettingRow>
                     <ctl:SettingRow Glyph="&#xE7F4;" Header="Show desktop button" Description="The slim strip at the far right of the dock.">
                         <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ShowDesktopButton}" />
                     </ctl:SettingRow>
@@ -321,6 +403,13 @@
 
                     <TextBlock Text="Layout presets" Style="{StaticResource SectionHeader}" />
                     <UniformGrid x:Name="PresetPanel" Columns="4" Margin="0,0,0,6" />
+                    <ctl:SettingRow Glyph="&#xE74E;" Header="Save current layout as a preset"
+                                    Description="Keeps the look and the widgets of your dock as a preset you can apply again later.">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBox x:Name="NewPresetName" Width="160" MinHeight="32" VerticalContentAlignment="Center" Margin="0,0,8,0" />
+                            <Button Content="Save" Click="OnSavePresetClick" />
+                        </StackPanel>
+                    </ctl:SettingRow>
 
                     <TextBlock Text="Style" Style="{StaticResource SectionHeader}" />
                     <ctl:SettingRow Glyph="&#xE790;" Header="Theme">
@@ -385,6 +474,21 @@
                     </ctl:SettingRow>
                     <ctl:SettingRow Glyph="&#xE7B3;" Header="Card hover" Description="Widget card gently lights up when hovered.">
                         <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding HoverEffect}" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE9A6;" Header="Even widget widths"
+                                    Description="Widget cards round their width up to a common grid, so the dock keeps an even rhythm.">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding AlignWidgetWidths}" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE8D2;" Header="Text size" x:Name="TextSizeRow"
+                                    Description="Text in settings, widget panels and menus. System follows the Windows text size setting.">
+                        <ComboBox x:Name="TextScaleCombo" Width="160" SelectionChanged="OnTextScaleChanged" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE790;" Header="Theme file"
+                                    Description="Share your dock's look: colors, glass, size, shape and position in a .dockhub-theme file.">
+                        <StackPanel Orientation="Horizontal">
+                            <Button Content="Export…" Click="OnExportThemeClick" Margin="0,0,8,0" />
+                            <Button Content="Import…" Click="OnImportThemeClick" />
+                        </StackPanel>
                     </ctl:SettingRow>
 
                     <TextBlock Text="Size and shape" Style="{StaticResource SectionHeader}" />

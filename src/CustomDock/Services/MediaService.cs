@@ -229,6 +229,35 @@ public sealed class MediaService
         return name.Length > 20 ? name[..20] : name;
     }
 
+    /// <summary>
+    /// Media session of an app, for the play/pause buttons under its window preview. Matched by the window's
+    /// AppUserModelID, or by the executable name appearing in the session's id ("Spotify.exe", "Chrome", "MSEdge").
+    /// </summary>
+    public MediaAppSession? FindSession(string? processName, string? aumid)
+    {
+        if (_manager is null) return null;
+        try
+        {
+            foreach (var session in _manager.GetSessions())
+            {
+                string id = session.SourceAppUserModelId ?? "";
+                if (id.Length == 0) continue;
+                bool match = !string.IsNullOrEmpty(aumid) && string.Equals(id, aumid, StringComparison.OrdinalIgnoreCase);
+                if (!match && !string.IsNullOrEmpty(processName))
+                {
+                    string exe = processName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ? processName[..^4] : processName;
+                    match = exe.Length > 2 && id.Contains(exe, StringComparison.OrdinalIgnoreCase);
+                }
+                if (match) return new MediaAppSession(session);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Debug($"Media sessions could not be read: {ex.Message}");
+        }
+        return null;
+    }
+
     public async Task PlayPauseAsync()
     {
         if (_session is not null) await Try(() => _session.TryTogglePlayPauseAsync().AsTask());
@@ -262,5 +291,54 @@ public sealed class MediaService
         {
             Log.Error(ex, "Media command failed");
         }
+    }
+}
+
+/// <summary>One app's media session: its current track and transport buttons.</summary>
+public sealed class MediaAppSession
+{
+    private readonly WinRtSession _session;
+
+    internal MediaAppSession(WinRtSession session) => _session = session;
+
+    public bool IsPlaying
+    {
+        get
+        {
+            try { return _session.GetPlaybackInfo()?.PlaybackStatus == GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing; }
+            catch { return false; }
+        }
+    }
+
+    public bool CanPrevious => Controls?.IsPreviousEnabled ?? false;
+
+    public bool CanNext => Controls?.IsNextEnabled ?? false;
+
+    private GlobalSystemMediaTransportControlsSessionPlaybackControls? Controls
+    {
+        get
+        {
+            try { return _session.GetPlaybackInfo()?.Controls; }
+            catch { return null; }
+        }
+    }
+
+    /// <summary>Current track title (used to pick the right browser window).</summary>
+    public async Task<string> GetTitleAsync()
+    {
+        try { return (await _session.TryGetMediaPropertiesAsync())?.Title ?? ""; }
+        catch { return ""; }
+    }
+
+    public Task PlayPauseAsync() => Run(() => _session.TryTogglePlayPauseAsync().AsTask());
+
+    public Task NextAsync() => Run(() => _session.TrySkipNextAsync().AsTask());
+
+    public Task PreviousAsync() => Run(() => _session.TrySkipPreviousAsync().AsTask());
+
+    private static async Task Run(Func<Task<bool>> action)
+    {
+        try { await action(); }
+        catch (Exception ex) { Log.Error(ex, "Media command failed"); }
     }
 }

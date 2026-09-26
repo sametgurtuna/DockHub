@@ -105,6 +105,12 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+        <Style.Triggers>
+            <!-- Cards widened to the grid keep their content in the middle. -->
+            <Trigger Property="SnapToGrid" Value="True">
+                <Setter Property="HorizontalContentAlignment" Value="Center" />
+            </Trigger>
+        </Style.Triggers>
     </Style>
 
     <!-- ================= Dock Button ================= -->

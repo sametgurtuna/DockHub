@@ -109,10 +109,10 @@ public partial class AlarmWidget : WidgetBase
     private void Render()
     {
         var next = _settings.NextOccurrence(DateTime.Now);
-        TitleText.Text = next is null ? "Alarm" : _settings.Time;
+        TitleText.Text = next is null ? L.T("Alarm") : _settings.Time;
         if (next is null)
         {
-            SubText.Text = "Set time";
+            SubText.Text = L.T("Set time");
         }
         else
         {
@@ -121,7 +121,7 @@ public partial class AlarmWidget : WidgetBase
             SubText.Text = _settings.RepeatDaily && !string.IsNullOrWhiteSpace(_settings.Label) ? $"{label} · daily" : label;
         }
         Bell.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, next is null ? "TextSecondaryBrush" : "AccentOrangeBrush");
-        ToolTip = next is null ? "Click to set alarm" : $"Next: {next.Value:dddd HH:mm}";
+        ToolTip = next is null ? L.T("Click to set alarm") : L.T("Next: {0}", next.Value.ToString("dddd HH:mm", System.Globalization.CultureInfo.CurrentCulture));
         RefreshCompact();
     }
 
@@ -170,7 +170,7 @@ public partial class AlarmWidget : WidgetBase
     {
         if (!TimeInput.TryParse(TimeBox.Text, out var time))
         {
-            ErrorText.Text = "Enter time in HH:mm format.";
+            ErrorText.Text = L.T("Enter time in HH:mm format.");
             return;
         }
         _settings.Time = $"{time.Hours:00}:{time.Minutes:00}";

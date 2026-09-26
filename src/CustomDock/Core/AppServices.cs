@@ -44,4 +44,12 @@ public static class AppServices
     public static UpdateService Updates { get; } = new();
 
     public static ClipboardHistoryService Clipboard { get; } = new();
+
+    public static KeyboardLayoutService KeyboardLayouts { get; } = new();
+
+    public static MicrophoneService Microphone { get; } = new();
+
+    public static NotificationCenterService NotificationCenter { get; } = new();
+
+    public static VirtualDesktopService VirtualDesktops { get; } = new();
 }

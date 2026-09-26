@@ -96,7 +96,7 @@ public partial class HydrationWidget : WidgetBase
 
         var remaining = Hydration.NextReminder - DateTime.Now;
         TimerText.Text = remaining > TimeSpan.Zero ? TimerFormat.FormatRemaining(remaining) : "Drink up!";
-        TimerCaption.Text = $"Water · {count}/{goal}";
+        TimerCaption.Text = L.T("Water · {0}/{1}", count, goal);
 
         Ring.Maximum = goal;
         Ring.Value = Math.Min(count, goal);
@@ -108,7 +108,7 @@ public partial class HydrationWidget : WidgetBase
         string reminders = _settings.NotificationsEnabled
             ? $"Reminder every {_settings.IntervalMinutes}m ({_settings.StartHour:00}:00–{_settings.EndHour:00}:00)"
             : "Reminders off";
-        ToolTip = $"Today {count}/{goal} glasses ({liters:0.0#} L)\n{reminders}\nClick: +1 glass · Right-click: options";
+        ToolTip = L.T("Today {0}/{1} glasses ({2} L)\n{3}\nClick: +1 glass · Right-click: options", count, goal, liters.ToString("0.0#", System.Globalization.CultureInfo.CurrentCulture), reminders);
         RefreshCompact();
     }
 

@@ -644,6 +644,20 @@
                     <TextBlock Text="Widget gallery" Style="{StaticResource PageTitle}" />
                     <TextBlock Text="Click the + button next to a widget to add it to the dock. Right-click added widgets on the dock to change their variant or open their settings."
                                Style="{StaticResource PageSubtitle}" />
+                    <WrapPanel Margin="0,0,0,12">
+                        <Button Margin="0,0,8,0" Click="OnInstallWebWidgetClick" ToolTip="Install a .dockwidget package (HTML/JavaScript widget)">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE896;" Style="{StaticResource IconText}" FontSize="12" />
+                                <TextBlock Text="Install widget…" Margin="8,0,0,0" />
+                            </StackPanel>
+                        </Button>
+                        <Button Click="OnOpenWidgetsFolderClick">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE838;" Style="{StaticResource IconText}" FontSize="12" />
+                                <TextBlock Text="Open widgets folder" Margin="8,0,0,0" />
+                            </StackPanel>
+                        </Button>
+                    </WrapPanel>
                     <StackPanel x:Name="GalleryPanel" />
                 </StackPanel>
 

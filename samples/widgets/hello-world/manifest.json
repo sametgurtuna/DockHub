@@ -1,0 +1,18 @@
+{
+  "id": "dev.dockhub.hello-world",
+  "name": "Hello world",
+  "version": "1.0.0",
+  "author": "DockHub",
+  "description": "A greeting and the time. Shows settings, storage and the context menu of the widget API.",
+  "entry": "index.html",
+  "minDockHubVersion": "0.7.0",
+  "variants": [
+    { "id": "standard", "name": "Standard", "size": "standard" },
+    { "id": "compact", "name": "Compact", "size": "compact" }
+  ],
+  "settings": [
+    { "key": "name", "type": "text", "label": "Your name", "default": "there" },
+    { "key": "seconds", "type": "toggle", "label": "Show seconds", "default": false }
+  ],
+  "permissions": { "network": [], "notifications": true }
+}

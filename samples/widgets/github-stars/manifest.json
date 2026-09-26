@@ -1,0 +1,15 @@
+{
+  "id": "dev.dockhub.github-stars",
+  "name": "GitHub stars",
+  "version": "1.0.0",
+  "author": "DockHub",
+  "description": "Star count of a GitHub repository. Shows how a widget asks for network access.",
+  "entry": "index.html",
+  "minDockHubVersion": "0.7.0",
+  "variants": [ { "id": "standard", "name": "Standard", "size": "standard" } ],
+  "settings": [
+    { "key": "repo", "type": "text", "label": "Repository", "description": "owner/name, for example sametgurtuna/DockHub", "default": "sametgurtuna/DockHub" },
+    { "key": "minutes", "type": "number", "label": "Refresh every (minutes)", "default": 30, "min": 5, "max": 240 }
+  ],
+  "permissions": { "network": ["api.github.com"], "notifications": false }
+}

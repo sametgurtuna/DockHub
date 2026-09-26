@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  /* DockHub sets these variables and data-theme on <html> to match the dock. */
+  html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
+  body {
+    font-family: var(--dh-font, "Segoe UI", sans-serif);
+    color: var(--dh-text, #fff);
+    display: flex; align-items: center; gap: 10px; padding: 0 12px; box-sizing: border-box;
+    user-select: none; cursor: default;
+  }
+  .dot { width: 22px; height: 22px; border-radius: 50%; background: var(--dh-accent, #4cc2ff); flex: none; }
+  .text { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
+  .title { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .time { font-size: 11px; color: var(--dh-text-secondary, #aaa); font-variant-numeric: tabular-nums; }
+  html[data-size="compact"] .text { display: none; }
+  html[data-size="compact"] body { justify-content: center; padding: 0; }
+</style>
+</head>
+<body>
+  <div class="dot"></div>
+  <div class="text">
+    <div class="title" id="greeting">Hello</div>
+    <div class="time" id="time"></div>
+  </div>
+<script>
+  let settings = { name: 'there', seconds: false };
+
+  async function start() {
+    settings = { ...settings, ...(await dockhub.settings.get()) };
+    dockhub.settings.onChange(values => { settings = { ...settings, ...values }; render(); });
+    dockhub.onSize(size => document.documentElement.dataset.size = size);
+
+    // Remember how many times the widget was clicked (kept per widget copy).
+    let clicks = (await dockhub.storage.get('clicks')) || 0;
+    document.body.addEventListener('click', async () => {
+      clicks++;
+      await dockhub.storage.set('clicks', clicks);
+      render();
+    });
+
+    await dockhub.contextMenu.set([{ id: 'wave', label: 'Say hello' }]);
+    dockhub.contextMenu.onSelect(id => {
+      if (id === 'wave') dockhub.notify({ title: 'Hello!', body: `You clicked the widget ${clicks} times.` });
+    });
+
+    render();
+    setInterval(render, 1000);
+  }
+
+  function render() {
+    document.getElementById('greeting').textContent = `Hello, ${settings.name}`;
+    const options = { hour: '2-digit', minute: '2-digit', second: settings.seconds ? '2-digit' : undefined };
+    document.getElementById('time').textContent = new Date().toLocaleTimeString(undefined, options);
+  }
+
+  start();
+</script>
+</body>
+</html>

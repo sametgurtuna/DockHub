@@ -91,6 +91,7 @@ public partial class App : Application
         if (config.DebugLogging) Log.DebugEnabled = true;
         L.Initialize(config.Language);
         ApplyMotionLevel();
+        Widgets.Web.WebWidgetCatalog.LoadAll();
         SystemEvents.UserPreferenceChanged += (_, e) =>
         {
             if (e.Category is UserPreferenceCategory.General or UserPreferenceCategory.Accessibility) ApplyMotionLevel();

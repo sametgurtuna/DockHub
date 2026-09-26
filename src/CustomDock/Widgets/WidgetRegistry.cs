@@ -80,7 +80,9 @@ public static class WidgetCategories
     public const string AI = "AI";
     public const string Productivity = "Productivity";
 
-    public static readonly string[] Ordered = { Clocks, Reminders, Productivity, Notes, Media, System, Weather, AI };
+    public const string Web = "Web widgets";
+
+    public static readonly string[] Ordered = { Clocks, Reminders, Productivity, Notes, Media, System, Weather, AI, Web };
 }
 
 /// <summary>
@@ -299,6 +301,14 @@ public static class WidgetRegistry
             Factory = () => new BatteryDevicesWidget(),
         },
     };
+
+    /// <summary>Adds (or replaces) a widget type at runtime, e.g. an installed web widget.</summary>
+    public static void Register(WidgetDescriptor descriptor)
+    {
+        var list = (List<WidgetDescriptor>)All;
+        list.RemoveAll(d => string.Equals(d.Id, descriptor.Id, StringComparison.OrdinalIgnoreCase));
+        list.Add(descriptor);
+    }
 
     public static WidgetDescriptor? Find(string? id)
         => All.FirstOrDefault(d => string.Equals(d.Id, id, StringComparison.OrdinalIgnoreCase));

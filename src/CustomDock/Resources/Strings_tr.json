@@ -731,6 +731,24 @@
   "Currency codes separated by commas, for example TRY, EUR, GBP.": "Virgülle ayrılmış para birimi kodları, örneğin TRY, EUR, GBP.",
   "Leave empty for your Downloads folder.": "İndirilenler klasörü için boş bırakın.",
 
+  // ---------------------------------------------------------------- Web widget'ları
+  "Web widgets": "Web widget'ları",
+  "Install widget…": "Widget yükle…",
+  "Open widgets folder": "Widget klasörünü aç",
+  "Install a .dockwidget package (HTML/JavaScript widget)": "Bir .dockwidget paketi yükle (HTML/JavaScript widget'ı)",
+  "Install a widget": "Widget yükle",
+  "Can't install this widget": "Bu widget yüklenemiyor",
+  "Internet access to: {0}": "Şuralara internet erişimi: {0}",
+  "Show notifications": "Bildirim gösterme",
+  "No internet access, no notifications": "İnternet erişimi yok, bildirim yok",
+  "Version {0}": "Sürüm {0}",
+  "This widget can use:": "Bu widget şunları kullanabilir:",
+  "Install “{0}”?": "“{0}” yüklensin mi?",
+  "Web widgets need the Microsoft Edge WebView2 Runtime.": "Web widget'ları için Microsoft Edge WebView2 Runtime gerekir.",
+  "This widget couldn't start.": "Bu widget başlatılamadı.",
+  "Developer tools": "Geliştirici araçları",
+  "Reload": "Yeniden yükle",
+
   // ---------------------------------------------------------------- Seçenek listeleri
   "1 second": "1 saniye",
   "2 seconds": "2 saniye",

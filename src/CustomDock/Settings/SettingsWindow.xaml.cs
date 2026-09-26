@@ -144,6 +144,23 @@ public partial class SettingsWindow : Window
 
     private void OnExitClick(object sender, RoutedEventArgs e) => App.Instance.ExitApplication();
 
+    private void OnCopyDiagnosticsClick(object sender, RoutedEventArgs e)
+    {
+        if (App.Instance.Shell is not { } shell) return;
+        try
+        {
+            string report = WindowDiagnostics.Dump(shell, AppServices.Config);
+            Log.Info("Diagnostics report:" + Environment.NewLine + report);
+            Clipboard.SetText(report);
+            DiagnosticsButton.Content = "Copied";
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to create diagnostics report");
+            DiagnosticsButton.Content = "Failed";
+        }
+    }
+
     private void OnOpenLinkClick(object sender, RoutedEventArgs e)
     {
         if (sender is FrameworkElement { Tag: string url })

@@ -174,6 +174,12 @@ public sealed class AppConfig : ObservableObject
 
     public bool HoverEffect { get => _hoverEffect; set => Set(ref _hoverEffect, value); }
 
+    // ---------------- Diagnostics
+
+    /// <summary>Writes verbose icon/window diagnostics to log.txt. Only editable in config.json.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool DebugLogging { get; set; }
+
     // ---------------- Items
 
     /// <summary>Dock items (app, widget, separator), from left to right.</summary>

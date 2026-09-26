@@ -140,6 +140,7 @@ public partial class DockWindow : Window, IWidgetHost
 
         ThemeManager.ThemeChanged += OnThemeChanged;
         SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
+        SystemEvents.PowerModeChanged += OnPowerModeChanged;
         _config.ItemsChanged += OnItemsChanged;
         _shell.RunningApps.GroupsChanged += RefreshRunningApps;
         _shell.Manager.FullScreenHelper.FullScreenApps.CollectionChanged += OnFullScreenAppsChanged;
@@ -219,6 +220,37 @@ public partial class DockWindow : Window, IWidgetHost
         new WindowInteropHelper(this).EnsureHandle();
         ApplySettings();
         _topmostTimer.Start();
+        // At sign-in the shell's icon cache may not be ready yet; retry missing icons once it has settled.
+        _iconRefreshTimer.Tick += (_, _) => { _iconRefreshTimer.Stop(); RefreshMissingIcons(); };
+        _iconRefreshTimer.Start();
+    }
+
+    private static readonly int WM_TASKBARCREATED = RegisterWindowMessage("TaskbarCreated");
+
+    private readonly DispatcherTimer _iconRefreshTimer = new(DispatcherPriority.Background) { Interval = TimeSpan.FromSeconds(15) };
+
+    private void OnPowerModeChanged(object? sender, PowerModeChangedEventArgs e)
+    {
+        if (e.Mode == PowerModes.Resume)
+            Dispatcher.BeginInvoke(DispatcherPriority.Background, RefreshMissingIcons);
+    }
+
+    /// <summary>Retries app and folder icons that could not be loaded (generic placeholder shown meanwhile).</summary>
+    public void RefreshMissingIcons()
+    {
+        if (_closing) return;
+        foreach (var view in _itemViews.Values.Concat(_runningViews.Values))
+        {
+            switch (view)
+            {
+                case AppButton button:
+                    button.RefreshIcon();
+                    break;
+                case GroupItemView group:
+                    group.RefreshIcons();
+                    break;
+            }
+        }
     }
 
     private void OnSourceInitialized(object? sender, EventArgs e)
@@ -308,6 +340,8 @@ public partial class DockWindow : Window, IWidgetHost
         }
         if ((msg == WM_SETTINGCHANGE && wParam.ToInt32() == SPI_SETWORKAREA) || msg == WM_DISPLAYCHANGE)
             QueueReposition();
+        if (msg == WM_TASKBARCREATED && WM_TASKBARCREATED != 0)
+            Dispatcher.BeginInvoke(DispatcherPriority.Background, RefreshMissingIcons); // Explorer restarted
         return IntPtr.Zero;
     }
 
@@ -500,6 +534,8 @@ public partial class DockWindow : Window, IWidgetHost
         AppServices.Clock.MinuteTick -= OnClockTick;
         ThemeManager.ThemeChanged -= OnThemeChanged;
         SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
+        SystemEvents.PowerModeChanged -= OnPowerModeChanged;
+        _iconRefreshTimer.Stop();
         _config.ItemsChanged -= OnItemsChanged;
         _shell.RunningApps.GroupsChanged -= RefreshRunningApps;
         _shell.Manager.FullScreenHelper.FullScreenApps.CollectionChanged -= OnFullScreenAppsChanged;

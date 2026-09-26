@@ -234,7 +234,12 @@ public sealed class GroupItemView : Grid
         try
         {
             if (child.Kind == DockItemKind.App && child.Path is not null)
-                return ShellIcons.GetIcon(child.Path, 48);
+            {
+                // Never leave a gap in the folder: missing icons show the generic app icon until they load.
+                var icon = AppIcons.For(child, 48, out bool isFallback);
+                if (isFallback) AppIcons.Invalidate(child);
+                return icon;
+            }
             if (child.Kind == DockItemKind.Widget && WidgetRegistry.Find(child.Widget) is { } descriptor)
             {
                 var visual = new DrawingVisual();
@@ -796,10 +801,10 @@ public sealed class GroupItemView : Grid
         }
         else if (e.Data.GetData(DockDragHelper.RunningAppFormat) is string key &&
                  App.Instance.Shell?.RunningApps.Find(key) is { } group &&
-                 AppLauncher.PinnablePath(group) is { } path)
+                 AppLauncher.PinItem(group) is { } pinItem)
         {
             e.Handled = true;
-            config.AddToGroup(_item.Id, DockItem.App(path, group.Title));
+            config.AddToGroup(_item.Id, pinItem);
             RefreshAppearance();
         }
         else if (e.Data.GetData(DataFormats.FileDrop) is string[] files)

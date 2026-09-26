@@ -13,23 +13,36 @@ namespace CustomDock.Native;
 /// <summary>High-resolution shell icons and shortcut (.lnk) information.</summary>
 public static class ShellIcons
 {
-    private static readonly Dictionary<string, ImageSource?> IconCache = new(StringComparer.OrdinalIgnoreCase);
-    private static readonly Dictionary<string, (string? Target, string? AppId)> LinkCache = new(StringComparer.OrdinalIgnoreCase);
+    private const int IconCacheCapacity = 256;
+    private static readonly TimeSpan FailedShortcutRetry = TimeSpan.FromSeconds(60);
 
-    /// <summary>Icon (pixel size) for a file, folder, shortcut, or "shell:AppsFolder\AUMID".</summary>
+    private static readonly Dictionary<string, LinkedListNode<(string Key, ImageSource Image)>> IconCache = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly LinkedList<(string Key, ImageSource Image)> IconOrder = new();
+    private static readonly Dictionary<string, (ShortcutInfo Info, DateTime Stamp, bool Failed)> LinkCache = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly HashSet<string> LoggedFailures = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>Icon (pixel size) for a file, folder, shortcut, or "shell:AppsFolder\AUMID". Failures are not cached.</summary>
     public static ImageSource? GetIcon(string path, int sizePx = 96)
     {
         if (string.IsNullOrWhiteSpace(path)) return null;
 
         string key = $"{sizePx}|{path}";
-        if (IconCache.TryGetValue(key, out var cached)) return cached;
+        if (IconCache.TryGetValue(key, out var node))
+        {
+            IconOrder.Remove(node);
+            IconOrder.AddFirst(node);
+            return node.Value.Image;
+        }
 
         ImageSource? image = null;
+        string? failure = null;
         try
         {
-            image = GetShellItemImage(path, sizePx) ?? GetFileInfoIcon(path);
+            image = GetShellItemImage(path, sizePx);
+            if (image is null) { failure = "shell item image"; image = GetFileInfoIcon(path); }
             if (image is null && File.Exists(path))
             {
+                failure += ", file info";
                 try
                 {
                     using var sysIcon = System.Drawing.Icon.ExtractAssociatedIcon(path);
@@ -48,10 +61,49 @@ public static class ShellIcons
             Log.Error(ex, $"Failed to retrieve icon: {path}");
         }
 
-        if (image is not null)
-            IconCache[key] = image;
+        if (image is null)
+        {
+            if (LoggedFailures.Add(key))
+                Log.Debug($"Icon not found ({failure}, exists: {File.Exists(path) || Directory.Exists(path)}): {path}");
+            return null;
+        }
 
+        LoggedFailures.Remove(key);
+        var added = IconOrder.AddFirst((key, image));
+        IconCache[key] = added;
+        if (IconCache.Count > IconCacheCapacity && IconOrder.Last is { } oldest)
+        {
+            IconOrder.RemoveLast();
+            IconCache.Remove(oldest.Value.Key);
+        }
         return image;
+    }
+
+    /// <summary>Icon from an icon resource location (e.g. a shortcut's "Change Icon" setting).</summary>
+    public static ImageSource? GetIconFromLocation(string file, int index, int sizePx = 96)
+    {
+        if (string.IsNullOrWhiteSpace(file)) return null;
+        file = Environment.ExpandEnvironmentVariables(file);
+        if (!File.Exists(file)) return null;
+
+        var icons = new IntPtr[1];
+        try
+        {
+            if (PrivateExtractIcons(file, index, sizePx, sizePx, icons, null, 1, 0) == 0 || icons[0] == IntPtr.Zero)
+                return null;
+            var source = Imaging.CreateBitmapSourceFromHIcon(icons[0], Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+            source.Freeze();
+            return source;
+        }
+        catch (Exception ex)
+        {
+            Log.Debug($"Icon location failed {file},{index}: {ex.Message}");
+            return null;
+        }
+        finally
+        {
+            if (icons[0] != IntPtr.Zero) DestroyIcon(icons[0]);
+        }
     }
 
     /// <summary>Retrieves icon from window handle (HWND) via WM_GETICON and window class.</summary>
@@ -117,7 +169,11 @@ public static class ShellIcons
     public static void ClearCache(string path)
     {
         foreach (var key in IconCache.Keys.Where(k => k.EndsWith("|" + path, StringComparison.OrdinalIgnoreCase)).ToList())
+        {
+            IconOrder.Remove(IconCache[key]);
             IconCache.Remove(key);
+        }
+        LinkCache.Remove(path);
     }
 
     private static ImageSource? GetShellItemImage(string path, int size)
@@ -168,6 +224,8 @@ public static class ShellIcons
         }
         if (!hasAlpha)
         {
+            // A completely empty bitmap (icon not extracted yet) is a failure, not a black square.
+            if (pixels.All(b => b == 0)) return null;
             for (int i = 3; i < pixels.Length; i += 4) pixels[i] = 255;
         }
 
@@ -205,18 +263,47 @@ public static class ShellIcons
     /// <summary>Target path and AppUserModelID of shortcut.</summary>
     public static (string? Target, string? AppId) ReadShortcut(string lnkPath)
     {
-        if (LinkCache.TryGetValue(lnkPath, out var cached)) return cached;
+        var info = ReadShortcutInfo(lnkPath);
+        return (info.Target, info.AppId);
+    }
 
-        (string? Target, string? AppId) result = (null, null);
+    /// <summary>
+    /// Full shortcut information. Successful reads are cached until the file changes; failed reads are retried
+    /// after a minute, so a transient error (file being replaced by an updater) doesn't stick for the whole session.
+    /// </summary>
+    public static ShortcutInfo ReadShortcutInfo(string lnkPath)
+    {
+        DateTime stamp;
+        try { stamp = File.GetLastWriteTimeUtc(lnkPath); }
+        catch { stamp = DateTime.MinValue; }
+
+        if (LinkCache.TryGetValue(lnkPath, out var cached))
+        {
+            if (!cached.Failed && cached.Stamp == stamp) return cached.Info;
+            if (cached.Failed && DateTime.UtcNow - cached.Stamp < FailedShortcutRetry) return cached.Info;
+        }
+
+        var result = new ShortcutInfo();
+        bool failed = false;
         object? link = null;
         try
         {
             link = new ShellLinkCoClass();
             ((IPersistFile)link).Load(lnkPath, 0);
+            var shellLink = (IShellLinkW)link;
+
             var sb = new StringBuilder(1024);
-            ((IShellLinkW)link).GetPath(sb, sb.Capacity, IntPtr.Zero, 0);
-            string? target = sb.ToString();
-            result.Target = string.IsNullOrWhiteSpace(target) ? null : target;
+            shellLink.GetPath(sb, sb.Capacity, IntPtr.Zero, 0);
+            result.Target = NullIfEmpty(sb.ToString());
+
+            sb.Clear();
+            shellLink.GetArguments(sb, sb.Capacity);
+            result.Arguments = NullIfEmpty(sb.ToString());
+
+            sb.Clear();
+            shellLink.GetIconLocation(sb, sb.Capacity, out int iconIndex);
+            result.IconFile = NullIfEmpty(sb.ToString());
+            result.IconIndex = iconIndex;
 
             if (link is IPropertyStore store)
             {
@@ -237,18 +324,24 @@ public static class ShellIcons
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"Failed to read shortcut: {lnkPath}");
+            failed = true;
+            Log.Warn($"Failed to read shortcut {lnkPath}: {ex.Message}");
         }
         finally
         {
             if (link is not null) Marshal.ReleaseComObject(link);
         }
 
-        LinkCache[lnkPath] = result;
+        LinkCache[lnkPath] = (result, failed ? DateTime.UtcNow : stamp, failed);
         return result;
     }
 
     public static string? ResolveShortcut(string lnkPath) => ReadShortcut(lnkPath).Target;
+
+    private static string? NullIfEmpty(string? text) => string.IsNullOrWhiteSpace(text) ? null : text;
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern uint PrivateExtractIcons(string file, int iconIndex, int cx, int cy, IntPtr[] icons, int[]? iconIds, uint count, uint flags);
 
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
     private static extern int SHCreateItemFromParsingName(
@@ -300,10 +393,24 @@ public static class ShellIcons
     {
     }
 
+    /// <summary>IShellLinkW; the full vtable order is required to reach GetArguments / GetIconLocation.</summary>
     [ComImport, Guid("000214F9-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     private interface IShellLinkW
     {
         void GetPath([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder file, int cch, IntPtr findData, int flags);
+        void GetIDList(out IntPtr pidl);
+        void SetIDList(IntPtr pidl);
+        void GetDescription([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder name, int cch);
+        void SetDescription([MarshalAs(UnmanagedType.LPWStr)] string name);
+        void GetWorkingDirectory([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder dir, int cch);
+        void SetWorkingDirectory([MarshalAs(UnmanagedType.LPWStr)] string dir);
+        void GetArguments([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder args, int cch);
+        void SetArguments([MarshalAs(UnmanagedType.LPWStr)] string args);
+        void GetHotkey(out short hotkey);
+        void SetHotkey(short hotkey);
+        void GetShowCmd(out int showCmd);
+        void SetShowCmd(int showCmd);
+        void GetIconLocation([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder iconPath, int cch, out int iconIndex);
     }
 
     [ComImport, Guid("886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
@@ -315,4 +422,18 @@ public static class ShellIcons
         [PreserveSig] int SetValue(ref PropertyKey key, ref PropVariant value);
         [PreserveSig] int Commit();
     }
+}
+
+/// <summary>Information read from a .lnk shortcut.</summary>
+public sealed class ShortcutInfo
+{
+    public string? Target { get; set; }
+
+    public string? Arguments { get; set; }
+
+    public string? AppId { get; set; }
+
+    public string? IconFile { get; set; }
+
+    public int IconIndex { get; set; }
 }

@@ -59,11 +59,20 @@ public sealed class AppGroup : ObservableObject
 
     public bool ProgressIndeterminate { get => _progressIndeterminate; private set => Set(ref _progressIndeterminate, value); }
 
-    public string? ExecutablePath => AppKeys.ExecutableOf(Key);
+    /// <summary>Real executable of a desktop app group (the key itself is version-independent, not a path).</summary>
+    public string? ExecutablePath => Key.StartsWith("exe:", StringComparison.Ordinal)
+        ? Windows.Select(w => { try { return w.WinFileName; } catch { return null; } }).FirstOrDefault(p => !string.IsNullOrEmpty(p))
+        : null;
 
     /// <summary>Most recently active window (or first window).</summary>
     public ApplicationWindow? PrimaryWindow =>
         Windows.FirstOrDefault(w => w.State == ApplicationWindow.WindowState.Active) ?? Windows.FirstOrDefault();
+
+    private static bool SafeIsUwp(ApplicationWindow window)
+    {
+        try { return window.IsUWP; }
+        catch { return false; }
+    }
 
     internal void Refresh()
     {
@@ -97,6 +106,16 @@ public sealed class AppGroup : ObservableObject
         else
         {
             Title = first.Title;
+        }
+
+        if (Icon is null && AppKeys.AppIdOf(Key) is not null)
+        {
+            // Packaged / UWP apps: the Start menu tile icon is sharper than the window icon.
+            var aumid = Windows.Select(w => { try { return w.AppUserModelID; } catch { return null; } })
+                .FirstOrDefault(a => !string.IsNullOrEmpty(a))
+                ?? (first.ProcId is { } pid ? NativeMethods.GetProcessAumid(pid) : null);
+            if (aumid is not null && !Windows.Any(w => SafeIsUwp(w)))
+                Icon = ShellIcons.GetIcon(AppKeys.AppsFolderPrefix + aumid, 96);
         }
 
         if (Icon is null)
@@ -136,6 +155,7 @@ public sealed class RunningAppsService : IDisposable
     private static readonly HashSet<string> WatchedProperties = new()
     {
         "State", "Icon", "OverlayIcon", "ProgressState", "ProgressValue", "Title", "Category", "WinFileName", "ProcId",
+        "ShowInTaskbar", "HMonitor",
     };
 
     private readonly ICollectionView _view;

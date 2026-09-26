@@ -96,8 +96,13 @@
                         DragOver="OnEndItemsDragOver" DragLeave="OnEndItemsDragLeave" Drop="OnEndItemsDrop">
                 <Button x:Name="ScrollBackButton" Style="{StaticResource DockButton}" Width="26" FontSize="11" Content="&#xE76B;"
                         ToolTip="Scroll back" Click="OnScrollBackClick" Visibility="Collapsed" />
-                <Button x:Name="ScrollForwardButton" Style="{StaticResource DockButton}" Width="26" FontSize="11" Content="&#xE76C;"
-                        ToolTip="Scroll forward" Click="OnScrollForwardClick" Visibility="Collapsed" />
+                <Grid>
+                    <Button x:Name="ScrollForwardButton" Style="{StaticResource DockButton}" Width="26" FontSize="11" Content="&#xE76C;"
+                            ToolTip="Scroll forward" Click="OnScrollForwardClick" Visibility="Collapsed" />
+                    <!-- Newly opened app that landed outside the visible part of the dock -->
+                    <Ellipse x:Name="NewAppHint" Width="6" Height="6" HorizontalAlignment="Right" VerticalAlignment="Top"
+                             Margin="0,9,3,0" IsHitTestVisible="False" Visibility="Collapsed" />
+                </Grid>
                 <dock:SeparatorView x:Name="EndSeparator" />
 
                 <ToggleButton x:Name="TrayOverflowButton" Style="{StaticResource DockButton}" Width="26" FontSize="11"

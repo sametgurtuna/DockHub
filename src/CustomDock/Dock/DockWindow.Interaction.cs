@@ -4,6 +4,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Shapes;
+using System.Windows.Threading;
 using CustomDock.Controls;
 using CustomDock.Core;
 using CustomDock.Native;
@@ -247,8 +249,47 @@ public partial class DockWindow
 
     private void OnScrollForwardClick(object sender, RoutedEventArgs e) => SmoothScrollBy(ViewportLength * 0.6);
 
+    private DispatcherTimer? _newAppHintTimer;
+    private readonly DateTime _startedAt = DateTime.UtcNow;
+
+    /// <summary>Marks the forward scroll arrow when a newly opened app was added outside the visible area.</summary>
+    private void HintIfOutOfView(AppButton button)
+    {
+        Dispatcher.BeginInvoke(DispatcherPriority.Loaded, () =>
+        {
+            if (_closing || ScrollableLength <= 0.5 || !button.IsLoaded || !Scroller.IsAncestorOf(button)) return;
+            var bounds = button.TransformToAncestor(Scroller).TransformBounds(new Rect(button.RenderSize));
+            double end = IsVertical ? bounds.Bottom : bounds.Right;
+            double viewport = IsVertical ? Scroller.ViewportHeight : Scroller.ViewportWidth;
+            if (end <= viewport + 1) return;
+
+            NewAppHint.SetResourceReference(Shape.FillProperty, button.Group?.IsFlashing == true ? "AccentOrangeBrush" : "AccentBlueBrush");
+            NewAppHint.Visibility = Visibility.Visible;
+            _newAppHintTimer ??= CreateNewAppHintTimer();
+            _newAppHintTimer.Stop();
+            _newAppHintTimer.Start();
+        });
+    }
+
+    private DispatcherTimer CreateNewAppHintTimer()
+    {
+        var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(10) };
+        timer.Tick += (_, _) => HideNewAppHint();
+        return timer;
+    }
+
+    private void HideNewAppHint()
+    {
+        _newAppHintTimer?.Stop();
+        NewAppHint.Visibility = Visibility.Collapsed;
+    }
+
     private void OnScrollChanged(object sender, ScrollChangedEventArgs e)
     {
+        // Scrolling toward the end reveals the new app.
+        if (NewAppHint.Visibility == Visibility.Visible && (IsVertical ? e.VerticalChange : e.HorizontalChange) > 0)
+            HideNewAppHint();
+
         bool scrollable = ScrollableLength > 0.5;
         var visibility = scrollable ? Visibility.Visible : Visibility.Collapsed;
         if (ScrollBackButton.Visibility != visibility)

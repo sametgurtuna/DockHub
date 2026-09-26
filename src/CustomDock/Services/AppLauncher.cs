@@ -99,15 +99,45 @@ public static class AppLauncher
         }
     }
 
-    /// <summary>Produces a pinnable path from a running window.</summary>
+    /// <summary>Path that launches a running app (its real executable, or shell:AppsFolder for packaged apps).</summary>
     public static string? PinnablePath(AppGroup group)
     {
         if (group.ExecutablePath is { } exe) return exe;
         if (AppKeys.AppIdOf(group.Key) is { } aumid)
+            return AppKeys.AppsFolderPrefix + (OriginalAumid(group) ?? aumid);
+        return null;
+    }
+
+    /// <summary>
+    /// Dock item for pinning a running app. Versioned install folders (Squirrel, MSIX) are replaced with a stable
+    /// launcher so the pin keeps working after the app updates itself.
+    /// </summary>
+    public static DockItem? PinItem(AppGroup group)
+    {
+        if (group.ExecutablePath is { } exe)
         {
-            // AUMID may have been lowercased; get the original case from the window.
-            var original = group.Windows.Select(w => w.AppUserModelID).FirstOrDefault(a => !string.IsNullOrEmpty(a)) ?? aumid;
-            return AppKeys.AppsFolderPrefix + original;
+            var (path, arguments) = AppPathResolver.StablePinPath(exe, OriginalAumid(group));
+            var item = DockItem.App(path, group.Title);
+            item.Arguments = arguments;
+            return item;
+        }
+        return PinnablePath(group) is { } launchPath ? DockItem.App(launchPath, group.Title) : null;
+    }
+
+    /// <summary>AUMID in its original case (keys are lower case).</summary>
+    private static string? OriginalAumid(AppGroup group)
+    {
+        foreach (var window in group.Windows)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(window.AppUserModelID)) return window.AppUserModelID;
+                if (window.ProcId is { } pid && NativeMethods.GetProcessAumid(pid) is { } processAumid) return processAumid;
+            }
+            catch
+            {
+                // Window may have closed.
+            }
         }
         return null;
     }

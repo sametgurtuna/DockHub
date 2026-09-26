@@ -88,6 +88,7 @@ public partial class App : Application
 
         AppServices.ConfigService.Load();
         var config = AppServices.Config;
+        if (config.DebugLogging) Log.DebugEnabled = true;
         ThemeManager.Apply(config.Theme);
 
         if (config.StartWithWindows != StartupManager.IsEnabled())

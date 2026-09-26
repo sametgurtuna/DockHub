@@ -8,6 +8,14 @@ public static class Log
     private const long MaxSize = 512 * 1024;
     private static readonly object Gate = new();
 
+    /// <summary>Verbose diagnostics: "debugLogging": true in config.json or the DOCKHUB_DEBUG=1 environment variable.</summary>
+    public static bool DebugEnabled { get; set; } = Environment.GetEnvironmentVariable("DOCKHUB_DEBUG") == "1";
+
+    public static void Debug(string message)
+    {
+        if (DebugEnabled) Write("DEBUG", message);
+    }
+
     public static void Info(string message) => Write("INFO", message);
 
     public static void Warn(string message) => Write("WARN", message);
@@ -16,7 +24,7 @@ public static class Log
 
     public static void Write(string level, string message)
     {
-        Debug.WriteLine($"[{level}] {message}");
+        System.Diagnostics.Debug.WriteLine($"[{level}] {message}");
         try
         {
             lock (Gate)

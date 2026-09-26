@@ -41,11 +41,49 @@ public sealed class ConfigService
         }
 
         Config.Items.RemoveAll(i => i.Kind == DockItemKind.Widget && WidgetRegistry.Find(i.Widget) is null);
+        RepairAppPaths(Config.Items);
         Config.Version = AppConfig.CurrentVersion;
         Config.PropertyChanged += (_, _) => ScheduleSave();
         Config.ItemsChanged += (_, _) => ScheduleSave();
         IsLoaded = true;
         SaveNow();
+    }
+
+    /// <summary>
+    /// Pins made from running apps used to store versioned install folders (Squirrel <c>app-1.2.3</c>, MSIX
+    /// <c>WindowsApps\Name_1.2.3.0_...</c>) that disappear when the app updates. Rewrites them to stable launchers
+    /// and finds the current folder for pins that already broke.
+    /// </summary>
+    private static void RepairAppPaths(IEnumerable<DockItem> items)
+    {
+        foreach (var item in items)
+        {
+            if (item.Kind == DockItemKind.Group && item.Children is { } children)
+            {
+                RepairAppPaths(children);
+                continue;
+            }
+            if (item.Kind != DockItemKind.App || item.Path is not { } path ||
+                !path.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            try
+            {
+                bool versioned = AppPathResolver.ParseSquirrel(path) is not null || AppPathResolver.ParseMsix(path) is not null;
+                string current = File.Exists(path) ? path : AppPathResolver.Repair(path) ?? path;
+                var (stable, arguments) = versioned ? AppPathResolver.StablePinPath(current, null) : (current, null);
+                arguments ??= item.Arguments;
+                if (string.Equals(stable, path, StringComparison.OrdinalIgnoreCase) && arguments == item.Arguments) continue;
+
+                Log.Info($"Pinned app path updated: {path} -> {stable}{(arguments is null ? "" : " " + arguments)}");
+                item.Path = stable;
+                item.Arguments = arguments;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"Failed to check pinned path {path}");
+            }
+        }
     }
 
     private static AppConfig ReadConfig()

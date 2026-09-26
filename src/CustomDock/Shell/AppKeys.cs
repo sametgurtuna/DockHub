@@ -6,8 +6,9 @@ namespace CustomDock.Shell;
 
 /// <summary>
 /// Matches windows and pinned applications with the same "application key".
-/// Rule: standard desktop apps are grouped by .exe path, UWP and PWA (Chrome/Edge web apps)
-/// are grouped by AppUserModelID.
+/// Rule: standard desktop apps are grouped by .exe path, UWP, packaged (MSIX) and PWA (Chrome/Edge web apps)
+/// apps are grouped by AppUserModelID. Executable keys are version-independent (see <see cref="AppPathResolver"/>),
+/// so an app keeps matching its pin after it updates itself into a new version folder.
 /// </summary>
 public static class AppKeys
 {
@@ -20,15 +21,17 @@ public static class AppKeys
             return "aumid:" + aumid.ToLowerInvariant();
 
         string? exe = SafeGet(() => window.WinFileName);
-        if (string.IsNullOrEmpty(exe))
-        {
-            uint pid = SafeGet(() => window.ProcId) ?? 0;
-            if (pid == 0) NativeMethods.GetWindowThreadProcessId(window.Handle, out pid);
-            if (pid != 0) exe = NativeMethods.GetProcessPath(pid);
-        }
+        uint pid = SafeGet(() => window.ProcId) ?? 0;
+        if (pid == 0) NativeMethods.GetWindowThreadProcessId(window.Handle, out pid);
+        if (string.IsNullOrEmpty(exe) && pid != 0)
+            exe = NativeMethods.GetProcessPath(pid);
 
         if (!string.IsNullOrEmpty(exe))
-            return "exe:" + exe.ToLowerInvariant();
+        {
+            if (AppPathResolver.ParseMsix(exe) is not null)
+                return PackagedKey(exe, string.IsNullOrEmpty(aumid) && pid != 0 ? NativeMethods.GetProcessAumid(pid) : aumid);
+            return "exe:" + AppPathResolver.NormalizeExe(exe);
+        }
 
         return "hwnd:" + window.Handle;
     }
@@ -42,22 +45,31 @@ public static class AppKeys
 
         if (path.EndsWith(".lnk", StringComparison.OrdinalIgnoreCase))
         {
-            var (target, appId) = ShellIcons.ReadShortcut(path);
-            if (!string.IsNullOrEmpty(appId) && (IsWebApp(appId) || string.IsNullOrEmpty(target)))
-                return "aumid:" + appId.ToLowerInvariant();
-            if (!string.IsNullOrEmpty(target) && target.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
-                return "exe:" + target.ToLowerInvariant();
+            var link = ShellIcons.ReadShortcutInfo(path);
+            if (!string.IsNullOrEmpty(link.AppId) && (IsWebApp(link.AppId) || string.IsNullOrEmpty(link.Target)))
+                return "aumid:" + link.AppId.ToLowerInvariant();
+            if (!string.IsNullOrEmpty(link.Target) && link.Target.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                return ForExecutable(link.Target, link.Arguments);
         }
 
         if (path.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
-            return "exe:" + path.ToLowerInvariant();
+            return ForExecutable(path, item.Arguments);
 
         return "path:" + path.ToLowerInvariant();
     }
 
-    /// <summary>Returns executable path if the key represents an .exe.</summary>
-    public static string? ExecutableOf(string key)
-        => key.StartsWith("exe:", StringComparison.Ordinal) ? key[4..] : null;
+    private static string ForExecutable(string exe, string? arguments)
+        => AppPathResolver.ParseMsix(exe) is not null ? PackagedKey(exe, null) : "exe:" + AppPathResolver.NormalizeExe(exe, arguments);
+
+    /// <summary>Packaged apps: AppUserModelID when it can be determined, otherwise a version-independent package path.</summary>
+    private static string PackagedKey(string exe, string? aumid)
+    {
+        if (string.IsNullOrEmpty(aumid) && AppPathResolver.ParseMsix(exe) is { } msix)
+            aumid = AppPathResolver.PackageAumid(msix.FamilyName);
+        return !string.IsNullOrEmpty(aumid)
+            ? "aumid:" + aumid.ToLowerInvariant()
+            : "exe:" + AppPathResolver.NormalizeExe(exe);
+    }
 
     public static string? AppIdOf(string key)
         => key.StartsWith("aumid:", StringComparison.Ordinal) ? key[6..] : null;

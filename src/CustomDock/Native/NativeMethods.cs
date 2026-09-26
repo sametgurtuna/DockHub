@@ -539,6 +539,28 @@ internal static class NativeMethods
         }
     }
 
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+    private static extern int GetApplicationUserModelId(IntPtr process, ref uint length, StringBuilder? id);
+
+    /// <summary>AppUserModelID of a packaged (MSIX) process, or null for unpackaged processes.</summary>
+    public static string? GetProcessAumid(uint processId)
+    {
+        var handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, processId);
+        if (handle == IntPtr.Zero) return null;
+        try
+        {
+            uint length = 0;
+            const int ERROR_INSUFFICIENT_BUFFER = 122;
+            if (GetApplicationUserModelId(handle, ref length, null) != ERROR_INSUFFICIENT_BUFFER || length == 0) return null;
+            var sb = new StringBuilder((int)length);
+            return GetApplicationUserModelId(handle, ref length, sb) == 0 ? sb.ToString() : null;
+        }
+        finally
+        {
+            CloseHandle(handle);
+        }
+    }
+
     // ------------------------------------------------------------------ Recycle Bin
 
     public const uint FO_DELETE = 0x0003;
@@ -583,4 +605,30 @@ internal static class NativeMethods
 
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
     public static extern int SHFileOperation(ref SHFILEOPSTRUCT lpFileOp);
+
+    // ------------------------------------------------------------------ Window events
+
+    public const uint EVENT_OBJECT_DESTROY = 0x8001;
+    public const uint EVENT_OBJECT_SHOW = 0x8002;
+    public const uint EVENT_OBJECT_HIDE = 0x8003;
+    public const uint EVENT_OBJECT_CLOAKED = 0x8017;
+    public const uint EVENT_OBJECT_UNCLOAKED = 0x8018;
+    public const uint WINEVENT_OUTOFCONTEXT = 0x0000;
+    public const uint WINEVENT_SKIPOWNPROCESS = 0x0002;
+    public const int OBJID_WINDOW = 0;
+    public const uint GA_ROOT = 2;
+
+    public delegate void WinEventProc(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint eventThread, uint eventTime);
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr SetWinEventHook(uint eventMin, uint eventMax, IntPtr hmodWinEventProc, WinEventProc callback, uint idProcess, uint idThread, uint flags);
+
+    [DllImport("user32.dll")]
+    public static extern bool UnhookWinEvent(IntPtr hWinEventHook);
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetAncestor(IntPtr hwnd, uint flags);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    public static extern IntPtr GetProp(IntPtr hWnd, string lpString);
 }

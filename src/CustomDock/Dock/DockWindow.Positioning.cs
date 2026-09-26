@@ -275,6 +275,7 @@ public partial class DockWindow
             ApplyBackdrop();
             UpdateReserver();
             QueueReposition();
+            RefreshMissingIcons();
         });
 
     private static readonly HashSet<string> MenuWindowClasses = new(StringComparer.Ordinal)

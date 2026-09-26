@@ -52,6 +52,7 @@ public sealed class ShellHost : IDisposable
         _appVisibility = new AppVisibilityHelper(false);
         Taskbar = new TaskbarController(() => Manager.NotificationArea?.Handle ?? IntPtr.Zero, () => _launcherVisible);
         RunningApps = new RunningAppsService(Manager);
+        VisibilityWatcher = new WindowVisibilityWatcher(Manager);
 
         _launcherTickHandler = (_, _) => PollLauncher();
         _launcherPoller = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(200) };
@@ -66,6 +67,8 @@ public sealed class ShellHost : IDisposable
     public TaskbarController Taskbar { get; }
 
     public RunningAppsService RunningApps { get; }
+
+    public WindowVisibilityWatcher VisibilityWatcher { get; }
 
     public NotificationArea? Tray => Manager.NotificationArea;
 
@@ -154,6 +157,7 @@ public sealed class ShellHost : IDisposable
         _launcherPoller.Stop();
         _launcherPoller.Tick -= _launcherTickHandler;
         Taskbar.Dispose();
+        VisibilityWatcher.Dispose();
         RunningApps.Dispose();
         try
         {

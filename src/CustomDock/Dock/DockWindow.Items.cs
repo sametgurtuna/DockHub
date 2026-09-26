@@ -13,7 +13,12 @@ namespace CustomDock.Dock;
 
 public partial class DockWindow
 {
-    private void OnItemsChanged(object? sender, EventArgs e) => RebuildItems();
+    private void OnItemsChanged(object? sender, EventArgs e)
+    {
+        // Keys are cached per item id; a repaired or edited path must be matched again.
+        _itemKeys.Clear();
+        RebuildItems();
+    }
 
     /// <summary>Widgets pinned to the fixed right edge render in <see cref="EndItemsPanel"/> instead of the scrollable center list.</summary>
     private static bool IsPinnedEnd(DockItem item) => item.Kind == DockItemKind.Widget && item.PinnedEnd;
@@ -198,16 +203,19 @@ public partial class DockWindow
         bool vertical = IsVertical;
         foreach (var group in unpinned)
         {
+            bool isNew = false;
             if (!_runningViews.TryGetValue(group.Key, out var button))
             {
                 var g = group;
                 button = new AppButton(null, group);
                 DockDragHelper.Attach(button, () => new DataObject(DockDragHelper.RunningAppFormat, g.Key));
                 _runningViews[group.Key] = button;
+                isNew = true;
             }
             button.Margin = vertical ? new Thickness(0, 1, 0, 1) : new Thickness(1, 0, 1, 0);
             button.Refresh();
             ItemsPanel.Children.Add(button);
+            if (isNew && DateTime.UtcNow > _startedAt + TimeSpan.FromSeconds(5)) HintIfOutOfView(button);
         }
     }
 
@@ -352,9 +360,9 @@ public partial class DockWindow
             }
             else if (e.Data.GetData(DockDragHelper.RunningAppFormat) is string runKey &&
                      _shell.RunningApps.Find(runKey) is { } runGroup &&
-                     AppLauncher.PinnablePath(runGroup) is { } runPath)
+                     AppLauncher.PinItem(runGroup) is { } runItem)
             {
-                config.AddToGroup(targetGroup.Item.Id, DockItem.App(runPath, runGroup.Title));
+                config.AddToGroup(targetGroup.Item.Id, runItem);
                 targetGroup.RefreshAppearance();
                 return;
             }
@@ -381,9 +389,9 @@ public partial class DockWindow
         }
         else if (e.Data.GetData(DockDragHelper.RunningAppFormat) is string key &&
                  _shell.RunningApps.Find(key) is { } group &&
-                 AppLauncher.PinnablePath(group) is { } path)
+                 AppLauncher.PinItem(group) is { } pinItem)
         {
-            config.AddItem(DockItem.App(path, group.Title), index);
+            config.AddItem(pinItem, index);
         }
         else if (e.Data.GetData(DataFormats.FileDrop) is string[] files)
         {

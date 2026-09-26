@@ -31,9 +31,13 @@ public sealed class WindowPreviewWindow : Window
     private int _outsideTicks;
     private readonly List<(Border Host, ApplicationWindow Window)> _previewItems = new();
 
+    private static readonly TimeSpan ClosingGrace = TimeSpan.FromSeconds(3);
+    private readonly Dictionary<IntPtr, DateTime> _closingWindows = new();
+
     private IntPtr _hwnd;
     private AppButton? _currentButton;
     private AppGroup? _currentGroup;
+    private DockEdge _currentEdge = DockEdge.Bottom;
     private bool _isClosing;
 
     public WindowPreviewWindow()
@@ -132,7 +136,12 @@ public sealed class WindowPreviewWindow : Window
         _hideTimer.Stop();
         _outsideTicks = 0;
 
-        var windows = group.Windows.Where(w => w.ShowInTaskbar).ToList();
+        // Windows closed from the preview keep their card hidden while they shut down (or show a save prompt).
+        var now = DateTime.UtcNow;
+        foreach (var handle in _closingWindows.Where(p => now - p.Value > ClosingGrace).Select(p => p.Key).ToList())
+            _closingWindows.Remove(handle);
+
+        var windows = group.Windows.Where(w => w.ShowInTaskbar && !_closingWindows.ContainsKey(w.Handle)).ToList();
         if (windows.Count == 0)
         {
             HidePreview();
@@ -140,6 +149,12 @@ public sealed class WindowPreviewWindow : Window
         }
 
         _currentButton = button;
+        _currentEdge = edge;
+        if (!ReferenceEquals(_currentGroup, group))
+        {
+            if (_currentGroup is not null) _currentGroup.PropertyChanged -= OnGroupPropertyChanged;
+            group.PropertyChanged += OnGroupPropertyChanged;
+        }
         _currentGroup = group;
 
         RebuildCards(windows);
@@ -169,11 +184,34 @@ public sealed class WindowPreviewWindow : Window
         _hideTimer.Stop();
         _outsideTicks = 0;
         UnregisterAllThumbnails();
+        if (_currentGroup is not null) _currentGroup.PropertyChanged -= OnGroupPropertyChanged;
         _currentButton = null;
         _currentGroup = null;
         _previewItems.Clear();
         _cardsPanel.Children.Clear();
         Hide();
+    }
+
+    /// <summary>A window of the previewed app opened or closed: rebuild the cards in place.</summary>
+    private void OnGroupPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(AppGroup.WindowCount)) return;
+        Dispatcher.BeginInvoke(DispatcherPriority.Background, () =>
+        {
+            if (IsVisible && ReferenceEquals(sender, _currentGroup) && _currentButton is not null && _currentGroup is not null)
+                ShowFor(_currentButton, _currentGroup, _currentEdge);
+        });
+    }
+
+    /// <summary>Close button and middle click: asks the window to close and drops its card right away.</summary>
+    private void CloseWindowFromPreview(ApplicationWindow window)
+    {
+        _closingWindows[window.Handle] = DateTime.UtcNow;
+        window.Close();
+        if (_currentButton is not null && _currentGroup is not null)
+            ShowFor(_currentButton, _currentGroup, _currentEdge);
+        else
+            HidePreview();
     }
 
     private bool IsMouseOverPreviewOrButton()
@@ -309,19 +347,7 @@ public sealed class WindowPreviewWindow : Window
             closeBtn.Click += (s, e) =>
             {
                 e.Handled = true;
-                w.Close();
-                // Check group again after 150ms
-                Dispatcher.BeginInvoke(DispatcherPriority.Background, () =>
-                {
-                    if (_currentGroup is not null && _currentButton is not null)
-                    {
-                        var remaining = _currentGroup.Windows.Where(win => win.ShowInTaskbar).ToList();
-                        if (remaining.Count > 0)
-                            ShowFor(_currentButton, _currentGroup, DockEdge.Bottom);
-                        else
-                            HidePreview();
-                    }
-                });
+                CloseWindowFromPreview(w);
             };
             Grid.SetColumn(closeBtn, 2);
 
@@ -365,6 +391,25 @@ public sealed class WindowPreviewWindow : Window
                 w.BringToFront();
                 HidePreview();
             };
+
+            // Middle click closes the window, like the Windows taskbar. Releasing outside the card cancels.
+            card.MouseDown += (_, e) =>
+            {
+                if (e.ChangedButton != MouseButton.Middle) return;
+                e.Handled = true;
+                card.CaptureMouse();
+            };
+            card.MouseUp += (_, e) =>
+            {
+                if (e.ChangedButton != MouseButton.Middle) return;
+                e.Handled = true;
+                bool captured = card.IsMouseCaptured;
+                card.ReleaseMouseCapture();
+                var position = e.GetPosition(card);
+                bool inside = position.X >= 0 && position.Y >= 0 && position.X <= card.ActualWidth && position.Y <= card.ActualHeight;
+                if (captured && inside) CloseWindowFromPreview(w);
+            };
+            card.ToolTip = "Click to switch · Middle-click to close";
 
             _previewItems.Add((thumbHost, w));
             _cardsPanel.Children.Add(card);

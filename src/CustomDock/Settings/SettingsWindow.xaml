@@ -552,8 +552,14 @@
                     <ctl:SettingRow Glyph="&#xE753;" Header="Open-Meteo" Description="Weather and geocoding data (CC BY 4.0).">
                         <Button Content="Open website" Tag="https://open-meteo.com/" Click="OnOpenLinkClick" />
                     </ctl:SettingRow>
+                    <TextBlock Text="Troubleshooting" Style="{StaticResource SectionHeader}" />
+                    <ctl:SettingRow Glyph="&#xEBE8;" Header="Copy diagnostics"
+                                    Description="Copies how DockHub sees open windows and pinned apps to the clipboard (and log.txt). Useful when an app doesn't show up on the dock or its icon is missing.">
+                        <Button x:Name="DiagnosticsButton" Content="Copy" Click="OnCopyDiagnosticsClick" />
+                    </ctl:SettingRow>
                     <TextBlock Text="Tips" Style="{StaticResource SectionHeader}" />
                     <ctl:SettingRow Glyph="&#xE962;" Header="Right-click the dock" Description="Add widgets, pin apps, change position, and toggle auto-hide." />
+                    <ctl:SettingRow Glyph="&#xE8A7;" Header="Window previews" Description="Hover a running app to preview its windows. Click a preview to switch to it, middle-click to close it." />
                     <ctl:SettingRow Glyph="&#xE7C9;" Header="Mouse wheel" Description="Scroll horizontally when the dock overflows." />
                     <ctl:SettingRow Glyph="&#xE8A7;" Header="Middle click / Shift+click" Description="Opens a new window of the application." />
                 </StackPanel>

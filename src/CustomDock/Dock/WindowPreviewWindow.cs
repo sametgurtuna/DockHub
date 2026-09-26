@@ -34,6 +34,13 @@ public sealed class WindowPreviewWindow : Window
     private static readonly TimeSpan ClosingGrace = TimeSpan.FromSeconds(3);
     private readonly Dictionary<IntPtr, DateTime> _closingWindows = new();
 
+    private const double MediaRowHeight = 30;
+
+    private readonly DispatcherTimer _peekTimer;
+    private ApplicationWindow? _peekTarget;
+    private ApplicationWindow? _peeking;
+    private int _cardsVersion;
+
     private IntPtr _hwnd;
     private AppButton? _currentButton;
     private AppGroup? _currentGroup;
@@ -119,6 +126,18 @@ public sealed class WindowPreviewWindow : Window
         };
         MouseLeave += (_, _) => ScheduleHide(100);
         SourceInitialized += OnSourceInitialized;
+
+        // Aero Peek: resting on a card shows that window alone for a moment.
+        _peekTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(450) };
+        _peekTimer.Tick += (_, _) =>
+        {
+            _peekTimer.Stop();
+            if (IsVisible && _peekTarget is { } target && !target.IsMinimized) BeginPeek(target);
+        };
+        PreviewMouseWheel += (_, e) =>
+        {
+            if (CycleWindows(e.Delta)) e.Handled = true;
+        };
     }
 
     public static WindowPreviewWindow Instance { get; } = new();
@@ -128,6 +147,7 @@ public sealed class WindowPreviewWindow : Window
         _hwnd = new WindowInteropHelper(this).Handle;
         WindowEffects.MakeToolWindow(_hwnd, noActivate: true);
         WindowEffects.ExtendGlass(_hwnd);
+        ManagedShell.Common.Helpers.WindowHelper.ExcludeWindowFromPeek(_hwnd);
     }
 
     public void ShowFor(AppButton button, AppGroup group, DockEdge edge)
@@ -180,6 +200,7 @@ public sealed class WindowPreviewWindow : Window
 
     public void HidePreview()
     {
+        EndPeek();
         _monitorTimer.Stop();
         _hideTimer.Stop();
         _outsideTicks = 0;
@@ -279,9 +300,15 @@ public sealed class WindowPreviewWindow : Window
 
     private void RebuildCards(List<ApplicationWindow> windows)
     {
+        EndPeek();
         UnregisterAllThumbnails();
         _previewItems.Clear();
         _cardsPanel.Children.Clear();
+        int version = ++_cardsVersion;
+
+        // Apps playing media (Spotify, a YouTube tab) get play/pause buttons under their preview.
+        var media = FindMedia(windows.FirstOrDefault());
+        var mediaCards = new List<(Grid Row, ApplicationWindow Window)>();
 
         // Show at most 8 windows side by side
         foreach (var window in windows.Take(8))
@@ -291,7 +318,7 @@ public sealed class WindowPreviewWindow : Window
             var card = new Border
             {
                 Width = CardWidth,
-                Height = CardHeight,
+                Height = media is null ? CardHeight : CardHeight + MediaRowHeight,
                 CornerRadius = new CornerRadius(8),
                 Margin = new Thickness(4),
                 Background = Brushes.Transparent,
@@ -300,7 +327,15 @@ public sealed class WindowPreviewWindow : Window
 
             var cardGrid = new Grid();
             cardGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(28) });
-            cardGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+            cardGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(CardHeight - 28) });
+            if (media is not null)
+            {
+                cardGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(MediaRowHeight) });
+                var mediaRow = new Grid { Visibility = Visibility.Collapsed };
+                Grid.SetRow(mediaRow, 2);
+                cardGrid.Children.Add(mediaRow);
+                mediaCards.Add((mediaRow, w));
+            }
 
             // 1. Header row (Icon + Title + Close button)
             var headerGrid = new Grid { Margin = new Thickness(4, 2, 4, 2) };
@@ -320,7 +355,7 @@ public sealed class WindowPreviewWindow : Window
 
             var titleText = new TextBlock
             {
-                Text = string.IsNullOrWhiteSpace(w.Title) ? "Window" : w.Title,
+                Text = string.IsNullOrWhiteSpace(w.Title) ? L.T("Window") : w.Title,
                 FontSize = 11,
                 FontWeight = FontWeights.Medium,
                 TextTrimming = TextTrimming.CharacterEllipsis,
@@ -339,7 +374,7 @@ public sealed class WindowPreviewWindow : Window
                 Width = 20,
                 Height = 20,
                 Style = Application.Current.TryFindResource("DockButton") as Style,
-                ToolTip = "Close",
+                ToolTip = L.T("Close"),
                 HorizontalAlignment = HorizontalAlignment.Right,
                 VerticalAlignment = VerticalAlignment.Center,
                 Padding = new Thickness(0),
@@ -377,16 +412,21 @@ public sealed class WindowPreviewWindow : Window
             card.MouseEnter += (_, _) =>
             {
                 card.SetResourceReference(Border.BackgroundProperty, "DockHoverBrush");
+                StartPeek(w);
             };
             card.MouseLeave += (_, _) =>
             {
                 card.Background = Brushes.Transparent;
+                _peekTimer.Stop();
+                _peekTarget = null;
+                EndPeek();
             };
 
             // Bring window to front on click
             card.MouseLeftButtonUp += (s, e) =>
             {
                 e.Handled = true;
+                EndPeek();
                 if (w.IsMinimized) w.Restore();
                 w.BringToFront();
                 HidePreview();
@@ -409,11 +449,141 @@ public sealed class WindowPreviewWindow : Window
                 bool inside = position.X >= 0 && position.Y >= 0 && position.X <= card.ActualWidth && position.Y <= card.ActualHeight;
                 if (captured && inside) CloseWindowFromPreview(w);
             };
-            card.ToolTip = "Click to switch · Middle-click to close";
+            card.ToolTip = L.T("Click to switch · Middle-click to close · Scroll to cycle windows");
 
             _previewItems.Add((thumbHost, w));
             _cardsPanel.Children.Add(card);
         }
+
+        if (media is not null && mediaCards.Count > 0)
+            _ = ShowMediaButtonsAsync(media, mediaCards, version);
+    }
+
+    // ------------------------------------------------------------------ Media buttons
+
+    private static Services.MediaAppSession? FindMedia(ApplicationWindow? window)
+    {
+        if (window is null) return null;
+        _ = AppServices.Media.EnsureStartedAsync();
+        string? exe = null, aumid = null;
+        try { exe = Path.GetFileName(window.WinFileName); } catch { /* ignore */ }
+        try { aumid = window.AppUserModelID; } catch { /* ignore */ }
+        return AppServices.Media.FindSession(exe, aumid);
+    }
+
+    /// <summary>
+    /// Shows the buttons under the window that plays: the only window, or the browser window whose title contains the
+    /// track (a YouTube tab's title is the video's), otherwise the first one.
+    /// </summary>
+    private async Task ShowMediaButtonsAsync(Services.MediaAppSession media, List<(Grid Row, ApplicationWindow Window)> cards, int version)
+    {
+        var target = cards[0];
+        if (cards.Count > 1)
+        {
+            string title = await media.GetTitleAsync();
+            if (version != _cardsVersion) return;
+            if (title.Length > 0)
+            {
+                foreach (var card in cards)
+                {
+                    if ((card.Window.Title ?? "").Contains(title, StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        target = card;
+                        break;
+                    }
+                }
+            }
+        }
+        BuildMediaRow(target.Row, media);
+    }
+
+    private static void BuildMediaRow(Grid row, Services.MediaAppSession media)
+    {
+        var panel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+        var style = Application.Current.TryFindResource("DockButton") as Style;
+        Button Make(string glyph, string tip, Func<Task> action, bool enabled)
+        {
+            var button = new Button
+            {
+                Content = glyph,
+                FontFamily = (FontFamily)Application.Current.FindResource("IconFont"),
+                FontSize = 12,
+                Width = 30,
+                Height = 26,
+                Padding = new Thickness(0),
+                Style = style,
+                ToolTip = L.T(tip),
+                IsEnabled = enabled,
+                Margin = new Thickness(4, 0, 4, 0),
+            };
+            button.Click += async (_, e) =>
+            {
+                e.Handled = true;
+                await action();
+            };
+            return button;
+        }
+
+        var play = Make(media.IsPlaying ? "\uE769" : "\uE768", "Play or pause", media.PlayPauseAsync, true);
+        play.Click += (_, _) => play.Content = (string)play.Content == "\uE769" ? "\uE768" : "\uE769";
+        panel.Children.Add(Make("\uE892", "Previous", media.PreviousAsync, media.CanPrevious));
+        panel.Children.Add(play);
+        panel.Children.Add(Make("\uE893", "Next", media.NextAsync, media.CanNext));
+        row.Children.Add(panel);
+        row.Visibility = Visibility.Visible;
+    }
+
+    // ------------------------------------------------------------------ Aero Peek and window cycling
+
+    private void StartPeek(ApplicationWindow window)
+    {
+        if (!AppServices.Config.PreviewPeek) return;
+        _peekTarget = window;
+        _peekTimer.Stop();
+        _peekTimer.Start();
+    }
+
+    private void BeginPeek(ApplicationWindow window)
+    {
+        try
+        {
+            ManagedShell.Common.Helpers.WindowHelper.PeekWindow(true, window.Handle, _hwnd);
+            _peeking = window;
+        }
+        catch (Exception ex)
+        {
+            Log.Debug($"Peek failed: {ex.Message}");
+        }
+    }
+
+    private void EndPeek()
+    {
+        _peekTimer.Stop();
+        if (_peeking is not { } window) return;
+        _peeking = null;
+        try { ManagedShell.Common.Helpers.WindowHelper.PeekWindow(false, window.Handle, _hwnd); }
+        catch { /* ignore */ }
+    }
+
+    /// <summary>Mouse wheel over the preview (or its app button): brings the app's next or previous window forward.</summary>
+    public bool CycleWindows(int delta)
+    {
+        if (!IsVisible || _previewItems.Count < 2) return false;
+        EndPeek();
+        var windows = _previewItems.Select(p => p.Window).ToList();
+        int index = windows.FindIndex(w => w.State == ApplicationWindow.WindowState.Active);
+        int next = delta < 0 ? (index + 1) % windows.Count : (index <= 0 ? windows.Count - 1 : index - 1);
+        var window = windows[next];
+        if (window.IsMinimized) window.Restore();
+        window.BringToFront();
+
+        for (int i = 0; i < _cardsPanel.Children.Count; i++)
+        {
+            if (_cardsPanel.Children[i] is not Border card) continue;
+            if (i == next) card.SetResourceReference(Border.BackgroundProperty, "DockHoverBrush");
+            else card.Background = Brushes.Transparent;
+        }
+        return true;
     }
 
     private void PositionWindow(AppButton button, DockEdge edge)
@@ -562,6 +732,7 @@ public sealed class WindowPreviewWindow : Window
             _hwnd = new WindowInteropHelper(this).EnsureHandle();
             WindowEffects.MakeToolWindow(_hwnd, noActivate: true);
             WindowEffects.ExtendGlass(_hwnd);
+            ManagedShell.Common.Helpers.WindowHelper.ExcludeWindowFromPeek(_hwnd);
         }
     }
 

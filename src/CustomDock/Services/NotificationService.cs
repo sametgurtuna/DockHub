@@ -17,6 +17,8 @@ public sealed class NotificationService
     public const string ActionReminderDone = "reminder-done";
     public const string ActionOpenUpdate = "open-update";
     public const string ActionSkipUpdate = "skip-update";
+    public const string ActionOpenScreenshot = "open-screenshot";
+    public const string ActionShowScreenshot = "show-screenshot";
 
     private bool _initialized;
 
@@ -119,7 +121,20 @@ public sealed class NotificationService
             case ActionSkipUpdate when AppServices.Updates.Available is { } skipped:
                 AppServices.Updates.Skip(skipped);
                 break;
+            case ActionOpenScreenshot or ActionShowScreenshot when IsScreenshot(id):
+                StartShell(action == ActionOpenScreenshot ? id! : "explorer.exe", action == ActionOpenScreenshot ? null : $"/select,\"{id}\"");
+                break;
         }
+    }
+
+    /// <summary>Screenshot actions only ever open PNG files that exist (the toast argument is the file path).</summary>
+    private static bool IsScreenshot(string? path)
+        => path is not null && Path.IsPathFullyQualified(path) && path.EndsWith(".png", StringComparison.OrdinalIgnoreCase) && File.Exists(path);
+
+    private static void StartShell(string file, string? arguments)
+    {
+        try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(file, arguments ?? "") { UseShellExecute = true }); }
+        catch (Exception ex) { Log.Error(ex, $"Failed to open {file}"); }
     }
 
     public static void Cleanup()

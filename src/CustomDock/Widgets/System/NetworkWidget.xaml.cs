@@ -33,7 +33,7 @@ public partial class NetworkWidget : WidgetBase
             Chart.SetData(history.Select(h => h.DownBytesPerSec).ToList(), history.Select(h => h.UpBytesPerSec).ToList());
         }
 
-        ToolTip = $"Download: {DownValue.Text} {DownUnit.Text}\nUpload: {UpValue.Text} {UpUnit.Text}";
+        ToolTip = L.T("Download: {0}\nUpload: {1}", $"{DownValue.Text} {DownUnit.Text}", $"{UpValue.Text} {UpUnit.Text}");
         RefreshCompact();
     }
 

@@ -60,7 +60,7 @@ public sealed class UndoToast : Window
             Width = 26,
             Height = 26,
             Margin = new Thickness(6, 0, 0, 0),
-            ToolTip = "Dismiss",
+            ToolTip = L.T("Dismiss"),
             Style = Application.Current.TryFindResource("DockButton") as Style,
         };
         close.SetResourceReference(FontFamilyProperty, "IconFont");

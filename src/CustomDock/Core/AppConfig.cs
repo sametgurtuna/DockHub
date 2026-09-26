@@ -51,6 +51,22 @@ public enum DockAlignment { Start, Center }
 
 public enum DockItemKind { App, Widget, Separator, Group }
 
+public enum MicrophoneIconMode
+{
+    /// <summary>Only while an app is using the microphone, like Windows.</summary>
+    WhenInUse,
+    Always,
+    Off,
+}
+
+public enum SearchButtonAction
+{
+    /// <summary>Opens Windows Search (Win+S).</summary>
+    WindowsSearch,
+    /// <summary>Opens DockHub's quick launcher.</summary>
+    Launcher,
+}
+
 /// <summary>%AppData%\DockHub\config.json content.</summary>
 public sealed class AppConfig : ObservableObject
 {
@@ -129,6 +145,34 @@ public sealed class AppConfig : ObservableObject
     /// <summary>Only shown on devices with a battery.</summary>
     public bool ShowBatteryIcon { get => _showBatteryIcon; set => Set(ref _showBatteryIcon, value); }
 
+    private bool _showKeyboardLayout = true;
+    private MicrophoneIconMode _microphoneIcon = MicrophoneIconMode.WhenInUse;
+    private bool _showNotificationIndicator = true;
+    private bool _showDesktopIndicator = true;
+    private bool _runningAppsAllDesktops;
+    private bool _previewPeek = true;
+    private SearchButtonAction _searchButtonAction = SearchButtonAction.WindowsSearch;
+
+    /// <summary>Input language indicator next to the tray (only while more than one keyboard layout is installed).</summary>
+    public bool ShowKeyboardLayout { get => _showKeyboardLayout; set => Set(ref _showKeyboardLayout, value); }
+
+    /// <summary>Microphone icon next to the tray: click to mute or unmute.</summary>
+    public MicrophoneIconMode MicrophoneIcon { get => _microphoneIcon; set => Set(ref _microphoneIcon, value); }
+
+    /// <summary>Notification count and Do Not Disturb state next to the clock.</summary>
+    public bool ShowNotificationIndicator { get => _showNotificationIndicator; set => Set(ref _showNotificationIndicator, value); }
+
+    /// <summary>Virtual desktop number next to Task view (only while more than one desktop exists).</summary>
+    public bool ShowDesktopIndicator { get => _showDesktopIndicator; set => Set(ref _showDesktopIndicator, value); }
+
+    /// <summary>Running apps from every virtual desktop, not just the current one.</summary>
+    public bool RunningAppsAllDesktops { get => _runningAppsAllDesktops; set => Set(ref _runningAppsAllDesktops, value); }
+
+    /// <summary>Hovering a window preview shows that window and fades the others (Aero Peek).</summary>
+    public bool PreviewPeek { get => _previewPeek; set => Set(ref _previewPeek, value); }
+
+    public SearchButtonAction SearchButtonAction { get => _searchButtonAction; set => Set(ref _searchButtonAction, value); }
+
     /// <summary>IDs of tray icons that are always shown in the dock (null = import from Windows settings).</summary>
     public List<string>? PinnedTrayIcons { get; set; }
 
@@ -194,6 +238,19 @@ public sealed class AppConfig : ObservableObject
 
     /// <summary>How open apps are marked: a line that widens with more windows, one dot per window, or nothing.</summary>
     public RunningIndicatorStyle RunningIndicator { get => _runningIndicator; set => Set(ref _runningIndicator, value); }
+
+    private bool _alignWidgetWidths = true;
+
+    /// <summary>Widget cards snap their width to a grid of half the dock height, so the dock keeps an even rhythm.</summary>
+    public bool AlignWidgetWidths { get => _alignWidgetWidths; set => Set(ref _alignWidgetWidths, value); }
+
+    private double _textScale;
+
+    /// <summary>Text size of settings, panels and menus. 0 follows Windows' "Text size" setting.</summary>
+    public double TextScale { get => _textScale; set => Set(ref _textScale, value <= 0 ? 0 : Math.Clamp(value, 1, 2)); }
+
+    /// <summary>Layouts the user saved from their own setup (Settings › Appearance › Layout presets).</summary>
+    public List<CustomLayoutPreset> CustomPresets { get; set; } = new();
 
     private bool _smartAutoHide;
 
@@ -359,6 +416,25 @@ public sealed class DockItem : ObservableObject
 
     public static DockItem Group(string name, List<DockItem>? children = null)
         => new() { Kind = DockItemKind.Group, GroupName = name, GroupAccent = "AccentBlueBrush", Children = children ?? new() };
+}
+
+/// <summary>A layout the user saved: the look plus the widgets (type and layout) of the setup at that time.</summary>
+public sealed class CustomLayoutPreset
+{
+    public string Id { get; set; } = DockItem.NewId();
+
+    public string Name { get; set; } = "";
+
+    public JsonObject? Appearance { get; set; }
+
+    public List<CustomPresetWidget> Widgets { get; set; } = new();
+}
+
+public sealed class CustomPresetWidget
+{
+    public string Widget { get; set; } = "";
+
+    public string? Variant { get; set; }
 }
 
 public sealed class LegacyWidgetEntry

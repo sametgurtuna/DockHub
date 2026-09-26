@@ -159,6 +159,7 @@ public sealed class RunningAppsService : IDisposable
     };
 
     private readonly ICollectionView _view;
+    private readonly INotifyCollectionChanged? _allWindows;
     private readonly Dictionary<string, AppGroup> _groups = new();
     private readonly HashSet<ApplicationWindow> _subscribed = new();
     private readonly Dispatcher _dispatcher;
@@ -170,8 +171,29 @@ public sealed class RunningAppsService : IDisposable
         _dispatcher = Dispatcher.CurrentDispatcher;
         _view = manager.Tasks.GroupedWindows;
         ((INotifyCollectionChanged)_view).CollectionChanged += OnViewChanged;
+        // Windows on other virtual desktops are hidden (cloaked), so they are not in the filtered view.
+        _allWindows = _view.SourceCollection as INotifyCollectionChanged;
+        if (_allWindows is not null) _allWindows.CollectionChanged += OnViewChanged;
         Rebuild();
     }
+
+    /// <summary>Show windows of every virtual desktop, not only the current one.</summary>
+    public bool IncludeAllDesktops
+    {
+        get => _includeAllDesktops;
+        set
+        {
+            if (_includeAllDesktops == value) return;
+            _includeAllDesktops = value;
+            if (value) Core.AppServices.VirtualDesktops.EnsureStarted();
+            QueueRebuild();
+        }
+    }
+
+    private bool _includeAllDesktops;
+
+    /// <summary>Rebuilds the groups (after virtual desktop switches).</summary>
+    public void Refresh() => QueueRebuild();
 
     /// <summary>Open application groups (ordered by first seen).</summary>
     public ObservableCollection<AppGroup> Groups { get; } = new();
@@ -205,7 +227,9 @@ public sealed class RunningAppsService : IDisposable
         List<ApplicationWindow> windows;
         try
         {
-            windows = _view.Cast<ApplicationWindow>().Where(w => w.ShowInTaskbar).ToList();
+            windows = _includeAllDesktops && _view.SourceCollection is IEnumerable<ApplicationWindow> all
+                ? all.Where(w => w.ShowInTaskbar || (w.CanAddToTaskbar && Core.AppServices.VirtualDesktops.IsOnOtherDesktop(w.Handle))).ToList()
+                : _view.Cast<ApplicationWindow>().Where(w => w.ShowInTaskbar).ToList();
         }
         catch (Exception ex)
         {
@@ -257,6 +281,7 @@ public sealed class RunningAppsService : IDisposable
     public void Dispose()
     {
         ((INotifyCollectionChanged)_view).CollectionChanged -= OnViewChanged;
+        if (_allWindows is not null) _allWindows.CollectionChanged -= OnViewChanged;
         foreach (var window in _subscribed)
             window.PropertyChanged -= OnWindowPropertyChanged;
         _subscribed.Clear();

@@ -13,7 +13,7 @@ public partial class SettingsWindow
     {
         var dialog = new SaveFileDialog
         {
-            Title = "Export DockHub settings",
+            Title = L.T("Export DockHub settings"),
             FileName = $"DockHub-backup-{DateTime.Now:yyyy-MM-dd}.zip",
             Filter = "DockHub backup (*.zip)|*.zip",
             DefaultExt = ".zip",
@@ -37,7 +37,7 @@ public partial class SettingsWindow
     {
         var dialog = new OpenFileDialog
         {
-            Title = "Import DockHub settings",
+            Title = L.T("Import DockHub settings"),
             Filter = "DockHub backup (*.zip)|*.zip",
             InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
         };

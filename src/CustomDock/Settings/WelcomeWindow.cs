@@ -75,7 +75,7 @@ public sealed class WelcomeWindow : Window
             _ => TipsPage(),
         };
         _back.Visibility = _step == 0 ? Visibility.Hidden : Visibility.Visible;
-        _next.Content = _step switch { 0 => "Get started", 3 => "Done", _ => "Next" };
+        _next.Content = L.T(_step switch { 0 => "Get started", 3 => "Done", _ => "Next" });
 
         _dots.Children.Clear();
         for (int i = 0; i < 4; i++)

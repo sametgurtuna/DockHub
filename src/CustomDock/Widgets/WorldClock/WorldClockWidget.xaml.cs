@@ -108,10 +108,10 @@ public sealed class WorldClockItem : ObservableObject
         TimeText = use24Hour ? local.ToString("H:mm", culture) : local.ToString("h:mm tt", culture);
 
         var diff = Zone.GetUtcOffset(utcNow) - TimeZoneInfo.Local.GetUtcOffset(utcNow);
-        string offset = diff == TimeSpan.Zero ? "same as local time"
-            : $"{(diff > TimeSpan.Zero ? "+" : "−")}{Math.Abs(diff.TotalHours):0.##} hr";
+        string offset = diff == TimeSpan.Zero ? L.T("same as local time")
+            : L.T("{0} hr", $"{(diff > TimeSpan.Zero ? "+" : "−")}{Math.Abs(diff.TotalHours).ToString("0.##", culture)}");
         int dayDiff = (local.Date - DateTime.Now.Date).Days;
-        string day = dayDiff switch { > 0 => " · tomorrow", < 0 => " · yesterday", _ => "" };
+        string day = dayDiff switch { > 0 => " · " + L.T("tomorrow"), < 0 => " · " + L.T("yesterday"), _ => "" };
         Details = $"{City.Label} — {local.ToString("dddd HH:mm", culture)}\n{offset}{day}";
     }
 }
@@ -226,7 +226,7 @@ public partial class WorldClockWidget : WidgetBase
         string name = local.StandardName;
         if (name.EndsWith(" Standard Time", StringComparison.OrdinalIgnoreCase))
             name = name[..^14].Trim();
-        return string.IsNullOrWhiteSpace(name) ? "Local" : name;
+        return string.IsNullOrWhiteSpace(name) ? L.T("Local") : name;
     }
 
     private bool _secondTickSubscribed;
@@ -265,13 +265,13 @@ public partial class WorldClockWidget : WidgetBase
 
         if (Variant != "single")
         {
-            ToolTip = _items.Count == 0 ? "Add a city" : string.Join("\n\n", _items.Select(i => i.Details));
+            ToolTip = _items.Count == 0 ? L.T("Add a city") : string.Join("\n\n", _items.Select(i => i.Details));
             RefreshCompact();
             return;
         }
         var first = _items.FirstOrDefault();
         SingleTime.Text = first?.TimeText ?? "--:--";
-        SingleCity.Text = first?.Label ?? "Add a city";
+        SingleCity.Text = first?.Label ?? L.T("Add a city");
         SingleClock.Time = first?.Time ?? DateTime.Now;
         ToolTip = first?.Details;
         Layout_single.Visibility = Visibility.Visible;

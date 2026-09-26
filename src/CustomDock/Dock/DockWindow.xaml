@@ -73,6 +73,7 @@
                         Click="OnSearchClick" />
                 <Button x:Name="TaskViewButton" Style="{StaticResource DockButton}" ToolTip="Task view" Content="&#xE7C4;" FontSize="17"
                         Click="OnTaskViewClick" />
+                <dock:VirtualDesktopIconView x:Name="VirtualDesktopIcon" VerticalAlignment="Center" />
                 <dock:SeparatorView x:Name="StartSeparator" />
                 <!-- Scroll arrows sit at the two ends of the scrollable item area -->
                 <Button x:Name="ScrollBackButton" Style="{StaticResource DockButton}" Width="26" FontSize="11" Content="&#xE76B;"
@@ -120,19 +121,34 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
+                <dock:KeyboardLayoutIconView x:Name="KeyboardLayoutIcon" VerticalAlignment="Center" />
+                <dock:MicrophoneStatusIconView x:Name="MicrophoneStatusIcon" VerticalAlignment="Center" />
                 <dock:NetworkStatusIconView x:Name="NetworkStatusIcon" VerticalAlignment="Center" />
                 <dock:VolumeStatusIconView x:Name="VolumeStatusIcon" VerticalAlignment="Center" />
                 <dock:BatteryStatusIconView x:Name="BatteryStatusIcon" VerticalAlignment="Center" />
 
                 <Button x:Name="ClockButton" Style="{StaticResource DockButton}" Width="Auto" Padding="9,0" Margin="2,0"
                         FontFamily="{StaticResource UiFont}" Click="OnClockClick">
-                    <StackPanel>
-                        <TextBlock x:Name="ClockTime" HorizontalAlignment="Right" FontSize="12" LineHeight="15"
-                                   LineStackingStrategy="BlockLineHeight" Typography.NumeralAlignment="Tabular"
-                                   Foreground="{DynamicResource TextPrimaryBrush}" />
-                        <TextBlock x:Name="ClockDate" HorizontalAlignment="Right" FontSize="12" LineHeight="15"
-                                   LineStackingStrategy="BlockLineHeight" Typography.NumeralAlignment="Tabular"
-                                   Foreground="{DynamicResource TextPrimaryBrush}" />
+                    <StackPanel Orientation="Horizontal">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock x:Name="ClockTime" HorizontalAlignment="Right" FontSize="12" LineHeight="15"
+                                       LineStackingStrategy="BlockLineHeight" Typography.NumeralAlignment="Tabular"
+                                       Foreground="{DynamicResource TextPrimaryBrush}" />
+                            <TextBlock x:Name="ClockDate" HorizontalAlignment="Right" FontSize="12" LineHeight="15"
+                                       LineStackingStrategy="BlockLineHeight" Typography.NumeralAlignment="Tabular"
+                                       Foreground="{DynamicResource TextPrimaryBrush}" />
+                        </StackPanel>
+                        <!-- Notification count and Do Not Disturb, like the Windows 11 clock -->
+                        <Grid x:Name="NotificationIndicator" Margin="7,0,0,0" VerticalAlignment="Center" Visibility="Collapsed">
+                            <TextBlock x:Name="DoNotDisturbGlyph" Text="&#xE708;" FontFamily="{StaticResource IconFont}" FontSize="13"
+                                       Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Visibility="Collapsed" />
+                            <Border x:Name="NotificationBadge" MinWidth="18" Height="18" CornerRadius="9" Padding="4,0"
+                                    Background="{DynamicResource AccentBrush}" VerticalAlignment="Center" Visibility="Collapsed">
+                                <TextBlock x:Name="NotificationCountText" FontSize="10.5" FontWeight="SemiBold" Typography.NumeralAlignment="Tabular"
+                                           Foreground="{DynamicResource OnAccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                        </Grid>
                     </StackPanel>
                 </Button>
                 <StackPanel x:Name="EndItemsPanel" Orientation="Horizontal" VerticalAlignment="Center" />

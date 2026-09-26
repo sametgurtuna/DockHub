@@ -13,7 +13,22 @@ public sealed class AIUsageData
     public double? WeekPercent { get; set; }
     public string? WeekResets { get; set; }
     public DateTime FetchedAt { get; set; }
+
+    /// <summary>Tooltip heading, e.g. "Claude Code usage".</summary>
+    public string? Title { get; set; }
+
+    /// <summary>Names of the two limits ("5-hour", "Weekly"; Gemini: "Today" only).</summary>
+    public string? PrimaryLabel { get; set; }
+
+    public string? SecondaryLabel { get; set; }
+
+    public bool HasSecondary { get; set; } = true;
+
+    /// <summary>Extra tooltip line (e.g. requests and tokens today).</summary>
+    public string? Detail { get; set; }
 }
+
+public enum AIProvider { Claude, Codex, Gemini }
 
 public enum AIUsageStatus
 {
@@ -34,7 +49,7 @@ public enum AIUsageStatus
 /// Monitors Claude Code subscription usage. Runs "claude -p /usage" in an invisible
 /// background process (without opening a window) and parses its output. Only runs while a widget is subscribed.
 /// </summary>
-public sealed class AIUsageService
+public sealed class AIUsageService : IAIUsageSource
 {
     public static readonly TimeSpan DefaultInterval = TimeSpan.FromMinutes(15);
     private static readonly TimeSpan ProcessTimeout = TimeSpan.FromSeconds(45);

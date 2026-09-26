@@ -88,9 +88,9 @@ public partial class RemindersWidget : WidgetBase
 
         if (count == 0)
         {
-            NextText.Text = "No reminders";
-            NextTime.Text = "Click to add";
-            ToolTip = "Click to add reminder";
+            NextText.Text = L.T("No reminders");
+            NextTime.Text = L.T("Click to add");
+            ToolTip = L.T("Click to add reminder");
             return;
         }
 
@@ -201,14 +201,14 @@ public partial class RemindersWidget : WidgetBase
         var text = NewText.Text.Trim();
         if (text.Length == 0)
         {
-            ErrorText.Text = "Please enter a reminder text.";
+            ErrorText.Text = L.T("Please enter a reminder text.");
             NewText.Focus();
             return;
         }
 
         if (DayCombo.SelectedItem is not Option<DateTime> day || !TimeInput.TryParse(TimeBox.Text, out var time))
         {
-            ErrorText.Text = "Enter time in HH:mm format.";
+            ErrorText.Text = L.T("Enter time in HH:mm format.");
             TimeBox.Focus();
             return;
         }
@@ -216,7 +216,7 @@ public partial class RemindersWidget : WidgetBase
         var due = day.Value.Date + time;
         if (due <= DateTime.Now)
         {
-            ErrorText.Text = "Cannot set a reminder in the past.";
+            ErrorText.Text = L.T("Cannot set a reminder in the past.");
             return;
         }
 

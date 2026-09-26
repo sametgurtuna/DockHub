@@ -99,7 +99,7 @@ public partial class NotesWidget : WidgetBase
         _settings.PropertyChanged += OnSettingsChanged;
 
         _loading = true;
-        NoteBox.Text = IsPreview ? "Release update.\nGo for a walk." : JsonStore.LoadData<NoteData>(StateKey).Text;
+        NoteBox.Text = IsPreview ? L.T("Release update.\nGo for a walk.") : JsonStore.LoadData<NoteData>(StateKey).Text;
         _loading = false;
         NoteBox.IsReadOnly = IsPreview;
         Root.Cursor = IsPreview ? null : Cursors.Hand;

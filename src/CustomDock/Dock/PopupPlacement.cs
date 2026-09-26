@@ -65,6 +65,8 @@ public static class PopupPlacement
         double along = 0;
         if (popup.Child is FrameworkElement child)
         {
+            // Panels follow the text size setting (the dock itself keeps its height).
+            Core.TextScale.Apply(child);
             child.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
             along = vertical
                 ? (target.ActualHeight - child.DesiredSize.Height) / 2

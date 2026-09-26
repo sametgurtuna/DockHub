@@ -265,11 +265,29 @@ public static class WidgetRegistry
             Factory = () => new CurrencyWidget(), SettingsType = typeof(CurrencySettings),
         },
 
+        new()
+        {
+            Id = "todo", Name = "To do", Category = WidgetCategories.Productivity,
+            Description = "Today's tasks: a simple list on this PC or today's and overdue tasks from Todoist. Tick to complete, add new ones from the flyout.",
+            IconPath = TodoWidget.Icon, AccentKey = "AccentGreenBrush",
+            Variants = new[] { new WidgetVariant("list", "List"), new WidgetVariant("count", "Count") },
+            Factory = () => new TodoWidget(), SettingsType = typeof(TodoSettings),
+            SettingsViewFactory = s => new TodoSettingsView((TodoSettings)s),
+        },
+        new()
+        {
+            Id = "screenshot", Name = "Screenshot", Category = WidgetCategories.Productivity,
+            Description = "One click opens the Windows snipping overlay; the other button saves every screen to Pictures\\Screenshots and copies it.",
+            IconPath = ScreenshotWidget.Icon, AccentKey = "AccentPinkBrush",
+            Variants = new[] { new WidgetVariant("icon", "Icon only"), new WidgetVariant("buttons", "Buttons") },
+            Factory = () => new ScreenshotWidget(), SettingsType = typeof(ScreenshotSettings),
+        },
+
         // ------------------------------------------------ AI
         new()
         {
             Id = "ai-usage", Name = "AI usage", Category = WidgetCategories.AI,
-            Description = "Claude Code subscription usage: 5-hour and weekly limits. Checked in the background with the local Claude CLI ('claude -p /usage').",
+            Description = "Limits of your AI coding assistant: Claude Code (5-hour and weekly), OpenAI Codex (5-hour and weekly) or Gemini CLI (requests today). Read on this PC, no account needed.",
             IconPath = "M12,3 L14.2,9.2 L20.8,9.2 L15.5,13.1 L17.5,19.3 L12,15.6 L6.5,19.3 L8.5,13.1 L3.2,9.2 L9.8,9.2 Z", AccentKey = "AccentOrangeBrush",
             Variants = new[] { new WidgetVariant("numbers", "Numbers"), new WidgetVariant("rings", "Rings"), new WidgetVariant("bars", "Bars") },
             Factory = () => new AIUsageWidget(), SettingsType = typeof(AIUsageSettings),
@@ -283,6 +301,30 @@ public static class WidgetRegistry
             IconPath = "M12,3 A9,9 0 0 0 3,12 V18 A3,3 0 0 0 6,21 H7 A2,2 0 0 0 9,19 V15 A2,2 0 0 0 7,13 H5 V12 A7,7 0 0 1 19,12 V13 H17 A2,2 0 0 0 15,15 V19 A2,2 0 0 0 17,21 H18 A3,3 0 0 0 21,18 V12 A9,9 0 0 0 12,3 Z", AccentKey = "AccentCyanBrush",
             Variants = new[] { new WidgetVariant("compact", "Compact"), new WidgetVariant("slider", "Slider") },
             Factory = () => new AudioWidget(),
+        },
+        new()
+        {
+            Id = "gpu", Name = "GPU", Category = WidgetCategories.System,
+            Description = "Graphics card load and video memory, from the same counters Task Manager uses.",
+            IconPath = "M4,7 H20 V17 H4 Z M8,17 V20 M16,17 V20 M8,10 H10 V14 H8 Z M13,10 H16 V14 H13 Z M2,10 H4 M2,14 H4", AccentKey = "AccentGreenBrush",
+            Variants = new[] { new WidgetVariant("numbers", "Numbers"), new WidgetVariant("rings", "Rings"), new WidgetVariant("bars", "Bars") },
+            Factory = () => new GpuWidget(), SettingsType = typeof(GpuSettings),
+        },
+        new()
+        {
+            Id = "display", Name = "Brightness", Category = WidgetCategories.System,
+            Description = "Screen brightness with the mouse wheel or a slider (laptop screens and DDC/CI monitors), and whether night light is on.",
+            IconPath = DisplayWidget.Icon, AccentKey = "AccentYellowBrush",
+            Variants = new[] { new WidgetVariant("slider", "Slider"), new WidgetVariant("icon", "Icon only") },
+            Factory = () => new DisplayWidget(),
+        },
+        new()
+        {
+            Id = "radios", Name = "Wi-Fi and Bluetooth", Category = WidgetCategories.System,
+            Description = "Turn Wi-Fi and Bluetooth on or off in one click, like Quick Settings.",
+            IconPath = RadiosWidget.Icon, AccentKey = "AccentBlueBrush",
+            Variants = new[] { new WidgetVariant("buttons", "Buttons"), new WidgetVariant("icons", "Icon only") },
+            Factory = () => new RadiosWidget(),
         },
         new()
         {

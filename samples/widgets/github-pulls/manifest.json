@@ -1,0 +1,21 @@
+{
+  "id": "dev.dockhub.github-pulls",
+  "name": "GitHub pull requests",
+  "version": "1.0.0",
+  "author": "DockHub",
+  "description": "Pull requests waiting for your review, your own open pull requests or unread notifications, with a notification when a new review request arrives.",
+  "entry": "index.html",
+  "minDockHubVersion": "0.8.0",
+  "variants": [
+    { "id": "standard", "name": "Standard", "size": "standard" },
+    { "id": "compact", "name": "Count only", "size": "compact" }
+  ],
+  "settings": [
+    { "key": "show", "type": "choice", "label": "Show", "options": ["Review requests", "My pull requests", "Notifications"], "default": "Review requests" },
+    { "key": "user", "type": "text", "label": "GitHub user name", "description": "Not needed when a token is set." },
+    { "key": "token", "type": "text", "label": "Personal access token", "description": "Optional for public repositories, required for notifications and private repositories (fine-grained or classic with the repo and notifications scopes). Stored in DockHub's settings on this PC." },
+    { "key": "minutes", "type": "number", "label": "Refresh every (minutes)", "default": 10, "min": 2, "max": 120 },
+    { "key": "notify", "type": "toggle", "label": "Notify me about new items", "default": true }
+  ],
+  "permissions": { "network": ["api.github.com"], "notifications": true }
+}

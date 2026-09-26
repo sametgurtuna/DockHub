@@ -98,7 +98,7 @@ public partial class CountdownWidget : WidgetBase
             _finished = true;
             _remaining = TimeSpan.Zero;
             AppServices.Clock.SecondTick -= OnTick;
-            Notify("Time's up ⏱", $"{_settings.Label} ({TimerFormat.Format(Total)}) completed.", tag: "countdown-" + Item.Id);
+            Notify(L.T("Time's up ⏱"), L.T("{0} ({1}) completed.", _settings.Label, TimerFormat.Format(Total)), tag: "countdown-" + Item.Id);
         }
         Render();
     }
@@ -108,11 +108,11 @@ public partial class CountdownWidget : WidgetBase
         var remaining = _running ? _endsAt - DateTime.Now : _remaining;
         TimeText.Text = TimerFormat.FormatRemaining(remaining);
         SetIdle(!_running && !_finished && remaining == Total);
-        LabelText.Text = _finished ? "Time's up" : _running || remaining == Total ? _settings.Label : "Paused";
+        LabelText.Text = _finished ? L.T("Time's up") : _running || remaining == Total ? _settings.Label : L.T("Paused");
         string brush = _finished ? "AccentOrangeBrush" : _running ? "AccentYellowBrush" : "TextPrimaryBrush";
         Icon.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, brush);
         TimeText.SetResourceReference(TextBlock.ForegroundProperty, _finished ? "AccentOrangeBrush" : "TextPrimaryBrush");
-        ToolTip = _finished ? "Click to reset" : (_running ? "Click to pause" : "Click to start") + "\nRight-click: select duration";
+        ToolTip = _finished ? L.T("Click to reset") : (_running ? L.T("Click to pause") : L.T("Click to start")) + "\n" + L.T("Right-click: select duration");
         RefreshCompact();
     }
 

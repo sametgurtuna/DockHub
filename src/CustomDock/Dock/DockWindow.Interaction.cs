@@ -201,6 +201,14 @@ public partial class DockWindow
         // Do not scroll dock horizontally when menu or popup (mixer, calendar, etc.) is open
         if (GlobalPopupDismissHook.HasActivePopupsOrMenus) return;
 
+        // Over an app whose preview is open, the wheel steps through that app's windows.
+        if (WindowPreviewWindow.Instance.IsVisible && FindAncestor<AppButton>(e.OriginalSource as DependencyObject) is not null
+            && WindowPreviewWindow.Instance.CycleWindows(e.Delta))
+        {
+            e.Handled = true;
+            return;
+        }
+
         for (var d = e.OriginalSource as DependencyObject; d is not null; d = VisualTreeHelper.GetParent(d))
         {
             if (d is TextBox { IsKeyboardFocusWithin: true } box && box.ExtentHeight > box.ViewportHeight) return;

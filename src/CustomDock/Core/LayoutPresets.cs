@@ -48,6 +48,37 @@ public static class LayoutPresets
             new[] { ("clock", "analog"), ("weather", "current"), ("system", "rings"), ("hydration", "timer") }),
     };
 
+    /// <summary>Stores the current look and widgets as a preset the user can apply again.</summary>
+    public static CustomLayoutPreset SaveCurrent(string name, ConfigService service)
+    {
+        var config = service.Config;
+        var preset = new CustomLayoutPreset
+        {
+            Name = name.Trim().Length > 0 ? name.Trim() : L.T("My layout {0}", config.CustomPresets.Count + 1),
+            Appearance = ConfigHistory.CaptureAppearance(config),
+            Widgets = config.Items.Where(i => i.Kind == DockItemKind.Widget && !string.IsNullOrEmpty(i.Widget))
+                .Select(i => new CustomPresetWidget { Widget = i.Widget!, Variant = i.Variant }).ToList(),
+        };
+        config.CustomPresets.Add(preset);
+        service.ScheduleSave();
+        Log.Info($"Layout preset saved: {preset.Name}");
+        return preset;
+    }
+
+    public static void DeleteCustom(string id, ConfigService service)
+    {
+        service.Config.CustomPresets.RemoveAll(p => p.Id == id);
+        service.ScheduleSave();
+    }
+
+    /// <summary>A saved layout in the same shape as the built-in presets.</summary>
+    public static LayoutPreset FromCustom(CustomLayoutPreset custom) => new(
+        custom.Id,
+        custom.Name,
+        custom.Widgets.Count == 1 ? L.T("Your saved layout with 1 widget.") : L.T("Your saved layout with {0} widgets.", custom.Widgets.Count),
+        c => { if (custom.Appearance is { } appearance) ConfigHistory.RestoreAppearance(c, appearance); },
+        custom.Widgets.Select(w => (w.Widget, w.Variant ?? "")).ToList());
+
     /// <summary>
     /// Applies a preset as one undoable step. Apps, folders and separators stay; the widgets become the preset's,
     /// reusing existing widgets of the same type so their settings and data (notes, reminders) are kept.
@@ -65,7 +96,7 @@ public static class LayoutPresets
         foreach (var (type, variant) in preset.Widgets)
         {
             var item = widgetsByType.TryGetValue(type, out var queue) && queue.Count > 0 ? queue.Dequeue() : DockItem.ForWidget(type);
-            item.Variant = variant;
+            item.Variant = string.IsNullOrEmpty(variant) ? item.Variant : variant;
             item.PinnedEnd = false;
             widgets.Add(item);
         }

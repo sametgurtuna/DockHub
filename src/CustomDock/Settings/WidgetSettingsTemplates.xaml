@@ -163,6 +163,29 @@
         </StackPanel>
     </DataTemplate>
 
+    <!-- GPU -->
+    <DataTemplate DataType="{x:Type w:GpuSettings}">
+        <StackPanel>
+            <ctl:SettingRow Header="Update interval" Description="A longer interval uses less CPU.">
+                <ComboBox Width="140" ItemsSource="{x:Static w:WidgetOptions.SystemIntervals}"
+                          DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding UpdateIntervalSeconds}" />
+            </ctl:SettingRow>
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- Screenshot -->
+    <DataTemplate DataType="{x:Type w:ScreenshotSettings}">
+        <StackPanel>
+            <ctl:SettingRow Header="Delay" Description="Wait before capturing, so you can open a menu first. A countdown shows on the widget.">
+                <ComboBox Width="140" ItemsSource="{x:Static w:WidgetOptions.ScreenshotDelays}"
+                          DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding DelaySeconds}" />
+            </ctl:SettingRow>
+            <ctl:SettingRow Header="Copy full-screen captures" Description="Also put captures of all screens on the clipboard. Snips are always copied.">
+                <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding CopyToClipboard}" />
+            </ctl:SettingRow>
+        </StackPanel>
+    </DataTemplate>
+
     <!-- Calendar -->
     <DataTemplate DataType="{x:Type w:CalendarSettings}">
         <StackPanel>
@@ -202,6 +225,13 @@
     <!-- AI usage -->
     <DataTemplate DataType="{x:Type w:AIUsageSettings}">
         <StackPanel>
+            <ctl:SettingRow Header="Assistant" Description="Claude Code asks its CLI; Codex and Gemini CLI are read from the logs they keep on this PC.">
+                <ComboBox Width="180" ItemsSource="{x:Static w:AIUsageSettings.Providers}"
+                          DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding Provider}" />
+            </ctl:SettingRow>
+            <ctl:SettingRow Header="Gemini daily request limit" Description="Only for Gemini CLI: today's requests are shown as a share of this (1,000 on the free tier).">
+                <TextBox Width="100" Text="{Binding GeminiDailyLimit, UpdateSourceTrigger=LostFocus}" />
+            </ctl:SettingRow>
             <ctl:SettingRow Header="Check usage every" Description="Each check runs the Claude CLI briefly in the background. Right-click the widget to refresh now.">
                 <ComboBox Width="140" ItemsSource="{x:Static w:WidgetOptions.AIUsageIntervals}"
                           DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding RefreshMinutes}" />

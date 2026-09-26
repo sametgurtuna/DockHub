@@ -211,7 +211,7 @@ public partial class FocusWidget : WidgetBase
         PhaseText.Text = _running ? phase : remaining < PhaseLength ? $"{phase} · paused" : phase;
         PopupPhase.Text = $"{phase} · session {_session} of {_settings.SessionsBeforeLongBreak}";
 
-        ToggleButton.Content = _running ? "Pause" : "Start";
+        ToggleButton.Content = L.T(_running ? "Pause" : "Start");
 
         foreach (var (minutes, button) in _presetButtons)
         {
@@ -220,7 +220,7 @@ public partial class FocusWidget : WidgetBase
             button.SetResourceReference(Button.ForegroundProperty, selected ? "OnAccentBrush" : "TextPrimaryBrush");
         }
 
-        ToolTip = (_running ? "Click to pause" : "Click to start") + "\nRight-click: reset, skip, durations";
+        ToolTip = L.T(_running ? "Click to pause" : "Click to start") + "\n" + L.T("Right-click: reset, skip, durations");
         RefreshCompact();
     }
 

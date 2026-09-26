@@ -43,6 +43,8 @@
     <!-- Shell services: task list, system tray, AppBar, Explorer taskbar hiding. Apache-2.0 -->
     <PackageReference Include="ManagedShell" Version="0.0.372" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4191.47" />
+    <!-- Laptop screen brightness (WMI) -->
+    <PackageReference Include="System.Management" Version="8.0.0" />
   </ItemGroup>
 
 </Project>

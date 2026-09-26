@@ -35,6 +35,10 @@ public static class AppServices
 
     public static AIUsageService AIUsage { get; } = new();
 
+    public static CodexUsageService CodexUsage { get; } = new();
+
+    public static GeminiUsageService GeminiUsage { get; } = new();
+
     public static AudioService Audio { get; } = new();
 
     public static RecycleBinService RecycleBin { get; } = new();
@@ -52,4 +56,10 @@ public static class AppServices
     public static NotificationCenterService NotificationCenter { get; } = new();
 
     public static VirtualDesktopService VirtualDesktops { get; } = new();
+
+    public static GpuMonitorService Gpu { get; } = new();
+
+    public static BrightnessService Brightness { get; } = new();
+
+    public static RadioService Radios { get; } = new();
 }

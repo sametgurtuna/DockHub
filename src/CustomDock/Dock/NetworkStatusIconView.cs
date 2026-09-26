@@ -20,9 +20,9 @@ public sealed class NetworkStatusIconView : StatusIconViewBase
         var status = AppServices.NetworkStatus.Status;
         (Glyph.Text, ToolTip) = status switch
         {
-            NetworkStatusKind.Ethernet => ("", "Ethernet connected"),
-            NetworkStatusKind.Wifi => ("", "Wi-Fi connected"),
-            _ => ("", "No network connection"),
+            NetworkStatusKind.Ethernet => ("", L.T("Ethernet connected")),
+            NetworkStatusKind.Wifi => ("", L.T("Wi-Fi connected")),
+            _ => ("", L.T("No network connection")),
         };
         Glyph.Opacity = status == NetworkStatusKind.Disconnected ? 0.45 : 1.0;
     }

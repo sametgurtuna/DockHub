@@ -37,8 +37,8 @@ public sealed class VolumeStatusIconView : StatusIconViewBase
             : percent <= 66 ? ""
             : "";
         Glyph.Opacity = hasDevice ? 1.0 : 0.45;
-        ToolTip = !hasDevice ? "No audio output device"
-            : $"{Audio.DefaultDevice!.Name}: {(muted ? "muted" : $"{percent}%")}";
+        ToolTip = !hasDevice ? L.T("No audio output device")
+            : $"{Audio.DefaultDevice!.Name}: {(muted ? L.T("muted") : $"{percent}%")}";
     }
 
     protected override void OnClick()

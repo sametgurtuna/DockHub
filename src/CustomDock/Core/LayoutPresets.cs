@@ -55,7 +55,7 @@ public static class LayoutPresets
     public static void Apply(LayoutPreset preset, ConfigService service)
     {
         var config = service.Config;
-        service.History.Push(config, $"Applied the {preset.Name} layout", destructive: true, includeAppearance: true);
+        service.History.Push(config, L.T("Applied the {0} layout", preset.Name), destructive: true, includeAppearance: true);
 
         var kept = config.Items.Where(i => i.Kind != DockItemKind.Widget).ToList();
         var widgetsByType = config.Items.Where(i => i.Kind == DockItemKind.Widget)

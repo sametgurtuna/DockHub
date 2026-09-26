@@ -338,6 +338,10 @@ public sealed class AppButton : Grid
 
         // Live thumbnail preview already shows open windows; clean tooltip
         ToolTip = group is { WindowCount: > 0 } ? null : Title;
+        System.Windows.Automation.AutomationProperties.SetName(this, Title);
+        System.Windows.Automation.AutomationProperties.SetHelpText(this, group is not { WindowCount: > 0 } ? L.T("Not running")
+            : group.IsFlashing ? L.T("Needs attention")
+            : group.WindowCount == 1 ? L.T("Running") : L.T("Running, {0} windows", group.WindowCount));
     }
 
     private void ShowThumbnailPreview()

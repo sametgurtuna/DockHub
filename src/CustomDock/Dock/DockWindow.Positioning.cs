@@ -112,7 +112,8 @@ public partial class DockWindow
         bool floating = _config.Layout == DockLayout.Floating;
         var tint = (TryFindResource("DockTintBrush") as SolidColorBrush)?.Color ?? Colors.Black;
 
-        if (_config.Backdrop == BackdropKind.Solid)
+        // Contrast themes need an opaque background behind the system text colors.
+        if (_config.Backdrop == BackdropKind.Solid || ThemeManager.IsHighContrast)
         {
             TintLayer.SetResourceReference(Border.BackgroundProperty, "DockSolidBrush");
             TintLayer.Opacity = 1;

@@ -5,7 +5,11 @@ using CustomDock.Services;
 
 namespace CustomDock.Widgets;
 
-public sealed record WidgetVariant(string Id, string Name);
+public sealed record WidgetVariant(string Id, string EnglishName)
+{
+    /// <summary>Display name in the interface language.</summary>
+    public string Name => L.T(EnglishName);
+}
 
 /// <summary>Metadata, variants, and factory methods for a widget type.</summary>
 public sealed class WidgetDescriptor
@@ -14,11 +18,15 @@ public sealed class WidgetDescriptor
 
     public required string Id { get; init; }
 
-    public required string Name { get; init; }
+    private string _name = "";
+    private string _description = "";
+
+    /// <summary>Display name in the interface language (the English name is the translation key).</summary>
+    public required string Name { get => L.T(_name); init => _name = value; }
 
     public required string Category { get; init; }
 
-    public required string Description { get; init; }
+    public required string Description { get => L.T(_description); init => _description = value; }
 
     /// <summary>Outline icon drawn in a 24×24 box.</summary>
     public required string IconPath { get; init; }

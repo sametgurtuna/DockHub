@@ -1,8 +1,10 @@
 namespace CustomDock.Core;
 
-/// <summary>Value + display label pair for ComboBoxes.</summary>
-public sealed record Option<T>(T Value, string Label)
+/// <summary>Value + display label pair for ComboBoxes. The label is shown in the interface language.</summary>
+public sealed record Option<T>(T Value, string EnglishLabel)
 {
+    public string Label => L.T(EnglishLabel);
+
     public override string ToString() => Label;
 }
 

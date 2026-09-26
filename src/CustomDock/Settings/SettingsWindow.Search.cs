@@ -4,6 +4,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using CustomDock.Controls;
+using CustomDock.Core;
 using CustomDock.Widgets;
 
 namespace CustomDock.Settings;
@@ -45,11 +46,11 @@ public partial class SettingsWindow
             {
                 if (string.IsNullOrWhiteSpace(row.Header)) continue;
                 Keywords.TryGetValue(row.Header, out var extra);
-                hits.Add(new SearchHit(row.Header, PageNames[key], key, row, $"{row.Header} {row.Description} {extra}"));
+                hits.Add(new SearchHit(row.Header, L.T(PageNames[key]), key, row, $"{row.Header} {row.Description} {extra} {L.T(row.Header)}"));
             }
         }
         foreach (var widget in WidgetRegistry.All)
-            hits.Add(new SearchHit(widget.Name, "Widget gallery", "gallery", null, $"{widget.Name} {widget.Description} {widget.Category} widget"));
+            hits.Add(new SearchHit(widget.Name, L.T("Widget gallery"), "gallery", null, $"{widget.Name} {widget.Description} {widget.Category} widget"));
         return hits;
     }
 
@@ -82,7 +83,7 @@ public partial class SettingsWindow
             .ToList();
         SearchResults.ItemsSource = results.Count > 0
             ? results
-            : new[] { new SearchHit("No matches", "Try another word", "", null, "") };
+            : new[] { new SearchHit(L.T("No matches"), L.T("Try another word"), "", null, "") };
         SearchResults.Visibility = Visibility.Visible;
         NavList.Visibility = Visibility.Collapsed;
     }

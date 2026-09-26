@@ -86,4 +86,13 @@ Ayarlar ve flyout'lar Windows'un "Metin boyutu" ayarına (`UISettings.TextScaleF
 
 ## Uygulama notları
 
-_(Faz uygulanırken doldurulacak.)_
+
+### 2026-09-26 — tamamlandı (kapsam notlarıyla)
+
+- **6.6 Türkçe:** resx yerine gettext tarzı bir yapı kuruldu: `L.T("English")` ve `Resources/Strings_tr.json` (~650 giriş). XAML'e dokunmadan, `Loaded`/`ToolTip.Opened`/`ContextMenu.Opened` class handler'ları yüklenen her elemanın sabit metnini çeviriyor. Bağlı (binding) değerler kaynağında çevriliyor: widget adları, açıklamaları, varyantlar ve `Option` etiketleri. Kod içinde birleştirilen metinler (geri alma açıklamaları, durum ipuçları, AI Usage, klasör diyaloğu) `L.T(format, args)` kullanıyor. Dil ayarı Ayarlar › General'da (System/English/Türkçe); değişiklik yeniden başlatma gerektiriyor. Test, JSON'un geçerli olduğunu ve yer tutucuların korunduğunu doğruluyor.
+  - Eksik kalanlar İngilizce görünüyor: widget'ların çalışma anında değişen durum metinleri (ör. "Running"/"Paused" sonradan atandığında), bazı araç ipuçları. Türkçe örnek canlı olarak hatasız açıldı, ancak kullanıcı bilgisayarı kullandığı için tam görsel tarama yapılmadı.
+- **6.3 Hareket:** `Motion.Level` (Full/Reduced/Off) eklendi. Varsayılan System, Windows'un "Animasyon efektleri" ayarını izliyor. Reduced modda yakınlaştırma, sekme, kaydırma, fan ve genie kapanıyor; yalnızca 120 ms fade kalıyor.
+- **6.4 Yüksek karşıtlık:** `HighContrast.xaml` (Dark.xaml'daki her fırça rolüne göre `SystemColors`'a eşlendi). Kontrast teması açılınca otomatik geçiş yapılıyor ve dock düz arka plana dönüyor.
+- **6.1 UI Automation:** uygulama butonu (ad + çalışıyor/pencere sayısı/dikkat), widget, klasör ve durum ikonları için adlar eklendi. Özel kontrollere (RingGauge vb.) AutomationPeer yazılmadı.
+- **6.2 Klavye:** "Move focus to the dock" (Win+Alt+T) → oklar, Home/End, Enter, Shift+Enter, menü tuşu / Shift+F10, Esc. Accent renkli odak halkası çiziliyor, ekran okuyucuya focus olayı gönderiliyor. Sağa sabitli widget'larda halka görünmüyor. Ayarlar penceresinin Tab sırası ayrıca elden geçirilmedi.
+- **6.5 Metin boyutu:** yapılmadı.

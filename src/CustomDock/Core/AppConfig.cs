@@ -27,6 +27,8 @@ public enum BackdropKind
 
 public enum DockSize { Small, Medium, Large }
 
+public enum MotionPreference { System, Full, Reduced, Off }
+
 public enum DockLayout
 {
     /// <summary>Floating bar with margins and rounded corners.</summary>
@@ -185,6 +187,20 @@ public sealed class AppConfig : ObservableObject
     public double EdgeMargin { get => _edgeMargin; set => Set(ref _edgeMargin, Math.Clamp(value, 0, 32)); }
 
     public bool HoverEffect { get => _hoverEffect; set => Set(ref _hoverEffect, value); }
+
+    // ---------------- Accessibility
+
+    private MotionPreference _motion = MotionPreference.System;
+
+    /// <summary>Animation level; System follows Windows' "Animation effects" setting.</summary>
+    public MotionPreference Motion { get => _motion; set => Set(ref _motion, value); }
+
+    // ---------------- Language
+
+    private UiLanguage _language = UiLanguage.System;
+
+    /// <summary>Interface language; System follows the Windows display language. Applies after a restart.</summary>
+    public UiLanguage Language { get => _language; set => Set(ref _language, value); }
 
     // ---------------- Updates
 

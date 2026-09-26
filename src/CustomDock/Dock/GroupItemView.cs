@@ -201,6 +201,7 @@ public sealed class GroupItemView : Grid
         // Frosted glass background + accent border
         _tileBorder.Background = new SolidColorBrush(Color.FromArgb(42, accentColor.R, accentColor.G, accentColor.B));
         _tileBorder.BorderBrush = new SolidColorBrush(Color.FromArgb(130, accentColor.R, accentColor.G, accentColor.B));
+        System.Windows.Automation.AutomationProperties.SetName(this, L.T("Folder: {0}, {1} items", _item.GroupName ?? L.T("Folder"), children.Count));
 
         if (children.Count == 0)
         {
@@ -716,7 +717,18 @@ public sealed class GroupItemView : Grid
         }
     }
 
-    private void OnContextMenuOpening(object sender, ContextMenuEventArgs e)
+    private void OnContextMenuOpening(object sender, ContextMenuEventArgs e) => BuildContextMenu();
+
+    /// <summary>Opens the right-click menu from the keyboard.</summary>
+    public void OpenContextMenu()
+    {
+        BuildContextMenu();
+        ContextMenu.PlacementTarget = this;
+        ContextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Top;
+        ContextMenu.IsOpen = true;
+    }
+
+    private void BuildContextMenu()
     {
         CloseFan();
         var menu = ContextMenu;
@@ -764,8 +776,8 @@ public sealed class GroupItemView : Grid
         }
 
         string? choice = ConfirmDialog.Show(
-            $"Remove “{folder.GroupName ?? "Folder"}”",
-            count == 1 ? "This folder contains 1 item." : $"This folder contains {count} items.",
+            L.T("Remove “{0}”", folder.GroupName ?? L.T("Folder")),
+            count == 1 ? L.T("This folder contains 1 item.") : L.T("This folder contains {0} items.", count),
             "", owner,
             new DialogButton("cancel", "Cancel", IsCancel: true),
             new DialogButton("delete", "Delete all", DialogButtonKind.Danger),

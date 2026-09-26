@@ -479,7 +479,7 @@ public partial class DockWindow : Window, IWidgetHost
         menu.Items.Clear();
         if (AppServices.ConfigService.History.Latest is { } last)
         {
-            menu.Items.Add(DockMenu.Item($"Undo: {last.Description}", "\uE7A7", () => AppServices.ConfigService.Undo()));
+            menu.Items.Add(DockMenu.Item(L.T("Undo: {0}", last.Description), "\uE7A7", () => AppServices.ConfigService.Undo()));
             menu.Items.Add(DockMenu.Separator());
         }
         menu.Items.Add(DockMenu.Item("Add widget…", "\uE710", () => App.Instance.ShowSettings("gallery")));

@@ -14,6 +14,11 @@ public static class ThemeManager
 
     public static bool IsDark { get; private set; } = true;
 
+    /// <summary>A Windows contrast theme is active; colors come from the system palette.</summary>
+    public static bool IsHighContrast { get; private set; }
+
+    private static bool IsLightColor(Color c) => (0.299 * c.R + 0.587 * c.G + 0.114 * c.B) / 255 > 0.5;
+
     public static event Action? ThemeChanged;
 
     public static void Apply(ThemePreference preference)
@@ -34,13 +39,19 @@ public static class ThemeManager
 
         var dictionaries = Application.Current.Resources.MergedDictionaries;
         var existing = dictionaries.FirstOrDefault(d =>
-            d.Source is { } s && (s.OriginalString.EndsWith("Dark.xaml") || s.OriginalString.EndsWith("Light.xaml")));
+            d.Source is { } s && (s.OriginalString.EndsWith("Dark.xaml") || s.OriginalString.EndsWith("Light.xaml") ||
+                                  s.OriginalString.EndsWith("HighContrast.xaml")));
 
+        // A Windows contrast theme overrides the chosen theme: every color comes from the system palette.
+        bool highContrast = SystemParameters.HighContrast;
+        if (highContrast) dark = !IsLightColor(SystemColors.WindowColor);
+        string file = highContrast ? "HighContrast" : dark ? "Dark" : "Light";
         var dictionary = new ResourceDictionary
         {
-            Source = new Uri($"pack://application:,,,/DockHub;component/Themes/{(dark ? "Dark" : "Light")}.xaml"),
+            Source = new Uri($"pack://application:,,,/DockHub;component/Themes/{file}.xaml"),
         };
-        ApplyAccent(dictionary, dark);
+        if (!highContrast) ApplyAccent(dictionary, dark);
+        IsHighContrast = highContrast;
 
         if (existing is null)
             dictionaries.Insert(0, dictionary);
@@ -87,7 +98,7 @@ public static class ThemeManager
 
     private static void OnUserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
     {
-        if (e.Category is not (UserPreferenceCategory.General or UserPreferenceCategory.Color or UserPreferenceCategory.VisualStyle))
+        if (e.Category is not (UserPreferenceCategory.General or UserPreferenceCategory.Color or UserPreferenceCategory.VisualStyle or UserPreferenceCategory.Accessibility))
             return;
         Application.Current?.Dispatcher.BeginInvoke(() => Apply(_preference));
     }

@@ -34,6 +34,7 @@
   <ItemGroup>
     <Resource Include="Assets\DockHub.ico" />
     <InternalsVisibleTo Include="CustomDock.Tests" />
+    <EmbeddedResource Include="Resources\Strings_*.json" />
   </ItemGroup>
 
   <ItemGroup>

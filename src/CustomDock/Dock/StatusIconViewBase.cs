@@ -57,7 +57,7 @@ public abstract class StatusIconViewBase : Border
             if (ContextMenu.Items.Count == 0) e.Handled = true;
         };
 
-        Loaded += (_, _) => { Attach(); Refresh(); };
+        Loaded += (_, _) => { Attach(); Update(); };
         Unloaded += (_, _) => Detach();
     }
 
@@ -87,5 +87,12 @@ public abstract class StatusIconViewBase : Border
     }
 
     /// <summary>Refresh on the UI thread (system notifications may arrive on other threads).</summary>
-    protected void RefreshSoon(object? sender = null, EventArgs? e = null) => Dispatcher.BeginInvoke(Refresh);
+    protected void RefreshSoon(object? sender = null, EventArgs? e = null) => Dispatcher.BeginInvoke(Update);
+
+    /// <summary>Refreshes the icon and gives screen readers its current state.</summary>
+    protected void Update()
+    {
+        Refresh();
+        System.Windows.Automation.AutomationProperties.SetName(this, ToolTip as string ?? "");
+    }
 }

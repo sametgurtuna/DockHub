@@ -29,7 +29,7 @@ public sealed class BatteryStatusIconView : StatusIconViewBase
 
     public BatteryStatusIconView()
     {
-        _timer.Tick += (_, _) => Refresh();
+        _timer.Tick += (_, _) => Update();
     }
 
     protected override void Attach()
@@ -63,9 +63,9 @@ public sealed class BatteryStatusIconView : StatusIconViewBase
         Glyph.SetResourceReference(TextBlock.ForegroundProperty, brush);
 
         string remaining = !charging && status.BatteryLifeRemaining > 0
-            ? $" · about {TimeSpan.FromSeconds(status.BatteryLifeRemaining):h\\:mm} left"
-            : charging ? (percent >= 100 ? " · fully charged" : " · charging") : "";
-        ToolTip = $"Battery {percent}%{remaining}";
+            ? " · " + L.T("about {0} left", TimeSpan.FromSeconds(status.BatteryLifeRemaining).ToString(@"h\:mm"))
+            : charging ? " · " + L.T(percent >= 100 ? "fully charged" : "charging") : "";
+        ToolTip = L.T("Battery {0}%", percent) + remaining;
     }
 
     protected override void OnClick() => NetworkStatusIconView.OpenSettings("ms-settings:batterysaver");

@@ -34,6 +34,7 @@ public sealed class WidgetItemView : WidgetCard
         ContextMenuOpening += OnContextMenuOpening;
         widget.CardAppearanceChanged += ApplyAppearance;
         widget.CompactAnchor = this;
+        System.Windows.Automation.AutomationProperties.SetName(this, L.T("{0} widget", widget.Descriptor?.Name ?? ""));
         widget.BeforeCompactPopup = CloseFlyout;
         widget.IdleChanged += OnWidgetIdleChanged;
         item.PropertyChanged += OnIdleSettingChanged;
@@ -220,7 +221,26 @@ public sealed class WidgetItemView : WidgetCard
             PopupAnimationHelper.ClosePopup(_flyout, _host.Edge, this);
     }
 
-    private void OnContextMenuOpening(object sender, ContextMenuEventArgs e)
+    private void OnContextMenuOpening(object sender, ContextMenuEventArgs e) => BuildContextMenu();
+
+    /// <summary>Enter on the focused widget: runs its main action or opens its panel (compact), otherwise its menu.</summary>
+    public void ActivateFromKeyboard()
+    {
+        if (!_compact) { OpenContextMenu(); return; }
+        if (Widget.OnCompactClick()) return;
+        OpenFlyout();
+    }
+
+    /// <summary>Opens the right-click menu from the keyboard.</summary>
+    public void OpenContextMenu()
+    {
+        BuildContextMenu();
+        ContextMenu.PlacementTarget = this;
+        ContextMenu.Placement = PlacementMode.Top;
+        ContextMenu.IsOpen = true;
+    }
+
+    private void BuildContextMenu()
     {
         CloseFlyout();
         var menu = ContextMenu;

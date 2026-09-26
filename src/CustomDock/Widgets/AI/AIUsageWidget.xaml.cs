@@ -54,11 +54,11 @@ public partial class AIUsageWidget : WidgetBase
     /// <summary>Explains a failed update in plain words.</summary>
     private static string? StatusMessage(AIUsageService service) => service.Status switch
     {
-        AIUsageStatus.CliNotFound => "Claude Code CLI not found. Install it and sign in to see your limits.",
-        AIUsageStatus.NotLoggedIn => "Not signed in. Run \"claude\" in a terminal and log in.",
-        AIUsageStatus.Timeout => "The Claude CLI didn't answer in time. Retrying later.",
-        AIUsageStatus.ParseFailed => "Couldn't read the usage output of the Claude CLI. Automatic checks are paused; right-click › Refresh now to try again.",
-        AIUsageStatus.Unknown => "Couldn't update usage. Retrying later.",
+        AIUsageStatus.CliNotFound => L.T("Claude Code CLI not found. Install it and sign in to see your limits."),
+        AIUsageStatus.NotLoggedIn => L.T("Not signed in. Run \"claude\" in a terminal and log in."),
+        AIUsageStatus.Timeout => L.T("The Claude CLI didn't answer in time. Retrying later."),
+        AIUsageStatus.ParseFailed => L.T("Couldn't read the usage output of the Claude CLI. Automatic checks are paused; right-click › Refresh now to try again."),
+        AIUsageStatus.Unknown => L.T("Couldn't update usage. Retrying later."),
         _ => null,
     };
 
@@ -105,17 +105,17 @@ public partial class AIUsageWidget : WidgetBase
         WeekBar.SetResourceReference(System.Windows.Controls.Border.BackgroundProperty, weekBrush);
         Opacity = data.SessionPercent is null && data.WeekPercent is null && AppServices.AIUsage.Status != AIUsageStatus.Pending ? 0.55 : 1;
 
-        var tooltip = new List<string> { "Claude Code usage" };
+        var tooltip = new List<string> { L.T("Claude Code usage") };
         tooltip.Add(data.SessionPercent is null
-            ? "5-hour: unknown"
-            : $"5-hour: {sessionText}" + (data.SessionResets is null ? "" : $" (resets: {data.SessionResets})"));
+            ? L.T("5-hour: unknown")
+            : L.T("5-hour: {0}", sessionText) + (data.SessionResets is null ? "" : " " + L.T("(resets {0})", data.SessionResets)));
         tooltip.Add(data.WeekPercent is null
-            ? "Weekly: unknown"
-            : $"Weekly: {weekText}" + (data.WeekResets is null ? "" : $" (resets: {data.WeekResets})"));
+            ? L.T("Weekly: unknown")
+            : L.T("Weekly: {0}", weekText) + (data.WeekResets is null ? "" : " " + L.T("(resets {0})", data.WeekResets)));
         if (StatusMessage(AppServices.AIUsage) is { } status)
             tooltip.Add(status);
         if (data.FetchedAt != default)
-            tooltip.Add($"Updated {data.FetchedAt:t}");
+            tooltip.Add(L.T("Updated {0}", data.FetchedAt.ToString("t")));
         ToolTip = string.Join("\n", tooltip);
 
         RefreshCompact();

@@ -175,6 +175,20 @@
                         <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ExplorerPinMenu}" />
                     </ctl:SettingRow>
 
+                    <TextBlock Text="Language" Style="{StaticResource SectionHeader}" />
+                    <ctl:SettingRow Glyph="&#xF2B7;" Header="Interface language" Description="System follows your Windows display language. DockHub restarts to switch.">
+                        <Border Style="{StaticResource SegmentedHost}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Language" Content="System"
+                                             IsChecked="{Binding Language, Converter={StaticResource EnumEq}, ConverterParameter=System}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Language" Content="English"
+                                             IsChecked="{Binding Language, Converter={StaticResource EnumEq}, ConverterParameter=English}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Language" Content="Türkçe"
+                                             IsChecked="{Binding Language, Converter={StaticResource EnumEq}, ConverterParameter=Turkish}" />
+                            </StackPanel>
+                        </Border>
+                    </ctl:SettingRow>
+
                     <TextBlock Text="Keyboard shortcuts" Style="{StaticResource SectionHeader}" />
                     <ctl:SettingRow Glyph="&#xE765;" Header="Win + number keys open dock apps"
                                     Description="Win+1…9 and Win+0 open or switch to the dock's apps, like the Windows taskbar. Add Shift for a new window, Ctrl+Shift to run as administrator, Alt for the jump list. Hold Win to see the numbers. Only when DockHub replaces the taskbar.">
@@ -331,6 +345,21 @@
                             <TextBlock Width="48" TextAlignment="Right" VerticalAlignment="Center"
                                        Text="{Binding TintOpacity, Converter={StaticResource Percent}}" Foreground="{DynamicResource TextSecondaryBrush}" />
                         </StackPanel>
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE945;" Header="Animations"
+                                    Description="Reduced keeps short fades and turns off zoom, bounce and the genie effect. System follows Windows' animation effects setting.">
+                        <Border Style="{StaticResource SegmentedHost}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Motion" Content="System"
+                                             IsChecked="{Binding Motion, Converter={StaticResource EnumEq}, ConverterParameter=System}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Motion" Content="Full"
+                                             IsChecked="{Binding Motion, Converter={StaticResource EnumEq}, ConverterParameter=Full}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Motion" Content="Reduced"
+                                             IsChecked="{Binding Motion, Converter={StaticResource EnumEq}, ConverterParameter=Reduced}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Motion" Content="Off"
+                                             IsChecked="{Binding Motion, Converter={StaticResource EnumEq}, ConverterParameter=Off}" />
+                            </StackPanel>
+                        </Border>
                     </ctl:SettingRow>
                     <ctl:SettingRow Glyph="&#xE7B3;" Header="Card hover" Description="Widget card gently lights up when hovered.">
                         <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding HoverEffect}" />

@@ -78,8 +78,8 @@ public sealed class HotkeyBox : Border
 
     private void UpdateText()
     {
-        _text.Text = _capturing ? "Press a shortcut…" : _gesture?.ToString().Replace("+", " + ") ?? "Not set";
+        _text.Text = _capturing ? L.T("Press a shortcut…") : _gesture?.ToString().Replace("+", " + ") ?? L.T("Not set");
         _text.Opacity = _capturing || _gesture is not null ? 1 : 0.6;
-        ToolTip = "Click, then press the keys. Backspace clears, Esc cancels.";
+        ToolTip = L.T("Click, then press the keys. Backspace clears, Esc cancels.");
     }
 }

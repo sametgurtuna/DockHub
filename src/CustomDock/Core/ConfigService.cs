@@ -222,7 +222,7 @@ public sealed class ConfigService
 
     public void AddItem(DockItem item, int index = -1)
     {
-        History.Push(Config, $"Added {Describe(item)}");
+        History.Push(Config, L.T("Added {0}", Describe(item)));
         if (index < 0 || index > Config.Items.Count) Config.Items.Add(item);
         else Config.Items.Insert(index, item);
         Config.NotifyItemsChanged();
@@ -234,7 +234,7 @@ public sealed class ConfigService
         var topLevel = Config.Items.FirstOrDefault(i => i.Id == id);
         if (topLevel is not null)
         {
-            var entry = History.Push(Config, $"Removed {Describe(topLevel)}", destructive: true);
+            var entry = History.Push(Config, L.T("Removed {0}", Describe(topLevel)), destructive: true);
             Config.Items.Remove(topLevel);
             OnItemsRemoved(new[] { topLevel }, entry);
             Config.NotifyItemsChanged();
@@ -245,7 +245,7 @@ public sealed class ConfigService
         {
             var child = group.Children?.FirstOrDefault(i => i.Id == id);
             if (child is null) continue;
-            var entry = History.Push(Config, $"Removed {Describe(child)}", destructive: true);
+            var entry = History.Push(Config, L.T("Removed {0}", Describe(child)), destructive: true);
             group.Children!.Remove(child);
             OnItemsRemoved(new[] { child }, entry);
             // Auto-delete empty groups
@@ -275,9 +275,9 @@ public sealed class ConfigService
     public static string Describe(DockItem item) => item.Kind switch
     {
         DockItemKind.App => !string.IsNullOrWhiteSpace(item.Name) ? item.Name! : Path.GetFileNameWithoutExtension(item.Path ?? "app"),
-        DockItemKind.Widget => $"{WidgetRegistry.Find(item.Widget)?.Name ?? "widget"} widget",
-        DockItemKind.Group => $"“{item.GroupName ?? "Folder"}” folder",
-        _ => "separator",
+        DockItemKind.Widget => L.T("{0} widget", WidgetRegistry.Find(item.Widget)?.Name ?? L.T("Unknown")),
+        DockItemKind.Group => L.T("“{0}” folder", item.GroupName ?? L.T("Folder")),
+        _ => L.T("separator"),
     };
 
     /// <summary>Forgets cached settings of removed items (and folder contents) and trashes their data files.</summary>
@@ -302,7 +302,7 @@ public sealed class ConfigService
         {
             // Item might be inside a group -- pull it out to top level
             if (FindParentGroup(id) is { } source && source.Children!.FirstOrDefault(c => c.Id == id) is { } moving)
-                History.Push(Config, $"Moved {Describe(moving)} out of the folder");
+                History.Push(Config, L.T("Moved {0} out of the folder", Describe(moving)));
             var parentGroup = FindParentGroup(id);
             if (parentGroup is null) return;
             var child = parentGroup.Children!.FirstOrDefault(c => c.Id == id);
@@ -317,7 +317,7 @@ public sealed class ConfigService
         }
         var item = Config.Items[oldIndex];
         int target = Math.Clamp(newIndex > oldIndex ? newIndex - 1 : newIndex, 0, Config.Items.Count - 1);
-        if (target != oldIndex) History.Push(Config, $"Moved {Describe(item)}");
+        if (target != oldIndex) History.Push(Config, L.T("Moved {0}", Describe(item)));
         Config.Items.RemoveAt(oldIndex);
         if (newIndex > oldIndex) newIndex--;
         newIndex = Math.Clamp(newIndex, 0, Config.Items.Count);
@@ -339,7 +339,7 @@ public sealed class ConfigService
     {
         var group = Config.Items.FirstOrDefault(g => g.Id == groupId && g.Kind == DockItemKind.Group);
         if (group is null) return;
-        History.Push(Config, $"Added {Describe(item)} to {Describe(group)}");
+        History.Push(Config, L.T("Added {0} to {1}", Describe(item), Describe(group)));
         group.Children ??= new List<DockItem>();
         if (index < 0 || index > group.Children.Count) group.Children.Add(item);
         else group.Children.Insert(index, item);
@@ -360,7 +360,7 @@ public sealed class ConfigService
         Config.Items.Remove(item1);
         Config.Items.Remove(item2);
 
-        History.Push(Config, $"Created “{name}” folder");
+        History.Push(Config, L.T("Created “{0}” folder", name));
         var group = DockItem.Group(name, new List<DockItem> { item1, item2 });
         insertAt = Math.Clamp(insertAt, 0, Config.Items.Count);
         Config.Items.Insert(insertAt, group);
@@ -375,7 +375,7 @@ public sealed class ConfigService
         if (index < 0) return;
         var group = Config.Items[index];
         if (group.Kind != DockItemKind.Group) return;
-        History.Push(Config, $"Ungrouped {Describe(group)}", destructive: true);
+        History.Push(Config, L.T("Ungrouped {0}", Describe(group)), destructive: true);
         Config.Items.RemoveAt(index);
         var children = group.Children ?? new List<DockItem>();
         for (int i = 0; i < children.Count; i++)

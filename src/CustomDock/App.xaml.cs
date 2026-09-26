@@ -89,6 +89,12 @@ public partial class App : Application
         AppServices.ConfigService.Load();
         var config = AppServices.Config;
         if (config.DebugLogging) Log.DebugEnabled = true;
+        L.Initialize(config.Language);
+        ApplyMotionLevel();
+        SystemEvents.UserPreferenceChanged += (_, e) =>
+        {
+            if (e.Category is UserPreferenceCategory.General or UserPreferenceCategory.Accessibility) ApplyMotionLevel();
+        };
         ThemeManager.Apply(config.Theme);
 
         if (config.StartWithWindows != StartupManager.IsEnabled())
@@ -268,6 +274,7 @@ public partial class App : Application
     {
         var config = AppServices.Config;
         RegisterHotkeyHandler(HotkeyActions.ToggleDock, DockWindow.ToggleAllDocks);
+        RegisterHotkeyHandler(HotkeyActions.FocusDock, DockWindow.FocusMainDock);
         RegisterHotkeyHandler(HotkeyActions.OpenSettings, () => ShowSettings());
         RegisterHotkeyHandler(HotkeyActions.PinApp, () => ShowAppPicker());
         RegisterHotkeyHandler(HotkeyActions.ToggleAutoHide, () => config.AutoHide = !config.AutoHide);
@@ -331,6 +338,18 @@ public partial class App : Application
                 TrayIconView.NotifySystemIconsChanged();
                 foreach (var dock in DockWindow.All.ToList()) dock.ApplySettings();
                 break;
+            case nameof(AppConfig.Motion):
+                ApplyMotionLevel();
+                break;
+            case nameof(AppConfig.Language):
+                if (ConfirmDialog.Show(L.T("Restart DockHub?"), L.T("The new language is used after a restart."), "", _settings,
+                        new DialogButton("later", L.T("Later"), IsCancel: true),
+                        new DialogButton("restart", L.T("Restart now"), DialogButtonKind.Primary)) == "restart")
+                {
+                    AppServices.ConfigService.SaveNow();
+                    RestartApplication();
+                }
+                break;
             case nameof(AppConfig.CheckForUpdates):
                 if (config.CheckForUpdates) AppServices.Updates.Start(); else AppServices.Updates.Stop();
                 break;
@@ -353,6 +372,18 @@ public partial class App : Application
                 foreach (var dock in DockWindow.All.ToList()) dock.ApplySettings();
                 break;
         }
+    }
+
+    /// <summary>Maps the animation setting (or Windows' "Animation effects") to the level all animations use.</summary>
+    private static void ApplyMotionLevel()
+    {
+        Controls.Motion.Level = AppServices.Config.Motion switch
+        {
+            MotionPreference.Full => Controls.MotionLevel.Full,
+            MotionPreference.Reduced => Controls.MotionLevel.Reduced,
+            MotionPreference.Off => Controls.MotionLevel.Off,
+            _ => SystemParameters.ClientAreaAnimation ? Controls.MotionLevel.Full : Controls.MotionLevel.Reduced,
+        };
     }
 
     private bool _revertingTaskbarMode;

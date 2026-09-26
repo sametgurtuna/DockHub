@@ -1,3 +1,4 @@
+using CustomDock.Core;
 using System.Runtime.InteropServices;
 using System.Windows.Threading;
 using CustomDock.Native;
@@ -51,7 +52,7 @@ public sealed class SystemMonitorService
             _updated += value;
             if (!_timer.IsEnabled)
             {
-                Sample();
+                SampleCore(); // first reading right away, even if the dock is hidden
                 _timer.Start();
             }
         }
@@ -63,6 +64,12 @@ public sealed class SystemMonitorService
     }
 
     private void Sample()
+    {
+        if (!DockVisibility.IsAnyDockVisible) return;
+        SampleCore();
+    }
+
+    private void SampleCore()
     {
         double cpu = Current.CpuPercent;
         if (NativeMethods.GetSystemTimes(out var idle, out var kernel, out var user))

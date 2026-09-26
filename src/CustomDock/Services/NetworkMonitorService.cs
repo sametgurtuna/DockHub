@@ -33,7 +33,7 @@ public sealed class NetworkMonitorService
             _updated += value;
             if (!_timer.IsEnabled)
             {
-                Sample();
+                _ = SampleCore(); // first reading right away, even if the dock is hidden
                 _timer.Start();
             }
         }
@@ -47,6 +47,13 @@ public sealed class NetworkMonitorService
     private bool _sampling;
 
     private async void Sample()
+    {
+        // Nothing shows the numbers while every dock is hidden.
+        if (!DockVisibility.IsAnyDockVisible) return;
+        await SampleCore();
+    }
+
+    private async Task SampleCore()
     {
         if (_sampling) return;
         _sampling = true;

@@ -24,7 +24,7 @@ Her faz tek başına yapılabilir, test edilebilir ve commit'lenebilir bir iş p
 | 6 | [Erişilebilirlik ve Türkçe arayüz](faz-6-erisilebilirlik-ve-yerellestirme.md) | 🟡 Orta | L | ✅ |
 | 7 | [Dock davranışı: profiller, intellihide, klasör grid](faz-7-dock-davranisi.md) | 🟡 Orta | L | ✅ |
 | 8 | [Yeni widget'lar](faz-8-yeni-widgetlar.md) | 🟢 Düşük | XL | ✅ (4/6) |
-| 9 | [Performans ve kod sağlığı](faz-9-performans-ve-kod-sagligi.md) | 🟢 Düşük | M | ⬜ |
+| 9 | [Performans ve kod sağlığı](faz-9-performans-ve-kod-sagligi.md) | 🟢 Düşük | M | 🟡 kısmen |
 | 10 | [Üçüncü taraf widget SDK'sı](faz-10-widget-sdk.md) | 🟢 Düşük | XL | ⬜ |
 
 Boyut: S = birkaç saat, M = 1-2 gün, L = 3-5 gün, XL = 1 hafta ve üzeri.

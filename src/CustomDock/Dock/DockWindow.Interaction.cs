@@ -45,6 +45,7 @@ public partial class DockWindow
         bool shouldShow = !IsFullscreenBlocked && (!_config.AutoHide || _revealed);
         if (shouldShow == _shown && (_animating || IsVisible == shouldShow)) return;
         _shown = shouldShow;
+        DockVisibility.Report(this, shouldShow);
         _ = AnimateAsync(shouldShow, animate);
         UpdateTrigger();
     }

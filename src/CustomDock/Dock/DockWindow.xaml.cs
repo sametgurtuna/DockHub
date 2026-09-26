@@ -536,6 +536,7 @@ public partial class DockWindow : Window, IWidgetHost
         SystemEvents.PowerModeChanged -= OnPowerModeChanged;
         _iconRefreshTimer.Stop();
         StopSmartHide();
+        DockVisibility.Report(this, false);
         _config.ItemsChanged -= OnItemsChanged;
         _shell.RunningApps.GroupsChanged -= RefreshRunningApps;
         _shell.Manager.FullScreenHelper.FullScreenApps.CollectionChanged -= OnFullScreenAppsChanged;

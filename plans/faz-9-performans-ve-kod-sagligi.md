@@ -76,3 +76,15 @@ Görev 9.1'deki ölçümler refactor sonrası tekrarlanır ve karşılaştırma 
 ## Uygulama notları
 
 _(Önce/sonra ölçüm tablosu buraya.)_
+
+### 2026-09-26 — kısmen tamamlandı
+
+- **Görev çubuğu denetimi olay tabanlı hale geldi:** 250 ms sabit polling yerine `EVENT_OBJECT_SHOW` hook'u (yalnızca `Shell_TrayWnd`/`Shell_SecondaryTrayWnd` için) kullanılıyor. Bir tetiklenmeden sonra 5 s boyunca 250 ms, geri kalanında 2 s güvenlik kontrolü yapılıyor. Boştaki uyanmalar yaklaşık 8 kat azaldı (4/s → 0,5/s). Hook kaldırma işlemi UI thread'ine yönlendirildi (Restore process exit'ten de çağrılabiliyor).
+- **Dock gizliyken örnekleme durduruluyor:** `DockVisibility` eklendi. CPU/bellek ve ağ hızı servisleri, tüm dock'lar gizliyken (otomatik gizleme, tam ekran oyun/video) örnek almıyor. Hesaplar geçen süreye dayandığı için değerler bozulmuyor.
+- **Log gürültüsü:** HyperX pil okuması (her 30 s) INFO'dan DEBUG'a alındı.
+- **Kaynak sızıntısı denetimi:** `SystemEvents` abonelikleri ve widget servis abonelikleri tarandı; açık kalan abonelik bulunmadı. `IconCache` LRU Faz 0'da yapılmıştı.
+- **Yapılmayanlar:**
+  - 9.1 ölçümleri: kullanıcı bilgisayarı kullandığı için test örneği çalıştırılmadı.
+  - 9.3 büyük dosyaların bölünmesi: davranış değiştirmeyen ama yüksek riskli bir iş.
+  - 9.5 açılış süresi.
+  - Faz 5.4 (widget genişlik standardı) ve Faz 8.4 (GPU) buraya devredilmişti; onlar da yapılmadı.

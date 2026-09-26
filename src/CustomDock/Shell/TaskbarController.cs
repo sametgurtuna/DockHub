@@ -31,12 +31,21 @@ public sealed class TaskbarController : IDisposable
     private int _originalState;
     private int _visibleTicks;
 
+    // Explorer re-showing its taskbar is caught by a show event; the timer only confirms it (fast for a few
+    // seconds after such an event, otherwise a slow safety check).
+    private static readonly TimeSpan FastInterval = TimeSpan.FromMilliseconds(250);
+    private static readonly TimeSpan SlowInterval = TimeSpan.FromSeconds(2);
+    private static readonly TimeSpan FastPeriod = TimeSpan.FromSeconds(5);
+    private DateTime _fastUntil;
+    private WinEventProc? _showProc;
+    private IntPtr _showHook;
+
     public TaskbarController(Func<IntPtr> ownTrayProvider, Func<bool> launcherVisible)
     {
         _ownTrayProvider = ownTrayProvider;
         _launcherVisible = launcherVisible;
         _onTick = (_, _) => Enforce();
-        _monitor = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(250) };
+        _monitor = new DispatcherTimer(DispatcherPriority.Background) { Interval = SlowInterval };
         _monitor.Tick += _onTick;
     }
 
@@ -61,6 +70,7 @@ public sealed class TaskbarController : IDisposable
         SetVisible(tray, false);
         IsHidden = true;
         _monitor.Start();
+        StartShowHook();
         Log.Info($"Windows taskbar hidden (original state {_originalState}).");
     }
 
@@ -79,8 +89,9 @@ public sealed class TaskbarController : IDisposable
 
         try
         {
-            if (_monitor.Dispatcher.CheckAccess()) _monitor.Stop();
-            else _monitor.Dispatcher.BeginInvoke(_monitor.Stop);
+            // Hooks and timers belong to the UI thread (Restore can also run from process exit).
+            if (_monitor.Dispatcher.CheckAccess()) { StopShowHook(); _monitor.Stop(); }
+            else _monitor.Dispatcher.BeginInvoke(() => { StopShowHook(); _monitor.Stop(); });
         }
         catch
         {
@@ -88,9 +99,33 @@ public sealed class TaskbarController : IDisposable
         }
     }
 
+    private void StartShowHook()
+    {
+        if (_showHook != IntPtr.Zero) return;
+        _showProc ??= OnWindowShown;
+        _showHook = SetWinEventHook(EVENT_OBJECT_SHOW, EVENT_OBJECT_SHOW, IntPtr.Zero, _showProc, 0, 0, WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS);
+    }
+
+    private void StopShowHook()
+    {
+        if (_showHook == IntPtr.Zero) return;
+        UnhookWinEvent(_showHook);
+        _showHook = IntPtr.Zero;
+    }
+
+    private void OnWindowShown(IntPtr hook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint thread, uint time)
+    {
+        if (idObject != OBJID_WINDOW || idChild != 0) return;
+        string cls = GetClassName(hwnd);
+        if (cls is not ("Shell_TrayWnd" or "Shell_SecondaryTrayWnd")) return;
+        _fastUntil = DateTime.UtcNow + FastPeriod;
+        _monitor.Interval = FastInterval;
+    }
+
     private void Enforce()
     {
         if (!IsHidden) return;
+        if (_monitor.Interval != SlowInterval && DateTime.UtcNow > _fastUntil) _monitor.Interval = SlowInterval;
 
         var tray = ExplorerTray;
         bool anyVisible = (tray != IntPtr.Zero && IsWindowVisible(tray)) || AnySecondaryTrayVisible();

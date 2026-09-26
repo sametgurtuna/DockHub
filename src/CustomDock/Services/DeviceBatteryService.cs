@@ -260,7 +260,7 @@ public sealed class DeviceBatteryService
                         {
                             battery = level;
                             isCharging = rawBuf[4] == 1 || rawBuf[4] == 2;
-                            Log.Info($"HyperX battery read: {devName} -> {battery}% (Charging: {isCharging})");
+                            Log.Debug($"HyperX battery read: {devName} -> {battery}% (Charging: {isCharging})");
                             break;
                         }
                     }

@@ -160,6 +160,20 @@
                     </ctl:SettingRow>
                     <StackPanel x:Name="HotkeyRows" />
 
+                    <TextBlock Text="Backup and restore" Style="{StaticResource SectionHeader}" />
+                    <ctl:SettingRow Glyph="&#xE78C;" Header="Export settings"
+                                    Description="Saves your dock, widgets, notes and reminders to a .zip file.">
+                        <Button Content="Export…" Click="OnExportSettingsClick" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE8B5;" Header="Import settings"
+                                    Description="Replaces your current setup with a backup. The current one is saved to the backups folder first, then DockHub restarts.">
+                        <Button Content="Import…" Click="OnImportSettingsClick" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE81C;" Header="Automatic backups"
+                                    Description="DockHub keeps a copy of its settings from each of the last 7 days and uses it automatically if the settings file is ever damaged.">
+                        <Button Content="Open folder" Click="OnOpenBackupsClick" />
+                    </ctl:SettingRow>
+
                     <TextBlock Text="Maintenance" Style="{StaticResource SectionHeader}" />
                     <ctl:SettingRow Glyph="&#xE777;" Header="Restore Windows taskbar"
                                     Description="If the taskbar remains hidden due to an issue. (Command line: DockHub.exe --restore-taskbar)">
@@ -256,6 +270,9 @@
                 <StackPanel x:Name="AppearancePage" Style="{StaticResource Page}">
                     <TextBlock Text="Appearance" Style="{StaticResource PageTitle}" />
                     <TextBlock Text="Theme, glass effect, size, and layout." Style="{StaticResource PageSubtitle}" />
+
+                    <TextBlock Text="Layout presets" Style="{StaticResource SectionHeader}" />
+                    <UniformGrid x:Name="PresetPanel" Columns="4" Margin="0,0,0,6" />
 
                     <TextBlock Text="Style" Style="{StaticResource SectionHeader}" />
                     <ctl:SettingRow Glyph="&#xE790;" Header="Theme">
@@ -559,6 +576,28 @@
                             </StackPanel>
                         </StackPanel>
                     </Border>
+                    <TextBlock Text="Updates" Style="{StaticResource SectionHeader}" />
+                    <Border x:Name="UpdateCard" Style="{StaticResource SettingCard}" Visibility="Collapsed">
+                        <StackPanel>
+                            <TextBlock x:Name="UpdateTitle" Style="{StaticResource SettingTitle}" />
+                            <TextBlock x:Name="UpdateNotes" Style="{StaticResource SettingDescription}" TextWrapping="Wrap" MaxHeight="160" Margin="0,4,0,10" />
+                            <StackPanel Orientation="Horizontal">
+                                <Button x:Name="InstallUpdateButton" Content="Download and install" Click="OnInstallUpdateClick" />
+                                <Button Content="Release notes" Margin="8,0,0,0" Click="OnReleaseNotesClick" />
+                                <TextBlock x:Name="UpdateProgress" VerticalAlignment="Center" Margin="12,0,0,0" Foreground="{DynamicResource TextSecondaryBrush}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    <ctl:SettingRow x:Name="UpdateStatusRow" Glyph="&#xE895;" Header="Check for updates">
+                        <Button x:Name="CheckUpdatesButton" Content="Check now" Click="OnCheckUpdatesClick" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE823;" Header="Check automatically" Description="Once a day, DockHub asks GitHub for the latest release. Nothing else is sent.">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding CheckForUpdates}" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE9D9;" Header="Include pre-releases" Description="Also offer beta versions.">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding IncludePrereleases}" />
+                    </ctl:SettingRow>
+
                     <TextBlock Text="Open source software &amp; data used" Style="{StaticResource SectionHeader}" />
                     <ctl:SettingRow Glyph="&#xE7F4;" Header="ManagedShell" Description="Task list, system tray, and AppBar services (Apache-2.0).">
                         <Button Content="GitHub" Tag="https://github.com/cairoshell/ManagedShell" Click="OnOpenLinkClick" />

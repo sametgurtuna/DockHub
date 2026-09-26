@@ -100,12 +100,20 @@ public partial class App : Application
         _tray = new TrayIconManager();
         AppServices.Notifications.Fallback = (title, body) => _tray?.ShowBalloon(title, body);
         AppServices.Notifications.Initialize();
+        if (AppServices.ConfigService.RecoveredFromBackup is { } backupDate)
+            AppServices.Notifications.Show("Settings restored from backup", $"config.json was damaged, so DockHub loaded your backup from {backupDate:g}.");
         AppServices.Reminders.Start();
         ItemDataStore.PurgeOld();
+        AppServices.Updates.UpdateAvailable += release => AppServices.Notifications.Show(
+            $"DockHub {release.Version} is available", "Open DockHub settings to see what's new and install it.", "update",
+            new ToastAction("Details", NotificationService.ActionOpenUpdate),
+            new ToastAction("Skip this version", NotificationService.ActionSkipUpdate));
+        AppServices.Updates.Start();
 
         CreateDock();
         ApplyTaskbarMode();
         StartKeyboardShortcuts();
+        UndoToast.Attach(AppServices.ConfigService.History);
 
         config.PropertyChanged += OnConfigChanged;
         WidgetItemView.SettingsRequested += item => ShowSettings("items", item.Id);
@@ -322,6 +330,11 @@ public partial class App : Application
             case nameof(AppConfig.ShowBatteryIcon):
                 TrayIconView.NotifySystemIconsChanged();
                 foreach (var dock in DockWindow.All.ToList()) dock.ApplySettings();
+                break;
+            case nameof(AppConfig.CheckForUpdates):
+                if (config.CheckForUpdates) AppServices.Updates.Start(); else AppServices.Updates.Stop();
+                break;
+            case nameof(AppConfig.IncludePrereleases):
                 break;
             case nameof(AppConfig.WinNumberHotkeys):
                 UpdateWinNumberHotkeys();

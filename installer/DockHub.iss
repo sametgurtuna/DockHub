@@ -84,6 +84,8 @@ Root: HKCU; Subkey: "Software\Classes\lnkfile\shell\DockHub.Pin"; Flags: uninsde
 
 [Run]
 Filename: "{app}\{#MyAppExe}"; Description: "{cm:LaunchApp}"; Flags: nowait postinstall skipifsilent
+; Silent installs come from the in-app updater: start the new version again right away.
+Filename: "{app}\{#MyAppExe}"; Parameters: "--startup"; Flags: nowait skipifnotsilent
 
 [Code]
 procedure RunDockHub(const Args: String);

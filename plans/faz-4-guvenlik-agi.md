@@ -85,4 +85,11 @@ Kullanıcının dock'u rahatça kurcalayabilmesi için hataları geri alınabili
 
 ## Uygulama notları
 
-_(Faz uygulanırken doldurulacak.)_
+
+### 2026-09-26 — tamamlandı
+
+- **Undo:** `ConfigHistory` (20 adım) eklendi. Geri yüklemede mevcut `DockItem` örnekleri id'ye göre yeniden kullanılıyor; view'lar ve widget ayarları bu örneklere referans tuttuğu için bu gerekli. Silinen öğelerin trash'teki verileri de geri geliyor. Yıkıcı işlemlerde dock'un yanında `UndoToast` çıkıyor (6 s, üzerine gelince duruyor). Dock menüsünde "Undo: …" var, Ayarlar'da Ctrl+Z çalışıyor.
+- **Yedek:** zip dışa/içe aktarma (manifest ile doğrulanıyor, içe aktarmadan önce mevcut durum `backups/` klasörüne yedekleniyor, yeniden başlatmada config üzerine yazılmasın diye `DisableSaving` kullanılıyor), günlük `config-yyyyMMdd.json` (7 adet). Bozuk config tespit edilirse en yeni sağlam yedek otomatik yükleniyor ve kullanıcıya bildirim gösteriliyor. Plandaki "önerme diyaloğu" yerine otomatik yükleme seçildi, çünkü açılış sırasında UI henüz hazır değil.
+- **Presetler:** Minimal, macOS style, Dashboard, Side bar. Uygulamalar, klasörler ve ayraçlar korunuyor; aynı türdeki mevcut widget'lar (ayarları ve verileriyle) yeniden kullanılıyor. Görünüm ayarları dahil tek adımda geri alınabiliyor. "Mevcut düzeni preset olarak kaydet" yapılmadı (opsiyoneldi).
+- **Güncelleme:** `UpdateService` (GitHub latest release, günde bir, pre-release seçeneği). Doğrulama için GitHub'ın asset `digest` alanı (sha256) kullanılıyor, yoksa SHA256SUMS'a düşülüyor. Installer `/SILENT` ile çalıştırılıyor; `DockHub.iss` sessiz kurulumdan sonra uygulamayı yeniden başlatıyor. Toast'ta "Details" ve "Skip this version" var; About sayfasına güncelleme kartı eklendi.
+- Testler: 56 (undo ve yedekleme testleri dahil).

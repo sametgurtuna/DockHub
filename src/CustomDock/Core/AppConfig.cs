@@ -186,6 +186,16 @@ public sealed class AppConfig : ObservableObject
 
     public bool HoverEffect { get => _hoverEffect; set => Set(ref _hoverEffect, value); }
 
+    // ---------------- Updates
+
+    private bool _checkForUpdates = true;
+    private bool _includePrereleases;
+
+    /// <summary>Checks GitHub Releases once a day for a newer DockHub.</summary>
+    public bool CheckForUpdates { get => _checkForUpdates; set => Set(ref _checkForUpdates, value); }
+
+    public bool IncludePrereleases { get => _includePrereleases; set => Set(ref _includePrereleases, value); }
+
     // ---------------- Keyboard
 
     private bool _winNumberHotkeys = true;

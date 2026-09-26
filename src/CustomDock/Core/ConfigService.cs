@@ -86,29 +86,55 @@ public sealed class ConfigService
         }
     }
 
-    private static AppConfig ReadConfig()
+    /// <summary>Date of the daily backup used because config.json was corrupt (shown to the user once), or null.</summary>
+    public DateTime? RecoveredFromBackup { get; private set; }
+
+    private AppConfig ReadConfig()
     {
         try
         {
-            var node = JsonNode.Parse(File.ReadAllText(AppPaths.ConfigFile), documentOptions: new JsonDocumentOptions
-            {
-                AllowTrailingCommas = true,
-                CommentHandling = JsonCommentHandling.Skip,
-            }) as JsonObject;
-            if (node is null) return new AppConfig { Items = DefaultItems.Create() };
-
-            // Map v1 enum values to new values (otherwise JSON cannot be deserialized)
-            MapEnum(node, "taskbarMode", ("HideTaskbar", "Replace"));
-            MapEnum(node, "backdrop", ("Mica", "Blur"), ("Transparent", "Solid"));
-            return node.Deserialize<AppConfig>(JsonStore.Options) ?? new AppConfig();
+            return ParseConfig(AppPaths.ConfigFile) ?? new AppConfig { Items = DefaultItems.Create() };
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to read config.json, using defaults");
+            Log.Error(ex, "Failed to read config.json");
             try { File.Copy(AppPaths.ConfigFile, $"{AppPaths.ConfigFile}.corrupt-{DateTime.Now:yyyyMMddHHmmss}", overwrite: true); } catch { /* ignore */ }
-            var config = new AppConfig { Items = DefaultItems.Create() };
-            return config;
+
+            // Fall back to the newest daily backup before starting over with defaults.
+            if (BackupService.LatestValidDailyBackup() is { } backup)
+            {
+                try
+                {
+                    if (ParseConfig(backup) is { } recovered)
+                    {
+                        RecoveredFromBackup = File.GetLastWriteTime(backup);
+                        Log.Info($"Settings restored from daily backup {backup}.");
+                        return recovered;
+                    }
+                }
+                catch (Exception backupEx)
+                {
+                    Log.Error(backupEx, $"Backup {backup} is not usable either");
+                }
+            }
+            Log.Warn("Using default settings.");
+            return new AppConfig { Items = DefaultItems.Create() };
         }
+    }
+
+    private static AppConfig? ParseConfig(string path)
+    {
+        var node = JsonNode.Parse(File.ReadAllText(path), documentOptions: new JsonDocumentOptions
+        {
+            AllowTrailingCommas = true,
+            CommentHandling = JsonCommentHandling.Skip,
+        }) as JsonObject;
+        if (node is null) return null;
+
+        // Map v1 enum values to new values (otherwise JSON cannot be deserialized)
+        MapEnum(node, "taskbarMode", ("HideTaskbar", "Replace"));
+        MapEnum(node, "backdrop", ("Mica", "Blur"), ("Transparent", "Solid"));
+        return node.Deserialize<AppConfig>(JsonStore.Options) ?? new AppConfig();
     }
 
     private static void MapEnum(JsonObject node, string property, params (string From, string To)[] map)
@@ -196,6 +222,7 @@ public sealed class ConfigService
 
     public void AddItem(DockItem item, int index = -1)
     {
+        History.Push(Config, $"Added {Describe(item)}");
         if (index < 0 || index > Config.Items.Count) Config.Items.Add(item);
         else Config.Items.Insert(index, item);
         Config.NotifyItemsChanged();
@@ -207,8 +234,9 @@ public sealed class ConfigService
         var topLevel = Config.Items.FirstOrDefault(i => i.Id == id);
         if (topLevel is not null)
         {
+            var entry = History.Push(Config, $"Removed {Describe(topLevel)}", destructive: true);
             Config.Items.Remove(topLevel);
-            OnItemsRemoved(new[] { topLevel });
+            OnItemsRemoved(new[] { topLevel }, entry);
             Config.NotifyItemsChanged();
             return;
         }
@@ -217,8 +245,9 @@ public sealed class ConfigService
         {
             var child = group.Children?.FirstOrDefault(i => i.Id == id);
             if (child is null) continue;
+            var entry = History.Push(Config, $"Removed {Describe(child)}", destructive: true);
             group.Children!.Remove(child);
-            OnItemsRemoved(new[] { child });
+            OnItemsRemoved(new[] { child }, entry);
             // Auto-delete empty groups
             if (group.Children.Count == 0)
                 Config.Items.RemoveAll(i => i.Id == group.Id);
@@ -227,18 +256,42 @@ public sealed class ConfigService
         }
     }
 
-    /// <summary>Data files moved to the trash by the most recent removal (for undo).</summary>
-    public List<(string Original, string Trashed)> LastTrashedFiles { get; private set; } = new();
+    /// <summary>Undo stack of dock changes.</summary>
+    public ConfigHistory History { get; } = new();
+
+    /// <summary>Reverts the latest dock change. Returns its description, or null if there was nothing to undo.</summary>
+    public string? Undo()
+    {
+        var entry = History.Undo(Config);
+        if (entry is null) return null;
+        // Settings objects of items that came back are recreated from their restored JSON.
+        foreach (var id in _itemSettings.Keys.ToList())
+            if (FindItem(id) is null) _itemSettings.Remove(id);
+        Config.NotifyItemsChanged();
+        return entry.Description;
+    }
+
+    /// <summary>Short user-facing name of an item ("Weather widget", "“AI” folder").</summary>
+    public static string Describe(DockItem item) => item.Kind switch
+    {
+        DockItemKind.App => !string.IsNullOrWhiteSpace(item.Name) ? item.Name! : Path.GetFileNameWithoutExtension(item.Path ?? "app"),
+        DockItemKind.Widget => $"{WidgetRegistry.Find(item.Widget)?.Name ?? "widget"} widget",
+        DockItemKind.Group => $"“{item.GroupName ?? "Folder"}” folder",
+        _ => "separator",
+    };
 
     /// <summary>Forgets cached settings of removed items (and folder contents) and trashes their data files.</summary>
-    private void OnItemsRemoved(IReadOnlyList<DockItem> removed)
+    private void OnItemsRemoved(IReadOnlyList<DockItem> removed, HistoryEntry? entry)
     {
         foreach (var item in ItemDataStore.Flatten(removed))
             _itemSettings.Remove(item.Id);
 
         // Widgets save their state once more when the dock detaches them, so trash after the dock has rebuilt.
         Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.Background, () =>
-            LastTrashedFiles = ItemDataStore.Trash(removed));
+        {
+            var files = ItemDataStore.Trash(removed);
+            entry?.TrashedFiles.AddRange(files);
+        });
     }
 
     /// <summary>Moves item to <paramref name="newIndex"/> position (insertion index relative to pre-move list).</summary>
@@ -248,6 +301,8 @@ public sealed class ConfigService
         if (oldIndex < 0)
         {
             // Item might be inside a group -- pull it out to top level
+            if (FindParentGroup(id) is { } source && source.Children!.FirstOrDefault(c => c.Id == id) is { } moving)
+                History.Push(Config, $"Moved {Describe(moving)} out of the folder");
             var parentGroup = FindParentGroup(id);
             if (parentGroup is null) return;
             var child = parentGroup.Children!.FirstOrDefault(c => c.Id == id);
@@ -261,6 +316,8 @@ public sealed class ConfigService
             return;
         }
         var item = Config.Items[oldIndex];
+        int target = Math.Clamp(newIndex > oldIndex ? newIndex - 1 : newIndex, 0, Config.Items.Count - 1);
+        if (target != oldIndex) History.Push(Config, $"Moved {Describe(item)}");
         Config.Items.RemoveAt(oldIndex);
         if (newIndex > oldIndex) newIndex--;
         newIndex = Math.Clamp(newIndex, 0, Config.Items.Count);
@@ -268,8 +325,9 @@ public sealed class ConfigService
         if (oldIndex != newIndex) Config.NotifyItemsChanged();
     }
 
-    public void ReplaceItems(IEnumerable<DockItem> items)
+    public void ReplaceItems(IEnumerable<DockItem> items, string description = "Changed dock items")
     {
+        History.Push(Config, description, destructive: true);
         Config.Items = items.ToList();
         Config.NotifyItemsChanged();
     }
@@ -281,6 +339,7 @@ public sealed class ConfigService
     {
         var group = Config.Items.FirstOrDefault(g => g.Id == groupId && g.Kind == DockItemKind.Group);
         if (group is null) return;
+        History.Push(Config, $"Added {Describe(item)} to {Describe(group)}");
         group.Children ??= new List<DockItem>();
         if (index < 0 || index > group.Children.Count) group.Children.Add(item);
         else group.Children.Insert(index, item);
@@ -301,6 +360,7 @@ public sealed class ConfigService
         Config.Items.Remove(item1);
         Config.Items.Remove(item2);
 
+        History.Push(Config, $"Created “{name}” folder");
         var group = DockItem.Group(name, new List<DockItem> { item1, item2 });
         insertAt = Math.Clamp(insertAt, 0, Config.Items.Count);
         Config.Items.Insert(insertAt, group);
@@ -315,6 +375,7 @@ public sealed class ConfigService
         if (index < 0) return;
         var group = Config.Items[index];
         if (group.Kind != DockItemKind.Group) return;
+        History.Push(Config, $"Ungrouped {Describe(group)}", destructive: true);
         Config.Items.RemoveAt(index);
         var children = group.Children ?? new List<DockItem>();
         for (int i = 0; i < children.Count; i++)
@@ -368,11 +429,15 @@ public sealed class ConfigService
         _saveTimer.Start();
     }
 
+    /// <summary>Stops writing config.json (used right before a restart that must keep an imported file).</summary>
+    public void DisableSaving() { _saveTimer.Stop(); IsLoaded = false; }
+
     public void SaveNow()
     {
         _saveTimer.Stop();
         if (!IsLoaded) return;
         JsonStore.Save(AppPaths.ConfigFile, Config);
+        BackupService.DailyBackup();
     }
 
     private sealed class LegacyPinnedStore

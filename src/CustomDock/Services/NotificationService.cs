@@ -15,6 +15,8 @@ public sealed class NotificationService
     public const string ActionHydrationDrink = "hydration-drink";
     public const string ActionReminderSnooze = "reminder-snooze";
     public const string ActionReminderDone = "reminder-done";
+    public const string ActionOpenUpdate = "open-update";
+    public const string ActionSkipUpdate = "skip-update";
 
     private bool _initialized;
 
@@ -110,6 +112,12 @@ public sealed class NotificationService
                 break;
             case ActionReminderSnooze when id is not null:
                 AppServices.Reminders.Snooze(id, TimeSpan.FromMinutes(10));
+                break;
+            case ActionOpenUpdate:
+                App.Instance.ShowSettings("about");
+                break;
+            case ActionSkipUpdate when AppServices.Updates.Available is { } skipped:
+                AppServices.Updates.Skip(skipped);
                 break;
         }
     }

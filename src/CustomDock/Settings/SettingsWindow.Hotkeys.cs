@@ -52,6 +52,14 @@ public partial class SettingsWindow
         RefreshHotkeyStatus();
     }
 
+    /// <summary>Ctrl+Z undoes the latest dock change (text boxes keep their own undo).</summary>
+    private void OnUndoKey(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key != System.Windows.Input.Key.Z || System.Windows.Input.Keyboard.Modifiers != System.Windows.Input.ModifierKeys.Control) return;
+        if (System.Windows.Input.Keyboard.FocusedElement is TextBox) return;
+        if (AppServices.ConfigService.Undo() is not null) e.Handled = true;
+    }
+
     /// <summary>Marks shortcuts another app already uses.</summary>
     private void RefreshHotkeyStatus()
     {

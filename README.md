@@ -314,9 +314,12 @@ The `DOCKHUB_HOME` environment variable changes the settings and data folder, wh
 | `%AppData%\DockHub\session.json` | Taskbar restore information (exists only while the taskbar is hidden) |
 | `%AppData%\DockHub\pin-requests.txt` | Pending pin requests from File Explorer (temporary) |
 | `%AppData%\DockHub\log.txt` | Log file (rotates at 512 KB) |
+| `%AppData%\DockHub\backups\` | A copy of `config.json` from each of the last 7 days, plus the state saved before an import |
 
 - Files are written to a temporary file first and then moved into place, so an interrupted write never corrupts them.
-- A corrupt file is backed up as `*.corrupt-<date>` and DockHub continues with defaults.
+- A corrupt `config.json` is backed up as `config.json.corrupt-<date>` and DockHub loads the newest daily backup (and tells you); only without one does it start with defaults.
+- *Settings › General › Backup and restore* exports everything (dock, widgets, notes, reminders) to a `.zip` and imports it again.
+- Removing items, deleting folders and applying a layout preset can be undone for a few seconds from the toast next to the dock, from the dock's right-click menu, or with Ctrl+Z in Settings.
 - Settings from the project's previous name (`%AppData%\CustomDock`, `CUSTOMDOCK_HOME`) are migrated automatically on first launch.
 - Version 1 `config.json` files are upgraded to version 2 automatically.
 
@@ -366,7 +369,7 @@ An app item's `path` can be an `.exe`, an `.lnk` shortcut, any file, or a Store 
 - **Location** (weather set to *Automatic*). Both location services and *Let desktop apps access your location* must be on in *Windows Settings › Privacy & security › Location*. Otherwise the widget asks for a city.
 - **Notifications.** No extra permission. The app registers its AUMID under HKCU on first use. With *Do not disturb* on, notifications collect in the notification center; if a toast cannot be shown, a tray balloon is used instead.
 - **Media (SMTC).** No permission or account. The player only needs to support Windows media controls.
-- **Network.** DockHub itself only contacts `api.open-meteo.com` (weather) and `geocoding-api.open-meteo.com` (city search). The *AI usage* widget, if you add it, runs your locally installed Claude CLI (`claude -p /usage`) at the interval you choose, and that CLI talks to Anthropic with your own login. There is no telemetry.
+- **Network.** DockHub itself only contacts `api.open-meteo.com` (weather), `geocoding-api.open-meteo.com` (city search) and, once a day unless you turn it off, `api.github.com` to look for a newer release. The *AI usage* widget, if you add it, runs your locally installed Claude CLI (`claude -p /usage`) at the interval you choose, and that CLI talks to Anthropic with your own login. There is no telemetry.
 
 ## Project structure
 

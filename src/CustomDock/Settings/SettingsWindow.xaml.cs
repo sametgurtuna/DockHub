@@ -58,6 +58,9 @@ public partial class SettingsWindow : Window
         _config.PropertyChanged += OnDisplayConfigChanged;
         LoadTray();
         LoadHotkeys();
+        LoadPresets();
+        LoadUpdates();
+        PreviewKeyDown += OnUndoKey;
         ItemList.ItemsSource = _rows;
         LoadItems();
         NavList.SelectedIndex = 0;

@@ -6,7 +6,7 @@ namespace CustomDock.Services;
 /// <summary>
 /// Battery levels of peripherals: HID devices from <see cref="BatteryDeviceCatalog"/> (HyperX, Compx, PlayStation,
 /// Razer, Logitech and catalog-defined requests), game controllers Windows reports on, and Bluetooth devices.
-/// Scans every 30 seconds on a worker thread.
+/// Scans every 30 seconds on a worker thread, only while something listens to <see cref="Updated"/>.
 /// </summary>
 public sealed partial class DeviceBatteryService
 {
@@ -21,18 +21,46 @@ public sealed partial class DeviceBatteryService
             Interval = TimeSpan.FromSeconds(30),
         };
         _timer.Tick += (_, _) => Refresh();
-        _timer.Start();
-        WatchGamepads();
-
-        // Initial scan
-        Refresh();
     }
 
     public IReadOnlyList<BatteryDeviceInfo> Devices { get; private set; } = Array.Empty<BatteryDeviceInfo>();
 
     public BatteryDeviceInfo? PrimaryDevice => Devices.FirstOrDefault();
 
-    public event EventHandler? Updated;
+    private EventHandler? _updated;
+    private bool _watchingGamepads;
+    private volatile bool _listening; // read by controller events, which arrive on other threads
+
+    /// <summary>Raised on the UI thread after each scan. The first listener starts scanning, the last one stops it.</summary>
+    public event EventHandler? Updated
+    {
+        add
+        {
+            _updated += value;
+            if (_timer.IsEnabled) return;
+            _listening = true;
+            _timer.Start();
+            if (!_watchingGamepads)
+            {
+                _watchingGamepads = true;
+                WatchGamepads();
+            }
+            _ = FirstScanAsync();
+        }
+        remove
+        {
+            _updated -= value;
+            if (_updated is not null) return;
+            _listening = false;
+            _timer.Stop();
+        }
+    }
+
+    private async Task FirstScanAsync()
+    {
+        await StartupPacing.WaitAsync(StartupPacing.DeviceBatteries).ConfigureAwait(true);
+        Refresh();
+    }
 
     private int _isRefreshing;
     private int _refreshRequested;
@@ -83,7 +111,7 @@ public sealed partial class DeviceBatteryService
             list.AddRange(bluetooth.Where(bt => !list.Any(d => string.Equals(d.Name, bt.Name, StringComparison.OrdinalIgnoreCase))));
 
             Devices = list;
-            Application.Current?.Dispatcher.BeginInvoke(() => Updated?.Invoke(this, EventArgs.Empty));
+            Application.Current?.Dispatcher.BeginInvoke(() => _updated?.Invoke(this, EventArgs.Empty));
         }
         catch (Exception ex)
         {

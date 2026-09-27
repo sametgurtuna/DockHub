@@ -448,6 +448,7 @@ src/CustomDock/              Produces DockHub.exe
 packaging/winget/            winget manifest templates (submitted by .github/workflows/winget.yml)
 samples/widgets/             Web widget examples: hello-world, github-stars, github-pulls
 tools/generate-icon.ps1      Renders Assets/DockHub.ico
+tools/measure-idle.ps1       Idle CPU, memory and start-up measurement
 docs/                        Widget SDK and supported battery devices; images/ holds the README artwork
 ```
 
@@ -541,11 +542,14 @@ The widget then shows up in the gallery automatically. Other helpers:
 
 ## Performance
 
-- **Timers.** Clock-based widgets share a single timer aligned to seconds or minutes. It ticks once a minute when no widget needs seconds and stops when nothing is subscribed. No timer runs more often than once per second, except the taskbar watcher (250 ms, a single Win32 call) and the Start menu visibility poll (200 ms).
+- **Timers.** Clock-based widgets share a single timer aligned to seconds or minutes. It ticks once a minute when no widget needs seconds and stops when nothing is subscribed. No timer runs more often than once per second, except the taskbar watcher (event driven, with a 2-second safety check that runs every 250 ms for 5 seconds after Explorer shows its taskbar) and the Start menu visibility poll (200 ms).
+- **Only what's on the dock.** Services start the first time something uses them: without a Device batteries widget nothing scans for devices, without a Brightness widget nothing asks the monitors.
 - **Monitoring.** System monitoring uses `GetSystemTimes` and `GlobalMemoryStatusEx`; disk usage is sampled once a minute. Network measurement runs only while a network widget is on the dock.
 - **Event driven.** The window list and full screen detection update through ManagedShell's shell hooks. Media updates through SMTC events, and the progress bar ticks once per second only while playing.
 - **Weather.** Widgets that share a location share one request and cache. Data refreshes every 30 minutes and retries after 3 minutes on failure.
 - **Scrolling.** The scroll animation runs only while scrolling.
+- **Start-up.** The dock is drawn first; the first weather, device battery and AI usage requests follow 2 to 8 seconds later instead of all at once. `log.txt` and *Settings › About › Copy diagnostics* show the time from launch to the first dock frame.
+- **Measuring.** `tools/measure-idle.ps1` records DockHub's CPU, memory and garbage collector counters while the computer is idle (it needs [dotnet-counters](https://learn.microsoft.com/dotnet/core/diagnostics/dotnet-counters)) and compares them with the targets: under 0.1% CPU and under 10% memory growth.
 
 ## Known limitations
 

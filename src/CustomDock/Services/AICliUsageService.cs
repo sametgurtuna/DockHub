@@ -49,7 +49,7 @@ public abstract class LocalUsageSource : IAIUsageSource
         {
             _updated += value;
             if (_timer.IsEnabled) return;
-            _ = RefreshAsync();
+            _ = RefreshAfterStartupAsync();
             _timer.Start();
         }
         remove
@@ -64,6 +64,13 @@ public abstract class LocalUsageSource : IAIUsageSource
         if (interval is { } value) _intervals[owner] = value < TimeSpan.FromMinutes(1) ? TimeSpan.FromMinutes(1) : value;
         else _intervals.Remove(owner);
         _timer.Interval = _intervals.Count == 0 ? TimeSpan.FromMinutes(5) : _intervals.Values.Min();
+    }
+
+    /// <summary>The first read waits until a few seconds after startup, when the dock is already up.</summary>
+    private async Task RefreshAfterStartupAsync()
+    {
+        await StartupPacing.WaitAsync(StartupPacing.AIUsage).ConfigureAwait(true);
+        await RefreshAsync().ConfigureAwait(true);
     }
 
     public async Task RefreshAsync()

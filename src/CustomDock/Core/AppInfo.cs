@@ -10,4 +10,7 @@ public static class AppInfo
 
     /// <summary>Product version (major.minor.patch).</summary>
     public static string Version => typeof(AppInfo).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
+
+    /// <summary>Time from process start-up code to the first rendered dock frame; null until the dock has rendered.</summary>
+    public static TimeSpan? StartupTime { get; internal set; }
 }

@@ -30,8 +30,12 @@ public partial class App : Application
     public static App Instance => (App)Current;
     public ShellHost? Shell => _shell;
 
+    private readonly Stopwatch _startupClock = Stopwatch.StartNew();
+
     protected override void OnStartup(StartupEventArgs e)
     {
+        StartupPacing.MarkStart();
+
         // Date and number formats in XAML bindings should follow system culture (defaults to en-US).
         FrameworkElement.LanguageProperty.OverrideMetadata(typeof(FrameworkElement),
             new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(CultureInfo.CurrentCulture.IetfLanguageTag)));
@@ -230,9 +234,22 @@ public partial class App : Application
     private void CreateDock()
     {
         _dock = new DockWindow(AppServices.Config, _shell!);
+        _dock.ContentRendered += OnFirstDockFrame;
         _dock.Start();
         SyncSecondaryDocks();
         SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
+    }
+
+    private void OnFirstDockFrame(object? sender, EventArgs e)
+    {
+        if (sender is Window window) window.ContentRendered -= OnFirstDockFrame;
+        // Counted from the process start, so loading the runtime is included (a cold start after sign-in).
+        TimeSpan sinceProcessStart;
+        try { sinceProcessStart = DateTime.Now - Process.GetCurrentProcess().StartTime; }
+        catch { sinceProcessStart = _startupClock.Elapsed; }
+        AppInfo.StartupTime = sinceProcessStart;
+        Log.Info($"First dock frame {sinceProcessStart.TotalMilliseconds:0} ms after process start ({_startupClock.ElapsedMilliseconds} ms in DockHub's own startup); " +
+                 $"services created: {string.Join(", ", AppServices.CreatedServices())}.");
     }
 
     private void OnDisplaySettingsChanged(object? sender, EventArgs e)
@@ -568,9 +585,7 @@ public partial class App : Application
             _shell?.Dispose();
             _winNumbers?.Dispose();
             _hotkeys?.Dispose();
-            AppServices.Reminders.Dispose();
-            AppServices.Audio.Dispose();
-            AppServices.Clock.Dispose();
+            AppServices.DisposeServices();
             NotificationService.Cleanup();
         }
         catch (Exception ex)

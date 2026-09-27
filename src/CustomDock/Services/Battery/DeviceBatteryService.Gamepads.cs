@@ -13,8 +13,8 @@ public sealed partial class DeviceBatteryService
     {
         try
         {
-            RawGameController.RawGameControllerAdded += (_, _) => Refresh();
-            RawGameController.RawGameControllerRemoved += (_, _) => Refresh();
+            RawGameController.RawGameControllerAdded += (_, _) => { if (_listening) Refresh(); };
+            RawGameController.RawGameControllerRemoved += (_, _) => { if (_listening) Refresh(); };
         }
         catch (Exception ex)
         {

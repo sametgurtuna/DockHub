@@ -59,8 +59,11 @@ public sealed class WeatherHub
             entry.Timer = new DispatcherTimer();
             entry.Timer.Tick += (_, _) => _ = RefreshAsync(entry);
             var age = entry.Data is null ? TimeSpan.MaxValue : DateTime.Now - entry.Data.FetchedAt;
-            if (age >= RefreshInterval) _ = RefreshAsync(entry);
-            else Schedule(entry, RefreshInterval - age);
+            // Right after startup the cached forecast is shown for a few seconds and fetched after the dock is up.
+            var startupWait = entry.Data is null ? TimeSpan.Zero : StartupPacing.DelayFor(StartupPacing.Weather);
+            if (age < RefreshInterval) Schedule(entry, RefreshInterval - age);
+            else if (startupWait > TimeSpan.Zero) Schedule(entry, startupWait);
+            else _ = RefreshAsync(entry);
         }
         return entry;
     }

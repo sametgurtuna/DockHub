@@ -14,9 +14,13 @@ namespace CustomDock.Widgets;
 public sealed class BatteryDevicesSettings : ObservableObject
 {
     private string[] _order = Array.Empty<string>();
+    private int _lowBatteryAlert = 15;
 
     /// <summary>Device ids in the order chosen in the panel; the first connected one is shown on the dock.</summary>
     public string[] Order { get => _order; set => Set(ref _order, value ?? Array.Empty<string>()); }
+
+    /// <summary>Level in percent at which a notification warns about a device's battery; 0 turns it off.</summary>
+    public int LowBatteryAlert { get => _lowBatteryAlert; set => Set(ref _lowBatteryAlert, Math.Clamp(value, 0, 50)); }
 }
 
 public partial class BatteryDevicesWidget : WidgetBase
@@ -35,6 +39,10 @@ public partial class BatteryDevicesWidget : WidgetBase
 
     private BatteryDevicesSettings _settings = new();
 
+    // Every widget copy on the dock shares one warning state, so a device is announced once; the highest level wins.
+    private static readonly LowBatteryAlerts s_alerts = new();
+    private static readonly Dictionary<BatteryDevicesWidget, int> s_alertLevels = new();
+
     static BatteryDevicesWidget()
     {
         HeadsetGeometry.Freeze();
@@ -52,6 +60,8 @@ public partial class BatteryDevicesWidget : WidgetBase
     protected override void OnAttached()
     {
         _settings = GetSettings<BatteryDevicesSettings>();
+        _settings.PropertyChanged += OnSettingsChanged;
+        if (!IsPreview) s_alertLevels[this] = _settings.LowBatteryAlert;
         AppServices.DeviceBattery.Updated += OnBatteryUpdated;
         Render();
     }
@@ -59,6 +69,14 @@ public partial class BatteryDevicesWidget : WidgetBase
     protected override void OnDetached()
     {
         AppServices.DeviceBattery.Updated -= OnBatteryUpdated;
+        _settings.PropertyChanged -= OnSettingsChanged;
+        s_alertLevels.Remove(this);
+    }
+
+    private void OnSettingsChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(BatteryDevicesSettings.LowBatteryAlert) && s_alertLevels.ContainsKey(this))
+            s_alertLevels[this] = _settings.LowBatteryAlert;
     }
 
     protected override void OnVariantChanged()
@@ -67,7 +85,24 @@ public partial class BatteryDevicesWidget : WidgetBase
         Render();
     }
 
-    private void OnBatteryUpdated(object? sender, EventArgs e) => Render();
+    private void OnBatteryUpdated(object? sender, EventArgs e)
+    {
+        WarnAboutLowBatteries();
+        Render();
+    }
+
+    /// <summary>Sends one notification per device that just reached the low battery level.</summary>
+    private static void WarnAboutLowBatteries()
+    {
+        int level = s_alertLevels.Count == 0 ? 0 : s_alertLevels.Values.Max();
+        foreach (var device in s_alerts.Check(AppServices.DeviceBattery.Devices, level))
+        {
+            string tag = "battery-" + device.Id;
+            if (tag.Length > 64) tag = tag[..64]; // toast tags are limited to 64 characters
+            AppServices.Notifications.Show(L.T("{0} battery is low", device.Name),
+                L.T("{0}% left. Charge it soon.", device.BatteryPercent), tag);
+        }
+    }
 
     /// <summary>Connected devices in the user's order; devices never ordered follow in scan order.</summary>
     private List<BatteryDeviceInfo> OrderedDevices()

@@ -213,6 +213,16 @@
         </StackPanel>
     </DataTemplate>
 
+    <!-- Device batteries -->
+    <DataTemplate DataType="{x:Type w:BatteryDevicesSettings}">
+        <StackPanel>
+            <ctl:SettingRow Header="Low battery warning" Description="Sends a notification when a device drops to this level, and again after it has been charged.">
+                <ComboBox Width="140" ItemsSource="{x:Static w:WidgetOptions.LowBatteryLevels}"
+                          DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding LowBatteryAlert}" />
+            </ctl:SettingRow>
+        </StackPanel>
+    </DataTemplate>
+
     <!-- Folder stack -->
     <DataTemplate DataType="{x:Type w:StackSettings}">
         <StackPanel>

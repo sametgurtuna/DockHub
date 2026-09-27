@@ -781,7 +781,9 @@
                             <TextBlock x:Name="WidgetLinkStatus" Style="{StaticResource SettingDescription}" Margin="0,6,0,0" Visibility="Collapsed" />
                         </StackPanel>
                     </Border>
-                    <TextBlock Text="Featured web widgets" FontFamily="{DynamicResource DisplayFont}" FontSize="17" FontWeight="SemiBold" Margin="2,6,0,10" />
+                    <TextBlock Text="Community web widgets" FontFamily="{DynamicResource DisplayFont}" FontSize="17" FontWeight="SemiBold" Margin="2,6,0,2" />
+                    <TextBlock Text="From DockHub's widget list on GitHub, updated daily. Anyone can add a widget to it with a pull request."
+                               Style="{StaticResource SettingDescription}" TextWrapping="Wrap" Margin="2,0,0,10" />
                     <StackPanel x:Name="FeaturedWidgetsPanel" />
                     <StackPanel x:Name="GalleryPanel" />
                 </StackPanel>

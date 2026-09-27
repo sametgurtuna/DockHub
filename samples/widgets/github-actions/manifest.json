@@ -1,0 +1,22 @@
+{
+  "id": "dev.dockhub.github-actions",
+  "name": "GitHub Actions",
+  "version": "1.0.0",
+  "author": "DockHub",
+  "description": "The latest workflow run of a repository: passing, failing or running, with a notification when a run fails and when it is fixed.",
+  "entry": "index.html",
+  "minDockHubVersion": "0.8.0",
+  "variants": [
+    { "id": "standard", "name": "Standard", "size": "standard" },
+    { "id": "compact", "name": "Status only", "size": "compact" }
+  ],
+  "settings": [
+    { "key": "repo", "type": "text", "label": "Repository", "description": "owner/name, for example sametgurtuna/DockHub." },
+    { "key": "workflow", "type": "text", "label": "Workflow file", "description": "Optional, for example ci.yml. Empty: the latest run of any workflow." },
+    { "key": "branch", "type": "text", "label": "Branch", "description": "Optional, for example main." },
+    { "key": "token", "type": "text", "label": "Personal access token", "description": "Only for private repositories (Actions: read). Stored in DockHub's settings on this PC." },
+    { "key": "minutes", "type": "number", "label": "Refresh every (minutes)", "default": 5, "min": 1, "max": 60 },
+    { "key": "notify", "type": "toggle", "label": "Notify me when a run fails or is fixed", "default": true }
+  ],
+  "permissions": { "network": ["api.github.com"], "notifications": true }
+}

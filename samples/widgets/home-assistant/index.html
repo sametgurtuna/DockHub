@@ -1,0 +1,115 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
+  body {
+    font-family: var(--dh-font, "Segoe UI", sans-serif); color: var(--dh-text, #fff);
+    display: flex; align-items: center; gap: 10px; padding: 0 12px; box-sizing: border-box; user-select: none;
+  }
+  body.toggle { cursor: pointer; }
+  .dot { flex: none; width: 12px; height: 12px; border-radius: 50%; background: rgba(127, 127, 127, .45); }
+  .dot.on { background: var(--dh-accent, #60cdff); box-shadow: 0 0 8px var(--dh-accent, #60cdff); }
+  .dot.error { background: #f85149; }
+  .text { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
+  .value { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .name { font-size: 11px; color: var(--dh-text-secondary, #aaa); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  html[data-size="compact"] body { justify-content: center; padding: 0; }
+  html[data-size="compact"] .dot, html[data-size="compact"] .name { display: none; }
+  html[data-size="compact"] .value { font-size: 13px; }
+</style>
+</head>
+<body>
+  <div class="dot" id="dot"></div>
+  <div class="text">
+    <div class="value" id="value">…</div>
+    <div class="name" id="name">Home Assistant</div>
+  </div>
+<script>
+  const TOGGLE_DOMAINS = ['light', 'switch', 'fan', 'input_boolean', 'automation'];
+  let settings = { server: '', token: '', entity: '', label: '', seconds: 30 };
+  let timer;
+  let state = null;
+
+  const server = () => (settings.server || '').trim().replace(/\/+$/, '');
+  const entity = () => (settings.entity || '').trim();
+  const domain = () => entity().split('.')[0];
+  const canToggle = () => TOGGLE_DOMAINS.includes(domain());
+
+  // Home Assistant is usually a plain http server on the local network: dockhub.http makes the request from
+  // DockHub itself, which is allowed because "server" is listed in permissions.networkFromSettings.
+  async function call(path, method = 'GET', body) {
+    const headers = { Authorization: `Bearer ${(settings.token || '').trim()}` };
+    if (body) headers['Content-Type'] = 'application/json';
+    const response = await dockhub.http.request({ url: `${server()}${path}`, method, headers, body: body && JSON.stringify(body) });
+    if (response.status === 401) throw new Error('The access token was not accepted.');
+    if (response.status === 404) throw new Error(`${entity()} was not found.`);
+    if (!response.ok) throw new Error(`Home Assistant answered ${response.status}.`);
+    return response.body ? JSON.parse(response.body) : null;
+  }
+
+  function render(error) {
+    const dot = document.getElementById('dot');
+    const value = document.getElementById('value');
+    const name = document.getElementById('name');
+    document.body.classList.toggle('toggle', !error && canToggle());
+    if (error) {
+      dot.className = 'dot error';
+      value.textContent = '!';
+      name.textContent = error;
+      document.body.title = error;
+      return;
+    }
+    const attributes = state.attributes || {};
+    const unit = attributes.unit_of_measurement ? ` ${attributes.unit_of_measurement}` : '';
+    const on = ['on', 'open', 'home', 'playing', 'unlocked'].includes(state.state);
+    const text = state.state === 'on' ? 'On' : state.state === 'off' ? 'Off' : `${state.state}${unit}`;
+    dot.className = 'dot' + (on ? ' on' : '');
+    value.textContent = text;
+    name.textContent = (settings.label || '').trim() || attributes.friendly_name || entity();
+    document.body.title = `${attributes.friendly_name || entity()}: ${text}` + (canToggle() ? '\nClick to switch' : '');
+  }
+
+  async function load() {
+    if (!server() || !settings.token || !entity()) {
+      render('Set the address, token and entity in the widget settings.');
+      return;
+    }
+    try {
+      state = await call(`/api/states/${encodeURIComponent(entity())}`);
+      render();
+    } catch (e) {
+      render(e.message);
+    }
+  }
+
+  async function toggle() {
+    if (!canToggle() || !state) return;
+    try {
+      await call('/api/services/homeassistant/toggle', 'POST', { entity_id: entity() });
+      setTimeout(load, 400);
+    } catch (e) {
+      render(e.message);
+    }
+  }
+
+  function schedule() {
+    clearInterval(timer);
+    timer = setInterval(load, Math.max(5, Number(settings.seconds) || 30) * 1000);
+  }
+
+  (async () => {
+    settings = { ...settings, ...(await dockhub.settings.get()) };
+    document.documentElement.dataset.size = dockhub.size;
+    dockhub.onSize(size => document.documentElement.dataset.size = size);
+    dockhub.settings.onChange(values => { settings = { ...settings, ...values }; load(); schedule(); });
+    document.body.addEventListener('click', toggle);
+    await dockhub.contextMenu.set([{ id: 'refresh', label: 'Refresh now' }, { id: 'open', label: 'Open Home Assistant' }]);
+    dockhub.contextMenu.onSelect(id => id === 'refresh' ? load() : server() && dockhub.openUrl(server()));
+    load();
+    schedule();
+  })();
+</script>
+</body>
+</html>

@@ -68,6 +68,7 @@ Links must use HTTPS. Every file must sit next to `manifest.json` (no `..`, no o
 | `variants` | Layouts users pick from the widget's *Appearance* menu. `size` is `compact` (44×44), `standard` (170×44) or `wide` (260×44), in dock units; it also picks the card's width class when *Even widget widths* is on. |
 | `settings` | Shown in *Settings › Dock items* when the widget is selected. Types: `text`, `number` (`min`, `max`), `toggle`, `choice` (`options`). |
 | `permissions.network` | The only hosts `fetch`, images and scripts may load from (HTTPS or WSS). Everything else is blocked. `*.example.org` also matches `example.org`. |
+| `permissions.networkFromSettings` | Keys of `text` settings that hold a server address, such as a Home Assistant URL. The host the user enters there is allowed too, and `dockhub.http.request` may use plain `http` for it. The install prompt says so. These settings can't have a `default`: the address always comes from the user. |
 | `permissions.notifications` | Allows `dockhub.notify`. |
 | `files` | Optional. Other files of the widget (relative paths) that DockHub downloads when the widget is installed from a `manifest.json` link. Packages don't need it. |
 
@@ -90,7 +91,7 @@ Links must use HTTPS. Every file must sit next to `manifest.json` (no `..`, no o
 
 ## window.dockhub
 
-All calls return promises. `apiVersion` is `1`.
+All calls return promises. `apiVersion` is `2` (DockHub 0.9 added `http.request`).
 
 ```ts
 dockhub.settings.get(): Promise<Record<string, unknown>>   // manifest defaults + the user's values
@@ -102,6 +103,9 @@ dockhub.storage.set(key: string, value: unknown): Promise<void>   // 256 KB per 
 dockhub.notify({ title, body }): Promise<void>             // needs permissions.notifications
 dockhub.openUrl(url: string): Promise<void>                // http(s) only, opens the default browser
 
+dockhub.http.request({ url, method?, headers?, body? }): Promise<{ status, ok, contentType, body }>
+                                                            // made by DockHub, not the page (see below)
+
 dockhub.contextMenu.set(items: { id: string, label: string }[]): Promise<void>   // up to 8 items
 dockhub.contextMenu.onSelect(handler: (id: string) => void)
 
@@ -111,6 +115,42 @@ dockhub.size                                                // current size
 ```
 
 Unknown methods, missing permissions and full storage reject the promise with an `Error`.
+
+### dockhub.http.request
+
+`fetch` in the page is limited by the browser: the page is served over https, so plain `http://` addresses are
+blocked, and the server must allow the widget's origin (CORS). A server on your network, such as Home Assistant at
+`http://homeassistant.local:8123`, usually does neither. `dockhub.http.request` makes the request from DockHub
+instead:
+
+- the host must be in `permissions.network` or come from a `permissions.networkFromSettings` setting;
+- methods `GET`, `POST`, `PUT`, `DELETE`; request bodies up to 64 KB (text), answers up to 1 MB (returned as text);
+- no cookies, no redirects (a 3xx answer is returned as it is), a 15-second timeout;
+- `Host`, `Cookie` and connection headers can't be set.
+
+```js
+const response = await dockhub.http.request({
+  url: `${settings.server}/api/states/sensor.outside`,
+  headers: { Authorization: `Bearer ${settings.token}` },
+});
+if (response.ok) show(JSON.parse(response.body).state);
+```
+
+See `samples/widgets/home-assistant` for a complete widget.
+
+## Share it in the gallery
+
+*Settings › Widget gallery* lists the community widgets from [`samples/widgets/index.json`](../samples/widgets/index.json),
+fetched once a day. To add yours, open a pull request with one entry:
+
+```json
+{ "id": "com.example.pomodoro-plus", "name": "Pomodoro+", "author": "Your name",
+  "description": "One sentence, at most 200 characters.",
+  "link": "https://github.com/you/widgets/tree/main/pomodoro-plus" }
+```
+
+`id` must match your manifest, and `link` is anything *Install from link* accepts (a GitHub folder, a `manifest.json`
+or a `.dockwidget` file). DockHub shows the widget's permissions before it installs anything.
 
 ## Good practice
 

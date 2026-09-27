@@ -11,12 +11,7 @@ public sealed record FeaturedWidget(string Id, string EnglishName, string Englis
 
     public string Description => L.T(EnglishDescription);
 
-    /// <summary>The sample at this version's tag first, then on the main branch (for development builds).</summary>
-    public IReadOnlyList<string> Links => new[]
-    {
-        $"https://raw.githubusercontent.com/sametgurtuna/DockHub/v{AppInfo.Version}/samples/widgets/{SamplePath}/manifest.json",
-        $"https://raw.githubusercontent.com/sametgurtuna/DockHub/master/samples/widgets/{SamplePath}/manifest.json",
-    };
+    public IReadOnlyList<string> Links => WebWidgetDownloader.SampleLinks(SamplePath);
 }
 
 /// <summary>
@@ -31,13 +26,28 @@ public static class WebWidgetDownloader
 
     private static readonly HttpClient Http = CreateClient();
 
+    /// <summary>The community list built into this version (see <see cref="WebWidgetIndex"/> for the live one).</summary>
     public static IReadOnlyList<FeaturedWidget> Featured { get; } = new[]
     {
         new FeaturedWidget("dev.dockhub.github-pulls", "GitHub pull requests",
             "Pull requests waiting for your review, your open pull requests or unread notifications.", "github-pulls"),
+        new FeaturedWidget("dev.dockhub.github-actions", "GitHub Actions",
+            "The latest workflow run of a repository: passing, failing or running, with a notification when it fails.", "github-actions"),
+        new FeaturedWidget("dev.dockhub.home-assistant", "Home Assistant",
+            "The state of a Home Assistant entity, such as a temperature; click to switch lights and plugs.", "home-assistant"),
         new FeaturedWidget("dev.dockhub.github-stars", "GitHub stars", "Star count of a GitHub repository.", "github-stars"),
         new FeaturedWidget("dev.dockhub.hello-world", "Hello world", "The SDK starter: settings, storage, a menu item and a notification.", "hello-world"),
     };
+
+    /// <summary>A sample of DockHub's repository: at this version's tag first, then on the main branch (for development builds).</summary>
+    public static IReadOnlyList<string> SampleLinks(string samplePath) => new[]
+    {
+        $"https://raw.githubusercontent.com/sametgurtuna/DockHub/v{AppInfo.Version}/samples/widgets/{samplePath}/manifest.json",
+        $"https://raw.githubusercontent.com/sametgurtuna/DockHub/master/samples/widgets/{samplePath}/manifest.json",
+    };
+
+    /// <summary>The HTTP client for widget downloads (DockHub user agent, 30 s timeout).</summary>
+    internal static HttpClient Client => Http;
 
     public sealed class DownloadException : Exception
     {

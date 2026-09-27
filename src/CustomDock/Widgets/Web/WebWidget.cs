@@ -221,9 +221,28 @@ public sealed class WebWidget : WidgetBase
     {
         if (!Uri.TryCreate(e.Request.Uri, UriKind.Absolute, out var uri)) return;
         if (uri.Scheme is "data" or "blob") return;
-        if (uri.Scheme is "https" or "wss" && WebWidgetCatalog.IsHostAllowed(_manifest, uri.Host)) return;
+        if (uri.Scheme is "https" or "wss" && IsHostAllowed(uri.Host)) return;
         e.Response = _web!.CoreWebView2.Environment.CreateWebResourceResponse(null, 403, "Blocked by DockHub", "");
         Log.Debug($"Web widget {_manifest.Id}: blocked {uri.Host}");
+    }
+
+    // Only what the user saved counts for a server setting (the manifest can't supply the address itself).
+    private bool IsHostAllowed(string host)
+        => WebWidgetCatalog.IsHostAllowed(_manifest, host, WebWidgetCatalog.SettingsHosts(_manifest, _settings.Values));
+
+    /// <summary>dockhub.http.request, answered when the request completes.</summary>
+    private async Task HttpRequestAsync(JsonNode id, JsonObject? args)
+    {
+        try
+        {
+            var request = WebWidgetHttp.Parse(args, IsHostAllowed);
+            Post(new JsonObject { ["id"] = id, ["result"] = await WebWidgetHttp.SendAsync(request) });
+        }
+        catch (Exception ex)
+        {
+            Log.Debug($"Web widget {_manifest.Id}: http.request failed: {ex.Message}");
+            Post(new JsonObject { ["id"] = id, ["error"] = ex is TaskCanceledException ? "The request timed out." : ex.Message });
+        }
     }
 
     private void OnMessage(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
@@ -238,6 +257,11 @@ public sealed class WebWidget : WidgetBase
         }
         if (message?["id"] is not { } id || message["method"]?.GetValue<string>() is not { } method) return;
         var args = message["args"] as JsonObject;
+        if (method == "http.request")
+        {
+            _ = HttpRequestAsync(id.DeepClone(), args);
+            return;
+        }
 
         try
         {
@@ -395,12 +419,13 @@ public sealed class WebWidget : WidgetBase
           window.addEventListener('mouseover', () => hover(true), { passive: true });
           window.addEventListener('mouseout', e => { if (!e.relatedTarget) hover(false); }, { passive: true });
           window.dockhub = {
-            apiVersion: 1,
+            apiVersion: 2,
             size: 'standard',
             settings: { get: () => call('settings.get'), onChange: f => on('settings', f) },
             storage: { get: key => call('storage.get', { key }), set: (key, value) => call('storage.set', { key, value }) },
             notify: options => call('notify', options),
             openUrl: url => call('openUrl', { url }),
+            http: { request: options => call('http.request', options) },
             contextMenu: { set: items => call('contextMenu.set', { items }), onSelect: f => on('menu', f) },
             onTheme: f => on('theme', f),
             onSize: f => on('size', f),

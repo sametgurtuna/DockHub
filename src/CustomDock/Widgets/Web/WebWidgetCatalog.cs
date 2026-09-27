@@ -25,6 +25,12 @@ public sealed class WebWidgetPermissions
     /// <summary>Host names the widget may fetch from (exact names or "*.example.com").</summary>
     [JsonPropertyName("network")] public List<string> Network { get; set; } = new();
     [JsonPropertyName("notifications")] public bool Notifications { get; set; }
+
+    /// <summary>
+    /// Keys of text settings that hold a server address (for example a Home Assistant URL): the host the user enters
+    /// there may be reached too.
+    /// </summary>
+    [JsonPropertyName("networkFromSettings")] public List<string> NetworkFromSettings { get; set; } = new();
 }
 
 public sealed class WebWidgetVariant
@@ -130,6 +136,21 @@ public static class WebWidgetCatalog
         if (manifest is null) { error = L.T("manifest.json is empty."); return null; }
         if (!IdRx.IsMatch(manifest.Id)) { error = L.T("The id must use lower-case letters, digits, dots and dashes."); return null; }
         if (string.IsNullOrWhiteSpace(manifest.Name)) { error = L.T("The name is missing."); return null; }
+        foreach (string key in manifest.Permissions.NetworkFromSettings)
+        {
+            var setting = manifest.Settings.FirstOrDefault(s => s.Key == key && s.Type == "text");
+            if (setting is null)
+            {
+                error = L.T("networkFromSettings names \"{0}\", which is not a text setting.", key);
+                return null;
+            }
+            // The address must come from the user; a default would let the widget pick its own host.
+            if (setting.Default is { ValueKind: not (JsonValueKind.Null or JsonValueKind.Undefined) })
+            {
+                error = L.T("The server setting \"{0}\" can't have a default value.", key);
+                return null;
+            }
+        }
         return manifest;
     }
 
@@ -214,6 +235,28 @@ public static class WebWidgetCatalog
         foreach (var dir in Directory.EnumerateDirectories(from))
             CopyDirectory(dir, Path.Combine(to, Path.GetFileName(dir)));
     }
+
+    /// <summary>
+    /// Hosts of the addresses the user entered in the settings named by permissions.networkFromSettings. Pass the
+    /// user's saved values only, never the manifest defaults.
+    /// </summary>
+    public static IReadOnlyList<string> SettingsHosts(WebWidgetManifest manifest, System.Text.Json.Nodes.JsonObject values)
+    {
+        var hosts = new List<string>();
+        foreach (string key in manifest.Permissions.NetworkFromSettings)
+        {
+            string? text = null;
+            try { text = values[key]?.GetValue<string>()?.Trim(); } catch (InvalidOperationException) { }
+            if (!string.IsNullOrEmpty(text) && Uri.TryCreate(text, UriKind.Absolute, out var uri)
+                && uri.Scheme is "http" or "https" && uri.Host.Length > 0)
+                hosts.Add(uri.Host);
+        }
+        return hosts;
+    }
+
+    /// <summary>Whether a request host is allowed by the manifest or is one the user entered in a server setting.</summary>
+    public static bool IsHostAllowed(WebWidgetManifest manifest, string host, IReadOnlyCollection<string> settingsHosts)
+        => IsHostAllowed(manifest, host) || settingsHosts.Contains(host, StringComparer.OrdinalIgnoreCase);
 
     /// <summary>Whether a request host is allowed by the widget's network permission.</summary>
     public static bool IsHostAllowed(WebWidgetManifest manifest, string host)

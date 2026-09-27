@@ -405,7 +405,7 @@ An app item's `path` can be an `.exe`, an `.lnk` shortcut, any file, or a Store 
 - **Microphone indicator.** DockHub reads which apps use the microphone from the same Windows privacy records as the Windows microphone icon; it never opens the microphone itself.
 - **Notification count.** Read from the Windows notification database of your account (read-only), only while the option is on.
 - **Wi-Fi and Bluetooth widget.** Uses the Windows radio API; if Windows doesn't allow it, the buttons open the matching Settings page instead.
-- **Network.** DockHub itself only contacts `api.open-meteo.com` (weather), `geocoding-api.open-meteo.com` (city search), `api.frankfurter.dev` and, for crypto symbols, `api.coingecko.com` (only with the Exchange rates widget), the calendar links you enter (Calendar widget) and, once a day unless you turn it off, `api.github.com` to look for a newer release. The *AI usage* widget, if you add it, runs your locally installed Claude CLI (`claude -p /usage`) at the interval you choose, and that CLI talks to Anthropic with your own login; for Codex and Gemini CLI it only reads the logs those tools keep in your user folder (`~/.codex/sessions`, `~/.gemini/tmp`). The *To do* widget talks to `api.todoist.com` only when you set it to Todoist, and installing a web widget from a link downloads it from that link. There is no telemetry.
+- **Network.** DockHub itself only contacts `api.open-meteo.com` (weather), `geocoding-api.open-meteo.com` (city search), `api.frankfurter.dev` and, for crypto symbols, `api.coingecko.com` (only with the Exchange rates widget), the calendar links you enter (Calendar widget) and, once a day unless you turn it off, `api.github.com` to look for a newer release. The *AI usage* widget, if you add it, runs your locally installed Claude CLI (`claude -p /usage`) at the interval you choose, and that CLI talks to Anthropic with your own login; for Codex and Gemini CLI it only reads the logs those tools keep in your user folder (`~/.codex/sessions`, `~/.gemini/tmp`). The *To do* widget talks to `api.todoist.com` only when you set it to Todoist, installing a web widget from a link downloads it from that link, and while *Settings › Widget gallery* is open DockHub fetches the community widget list from `raw.githubusercontent.com` (at most once a day). Web widgets reach only the hosts they declare, or a server address you enter in their settings. There is no telemetry.
 
 ## Project structure
 
@@ -447,7 +447,8 @@ src/CustomDock/              Produces DockHub.exe
     ├── Calendar/  Clipboard/  Stack/  Currency/  Todo/  Screenshot/
     └── AI/ (AI usage)  Weather/  Web/ (HTML/JavaScript widgets, link installs)
 packaging/winget/            winget manifest templates (submitted by .github/workflows/winget.yml)
-samples/widgets/             Web widget examples: hello-world, github-stars, github-pulls
+samples/widgets/             Web widget examples (hello-world, github-stars, github-pulls, github-actions, home-assistant)
+                             and index.json, the community list shown in the gallery
 tools/generate-icon.ps1      Renders Assets/DockHub.ico
 tools/measure-idle.ps1       Idle CPU, memory and start-up measurement
 docs/                        Widget SDK and supported battery devices; images/ holds the README artwork
@@ -455,7 +456,7 @@ docs/                        Widget SDK and supported battery devices; images/ h
 
 ## Web widgets (HTML and JavaScript)
 
-Anyone can build a widget with HTML, CSS and JavaScript, no C# needed. Web widgets run in Microsoft Edge WebView2, follow the dock theme and use a small `window.dockhub` API for settings, storage, notifications and their right-click menu. Each widget only reaches the internet hosts its manifest lists, and users see those permissions before installing a `.dockwidget` package (open the file, or use *Settings › Widget gallery › Install widget…*) or a link (a `manifest.json`, a `.dockwidget` file or a GitHub folder) with *Install from link…*. The gallery also lists featured widgets, such as a GitHub pull requests widget, that install with one click.
+Anyone can build a widget with HTML, CSS and JavaScript, no C# needed. Web widgets run in Microsoft Edge WebView2, follow the dock theme and use a small `window.dockhub` API for settings, storage, notifications and their right-click menu. Each widget only reaches the internet hosts its manifest lists, and users see those permissions before installing a `.dockwidget` package (open the file, or use *Settings › Widget gallery › Install widget…*) or a link (a `manifest.json`, a `.dockwidget` file or a GitHub folder) with *Install from link…*. The gallery also lists community widgets from a list kept in this repository (GitHub pull requests, GitHub Actions, Home Assistant and more) that install with one click; anyone can add one with a pull request.
 
 With `"debugLogging": true`, a widget reloads by itself whenever you save one of its files. See the [widget SDK guide](docs/widget-sdk.md) and the examples in [`samples/widgets`](samples/widgets).
 

@@ -136,15 +136,14 @@ public sealed class WidgetItemView : WidgetCard
     public void RefreshGrid() => ApplyWidthClass();
 
     /// <summary>
-    /// Snaps the card to the grid and gives it its variant's minimum width while "Even widget widths" is on. The
-    /// widget keeps its own width and is centered in any extra room; a compact tile fills its card.
+    /// Snaps the card to the grid and gives it its variant's minimum width while "Even widget widths" is on (the card
+    /// style then centers the widget in any extra room).
     /// </summary>
     private void ApplyWidthClass()
     {
         SnapToGrid = AlignWidths && !_compact;
         var width = Widget.Descriptor.Variants.FirstOrDefault(v => v.Id == Widget.Variant)?.Width ?? WidgetWidth.Auto;
         MinWidth = SnapToGrid ? WidgetWidths.MinCardWidth(width) : 0;
-        HorizontalContentAlignment = _compact ? HorizontalAlignment.Stretch : HorizontalAlignment.Center;
     }
 
     private void ApplyAppearance()

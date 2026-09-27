@@ -115,7 +115,7 @@ Faz 1.7'deki `AIUsageStatus` kullanılarak:
 
 - `WidgetWidth` sınıfları (`Widgets/WidgetWidths.cs`): **Compact** = kart yüksekliği (46), **Standard** = 2,5 × (115), **Wide** = 4 × (184). Üçü de kartların oturduğu yarım yükseklik ızgarasının (23) tam katı. Dock boyutu (Small/Large) içeriği `ScaleTransform` ile ölçeklediği için genişlikler de kendiliğinden ölçekleniyor.
 - Sınıf yalnızca **en az genişlik** olarak uygulanıyor. İçerik daha genişse kart büyüyor, hiçbir şey kırpılmıyor. "Even widget widths" kapalıyken hiçbir sınıf uygulanmıyor.
-- Widget artık kartın içinde kendi genişliğinde ve **ortalanmış** duruyor (eskiden fazla alan sağ tarafta kalıyordu). Compact tile kartı doldurmaya devam ediyor.
+- Fazla alanda widget ortalanıyor. Bunu kart stilindeki mevcut `SnapToGrid` tetikleyicisi zaten yapıyordu; sınıf tabanı da yalnızca SnapToGrid açıkken uygulandığı için ek bir şey gerekmedi.
 - Widget'lar arası boşluk tek bir kaynaktan okunuyor: `DockItemSpacing` (Controls.xaml, 3,0).
 - Sınıf seçerken ölçüt: varyantın doğal genişliğini (XAML'deki Width/MinWidth değerleri ve 2 × 11 px iç boşluk) aşmayan en yakın sınıf. Emin olunamayan yerde küçük sınıf seçildi (fazla genişletmektense).
 - Bir test, yerleşik her varyantın bir sınıfı olduğunu denetliyor. Web widget'ları `Auto` (taban yok).

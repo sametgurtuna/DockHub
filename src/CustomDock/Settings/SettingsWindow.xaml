@@ -195,16 +195,7 @@
 
                     <TextBlock Text="Language" Style="{StaticResource SectionHeader}" />
                     <ctl:SettingRow Glyph="&#xF2B7;" Header="Interface language" Description="System follows your Windows display language. DockHub restarts to switch.">
-                        <Border Style="{StaticResource SegmentedHost}">
-                            <StackPanel Orientation="Horizontal">
-                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Language" Content="System"
-                                             IsChecked="{Binding Language, Converter={StaticResource EnumEq}, ConverterParameter=System}" />
-                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Language" Content="English"
-                                             IsChecked="{Binding Language, Converter={StaticResource EnumEq}, ConverterParameter=English}" />
-                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Language" Content="Türkçe"
-                                             IsChecked="{Binding Language, Converter={StaticResource EnumEq}, ConverterParameter=Turkish}" />
-                            </StackPanel>
-                        </Border>
+                        <ComboBox x:Name="LanguageCombo" Width="160" SelectionChanged="OnLanguageChanged" />
                     </ctl:SettingRow>
 
                 </StackPanel>

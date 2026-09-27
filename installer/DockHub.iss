@@ -51,16 +51,26 @@ ChangesAssociations=yes
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "turkish"; MessagesFile: "compiler:Languages\Turkish.isl"
+Name: "german"; MessagesFile: "compiler:Languages\German.isl"
+Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 
 [CustomMessages]
 english.StartupGroup=Startup:
 turkish.StartupGroup=Başlangıç:
+german.StartupGroup=Autostart:
+spanish.StartupGroup=Inicio:
 english.StartupTask=Start DockHub automatically when I sign in to Windows
 turkish.StartupTask=Windows'a giriş yaptığımda DockHub'ı otomatik başlat
+german.StartupTask=DockHub bei der Anmeldung an Windows automatisch starten
+spanish.StartupTask=Iniciar DockHub automáticamente al iniciar sesión en Windows
 english.LaunchApp=Launch DockHub now
 turkish.LaunchApp=DockHub'ı şimdi başlat
+german.LaunchApp=DockHub jetzt starten
+spanish.LaunchApp=Iniciar DockHub ahora
 english.WidgetFileType=DockHub widget
 turkish.WidgetFileType=DockHub widget'ı
+german.WidgetFileType=DockHub-Widget
+spanish.WidgetFileType=Widget de DockHub
 
 [Tasks]
 Name: "startup"; Description: "{cm:StartupTask}"; GroupDescription: "{cm:StartupGroup}"

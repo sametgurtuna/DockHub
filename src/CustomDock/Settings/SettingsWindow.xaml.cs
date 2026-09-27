@@ -65,6 +65,7 @@ public partial class SettingsWindow : Window
         LoadProfiles();
         LoadUpdates();
         LoadTextScale();
+        LoadLanguages();
         DockPreview.Bind(_config);
         PreviewKeyDown += OnUndoKey;
         PreviewKeyDown += (_, e) =>
@@ -160,6 +161,26 @@ public partial class SettingsWindow : Window
 
     private void OnRestartClick(object sender, RoutedEventArgs e) => App.Instance.RestartApplication();
 
+    private bool _loadingLanguages;
+
+    private void LoadLanguages()
+    {
+        _loadingLanguages = true;
+        LanguageCombo.Items.Clear();
+        LanguageCombo.Items.Add(new ComboBoxItem { Content = L.T("System"), Tag = UiLanguage.System });
+        foreach (var language in L.Languages)
+            LanguageCombo.Items.Add(new ComboBoxItem { Content = language.NativeName, Tag = language.Language });
+        LanguageCombo.SelectedItem = LanguageCombo.Items.OfType<ComboBoxItem>().FirstOrDefault(i => Equals(i.Tag, _config.Language))
+            ?? LanguageCombo.Items[0];
+        _loadingLanguages = false;
+    }
+
+    private void OnLanguageChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loadingLanguages || LanguageCombo.SelectedItem is not ComboBoxItem { Tag: UiLanguage language }) return;
+        _config.Language = language;
+    }
+
     private void OnOpenConfigFolderClick(object sender, RoutedEventArgs e)
         => Process.Start(new ProcessStartInfo("explorer.exe", $"\"{AppPaths.Root}\"") { UseShellExecute = true });
 
@@ -229,6 +250,8 @@ public partial class SettingsWindow : Window
     {
         if (e.PropertyName is nameof(AppConfig.MonitorDevice) or nameof(AppConfig.ShowOnAllDisplays))
             LoadDisplaySizes();
+        else if (e.PropertyName == nameof(AppConfig.Language) && !Equals((LanguageCombo.SelectedItem as ComboBoxItem)?.Tag, _config.Language))
+            LoadLanguages(); // changed by undo or a restored backup
     }
 
     private sealed record SizeOption(string Label, DockSize? Size);

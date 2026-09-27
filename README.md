@@ -102,7 +102,7 @@ No admin rights. Your original taskbar always comes back.
 2. Run it. DockHub installs for the current user, so no administrator prompt appears.
 3. Keep **"Start DockHub automatically when I sign in to Windows"** checked (the default) to have the dock ready every time Windows starts.
 
-The installer is self-contained. It ships the .NET runtime, so there is nothing else to install. It is available in English and Turkish.
+The installer is self-contained. It ships the .NET runtime, so there is nothing else to install. It is available in English, Turkish, German and Spanish.
 
 ### winget
 
@@ -316,7 +316,7 @@ What the installer does:
 | Autostart | `HKCU\...\Run\DockHub` = `"...\DockHub.exe" --startup`, enabled by default |
 | Upgrades | Closes the running dock with `--exit` before replacing files |
 | Uninstall | Runs `--exit` and `--restore-taskbar`, then removes the autostart entry and the File Explorer verbs |
-| Languages | English, Turkish |
+| Languages | English, Turkish, German, Spanish |
 
 ## Command line
 
@@ -558,7 +558,7 @@ The widget then shows up in the gallery automatically. Other helpers:
 - **Window effects.** The blurred glass effect uses `SetWindowCompositionAttribute`, so it works even when the window is inactive. Corner rounding comes from DWM (about 8 px); corners stay square on Windows 10.
 - **Shell integration.** Windows 11's XAML tray items (network, volume and battery quick settings, language bar) belong to Explorer, so the dock shows its own network, volume and battery icons and opens Windows' quick settings panel from them. The per-app taskbar progress indicator may not appear for some apps, because the Windows key stays with Explorer.
 - **Multiple monitors.** The tray icons live on the main dock. With *Show on all displays* the other displays get a dock with apps, and any widget can be moved to one of them; each widget sits on one dock only, and a widget whose display is disconnected waits on the main dock until it is back. The Windows taskbar is hidden on every display.
-- **Language.** The interface is available in English and Turkish (*Settings › General › Language*; System follows your Windows display language). Dates and numbers follow your Windows locale. Text that has no translation yet appears in English.
+- **Language.** The interface is available in English, Turkish, German and Spanish (*Settings › General › Language*; System follows your Windows display language). Dates and numbers follow your Windows locale. Text that has no translation yet appears in English. Translations live in `src/CustomDock/Resources/Strings_<code>.json`, with the English text as the key; a test checks that every language has the same keys and placeholders.
 
 ## FAQ
 

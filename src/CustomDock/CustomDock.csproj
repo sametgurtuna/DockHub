@@ -19,7 +19,7 @@
     <Product>DockHub</Product>
     <Company>DockHub</Company>
     <Copyright>© 2026</Copyright>
-    <SatelliteResourceLanguages>en;tr</SatelliteResourceLanguages>
+    <SatelliteResourceLanguages>en;tr;de;es</SatelliteResourceLanguages>
     <!-- DPI awareness for WPF is configured via app.manifest (PerMonitorV2). -->
     <NoWarn>$(NoWarn);WFAC010</NoWarn>
   </PropertyGroup>

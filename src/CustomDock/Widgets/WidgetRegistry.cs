@@ -337,7 +337,7 @@ public static class WidgetRegistry
         new()
         {
             Id = "battery-devices", Name = "Device batteries", Category = WidgetCategories.System,
-            Description = "Battery levels for HyperX Cloud II Wireless, LAMZU Atlantis Mini and connected Bluetooth headphones, mice, and keyboards. Click to see and reorder all devices.",
+            Description = "Battery levels of Bluetooth headphones, mice and keyboards, Xbox and PlayStation controllers, and Logitech, Razer, HyperX, SteelSeries and LAMZU receivers. Click to see and reorder all devices.",
             IconPath = "M4,7 H18 A2,2 0 0 1 20,9 V15 A2,2 0 0 1 18,17 H4 A2,2 0 0 1 2,15 V9 A2,2 0 0 1 4,7 Z M20,11 H22 V13 H20 Z", AccentKey = "AccentGreenBrush",
             Variants = new[] { new WidgetVariant("single", "Single device"), new WidgetVariant("multi", "Multiple devices") },
             Factory = () => new BatteryDevicesWidget(), SettingsType = typeof(BatteryDevicesSettings),

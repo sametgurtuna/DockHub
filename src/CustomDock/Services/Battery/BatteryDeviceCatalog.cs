@@ -7,13 +7,24 @@ namespace CustomDock.Services;
 
 /// <summary>
 /// One device the hardware battery scan can read. A null <see cref="Pid"/> matches every product of the vendor;
-/// "{pid}" in <see cref="Name"/> is replaced with the product id.
+/// "{pid}" in <see cref="Name"/> is replaced with the product id. <see cref="Variant"/> picks a protocol flavor
+/// ("ds4" or "dualsense" for PlayStation, "receiver" for Logitech receivers); <see cref="Request"/> describes a
+/// <c>hidrequest</c> device.
 /// </summary>
 public sealed record BatteryCatalogEntry(string Protocol, ushort Vid, ushort? Pid, string Name,
-    BatteryDeviceKind Kind = BatteryDeviceKind.Unknown, string? Id = null, bool Wired = false)
+    BatteryDeviceKind Kind = BatteryDeviceKind.Unknown, string? Id = null, bool Wired = false,
+    string? Variant = null, HidRequestSpec? Request = null)
 {
     public string DisplayName(ushort pid) => Name.Replace("{pid}", pid.ToString("X4", CultureInfo.InvariantCulture));
 }
+
+/// <summary>
+/// A battery query defined in the catalog: <see cref="Request"/> (first byte = report id) is sent as an output or
+/// feature report on the collection with <see cref="UsagePage"/>; the answer must start with <see cref="Match"/> and
+/// carries the level at <see cref="LevelOffset"/> (0-<see cref="LevelMax"/>).
+/// </summary>
+public sealed record HidRequestSpec(bool Feature, byte[] Request, ushort? UsagePage, byte[] Match, int LevelOffset,
+    int LevelMax = 100, int? ChargingOffset = null, byte ChargingValue = 1, int? OfflineValue = null);
 
 /// <summary>
 /// The devices DockHub reads over HID, from <c>Resources/battery-devices.json</c> plus an optional
@@ -152,7 +163,93 @@ public sealed class BatteryDeviceCatalog
         }
         bool wired = element.TryGetProperty("wired", out var w) && w.ValueKind == JsonValueKind.True;
 
-        return new BatteryCatalogEntry(protocol.ToLowerInvariant(), vid, pid, name, kind, id, wired);
+        protocol = protocol.ToLowerInvariant();
+        string? variant = String(element, "variant")?.ToLowerInvariant();
+        string[]? variants = protocol switch
+        {
+            BatteryProtocols.PlayStation => new[] { "ds4", "dualsense" },
+            BatteryProtocols.Logitech => new[] { "receiver", "device" },
+            _ => null,
+        };
+        if (variants is not null && (variant is null || !variants.Contains(variant)))
+        {
+            error = $"\"variant\" must be {string.Join(" or ", variants.Select(v => $"\"{v}\""))}";
+            return null;
+        }
+
+        HidRequestSpec? request = null;
+        if (protocol == BatteryProtocols.HidRequest)
+        {
+            request = ParseRequest(element, out error);
+            if (request is null) return null;
+        }
+
+        return new BatteryCatalogEntry(protocol, vid, pid, name, kind, id, wired, variant, request);
+    }
+
+    private static HidRequestSpec? ParseRequest(JsonElement element, out string? error)
+    {
+        error = null;
+        string method = String(element, "method")?.ToLowerInvariant() ?? "output";
+        if (method is not ("output" or "feature"))
+        {
+            error = "\"method\" must be \"output\" or \"feature\"";
+            return null;
+        }
+        if (Bytes(String(element, "request")) is not { Length: > 0 and <= 64 } request)
+        {
+            error = "\"request\" must be 1-64 hex bytes, for example \"06 18\"";
+            return null;
+        }
+        ushort? usagePage = null;
+        if (String(element, "usagePage") is { } pageText)
+        {
+            if (Hex(pageText) is not { } page)
+            {
+                error = "\"usagePage\" must be four hex digits";
+                return null;
+            }
+            usagePage = page;
+        }
+        byte[] match = Array.Empty<byte>();
+        if (String(element, "match") is { } matchText)
+        {
+            if (Bytes(matchText) is not { } parsedMatch)
+            {
+                error = "\"match\" must be hex bytes";
+                return null;
+            }
+            match = parsedMatch;
+        }
+
+        if (Int(element, "levelOffset") is not { } levelOffset || levelOffset is < 0 or >= 64)
+        {
+            error = "\"levelOffset\" must be 0-63";
+            return null;
+        }
+        int levelMax = Int(element, "levelMax") ?? 100;
+        int? chargingOffset = Int(element, "chargingOffset");
+        int chargingValue = Int(element, "chargingValue") ?? 1;
+        int? offlineValue = Int(element, "offlineValue");
+        if (levelMax is < 1 or > 255 || chargingOffset is < 0 or >= 64 || chargingValue is < 0 or > 255 || offlineValue is < 0 or > 255)
+        {
+            error = "\"levelMax\" must be 1-255, \"chargingOffset\" 0-63, \"chargingValue\" and \"offlineValue\" 0-255";
+            return null;
+        }
+        return new HidRequestSpec(method == "feature", request, usagePage, match, levelOffset, levelMax,
+            chargingOffset, (byte)chargingValue, offlineValue);
+    }
+
+    private static int? Int(JsonElement element, string name)
+        => element.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.Number && value.TryGetInt32(out int number) ? number : null;
+
+    /// <summary>Hex bytes separated by spaces (or not): "06 18", "0618".</summary>
+    private static byte[]? Bytes(string? text)
+    {
+        if (text is null) return null;
+        string hex = text.Replace(" ", "").Replace("-", "");
+        if (hex.Length % 2 != 0 || !hex.All(Uri.IsHexDigit)) return null;
+        return Convert.FromHexString(hex);
     }
 
     private static string? String(JsonElement element, string name)

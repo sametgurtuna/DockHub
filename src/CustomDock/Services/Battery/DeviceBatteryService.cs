@@ -4,8 +4,9 @@ using CustomDock.Core;
 namespace CustomDock.Services;
 
 /// <summary>
-/// Battery levels of peripherals: HID devices from <see cref="BatteryDeviceCatalog"/> (HyperX headsets, Compx mice)
-/// and Bluetooth devices Windows reports a level for. Scans every 30 seconds on a worker thread.
+/// Battery levels of peripherals: HID devices from <see cref="BatteryDeviceCatalog"/> (HyperX, Compx, PlayStation,
+/// Razer, Logitech and catalog-defined requests), game controllers Windows reports on, and Bluetooth devices.
+/// Scans every 30 seconds on a worker thread.
 /// </summary>
 public sealed partial class DeviceBatteryService
 {
@@ -21,6 +22,7 @@ public sealed partial class DeviceBatteryService
         };
         _timer.Tick += (_, _) => Refresh();
         _timer.Start();
+        WatchGamepads();
 
         // Initial scan
         Refresh();
@@ -33,23 +35,52 @@ public sealed partial class DeviceBatteryService
     public event EventHandler? Updated;
 
     private int _isRefreshing;
+    private int _refreshRequested;
 
+    /// <summary>
+    /// Scans on a worker thread. One scan runs at a time; a request that arrives during a scan (the timer, the panel,
+    /// a controller being connected) runs another scan right after it instead of being dropped.
+    /// </summary>
     public Task RefreshAsync() => Task.Run(async () =>
     {
-        // One scan at a time: the timer, the panel and the refresh button can all ask at once.
-        if (Interlocked.Exchange(ref _isRefreshing, 1) == 1) return;
+        Volatile.Write(ref _refreshRequested, 1);
+        while (Volatile.Read(ref _refreshRequested) == 1)
+        {
+            if (Interlocked.Exchange(ref _isRefreshing, 1) == 1) return; // the running scan picks the request up
+            try
+            {
+                while (Interlocked.Exchange(ref _refreshRequested, 0) == 1)
+                    await ScanAsync().ConfigureAwait(false);
+            }
+            finally
+            {
+                Volatile.Write(ref _isRefreshing, 0);
+            }
+        }
+    });
+
+    private async Task ScanAsync()
+    {
         try
         {
             var catalog = CurrentCatalog();
             var list = new List<BatteryDeviceInfo>();
 
-            // 1. HID devices from the catalog (HyperX headsets, Compx mice), filtered by the ids in their paths
+            // 1. HID devices from the catalog, filtered by the ids in their paths before anything is opened
             var hidPaths = EnumerateHidPaths();
             list.AddRange(ScanHyperX(hidPaths, catalog));
             list.AddRange(ScanCompxMice(hidPaths, catalog));
+            list.AddRange(ScanPlayStation(hidPaths, catalog));
+            list.AddRange(ScanRazer(hidPaths, catalog));
+            list.AddRange(ScanLogitech(hidPaths, catalog));
+            list.AddRange(ScanHidRequests(hidPaths, catalog));
 
-            // 2. Bluetooth (classic and Low Energy) devices Windows reports a battery level for
-            list.AddRange(await ScanBluetoothDevicesAsync().ConfigureAwait(false));
+            // 2. Game controllers that report a battery to Windows (Xbox)
+            list.AddRange(ScanGamepads());
+
+            // 3. Bluetooth (classic and Low Energy) devices; a controller or HID device read above is not listed twice
+            var bluetooth = await ScanBluetoothDevicesAsync().ConfigureAwait(false);
+            list.AddRange(bluetooth.Where(bt => !list.Any(d => string.Equals(d.Name, bt.Name, StringComparison.OrdinalIgnoreCase))));
 
             Devices = list;
             Application.Current?.Dispatcher.BeginInvoke(() => Updated?.Invoke(this, EventArgs.Empty));
@@ -58,11 +89,7 @@ public sealed partial class DeviceBatteryService
         {
             Log.Error(ex, "Failed to scan device batteries");
         }
-        finally
-        {
-            Volatile.Write(ref _isRefreshing, 0);
-        }
-    });
+    }
 
     public void Refresh() => _ = RefreshAsync();
 

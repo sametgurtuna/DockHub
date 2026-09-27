@@ -64,14 +64,68 @@ public sealed partial class DeviceBatteryService
         return result;
     }
 
-    private static IntPtr OpenHid(string path)
+    /// <summary>Opens a HID collection for overlapped I/O; <see cref="IntPtr.Zero"/> when Windows refuses (keyboards, mice, exclusive owners).</summary>
+    private static IntPtr OpenHid(string path, bool write = true)
     {
         IntPtr handle = HidInterop.CreateFile(path,
-            HidInterop.GENERIC_READ | HidInterop.GENERIC_WRITE,
+            write ? HidInterop.GENERIC_READ | HidInterop.GENERIC_WRITE : HidInterop.GENERIC_READ,
             HidInterop.FILE_SHARE_READ | HidInterop.FILE_SHARE_WRITE,
             IntPtr.Zero, HidInterop.OPEN_EXISTING, HidInterop.FILE_FLAG_OVERLAPPED, IntPtr.Zero);
         return handle == new IntPtr(-1) ? IntPtr.Zero : handle;
     }
+
+    /// <summary>Writes one output report (padded to <paramref name="length"/>) on an overlapped handle; false on timeout or error.</summary>
+    private static bool WriteOutputReport(IntPtr handle, byte[] report, int length, uint timeoutMs)
+    {
+        if (report.Length > length) return false;
+        IntPtr native = Marshal.AllocHGlobal(length);
+        IntPtr writeEvent = HidInterop.CreateEvent(IntPtr.Zero, true, false, null);
+        try
+        {
+            var padded = new byte[length];
+            report.CopyTo(padded, 0);
+            Marshal.Copy(padded, 0, native, length);
+
+            var overlapped = new HidInterop.OVERLAPPED { hEvent = writeEvent };
+            if (HidInterop.WriteFile(handle, native, (uint)length, out _, ref overlapped)) return true;
+            if (Marshal.GetLastWin32Error() != 997) return false; // ERROR_IO_PENDING
+            if (HidInterop.WaitForSingleObject(writeEvent, timeoutMs) != 0)
+            {
+                HidInterop.CancelIoEx(handle, ref overlapped);
+                HidInterop.GetOverlappedResult(handle, ref overlapped, out _, true);
+                return false;
+            }
+            return HidInterop.GetOverlappedResult(handle, ref overlapped, out uint written, false) && written > 0;
+        }
+        finally
+        {
+            HidInterop.CloseHandle(writeEvent);
+            Marshal.FreeHGlobal(native);
+        }
+    }
+
+    /// <summary>Short stable id part for a device path or other long identifier (FNV-1a).</summary>
+    private static string StableHash(string text)
+    {
+        uint hash = 2166136261;
+        foreach (char c in text.ToLowerInvariant())
+        {
+            hash ^= c;
+            hash *= 16777619;
+        }
+        return hash.ToString("x8");
+    }
+
+    // Last reading of each device, shown while a sleeping device doesn't answer (newer protocols share this).
+    private static readonly Dictionary<string, BatteryDeviceInfo> s_lastKnown = new();
+
+    private static BatteryDeviceInfo Remember(BatteryDeviceInfo device)
+    {
+        s_lastKnown[device.Id] = device;
+        return device;
+    }
+
+    private static BatteryDeviceInfo? Recall(string id) => s_lastKnown.TryGetValue(id, out var device) ? device : null;
 
     private static HidInterop.HIDP_CAPS? GetCaps(IntPtr handle)
     {

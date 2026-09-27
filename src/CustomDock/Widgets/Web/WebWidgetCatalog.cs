@@ -133,10 +133,23 @@ public static class WebWidgetCatalog
         return manifest;
     }
 
-    /// <summary>Reads a .dockwidget package (zip) without installing it.</summary>
+    public const long MaxPackageBytes = 20 * 1024 * 1024;
+    public const long MaxUnpackedBytes = 50 * 1024 * 1024;
+    public const int MaxPackageEntries = 256;
+
+    /// <summary>
+    /// Reads a .dockwidget package (zip) without installing it. Packages over 20 MB, over 50 MB unpacked or with more
+    /// than 256 entries are refused before anything is extracted; entries can't leave the folder (the zip reader
+    /// refuses such paths).
+    /// </summary>
     public static WebWidgetManifest? Inspect(string packagePath, out string extractedTo, out string? error)
     {
         extractedTo = Path.Combine(Path.GetTempPath(), "dockhub-widget-" + Guid.NewGuid().ToString("N")[..8]);
+        if (CheckPackage(packagePath) is { } refused)
+        {
+            error = refused;
+            return null;
+        }
         try
         {
             ZipFile.ExtractToDirectory(packagePath, extractedTo);
@@ -154,6 +167,24 @@ public static class WebWidgetCatalog
         return Read(root, out error);
     }
 
+    /// <summary>A reason to refuse a package before extracting it, or null when its size and entries are fine.</summary>
+    internal static string? CheckPackage(string packagePath)
+    {
+        try
+        {
+            if (new FileInfo(packagePath).Length > MaxPackageBytes) return L.T("The package is larger than {0} MB.", MaxPackageBytes / 1024 / 1024);
+            using var zip = ZipFile.OpenRead(packagePath);
+            if (zip.Entries.Count > MaxPackageEntries) return L.T("The package has more than {0} files.", MaxPackageEntries);
+            long unpacked = zip.Entries.Sum(entry => entry.Length);
+            if (unpacked > MaxUnpackedBytes) return L.T("The package is larger than {0} MB.", MaxUnpackedBytes / 1024 / 1024);
+            return null;
+        }
+        catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException)
+        {
+            return L.T("The package can't be opened: {0}", ex.Message);
+        }
+    }
+
     /// <summary>Copies an inspected package into the widgets folder (replacing an older version) and registers it.</summary>
     public static void Install(WebWidgetManifest manifest)
     {
@@ -165,6 +196,14 @@ public static class WebWidgetCatalog
         Installed.Add(installed);
         WidgetRegistry.Register(WebWidget.CreateDescriptor(installed));
         Log.Info($"Web widget installed: {installed.Id} {installed.Version}");
+    }
+
+    /// <summary>Takes a re-read manifest of an installed widget (developer mode) into the list and the registry.</summary>
+    public static void Refresh(WebWidgetManifest manifest)
+    {
+        Installed.RemoveAll(m => m.Id == manifest.Id);
+        Installed.Add(manifest);
+        WidgetRegistry.Register(WebWidget.CreateDescriptor(manifest));
     }
 
     private static void CopyDirectory(string from, string to)

@@ -81,7 +81,8 @@
                     <ControlTemplate.Triggers>
                         <MultiTrigger>
                             <MultiTrigger.Conditions>
-                                <Condition Property="IsMouseOver" Value="True" />
+                                <!-- IsHighlighted = the mouse is over the card, or over content that keeps the mouse (a web view). -->
+                                <Condition Property="IsHighlighted" Value="True" />
                                 <Condition Property="HoverEnabled" Value="True" />
                             </MultiTrigger.Conditions>
                             <Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource CardHoverBorderBrush}" />

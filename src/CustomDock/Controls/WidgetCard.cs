@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace CustomDock.Controls;
 
@@ -19,7 +20,38 @@ public class WidgetCard : ContentControl
     public static readonly DependencyProperty SnapToGridProperty = DependencyProperty.Register(
         nameof(SnapToGrid), typeof(bool), typeof(WidgetCard), new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsMeasure));
 
+    /// <summary>
+    /// Set by content that keeps the mouse to itself (a web view is a window of its own, so WPF never sees the
+    /// pointer over it): the card is highlighted as if the mouse were over it.
+    /// </summary>
+    public static readonly DependencyProperty IsContentHoveredProperty = DependencyProperty.Register(
+        nameof(IsContentHovered), typeof(bool), typeof(WidgetCard), new PropertyMetadata(false, (d, _) => ((WidgetCard)d).UpdateHighlight()));
+
+    private static readonly DependencyPropertyKey IsHighlightedPropertyKey = DependencyProperty.RegisterReadOnly(
+        nameof(IsHighlighted), typeof(bool), typeof(WidgetCard), new PropertyMetadata(false));
+
+    /// <summary>The mouse is over the card or its content; drives the hover look in the card style.</summary>
+    public static readonly DependencyProperty IsHighlightedProperty = IsHighlightedPropertyKey.DependencyProperty;
+
     public bool HoverEnabled { get => (bool)GetValue(HoverEnabledProperty); set => SetValue(HoverEnabledProperty, value); }
+
+    public bool IsContentHovered { get => (bool)GetValue(IsContentHoveredProperty); set => SetValue(IsContentHoveredProperty, value); }
+
+    public bool IsHighlighted => (bool)GetValue(IsHighlightedProperty);
+
+    protected override void OnMouseEnter(MouseEventArgs e)
+    {
+        base.OnMouseEnter(e);
+        UpdateHighlight();
+    }
+
+    protected override void OnMouseLeave(MouseEventArgs e)
+    {
+        base.OnMouseLeave(e);
+        UpdateHighlight();
+    }
+
+    private void UpdateHighlight() => SetValue(IsHighlightedPropertyKey, IsMouseOver || IsContentHovered);
 
     public CornerRadius CornerRadius { get => (CornerRadius)GetValue(CornerRadiusProperty); set => SetValue(CornerRadiusProperty, value); }
 

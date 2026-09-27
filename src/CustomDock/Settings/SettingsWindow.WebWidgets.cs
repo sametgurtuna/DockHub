@@ -21,8 +21,13 @@ public partial class SettingsWindow
             Filter = "DockHub widget (*.dockwidget;*.zip)|*.dockwidget;*.zip",
         };
         if (dialog.ShowDialog(this) != true) return;
+        InstallWidgetPackage(dialog.FileName);
+    }
 
-        var manifest = WebWidgetCatalog.Inspect(dialog.FileName, out _, out var error);
+    /// <summary>Checks a .dockwidget package, shows what it can reach, and installs it when the user agrees.</summary>
+    public void InstallWidgetPackage(string packagePath)
+    {
+        var manifest = WebWidgetCatalog.Inspect(packagePath, out _, out var error);
         if (manifest is null)
         {
             ConfirmDialog.Show(L.T("Can't install this widget"), error ?? "", "", this, new DialogButton("ok", "OK", DialogButtonKind.Primary));

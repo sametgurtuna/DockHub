@@ -16,11 +16,16 @@ All three are also listed under *Settings › Widget gallery › Featured web wi
 2. Restart DockHub (tray menu › Restart, or *Settings › Backup and troubleshooting › Restart DockHub*).
 3. Open *Settings › Widget gallery*: your widget is listed under **Web widgets**. Press **+**.
 
-While developing, set `"debugLogging": true` in `%AppData%\DockHub\config.json`. The widget's right-click menu then has **Developer tools** (the Edge DevTools for that widget), and **Reload** is always there.
+While developing, set `"debugLogging": true` in `%AppData%\DockHub\config.json` and restart DockHub. Then:
+
+- **Live reload.** Saving any file in `%AppData%\DockHub\widgets\<your widget>` reloads the widget on the dock within half a second. A changed `manifest.json` is read again (new variants, settings and permissions), so you don't have to reinstall or restart.
+- The widget's right-click menu has **Developer tools** (the Edge DevTools for that widget). **Reload** is always there.
 
 ## Package and share
 
-A `.dockwidget` file is a zip of the widget folder (the files can be at the zip's root or inside one folder). Users install it with *Settings › Widget gallery › Install widget…*. DockHub shows the name, version, author and the permissions before installing. Installing a package with the same `id` replaces the older version and keeps each widget's settings and storage.
+A `.dockwidget` file is a zip of the widget folder (the files can be at the zip's root or inside one folder). Users install it by opening the file (the installer registers the `.dockwidget` type, so a double-click in File Explorer works) or with *Settings › Widget gallery › Install widget…*. DockHub shows the name, version, author and the permissions before installing. Installing a package with the same `id` replaces the older version and keeps each widget's settings and storage.
+
+A package can be up to 20 MB, 50 MB unpacked and 256 files; no entry may point outside the widget's folder. From a command line: `DockHub.exe --install-widget path\to\widget.dockwidget` (it also works while DockHub is running).
 
 You can also share a link. *Settings › Widget gallery › Install from link…* accepts:
 
@@ -60,7 +65,7 @@ Links must use HTTPS. Every file must sit next to `manifest.json` (no `..`, no o
 |---|---|
 | `id` | Lower-case letters, digits, dots and dashes (3 to 64 characters). Reverse domain style is recommended. |
 | `entry` | The HTML file to load, relative to the widget folder. |
-| `variants` | Layouts users pick from the widget's *Appearance* menu. `size` is `compact` (44×44), `standard` (170×44) or `wide` (260×44), in dock units. |
+| `variants` | Layouts users pick from the widget's *Appearance* menu. `size` is `compact` (44×44), `standard` (170×44) or `wide` (260×44), in dock units; it also picks the card's width class when *Even widget widths* is on. |
 | `settings` | Shown in *Settings › Dock items* when the widget is selected. Types: `text`, `number` (`min`, `max`), `toggle`, `choice` (`options`). |
 | `permissions.network` | The only hosts `fetch`, images and scripts may load from (HTTPS or WSS). Everything else is blocked. `*.example.org` also matches `example.org`. |
 | `permissions.notifications` | Allows `dockhub.notify`. |
@@ -70,6 +75,7 @@ Links must use HTTPS. Every file must sit next to `manifest.json` (no `..`, no o
 
 - Files are served from a private `https://<id>.widget.dockhub/` address. There is no access to local files, other sites' cookies, downloads, pop-up windows, the camera, the microphone or location.
 - The page background is transparent: the dock card shows through. Size your content to the variant's size and don't scroll.
+- The card keeps a one-pixel frame around the page and lights it up while the pointer is over your widget, like any other card; use CSS `:hover` for hover effects inside the page.
 - Before your scripts run, DockHub sets these CSS variables on `<html>` and keeps them in sync with the dock's theme:
 
 | Variable | Meaning |

@@ -72,85 +72,11 @@ public static class ExplorerPinMenu
 
     // ------------------------------------------------------------------ Pin requests (inter-instance)
 
-    private const string MutexName = @"Local\DockHub.PinQueue.Mutex";
-    private static string QueueFile => Path.Combine(AppPaths.Root, "pin-requests.txt");
-
     /// <summary>Second instance: writes request to queue; running instance reads via signal.</summary>
-    public static void Enqueue(string path)
-    {
-        try
-        {
-            using var mutex = new Mutex(false, MutexName);
-            bool acquired = false;
-            try
-            {
-                acquired = mutex.WaitOne(TimeSpan.FromSeconds(3));
-            }
-            catch (AbandonedMutexException)
-            {
-                acquired = true;
-            }
-
-            if (acquired)
-            {
-                try
-                {
-                    Directory.CreateDirectory(Path.GetDirectoryName(QueueFile)!);
-                    File.AppendAllLines(QueueFile, new[] { Path.GetFullPath(path) });
-                }
-                finally
-                {
-                    mutex.ReleaseMutex();
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Failed to write pin request");
-        }
-    }
+    public static void Enqueue(string path) => RequestQueue.Pins.Enqueue(path);
 
     /// <summary>Retrieves queued requests and clears the queue.</summary>
-    public static List<string> Dequeue()
-    {
-        try
-        {
-            using var mutex = new Mutex(false, MutexName);
-            bool acquired = false;
-            try
-            {
-                acquired = mutex.WaitOne(TimeSpan.FromSeconds(3));
-            }
-            catch (AbandonedMutexException)
-            {
-                acquired = true;
-            }
-
-            if (acquired)
-            {
-                try
-                {
-                    if (!File.Exists(QueueFile)) return new List<string>();
-                    var lines = File.ReadAllLines(QueueFile)
-                        .Where(l => !string.IsNullOrWhiteSpace(l))
-                        .Distinct(StringComparer.OrdinalIgnoreCase)
-                        .ToList();
-                    File.Delete(QueueFile);
-                    return lines;
-                }
-                finally
-                {
-                    mutex.ReleaseMutex();
-                }
-            }
-            return new List<string>();
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Failed to read pin requests");
-            return new List<string>();
-        }
-    }
+    public static List<string> Dequeue() => RequestQueue.Pins.Dequeue();
 
     private const int SHCNE_ASSOCCHANGED = 0x08000000;
 

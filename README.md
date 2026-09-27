@@ -112,7 +112,7 @@ Once the package is published in the Windows Package Manager repository:
 winget install SametGurtuna.DockHub
 ```
 
-**Uninstalling** from *Settings › Apps* closes DockHub, restores the Windows taskbar, and removes the autostart entry and the File Explorer menu command. Your settings in `%AppData%\DockHub` are kept.
+**Uninstalling** from *Settings › Apps* closes DockHub, restores the Windows taskbar, and removes the autostart entry, the File Explorer menu command and the `.dockwidget` file type. Your settings in `%AppData%\DockHub` are kept.
 
 ### Requirements
 
@@ -325,6 +325,7 @@ What the installer does:
 | `DockHub.exe` | Starts the dock. If it is already running, brings the settings window to the front. |
 | `DockHub.exe --exit` | Closes the running instance cleanly (the taskbar comes back). |
 | `DockHub.exe --pin "<file>"` | Pins an app to the dock (used by the File Explorer command). Starts the dock if needed. |
+| `DockHub.exe --install-widget "<file>"` | Asks to install a `.dockwidget` package (used when you open one in File Explorer). Starts the dock if needed. |
 | `DockHub.exe --restore-taskbar` | **Emergency:** restores the Windows taskbar under any circumstances. |
 | `DockHub.exe --startup` | Used by the autostart entry. |
 
@@ -341,7 +342,7 @@ The `DOCKHUB_HOME` environment variable changes the settings and data folder, wh
 | `%AppData%\DockHub\data\weather-cache.json` | Latest weather per location, for an instant first paint |
 | `%AppData%\DockHub\data\trash\` | Data of removed widgets (for example sticky notes), kept for 7 days |
 | `%AppData%\DockHub\session.json` | Taskbar restore information (exists only while the taskbar is hidden) |
-| `%AppData%\DockHub\pin-requests.txt` | Pending pin requests from File Explorer (temporary) |
+| `%AppData%\DockHub\pin-requests.txt`, `widget-requests.txt` | Pending pin and widget install requests from File Explorer (temporary) |
 | `%AppData%\DockHub\log.txt` | Log file (rotates at 512 KB) |
 | `%AppData%\DockHub\backups\` | A copy of `config.json` from each of the last 7 days, plus the state saved before an import |
 | `%AppData%\DockHub\widgets\` | Installed web widgets, one folder each |
@@ -454,9 +455,9 @@ docs/                        Widget SDK and supported battery devices; images/ h
 
 ## Web widgets (HTML and JavaScript)
 
-Anyone can build a widget with HTML, CSS and JavaScript, no C# needed. Web widgets run in Microsoft Edge WebView2, follow the dock theme and use a small `window.dockhub` API for settings, storage, notifications and their right-click menu. Each widget only reaches the internet hosts its manifest lists, and users see those permissions before installing a `.dockwidget` package from *Settings › Widget gallery › Install widget…* or a link (a `manifest.json`, a `.dockwidget` file or a GitHub folder) with *Install from link…*. The gallery also lists featured widgets, such as a GitHub pull requests widget, that install with one click.
+Anyone can build a widget with HTML, CSS and JavaScript, no C# needed. Web widgets run in Microsoft Edge WebView2, follow the dock theme and use a small `window.dockhub` API for settings, storage, notifications and their right-click menu. Each widget only reaches the internet hosts its manifest lists, and users see those permissions before installing a `.dockwidget` package (open the file, or use *Settings › Widget gallery › Install widget…*) or a link (a `manifest.json`, a `.dockwidget` file or a GitHub folder) with *Install from link…*. The gallery also lists featured widgets, such as a GitHub pull requests widget, that install with one click.
 
-See the [widget SDK guide](docs/widget-sdk.md) and the examples in [`samples/widgets`](samples/widgets).
+With `"debugLogging": true`, a widget reloads by itself whenever you save one of its files. See the [widget SDK guide](docs/widget-sdk.md) and the examples in [`samples/widgets`](samples/widgets).
 
 ## Writing a widget
 

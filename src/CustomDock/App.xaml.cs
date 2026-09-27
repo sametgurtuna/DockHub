@@ -60,6 +60,10 @@ public partial class App : Application
         if (PinArgumentPath(e.Args) is { } pinPath)
             ExplorerPinMenu.Enqueue(pinPath);
 
+        // "DockHub.exe --install-widget <file>": a .dockwidget package opened in File Explorer
+        if (ArgumentValue(e.Args, InstallWidgetArgument) is { } packagePath)
+            RequestQueue.WidgetPackages.Enqueue(packagePath);
+
         _singleInstance = new SingleInstance();
         bool exitRequested = e.Args.Any(a => a.Equals("--exit", StringComparison.OrdinalIgnoreCase));
         if (exitRequested)
@@ -76,6 +80,8 @@ public partial class App : Application
             // Second instance triggered by toast click closes silently; otherwise show settings of running instance.
             if (PinArgumentPath(e.Args) is not null)
                 SingleInstance.SignalPin();
+            else if (ArgumentValue(e.Args, InstallWidgetArgument) is not null)
+                SingleInstance.SignalWidget();
             else if (!e.Args.Any(a => a.Contains("ToastActivated", StringComparison.OrdinalIgnoreCase)))
                 SingleInstance.SignalExisting();
             Shutdown();
@@ -98,6 +104,7 @@ public partial class App : Application
         TextScale.Initialize();
         Controls.WidgetCard.AlignWidths = config.AlignWidgetWidths;
         Widgets.Web.WebWidgetCatalog.LoadAll();
+        Widgets.Web.WebWidgetDevReload.Apply(config.DebugLogging);
         SystemEvents.UserPreferenceChanged += (_, e) =>
         {
             if (e.Category is UserPreferenceCategory.General or UserPreferenceCategory.Accessibility) ApplyMotionLevel();
@@ -132,8 +139,9 @@ public partial class App : Application
         config.PropertyChanged += OnConfigChanged;
         WidgetItemView.SettingsRequested += item => ShowSettings("items", item.Id);
 
-        _singleInstance.Listen(Dispatcher, () => ShowSettings(), ExitApplication, ProcessPinRequests);
+        _singleInstance.Listen(Dispatcher, () => ShowSettings(), ExitApplication, ProcessPinRequests, ProcessWidgetPackages);
         ProcessPinRequests();
+        ProcessWidgetPackages();
         SystemEvents.SessionEnding += (_, _) => Cleanup();
 
         if (config.IsFirstRun && !config.WelcomeShown)
@@ -459,10 +467,25 @@ public partial class App : Application
             new DialogButton("restart", "Restart", DialogButtonKind.Primary)) == "restart";
     }
 
-    private static string? PinArgumentPath(string[] args)
+    public const string InstallWidgetArgument = "--install-widget";
+
+    private static string? PinArgumentPath(string[] args) => ArgumentValue(args, ExplorerPinMenu.PinArgument);
+
+    /// <summary>The value after <paramref name="name"/> on the command line ("--pin C:\app.exe").</summary>
+    private static string? ArgumentValue(string[] args, string name)
     {
-        int index = Array.FindIndex(args, a => a.Equals(ExplorerPinMenu.PinArgument, StringComparison.OrdinalIgnoreCase));
+        int index = Array.FindIndex(args, a => a.Equals(name, StringComparison.OrdinalIgnoreCase));
         return index >= 0 && index + 1 < args.Length && !string.IsNullOrWhiteSpace(args[index + 1]) ? args[index + 1] : null;
+    }
+
+    /// <summary>Opens the widget gallery and asks before installing each .dockwidget package opened in File Explorer.</summary>
+    private void ProcessWidgetPackages()
+    {
+        var packages = RequestQueue.WidgetPackages.Dequeue().Where(File.Exists).ToList();
+        if (packages.Count == 0) return;
+        ShowSettings("gallery");
+        foreach (var package in packages)
+            _settings?.InstallWidgetPackage(package);
     }
 
     /// <summary>Appends "pin" requests from Explorer to the end of pinned applications.</summary>

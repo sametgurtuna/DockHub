@@ -25,7 +25,7 @@ public sealed record FeaturedWidget(string Id, string EnglishName, string Englis
 /// </summary>
 public static class WebWidgetDownloader
 {
-    private const long MaxPackageBytes = 20 * 1024 * 1024;
+    private const long MaxPackageBytes = WebWidgetCatalog.MaxPackageBytes;
     private const long MaxFileBytes = 5 * 1024 * 1024;
     private const int MaxFiles = 64;
 

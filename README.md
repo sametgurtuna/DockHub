@@ -447,6 +447,7 @@ src/CustomDock/              Produces DockHub.exe
     ├── Calendar/  Clipboard/  Stack/  Currency/  Todo/  Screenshot/
     └── AI/ (AI usage)  Weather/  Web/ (HTML/JavaScript widgets, link installs)
 packaging/winget/            winget manifest templates (submitted by .github/workflows/winget.yml)
+packaging/signing/           Optional code signing of releases (Azure Artifact Signing) and how to set it up
 samples/widgets/             Web widget examples (hello-world, github-stars, github-pulls, github-actions, home-assistant)
                              and index.json, the community list shown in the gallery
 tools/generate-icon.ps1      Renders Assets/DockHub.ico
@@ -589,7 +590,7 @@ Only weather and city search requests to Open-Meteo, plus whatever the widgets y
 <details>
 <summary><b>An app doesn't show up on the dock, or its icon is missing. What can I do?</b></summary>
 
-Open *Settings › About › Copy diagnostics* and paste the result into an issue. It lists every window DockHub knows about, why it is or isn't shown, and whether each pinned app's icon and path were found. From a terminal, `plans/tools/window-diag.ps1 -ProcessName <name>` shows the same window details for one app. Setting `"debugLogging": true` in `config.json` (or `DOCKHUB_DEBUG=1`) writes extra detail to `log.txt`.
+Open *Settings › About › Report a problem*. It opens a bug report with your DockHub and Windows versions, language and widgets filled in, and copies a diagnostics report you can paste into it (*Copy diagnostics* copies the report alone). The report lists every window DockHub knows about, why it is or isn't shown, and whether each pinned app's icon and path were found. From a terminal, `plans/tools/window-diag.ps1 -ProcessName <name>` shows the same window details for one app. Setting `"debugLogging": true` in `config.json` (or `DOCKHUB_DEBUG=1`) writes extra detail to `log.txt`.
 
 Pins of apps that update themselves into versioned folders (Discord, Slack, Microsoft Store apps) are repaired automatically on start.
 </details>

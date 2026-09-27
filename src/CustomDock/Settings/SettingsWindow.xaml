@@ -836,6 +836,10 @@
                                     Description="Copies how DockHub sees open windows and pinned apps to the clipboard (and log.txt). Useful when an app doesn't show up on the dock or its icon is missing.">
                         <Button x:Name="DiagnosticsButton" Content="Copy" Click="OnCopyDiagnosticsClick" />
                     </ctl:SettingRow>
+                    <ctl:SettingRow x:Name="ReportProblemRow" Glyph="&#xE939;" Header="Report a problem"
+                                    Description="Opens a bug report on GitHub with your DockHub and Windows versions, language and widgets filled in, and copies the diagnostics report.">
+                        <Button Content="Report…" Click="OnReportProblemClick" />
+                    </ctl:SettingRow>
                     <TextBlock Text="Tips" Style="{StaticResource SectionHeader}" />
                     <ctl:SettingRow Glyph="&#xE962;" Header="Right-click the dock" Description="Add widgets, pin apps, change position, and toggle auto-hide." />
                     <ctl:SettingRow Glyph="&#xE8A7;" Header="Window previews" Description="Hover a running app to preview its windows. Click a preview to switch to it, middle-click to close it." />

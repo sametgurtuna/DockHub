@@ -1,0 +1,67 @@
+name: Bug report
+description: Something in DockHub doesn't work as it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a problem. **Settings › About › Report a problem** fills in the version,
+        Windows and setup fields for you.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: What went wrong, and what did you expect instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: If you can make it happen again, how?
+      placeholder: |
+        1. Right-click the dock
+        2. ...
+
+  - type: input
+    id: version
+    attributes:
+      label: DockHub version
+      description: Settings › About
+      placeholder: 0.9.0
+    validations:
+      required: true
+
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      placeholder: Windows 11 24H2 (build 26100.4061)
+    validations:
+      required: true
+
+  - type: textarea
+    id: setup
+    attributes:
+      label: Setup
+      description: Language, taskbar mode, number of displays and the widgets on your dock.
+      render: text
+
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics (optional)
+      description: |
+        Report a problem (and Settings › About › Copy diagnostics) puts a diagnostics report on your clipboard. Paste it
+        here only if it helps, for example when an app or its icon is missing from the dock. It lists the titles of your
+        open windows and the paths of your pinned apps, so remove anything private first.
+      render: text
+
+  - type: textarea
+    id: log
+    attributes:
+      label: Log (optional)
+      description: The end of `%AppData%\DockHub\log.txt` around the time of the problem, if it shows an error.
+      render: text

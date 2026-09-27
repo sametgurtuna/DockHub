@@ -1,8 +1,11 @@
 # Publishes DockHub (self-contained, win-x64) and compiles the Inno Setup installer.
 # Usage: pwsh installer/build.ps1
+# The release workflow runs it in two stages (-Stage Publish, then -Stage Installer) to sign DockHub.exe in between.
 param(
     [string]$Configuration = 'Release',
-    [string]$Runtime = 'win-x64'
+    [string]$Runtime = 'win-x64',
+    [ValidateSet('All', 'Publish', 'Installer')]
+    [string]$Stage = 'All'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -14,11 +17,17 @@ $version = ($proj.Project.PropertyGroup | Where-Object { $_.Version } | Select-O
 if (-not $version) { throw 'Version not found in CustomDock.csproj' }
 
 $publish = Join-Path $root "artifacts\publish\$Runtime"
-if (Test-Path $publish) { Remove-Item $publish -Recurse -Force }
-
-dotnet publish $project -c $Configuration -r $Runtime --self-contained true `
-    -p:PublishReadyToRun=true -p:DebugType=None -p:DebugSymbols=false -o $publish
-if ($LASTEXITCODE) { throw 'dotnet publish failed' }
+if ($Stage -ne 'Installer') {
+    if (Test-Path $publish) { Remove-Item $publish -Recurse -Force }
+    dotnet publish $project -c $Configuration -r $Runtime --self-contained true `
+        -p:PublishReadyToRun=true -p:DebugType=None -p:DebugSymbols=false -o $publish
+    if ($LASTEXITCODE) { throw 'dotnet publish failed' }
+    Write-Host "Published: $publish"
+    if ($Stage -eq 'Publish') { return }
+}
+elseif (-not (Test-Path (Join-Path $publish 'DockHub.exe'))) {
+    throw "Nothing published in $publish yet; run with -Stage Publish first."
+}
 
 $iscc = @(
     "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe",

@@ -466,6 +466,8 @@
   "Conditions": "Koşullar",
   "Hourly forecast": "Saatlik tahmin",
   "AI usage": "Yapay zekâ kullanımı",
+  "AI": "Yapay zekâ",
+  "GPU": "GPU",
   "Claude Code subscription usage: 5-hour and weekly limits. Checked in the background with the local Claude CLI ('claude -p /usage').": "Claude Code abonelik kullanımı: 5 saatlik ve haftalık limitler. Yerel Claude CLI ile arka planda denetlenir ('claude -p /usage').",
   "Audio device": "Ses cihazı",
   "Quick switch between headphones and speakers, volume adjustment with mouse wheel, and mute.": "Kulaklık ile hoparlör arasında hızlı geçiş, fare tekerleğiyle ses ayarı ve sessize alma.",

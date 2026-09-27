@@ -42,7 +42,16 @@ public static class CurrencyService
         var response = await Http.GetFromJsonAsync<RangeResponse>(url).ConfigureAwait(true)
                        ?? throw new InvalidOperationException("Empty response");
 
-        var days = response.Rates.OrderBy(r => r.Key, StringComparer.Ordinal).ToList();
+        var quotes = BuildQuotes(baseCurrency, wanted, response.Rates);
+        Cache[key] = (DateTime.Now, quotes);
+        return quotes;
+    }
+
+    /// <summary>Quotes from a Frankfurter range answer (date → currency → rate), oldest day first in each history.</summary>
+    internal static List<CurrencyQuote> BuildQuotes(string baseCurrency, IEnumerable<string> wanted,
+        Dictionary<string, Dictionary<string, double>> rates)
+    {
+        var days = rates.OrderBy(r => r.Key, StringComparer.Ordinal).ToList();
         var quotes = new List<CurrencyQuote>();
         foreach (var target in wanted)
         {
@@ -50,9 +59,9 @@ public static class CurrencyService
             if (series.Count == 0) continue;
             var latest = series[^1];
             quotes.Add(new CurrencyQuote(baseCurrency, target, latest.Rate, series.Count > 1 ? series[^2].Rate : null,
-                series.Select(s => s.Rate).ToList(), DateTime.TryParse(latest.Date, out var date) ? date : DateTime.Today));
+                series.Select(s => s.Rate).ToList(),
+                DateTime.TryParse(latest.Date, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var date) ? date : DateTime.Today));
         }
-        Cache[key] = (DateTime.Now, quotes);
         return quotes;
     }
 

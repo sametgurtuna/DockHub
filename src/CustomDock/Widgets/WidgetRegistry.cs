@@ -28,6 +28,11 @@ public sealed class WidgetDescriptor
 
     public required string Description { get => L.T(_description); init => _description = value; }
 
+    /// <summary>The untranslated name and description (the translation keys).</summary>
+    internal string EnglishName => _name;
+
+    internal string EnglishDescription => _description;
+
     /// <summary>Outline icon drawn in a 24×24 box.</summary>
     public required string IconPath { get; init; }
 

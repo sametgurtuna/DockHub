@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -23,10 +22,6 @@ namespace CustomDock.Dock;
 public sealed class AppButton : Grid
 {
     private const double IconSize = 30;
-
-    private static readonly Regex BadgeRx = new(
-        @"(?:^|[\(\[])\s*(\d{1,4}\+?)\s*(?:[\)\]]|$)|[\(\[]\s*(\d{1,4}\+?)\s*[\)\]]",
-        RegexOptions.Compiled);
 
     private readonly Border _hover;
     private readonly Image _icon;
@@ -379,25 +374,7 @@ public sealed class AppButton : Grid
             return;
         }
 
-        string? badgeText = null;
-        bool hasDot = false;
-
-        foreach (var window in group.Windows)
-        {
-            if (string.IsNullOrWhiteSpace(window.Title)) continue;
-
-            var match = BadgeRx.Match(window.Title);
-            if (match.Success)
-            {
-                badgeText = !string.IsNullOrEmpty(match.Groups[1].Value) ? match.Groups[1].Value : match.Groups[2].Value;
-                break;
-            }
-
-            if (window.Title.StartsWith("•") || window.Title.StartsWith("*") || window.Title.Contains(" • ") || window.Title.Contains(" * "))
-            {
-                hasDot = true;
-            }
-        }
+        var (badgeText, hasDot) = AppButtonBadge.FromTitles(group.Windows.Select(w => w.Title));
 
         if (!string.IsNullOrEmpty(badgeText))
         {

@@ -264,7 +264,7 @@ public static class WidgetRegistry
         new()
         {
             Id = "currency", Name = "Exchange rates", Category = WidgetCategories.Productivity,
-            Description = "Daily exchange rates from the European Central Bank with the change since the previous day and a two-week trend.",
+            Description = "Daily exchange rates from the European Central Bank and crypto prices (BTC, ETH and more) with the change since the previous day and a two-week trend.",
             IconPath = CurrencyWidget.Icon, AccentKey = "AccentGreenBrush",
             Variants = new[] { new WidgetVariant("single", "Single pair", WidgetWidth.Standard), new WidgetVariant("list", "Several pairs", WidgetWidth.Standard) },
             Factory = () => new CurrencyWidget(), SettingsType = typeof(CurrencySettings),

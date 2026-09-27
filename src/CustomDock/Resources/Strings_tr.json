@@ -705,7 +705,7 @@
   "Exchange rates": "Döviz kurları",
   "Single pair": "Tek parite",
   "Several pairs": "Birden çok parite",
-  "Daily exchange rates from the European Central Bank with the change since the previous day and a two-week trend.": "Avrupa Merkez Bankası'nın günlük döviz kurları; önceki güne göre değişim ve iki haftalık eğilimle.",
+  "Daily exchange rates from the European Central Bank and crypto prices (BTC, ETH and more) with the change since the previous day and a two-week trend.": "Avrupa Merkez Bankası'nın günlük döviz kurları ve kripto fiyatları (BTC, ETH ve diğerleri); önceki güne göre değişim ve iki haftalık eğilim.",
   "Clipboard": "Pano",
   "Nothing copied yet": "Henüz bir şey kopyalanmadı",
   "Last copied: {0}": "Son kopyalanan: {0}",
@@ -740,7 +740,8 @@
   "A notification before each event.": "Her etkinlikten önce bir bildirim.",
   "Base currency": "Temel para birimi",
   "Show against": "Karşılaştırılacaklar",
-  "Currency codes separated by commas, for example TRY, EUR, GBP.": "Virgülle ayrılmış para birimi kodları, örneğin TRY, EUR, GBP.",
+  "Currency codes or crypto symbols separated by commas, for example TRY, EUR, BTC.": "Virgülle ayrılmış para birimi kodları veya kripto sembolleri, örneğin TRY, EUR, BTC.",
+  "Crypto prices from CoinGecko": "Kripto fiyatları CoinGecko'dan",
   "Leave empty for your Downloads folder.": "İndirilenler klasörü için boş bırakın.",
 
   // ---------------------------------------------------------------- Web widget'ları

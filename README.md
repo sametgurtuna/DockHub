@@ -207,7 +207,7 @@ Every widget can be added more than once, and each copy has its own settings. Ch
 | Productivity | **Calendar** | Next event, Time until | Your next meeting from any iCal (.ics) link (Google, Outlook...), a **Join** button for Teams, Meet and Zoom, today's agenda and a reminder before events. |
 | | **Clipboard history** | Latest item, Icon only | The last 25 copied texts and images; click to copy again, pin favorites. Memory only; password managers are skipped. |
 | | **Folder stack** | Stack, Detailed | Newest files of Downloads (or any folder); drag files out into other apps. |
-| | **Exchange rates** | Single pair, Several pairs | Daily ECB rates via [Frankfurter](https://frankfurter.dev/), change since the previous day and a two-week trend. |
+| | **Exchange rates** | Single pair, Several pairs | Daily ECB rates via [Frankfurter](https://frankfurter.dev/) and crypto prices (BTC, ETH, SOL and 16 more) via [CoinGecko](https://www.coingecko.com/), with the change since the previous day and a two-week trend. Mix both in one list, for example `TRY, EUR, BTC`. |
 | | **To do** | List, Count | Today's tasks: a simple list kept on this PC or today's and overdue tasks from [Todoist](https://todoist.com/) (personal API token, stored encrypted). Tick to complete, type to add. |
 | | **Screenshot** | Icon only, Buttons | Opens the Windows snipping overlay, or saves every screen to *Pictures › Screenshots* and copies it, with an optional delay. |
 
@@ -404,7 +404,7 @@ An app item's `path` can be an `.exe`, an `.lnk` shortcut, any file, or a Store 
 - **Microphone indicator.** DockHub reads which apps use the microphone from the same Windows privacy records as the Windows microphone icon; it never opens the microphone itself.
 - **Notification count.** Read from the Windows notification database of your account (read-only), only while the option is on.
 - **Wi-Fi and Bluetooth widget.** Uses the Windows radio API; if Windows doesn't allow it, the buttons open the matching Settings page instead.
-- **Network.** DockHub itself only contacts `api.open-meteo.com` (weather), `geocoding-api.open-meteo.com` (city search), `api.frankfurter.dev` (only with the Exchange rates widget), the calendar links you enter (Calendar widget) and, once a day unless you turn it off, `api.github.com` to look for a newer release. The *AI usage* widget, if you add it, runs your locally installed Claude CLI (`claude -p /usage`) at the interval you choose, and that CLI talks to Anthropic with your own login; for Codex and Gemini CLI it only reads the logs those tools keep in your user folder (`~/.codex/sessions`, `~/.gemini/tmp`). The *To do* widget talks to `api.todoist.com` only when you set it to Todoist, and installing a web widget from a link downloads it from that link. There is no telemetry.
+- **Network.** DockHub itself only contacts `api.open-meteo.com` (weather), `geocoding-api.open-meteo.com` (city search), `api.frankfurter.dev` and, for crypto symbols, `api.coingecko.com` (only with the Exchange rates widget), the calendar links you enter (Calendar widget) and, once a day unless you turn it off, `api.github.com` to look for a newer release. The *AI usage* widget, if you add it, runs your locally installed Claude CLI (`claude -p /usage`) at the interval you choose, and that CLI talks to Anthropic with your own login; for Codex and Gemini CLI it only reads the logs those tools keep in your user folder (`~/.codex/sessions`, `~/.gemini/tmp`). The *To do* widget talks to `api.todoist.com` only when you set it to Todoist, and installing a web widget from a link downloads it from that link. There is no telemetry.
 
 ## Project structure
 
@@ -581,7 +581,7 @@ No. DockHub installs and runs as a normal user.
 <details>
 <summary><b>Does it send any data?</b></summary>
 
-Only weather and city search requests to Open-Meteo, plus whatever the widgets you add need (exchange rates, your calendar links, Todoist, web widgets' declared hosts) and a daily update check you can turn off. If you add the AI usage widget with Claude Code, your local Claude CLI checks your usage with your own account. There is no DockHub account and no telemetry.
+Only weather and city search requests to Open-Meteo, plus whatever the widgets you add need (exchange rates and crypto prices, your calendar links, Todoist, web widgets' declared hosts) and a daily update check you can turn off. If you add the AI usage widget with Claude Code, your local Claude CLI checks your usage with your own account. There is no DockHub account and no telemetry.
 </details>
 
 <details>

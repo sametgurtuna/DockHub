@@ -22,7 +22,10 @@ public sealed class CurrencySettings : ObservableObject
     public IReadOnlyList<string> TargetList => Targets.Split(new[] { ',', ' ', ';' }, StringSplitOptions.RemoveEmptyEntries);
 }
 
-/// <summary>Exchange rates with the daily change and a two-week trend line (ECB data via Frankfurter).</summary>
+/// <summary>
+/// Exchange rates and crypto prices with the daily change and a two-week trend line (ECB data via Frankfurter,
+/// crypto via CoinGecko).
+/// </summary>
 public partial class CurrencyWidget : WidgetBase
 {
     public const string Icon = "M12,3 A9,9 0 1 1 11.99,3 Z M14.8,8.5 C14.2,7.6 13.2,7.2 12,7.2 C10.4,7.2 9.3,8 9.3,9.2 C9.3,11.9 14.9,10.8 14.9,13.8 C14.9,15.1 13.6,16 12,16 C10.6,16 9.5,15.4 9,14.4 M12,5.8 V7.2 M12,16 V17.8";
@@ -136,7 +139,7 @@ public partial class CurrencyWidget : WidgetBase
                 Margin = new Thickness(0, 0, 14, 0),
                 Children =
                 {
-                    new TextBlock { Text = quote.Target, Style = (Style)FindResource("CaptionText") },
+                    new TextBlock { Text = quote.Symbol, Style = (Style)FindResource("CaptionText") },
                     new TextBlock { Text = Format(quote.Rate), Style = (Style)FindResource("TitleText"), FontSize = 13 },
                     change,
                 },
@@ -144,7 +147,8 @@ public partial class CurrencyWidget : WidgetBase
         }
 
         var lines = _quotes.Select(q => $"1 {q.Base} = {Format(q.Rate)} {q.Target}  {Change(q)}").ToList();
-        if (first is not null) lines.Add(L.T("ECB rate of {0}", first.Date.ToString("d", CultureInfo.CurrentCulture)));
+        if (_quotes.FirstOrDefault(q => !q.IsCrypto) is { } ecb) lines.Add(L.T("ECB rate of {0}", ecb.Date.ToString("d", CultureInfo.CurrentCulture)));
+        if (_quotes.Any(q => q.IsCrypto)) lines.Add(L.T("Crypto prices from CoinGecko"));
         if (_error is not null) lines.Add(_error);
         ToolTip = string.Join("\n", lines);
         Opacity = _error is not null && first is null ? 0.6 : 1;

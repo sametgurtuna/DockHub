@@ -1,0 +1,44 @@
+{
+  // Devices whose battery DockHub reads over HID. %AppData%\DockHub\battery-devices.json uses the same format;
+  // its entries are added to these and replace an entry with the same protocol, vid and pid.
+  //   protocol: hyperx | compx
+  //   vid, pid: four hex digits (leave pid out to match every product of the vendor)
+  //   name:     shown on the dock; "{pid}" is replaced with the product id
+  //   kind:     headset | mouse | keyboard | controller (picks the icon)
+  //   id:       optional stable id (lower-case letters, digits, dashes); entries with the same id are one device
+  //   wired:    true when this product id means the device is plugged in with its cable (shown as charging)
+  "devices": [
+    // ---------------------------------------------------------------- HyperX (Kingston 0951, HP 03F0)
+    { "protocol": "hyperx", "vid": "0951", "pid": "1718", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "0951", "pid": "018B", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "0951", "pid": "017B", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "0951", "pid": "0B92", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "0951", "pid": "16EA", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "0951", "pid": "16EB", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "0951", "pid": "0D93", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "0951", "pid": "0696", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "0951", "pid": "0186", "name": "HyperX Cloud Core Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "0951", "pid": "0188", "name": "HyperX Cloud Alpha Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "0951", "pid": "0914", "name": "HyperX Cloud Flight", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "0951", "pid": "0185", "name": "HyperX Cloud Flight", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "0951", "name": "HyperX Headset ({pid})", "kind": "headset" },
+
+    { "protocol": "hyperx", "vid": "03F0", "pid": "1718", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "03F0", "pid": "018B", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "03F0", "pid": "017B", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "03F0", "pid": "0B92", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "03F0", "pid": "16EA", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "03F0", "pid": "16EB", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "03F0", "pid": "0D93", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "03F0", "pid": "0696", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "03F0", "pid": "0186", "name": "HyperX Cloud Core Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "03F0", "pid": "0188", "name": "HyperX Cloud Alpha Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "03F0", "pid": "0914", "name": "HyperX Cloud Flight", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "03F0", "pid": "0185", "name": "HyperX Cloud Flight", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "03F0", "name": "HyperX Headset ({pid})", "kind": "headset" },
+
+    // ---------------------------------------------------------------- Compx chipset mice
+    { "protocol": "compx", "vid": "25A7", "pid": "FA7B", "id": "lamzu-atlantis-mini", "name": "LAMZU Atlantis Mini", "kind": "mouse", "wired": true },
+    { "protocol": "compx", "vid": "25A7", "pid": "FA7C", "id": "lamzu-atlantis-mini", "name": "LAMZU Atlantis Mini", "kind": "mouse" }
+  ]
+}

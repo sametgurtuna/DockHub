@@ -24,10 +24,14 @@ public partial class BatteryDevicesWidget : WidgetBase
     private const string HeadsetIconPath = "M12,3 A9,9 0 0 0 3,12 V18 A3,3 0 0 0 6,21 H7 A2,2 0 0 0 9,19 V15 A2,2 0 0 0 7,13 H5 V12 A7,7 0 0 1 19,12 V13 H17 A2,2 0 0 0 15,15 V19 A2,2 0 0 0 17,21 H18 A3,3 0 0 0 21,18 V12 A9,9 0 0 0 12,3 Z";
     private const string MouseIconPath = "M12,2 C8.7,2 6,4.7 6,8 V16 C6,19.3 8.7,22 12,22 C15.3,22 18,19.3 18,16 V8 C18,4.7 15.3,2 12,2 Z M11,4.1 V9 H8 V8 C8,5.8 9.3,4.1 11,4.1 Z M13,4.1 C14.7,4.1 16,5.8 16,8 V9 H13 V4.1 Z";
     private const string BatteryIconPath = "M4,7 H18 A2,2 0 0 1 20,9 V15 A2,2 0 0 1 18,17 H4 A2,2 0 0 1 2,15 V9 A2,2 0 0 1 4,7 Z M20,11 H22 V13 H20 Z";
+    private const string KeyboardIconPath = "M3,6 H21 A1,1 0 0 1 22,7 V17 A1,1 0 0 1 21,18 H3 A1,1 0 0 1 2,17 V7 A1,1 0 0 1 3,6 Z M5,9 V11 H7 V9 Z M9,9 V11 H11 V9 Z M13,9 V11 H15 V9 Z M17,9 V11 H19 V9 Z M7,13.5 V15.5 H17 V13.5 Z";
+    private const string ControllerIconPath = "M7,7 H17 C20,7 22,10 22,14 C22,17 20.5,18.5 19,18.5 C17.5,18.5 16.5,17 15.5,16 H8.5 C7.5,17 6.5,18.5 5,18.5 C3.5,18.5 2,17 2,14 C2,10 4,7 7,7 Z M6,10 V11.5 H4.5 V13 H6 V14.5 H7.5 V13 H9 V11.5 H7.5 V10 Z M15,11.5 A1,1 0 1 1 17,11.5 A1,1 0 1 1 15,11.5 Z M17,13.5 A1,1 0 1 1 19,13.5 A1,1 0 1 1 17,13.5 Z";
 
     private static readonly Geometry HeadsetGeometry = Geometry.Parse(HeadsetIconPath);
     private static readonly Geometry MouseGeometry = Geometry.Parse(MouseIconPath);
     private static readonly Geometry BatteryGeometry = Geometry.Parse(BatteryIconPath);
+    private static readonly Geometry KeyboardGeometry = Geometry.Parse(KeyboardIconPath);
+    private static readonly Geometry ControllerGeometry = Geometry.Parse(ControllerIconPath);
 
     private BatteryDevicesSettings _settings = new();
 
@@ -36,6 +40,8 @@ public partial class BatteryDevicesWidget : WidgetBase
         HeadsetGeometry.Freeze();
         MouseGeometry.Freeze();
         BatteryGeometry.Freeze();
+        KeyboardGeometry.Freeze();
+        ControllerGeometry.Freeze();
     }
 
     public BatteryDevicesWidget()
@@ -147,12 +153,23 @@ public partial class BatteryDevicesWidget : WidgetBase
         return ("AccentRedBrush", "RedTrackBrush");
     }
 
-    private static Geometry GetDeviceGeometry(BatteryDeviceInfo dev)
+    private static Geometry GetDeviceGeometry(BatteryDeviceInfo dev) => dev.EffectiveKind switch
     {
-        if (dev.IsHeadset) return HeadsetGeometry;
-        if (dev.IsMouse) return MouseGeometry;
-        return BatteryGeometry;
-    }
+        BatteryDeviceKind.Headset => HeadsetGeometry,
+        BatteryDeviceKind.Mouse => MouseGeometry,
+        BatteryDeviceKind.Keyboard => KeyboardGeometry,
+        BatteryDeviceKind.Controller => ControllerGeometry,
+        _ => BatteryGeometry,
+    };
+
+    private static string KindLabel(BatteryDeviceInfo dev) => dev.EffectiveKind switch
+    {
+        BatteryDeviceKind.Headset => L.T("Headset"),
+        BatteryDeviceKind.Mouse => L.T("Mouse"),
+        BatteryDeviceKind.Keyboard => L.T("Keyboard"),
+        BatteryDeviceKind.Controller => L.T("Controller"),
+        _ => L.T("Battery"),
+    };
 
     private static Grid CreateRing(BatteryDeviceInfo dev, double size, double iconSize, double thickness)
     {
@@ -350,7 +367,7 @@ public partial class BatteryDevicesWidget : WidgetBase
         {
             var (fillKey, trackKey) = GetBrushKeys(primary.BatteryPercent, primary.IsCharging);
             tile.ShowRing(primary.BatteryPercent, 100, fillKey, trackKey, primary.BatteryPercent.ToString(CultureInfo.CurrentCulture));
-            tile.Text = L.T(primary.IsHeadset ? "Headset" : (primary.IsMouse ? "Mouse" : "Battery"));
+            tile.Text = KindLabel(primary);
         }
         else
         {

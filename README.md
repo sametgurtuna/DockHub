@@ -198,7 +198,7 @@ Every widget can be added more than once, and each copy has its own settings. Ch
 | | **Network** | Numbers only, With graph | Live download and upload speed. |
 | | **Status** | Rings, Percentage ring, Icons only | Battery, disk, memory and processor. |
 | | **Recycle bin** | Icon only, Detailed | Drag files onto it to delete them, click to open, right-click to empty. |
-| | **Device batteries** | Single device, Multiple devices | Battery levels for Bluetooth and USB peripherals (HyperX Cloud II Wireless, LAMZU Atlantis Mini, wireless headsets, mice, keyboards). Click it to see every device and choose which one the dock shows. |
+| | **Device batteries** | Single device, Multiple devices | Battery levels of connected Bluetooth (classic and Low Energy) headsets, mice, keyboards and controllers, plus [USB receivers](docs/battery-devices.md) such as HyperX Cloud II Wireless and LAMZU Atlantis Mini. Click it to see every device and choose which one the dock shows. |
 | | **GPU** | Numbers, Rings, Bars | Graphics card load and video memory from the Task Manager counters. |
 | | **Brightness** | Slider, Icon only | Scroll to change the brightness of laptop screens and DDC/CI monitors; shows when night light is on. |
 | | **Wi-Fi and Bluetooth** | Buttons, Icon only | Turn Wi-Fi and Bluetooth on or off in one click, like Quick Settings. |
@@ -346,6 +346,7 @@ The `DOCKHUB_HOME` environment variable changes the settings and data folder, wh
 | `%AppData%\DockHub\backups\` | A copy of `config.json` from each of the last 7 days, plus the state saved before an import |
 | `%AppData%\DockHub\widgets\` | Installed web widgets, one folder each |
 | `%AppData%\DockHub\data\todo-<item>.json` | Tasks of a local To do widget |
+| `%AppData%\DockHub\battery-devices.json` | Optional: extra devices for the Device batteries widget ([format](docs/battery-devices.md#adding-a-device)) |
 
 - Files are written to a temporary file first and then moved into place, so an interrupted write never corrupts them.
 - A corrupt `config.json` is backed up as `config.json.corrupt-<date>` and DockHub loads the newest daily backup (and tells you); only without one does it start with defaults.
@@ -427,7 +428,8 @@ src/CustomDock/              Produces DockHub.exe
 │   └── AppKeys.cs, TrayPreferences.cs, DefaultItems.cs
 ├── Services/                Clock, system, GPU and network monitors, media (SMTC), weather (with WeatherHub cache),
 │                            notifications, reminders, hydration, app launcher, keyboard layouts, microphone,
-│                            notification center, virtual desktops, brightness, radios, AI usage, Todoist
+│                            notification center, virtual desktops, brightness, radios, AI usage, Todoist,
+│                            Battery/ (device batteries: Bluetooth, HID protocols, device catalog)
 ├── Dock/                    DockWindow (zones, scrolling, drag and drop, position, auto-hide), AppButton,
 │                            WidgetItemView (card, vertical tile and panel), GroupItemView (folders),
 │                            WindowPreviewWindow (live thumbnails), GenieEffectHelper, PopupAnimationHelper,
@@ -446,7 +448,7 @@ src/CustomDock/              Produces DockHub.exe
 packaging/winget/            winget manifest templates (submitted by .github/workflows/winget.yml)
 samples/widgets/             Web widget examples: hello-world, github-stars, github-pulls
 tools/generate-icon.ps1      Renders Assets/DockHub.ico
-docs/images/                 README artwork
+docs/                        Widget SDK and supported battery devices; images/ holds the README artwork
 ```
 
 ## Web widgets (HTML and JavaScript)

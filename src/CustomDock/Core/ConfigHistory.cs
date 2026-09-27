@@ -100,6 +100,7 @@ public sealed class ConfigHistory
         live.Widget = snapshot.Widget;
         live.Variant = snapshot.Variant;
         live.PinnedEnd = snapshot.PinnedEnd;
+        live.Display = snapshot.Display;
         live.GroupName = snapshot.GroupName;
         live.GroupAccent = snapshot.GroupAccent;
         live.Children = snapshot.Children?.Select(c => Reuse(c, existing)).ToList();

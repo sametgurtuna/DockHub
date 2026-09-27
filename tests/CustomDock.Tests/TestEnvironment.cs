@@ -16,6 +16,17 @@ internal static class TestEnvironment
 
     public static string Fixture(string relativePath)
         => File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", relativePath));
+
+    /// <summary>The repository checkout the tests were built from (the folder holding CustomDock.sln).</summary>
+    public static string RepositoryRoot
+    {
+        get
+        {
+            var dir = new DirectoryInfo(AppContext.BaseDirectory);
+            while (dir is not null && !File.Exists(Path.Combine(dir.FullName, "CustomDock.sln"))) dir = dir.Parent;
+            return dir?.FullName ?? throw new DirectoryNotFoundException("CustomDock.sln not found above the test folder");
+        }
+    }
 }
 
 /// <summary>Tests that read or write config.json share one file, so they must not run in parallel.</summary>

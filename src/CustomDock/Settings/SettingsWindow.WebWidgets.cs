@@ -21,8 +21,13 @@ public partial class SettingsWindow
             Filter = "DockHub widget (*.dockwidget;*.zip)|*.dockwidget;*.zip",
         };
         if (dialog.ShowDialog(this) != true) return;
+        InstallWidgetPackage(dialog.FileName);
+    }
 
-        var manifest = WebWidgetCatalog.Inspect(dialog.FileName, out _, out var error);
+    /// <summary>Checks a .dockwidget package, shows what it can reach, and installs it when the user agrees.</summary>
+    public void InstallWidgetPackage(string packagePath)
+    {
+        var manifest = WebWidgetCatalog.Inspect(packagePath, out _, out var error);
         if (manifest is null)
         {
             ConfirmDialog.Show(L.T("Can't install this widget"), error ?? "", "", this, new DialogButton("ok", "OK", DialogButtonKind.Primary));
@@ -37,6 +42,11 @@ public partial class SettingsWindow
         var permissions = new List<string>();
         if (manifest.Permissions.Network.Count > 0)
             permissions.Add(L.T("Internet access to: {0}", string.Join(", ", manifest.Permissions.Network)));
+        foreach (string key in manifest.Permissions.NetworkFromSettings)
+        {
+            string label = manifest.Settings.FirstOrDefault(s => s.Key == key)?.Label ?? key;
+            permissions.Add(L.T("Internet access to the address you enter in “{0}” (also plain http, for servers on your network)", label));
+        }
         if (manifest.Permissions.Notifications) permissions.Add(L.T("Show notifications"));
         if (permissions.Count == 0) permissions.Add(L.T("No internet access, no notifications"));
         string message = $"{manifest.Description}\n\n{L.T("Version {0}", manifest.Version)}" +
@@ -129,10 +139,26 @@ public partial class SettingsWindow
 
     // ------------------------------------------------------------------ Featured
 
+    private bool _indexRefreshStarted;
+
+    /// <summary>The community list: the kept copy at once, then the fresh one when it arrives (at most daily).</summary>
     private void BuildFeaturedWidgets()
     {
+        ShowWidgetIndex(WebWidgetIndex.Current());
+        if (_indexRefreshStarted) return;
+        _indexRefreshStarted = true;
+        _ = RefreshWidgetIndexAsync();
+    }
+
+    private async Task RefreshWidgetIndexAsync()
+    {
+        if (await WebWidgetIndex.RefreshAsync(WebWidgetDownloader.Client) is { } fresh) ShowWidgetIndex(fresh);
+    }
+
+    private void ShowWidgetIndex(IReadOnlyList<WidgetIndexEntry> entries)
+    {
         FeaturedWidgetsPanel.Children.Clear();
-        foreach (var featured in WebWidgetDownloader.Featured)
+        foreach (var featured in entries)
         {
             var installed = WebWidgetCatalog.Installed.FirstOrDefault(m => m.Id == featured.Id);
             var button = new Button
@@ -147,7 +173,7 @@ public partial class SettingsWindow
             button.Click += async (_, _) => await DownloadAndInstallAsync(featured.Links, button, null);
 
             var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 12, 0) };
-            var title = new TextBlock { Text = featured.Name };
+            var title = new TextBlock { Text = featured.Author is { Length: > 0 } author && author != "DockHub" ? $"{featured.Name} · {author}" : featured.Name };
             title.SetResourceReference(StyleProperty, "SettingTitle");
             var description = new TextBlock { Text = featured.Description };
             description.SetResourceReference(StyleProperty, "SettingDescription");

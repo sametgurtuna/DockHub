@@ -32,9 +32,74 @@ jobs:
       - name: Install Inno Setup
         run: choco install innosetup -y --no-progress
 
+      # Code signing is optional: without the secrets and variables in packaging/signing/README.md the release is
+      # built exactly as before, unsigned, with a warning.
+      - name: Check code signing
+        id: signing
+        shell: pwsh
+        env:
+          CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ACCOUNT: ${{ vars.SIGNING_ACCOUNT }}
+        run: |
+          if ($env:CLIENT_ID -and $env:ACCOUNT) {
+            "enabled=true" >> $env:GITHUB_OUTPUT
+          } else {
+            "enabled=false" >> $env:GITHUB_OUTPUT
+            Write-Output "::warning::Code signing is not set up, so this release is unsigned (see packaging/signing/README.md)."
+          }
+
+      - name: Publish
+        shell: pwsh
+        run: pwsh installer/build.ps1 -Stage Publish
+
+      - name: Sign DockHub
+        if: steps.signing.outputs.enabled == 'true'
+        uses: azure/artifact-signing-action@v2
+        env:
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        with:
+          endpoint: ${{ vars.SIGNING_ENDPOINT }}
+          signing-account-name: ${{ vars.SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ vars.SIGNING_PROFILE }}
+          files: |
+            ${{ github.workspace }}\artifacts\publish\win-x64\DockHub.exe
+            ${{ github.workspace }}\artifacts\publish\win-x64\DockHub.dll
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
       - name: Build installer
         shell: pwsh
-        run: pwsh installer/build.ps1
+        run: pwsh installer/build.ps1 -Stage Installer
+
+      - name: Sign installer
+        if: steps.signing.outputs.enabled == 'true'
+        uses: azure/artifact-signing-action@v2
+        env:
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        with:
+          endpoint: ${{ vars.SIGNING_ENDPOINT }}
+          signing-account-name: ${{ vars.SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ vars.SIGNING_PROFILE }}
+          files: ${{ github.workspace }}\installer\Output\DockHub-Setup-${{ env.VERSION }}-x64.exe
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
+      - name: Verify signatures
+        if: steps.signing.outputs.enabled == 'true'
+        shell: pwsh
+        run: |
+          $files = @('artifacts/publish/win-x64/DockHub.exe', 'artifacts/publish/win-x64/DockHub.dll', "installer/Output/DockHub-Setup-$env:VERSION-x64.exe")
+          foreach ($file in $files) {
+            $signature = Get-AuthenticodeSignature $file
+            if ($signature.Status -ne 'Valid') { throw "$file is not signed correctly: $($signature.Status) $($signature.StatusMessage)" }
+            Write-Output "$file signed by $($signature.SignerCertificate.Subject)"
+          }
 
       - name: Checksum
         shell: pwsh

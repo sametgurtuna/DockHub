@@ -1,0 +1,91 @@
+{
+  // Devices whose battery DockHub reads over HID. %AppData%\DockHub\battery-devices.json uses the same format;
+  // its entries are added to these and replace an entry with the same protocol, vid and pid.
+  // Protocols and fields are described in docs/battery-devices.md.
+  //   protocol: hyperx | compx | playstation | razer | hidpp | hidrequest
+  //   vid, pid: four hex digits (leave pid out to match every product of the vendor)
+  //   name:     shown on the dock; "{pid}" is replaced with the product id
+  //   kind:     headset | mouse | keyboard | controller (picks the icon)
+  //   id:       optional stable id (lower-case letters, digits, dashes); entries with the same id are one device
+  //   wired:    true when this product id means the device is plugged in with its cable (shown as charging)
+  //   variant:  playstation: ds4 | dualsense; hidpp: receiver | device
+  "devices": [
+    // ---------------------------------------------------------------- HyperX (Kingston 0951, HP 03F0)
+    { "protocol": "hyperx", "vid": "0951", "pid": "1718", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "0951", "pid": "018B", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "0951", "pid": "017B", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "0951", "pid": "0B92", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "0951", "pid": "16EA", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "0951", "pid": "16EB", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "0951", "pid": "0D93", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "0951", "pid": "0696", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "0951", "pid": "0186", "name": "HyperX Cloud Core Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "0951", "pid": "0188", "name": "HyperX Cloud Alpha Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "0951", "pid": "0914", "name": "HyperX Cloud Flight", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "0951", "pid": "0185", "name": "HyperX Cloud Flight", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "0951", "name": "HyperX Headset ({pid})", "kind": "headset" },
+
+    { "protocol": "hyperx", "vid": "03F0", "pid": "1718", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "03F0", "pid": "018B", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "03F0", "pid": "017B", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "03F0", "pid": "0B92", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "03F0", "pid": "16EA", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "03F0", "pid": "16EB", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "03F0", "pid": "0D93", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "03F0", "pid": "0696", "name": "HyperX Cloud II Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "03F0", "pid": "0186", "name": "HyperX Cloud Core Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "03F0", "pid": "0188", "name": "HyperX Cloud Alpha Wireless", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "03F0", "pid": "0914", "name": "HyperX Cloud Flight", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "03F0", "pid": "0185", "name": "HyperX Cloud Flight", "kind": "headset" },
+    { "protocol": "hyperx", "vid": "03F0", "name": "HyperX Headset ({pid})", "kind": "headset" },
+
+    // ---------------------------------------------------------------- Compx chipset mice
+    { "protocol": "compx", "vid": "25A7", "pid": "FA7B", "id": "lamzu-atlantis-mini", "name": "LAMZU Atlantis Mini", "kind": "mouse", "wired": true },
+    { "protocol": "compx", "vid": "25A7", "pid": "FA7C", "id": "lamzu-atlantis-mini", "name": "LAMZU Atlantis Mini", "kind": "mouse" },
+
+    // ---------------------------------------------------------------- PlayStation controllers (Sony 054C)
+    { "protocol": "playstation", "vid": "054C", "pid": "05C4", "variant": "ds4", "name": "DualShock 4", "kind": "controller" },
+    { "protocol": "playstation", "vid": "054C", "pid": "09CC", "variant": "ds4", "name": "DualShock 4", "kind": "controller" },
+    { "protocol": "playstation", "vid": "054C", "pid": "0CE6", "variant": "dualsense", "name": "DualSense", "kind": "controller" },
+    { "protocol": "playstation", "vid": "054C", "pid": "0DF2", "variant": "dualsense", "name": "DualSense Edge", "kind": "controller" },
+
+    // ---------------------------------------------------------------- Razer mice (1532); cable and receiver share an id
+    { "protocol": "razer", "vid": "1532", "pid": "007A", "id": "razer-viper-ultimate", "name": "Razer Viper Ultimate", "kind": "mouse", "wired": true },
+    { "protocol": "razer", "vid": "1532", "pid": "007B", "id": "razer-viper-ultimate", "name": "Razer Viper Ultimate", "kind": "mouse" },
+    { "protocol": "razer", "vid": "1532", "pid": "007C", "id": "razer-deathadder-v2-pro", "name": "Razer DeathAdder V2 Pro", "kind": "mouse", "wired": true },
+    { "protocol": "razer", "vid": "1532", "pid": "007D", "id": "razer-deathadder-v2-pro", "name": "Razer DeathAdder V2 Pro", "kind": "mouse" },
+    { "protocol": "razer", "vid": "1532", "pid": "0083", "name": "Razer Basilisk X HyperSpeed", "kind": "mouse" },
+    { "protocol": "razer", "vid": "1532", "pid": "0086", "id": "razer-basilisk-ultimate", "name": "Razer Basilisk Ultimate", "kind": "mouse", "wired": true },
+    { "protocol": "razer", "vid": "1532", "pid": "0088", "id": "razer-basilisk-ultimate", "name": "Razer Basilisk Ultimate", "kind": "mouse" },
+    { "protocol": "razer", "vid": "1532", "pid": "008F", "id": "razer-naga-pro", "name": "Razer Naga Pro", "kind": "mouse", "wired": true },
+    { "protocol": "razer", "vid": "1532", "pid": "0090", "id": "razer-naga-pro", "name": "Razer Naga Pro", "kind": "mouse" },
+    { "protocol": "razer", "vid": "1532", "pid": "0094", "name": "Razer Orochi V2", "kind": "mouse" },
+    { "protocol": "razer", "vid": "1532", "pid": "009C", "name": "Razer DeathAdder V2 X HyperSpeed", "kind": "mouse" },
+    { "protocol": "razer", "vid": "1532", "pid": "00A5", "id": "razer-viper-v2-pro", "name": "Razer Viper V2 Pro", "kind": "mouse", "wired": true },
+    { "protocol": "razer", "vid": "1532", "pid": "00A6", "id": "razer-viper-v2-pro", "name": "Razer Viper V2 Pro", "kind": "mouse" },
+    { "protocol": "razer", "vid": "1532", "pid": "00AA", "id": "razer-basilisk-v3-pro", "name": "Razer Basilisk V3 Pro", "kind": "mouse", "wired": true },
+    { "protocol": "razer", "vid": "1532", "pid": "00AB", "id": "razer-basilisk-v3-pro", "name": "Razer Basilisk V3 Pro", "kind": "mouse" },
+    { "protocol": "razer", "vid": "1532", "pid": "00B6", "id": "razer-deathadder-v3-pro", "name": "Razer DeathAdder V3 Pro", "kind": "mouse", "wired": true },
+    { "protocol": "razer", "vid": "1532", "pid": "00B7", "id": "razer-deathadder-v3-pro", "name": "Razer DeathAdder V3 Pro", "kind": "mouse" },
+
+    // ---------------------------------------------------------------- Logitech HID++ 2.0 (046D)
+    // Receivers: the devices paired to them (slots 1-6) are read and named by the devices themselves.
+    { "protocol": "hidpp", "vid": "046D", "pid": "C52B", "variant": "receiver", "name": "Logitech device" },
+    { "protocol": "hidpp", "vid": "046D", "pid": "C532", "variant": "receiver", "name": "Logitech device" },
+    { "protocol": "hidpp", "vid": "046D", "pid": "C534", "variant": "receiver", "name": "Logitech device" },
+    { "protocol": "hidpp", "vid": "046D", "pid": "C539", "variant": "receiver", "name": "Logitech device" },
+    { "protocol": "hidpp", "vid": "046D", "pid": "C53A", "variant": "receiver", "name": "Logitech device" },
+    { "protocol": "hidpp", "vid": "046D", "pid": "C53F", "variant": "receiver", "name": "Logitech device" },
+    { "protocol": "hidpp", "vid": "046D", "pid": "C545", "variant": "receiver", "name": "Logitech device" },
+    { "protocol": "hidpp", "vid": "046D", "pid": "C547", "variant": "receiver", "name": "Logitech device" },
+    { "protocol": "hidpp", "vid": "046D", "pid": "C548", "variant": "receiver", "name": "Logitech device" },
+    // Any other Logitech device with a HID++ collection (cable or Bluetooth).
+    { "protocol": "hidpp", "vid": "046D", "variant": "device", "name": "Logitech device" },
+
+    // ---------------------------------------------------------------- SteelSeries (1038), request/answer (HeadsetControl)
+    { "protocol": "hidrequest", "vid": "1038", "pid": "1260", "name": "SteelSeries Arctis 7", "kind": "headset",
+      "method": "output", "request": "06 18", "usagePage": "FF43", "levelOffset": 2 },
+    { "protocol": "hidrequest", "vid": "1038", "pid": "12AD", "name": "SteelSeries Arctis 7", "kind": "headset",
+      "method": "output", "request": "06 18", "usagePage": "FF43", "levelOffset": 2 }
+  ]
+}

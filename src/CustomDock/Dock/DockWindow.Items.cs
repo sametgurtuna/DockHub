@@ -23,13 +23,47 @@ public partial class DockWindow
     /// <summary>Widgets pinned to the fixed right edge render in <see cref="EndItemsPanel"/> instead of the scrollable center list.</summary>
     private static bool IsPinnedEnd(DockItem item) => item.Kind == DockItemKind.Widget && item.PinnedEnd;
 
+    /// <summary>Displays whose own dock failed to open; their widgets stay on the main dock.</summary>
+    private static readonly HashSet<string> s_failedDisplays = new(StringComparer.OrdinalIgnoreCase);
+
+    public static void MarkDisplayFailed(string device, bool failed)
+    {
+        if (failed) s_failedDisplays.Add(device);
+        else s_failedDisplays.Remove(device);
+    }
+
+    /// <summary>
+    /// Displays that have, or are about to get, a dock of their own: the same set the app opens docks for (every
+    /// connected display but the main one, while "Show on all displays" is on), minus docks that failed to open.
+    /// Deciding from this set rather than from the docks already open means the main dock never builds, even
+    /// briefly, a widget that belongs to a display whose dock is still starting.
+    /// </summary>
+    private IReadOnlyCollection<string> SecondaryDisplays()
+    {
+        if (!_config.ShowOnAllDisplays) return Array.Empty<string>();
+        string main = MonitorHelper.GetPreferred(_config.MonitorDevice).DeviceName;
+        return MonitorHelper.GetAll()
+            .Select(m => m.DeviceName)
+            .Where(d => !string.Equals(d, main, StringComparison.OrdinalIgnoreCase) && !s_failedDisplays.Contains(d))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+    }
+
+    private IReadOnlyCollection<string> _secondaryDisplays = Array.Empty<string>();
+
+    /// <summary>Whether this dock shows the widget (see <see cref="WidgetPlacement"/>); other items show everywhere.</summary>
+    private bool ShowsHere(DockItem item)
+        => item.Kind != DockItemKind.Widget || WidgetPlacement.ShowsOn(item.Display, _secondaryDevice, _secondaryDisplays);
+
     private void RebuildItems()
     {
         var items = _config.Items;
         bool vertical = IsVertical;
         var positionsBefore = CapturePositions();
+        _secondaryDisplays = SecondaryDisplays();
 
-        foreach (var id in _itemViews.Keys.Except(items.Select(i => i.Id)).ToList())
+        // Items that were removed, or widgets that moved to another display's dock.
+        var kept = items.Where(ShowsHere).Select(i => i.Id).ToHashSet();
+        foreach (var id in _itemViews.Keys.Where(id => !kept.Contains(id)).ToList())
         {
             DisposeView(_itemViews[id]);
             _itemViews.Remove(id);
@@ -121,8 +155,8 @@ public partial class DockWindow
                     var app = new AppButton(item, null);
                     DockDragHelper.Attach(app, () => new DataObject(DockDragHelper.ItemFormat, item.Id));
                     return app;
-                // Widgets keep their own state (timers, notes, alarms); a second copy would diverge, so they stay on the main dock.
-                case DockItemKind.Widget when !IsMain:
+                // Widgets keep their own state (timers, notes, alarms); a second copy would diverge, so each lives on one dock.
+                case DockItemKind.Widget when !ShowsHere(item):
                     return null;
                 case DockItemKind.Widget when WidgetRegistry.Find(item.Widget) is { } descriptor:
                     var widget = descriptor.Create(item);
@@ -394,6 +428,7 @@ public partial class DockWindow
 
         if (e.Data.GetData(DockDragHelper.ItemFormat) is string itemId)
         {
+            AdoptWidget(itemId);
             // Dropping a right-pinned widget back into the scrollable list unpins it.
             if (config.FindItem(itemId) is { PinnedEnd: true } draggedItem)
             {
@@ -435,9 +470,24 @@ public partial class DockWindow
         e.Handled = true;
         if (e.Data.GetData(DockDragHelper.ItemFormat) is not string itemId) return;
         if (AppServices.ConfigService.FindItem(itemId) is not { Kind: DockItemKind.Widget } item) return;
-        if (item.PinnedEnd) return;
+        bool adopted = AdoptWidget(itemId);
+        if (item.PinnedEnd && !adopted) return;
 
         item.PinnedEnd = true;
         _config.NotifyItemsChanged();
+    }
+
+    /// <summary>
+    /// A widget dragged here from another display's dock moves to this dock's display. A widget already shown here
+    /// keeps its display (it may be waiting here for a disconnected one).
+    /// </summary>
+    private bool AdoptWidget(string itemId)
+    {
+        if (_itemViews.ContainsKey(itemId)) return false;
+        if (AppServices.ConfigService.FindItem(itemId) is not { Kind: DockItemKind.Widget } widget) return false;
+        if (string.Equals(widget.Display, _secondaryDevice, StringComparison.OrdinalIgnoreCase)) return false;
+        widget.Display = _secondaryDevice;
+        AppServices.ConfigService.ScheduleSave();
+        return true;
     }
 }

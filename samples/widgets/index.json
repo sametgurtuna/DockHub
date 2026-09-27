@@ -1,0 +1,19 @@
+{
+  // DockHub's community widget list, shown in Settings › Widget gallery and fetched once a day.
+  // Add your widget with a pull request: one entry with an id (the id in its manifest.json), a name, a one-sentence
+  // description (at most 200 characters), your name as author, and a "link" DockHub can install from: a GitHub
+  // folder, a manifest.json or a .dockwidget file. Widgets kept in this repository use "path" instead.
+  // DockHub shows the widget's permissions before anything is installed. See docs/widget-sdk.md.
+  "widgets": [
+    { "id": "dev.dockhub.github-pulls", "name": "GitHub pull requests", "author": "DockHub", "path": "github-pulls",
+      "description": "Pull requests waiting for your review, your open pull requests or unread notifications." },
+    { "id": "dev.dockhub.github-actions", "name": "GitHub Actions", "author": "DockHub", "path": "github-actions",
+      "description": "The latest workflow run of a repository: passing, failing or running, with a notification when it fails." },
+    { "id": "dev.dockhub.home-assistant", "name": "Home Assistant", "author": "DockHub", "path": "home-assistant",
+      "description": "The state of a Home Assistant entity, such as a temperature; click to switch lights and plugs." },
+    { "id": "dev.dockhub.github-stars", "name": "GitHub stars", "author": "DockHub", "path": "github-stars",
+      "description": "Star count of a GitHub repository." },
+    { "id": "dev.dockhub.hello-world", "name": "Hello world", "author": "DockHub", "path": "hello-world",
+      "description": "The SDK starter: settings, storage, a menu item and a notification." }
+  ]
+}

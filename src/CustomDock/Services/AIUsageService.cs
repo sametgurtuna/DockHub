@@ -97,7 +97,7 @@ public sealed class AIUsageService : IAIUsageSource
             _updated += value;
             if (!_timer.IsEnabled)
             {
-                _ = RefreshAsync();
+                _ = RefreshAfterStartupAsync();
                 _timer.Start();
             }
         }
@@ -115,6 +115,13 @@ public sealed class AIUsageService : IAIUsageSource
         else _requestedIntervals.Remove(owner);
         if (_consecutiveErrors == 0 && Status != AIUsageStatus.CliNotFound)
             _timer.Interval = PollInterval;
+    }
+
+    /// <summary>The first check waits until a few seconds after startup: it runs the Claude CLI, a whole process.</summary>
+    private async Task RefreshAfterStartupAsync()
+    {
+        await StartupPacing.WaitAsync(StartupPacing.AIUsage).ConfigureAwait(true);
+        await RefreshAsync().ConfigureAwait(true);
     }
 
     public async Task RefreshAsync()

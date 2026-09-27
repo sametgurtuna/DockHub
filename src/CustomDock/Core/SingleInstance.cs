@@ -12,11 +12,13 @@ public sealed class SingleInstance : IDisposable
     private const string EventName = @"Local\DockHub.Activate.5B1E7C1A";
     private const string ExitEventName = @"Local\DockHub.Exit.5B1E7C1A";
     private const string PinEventName = @"Local\DockHub.Pin.5B1E7C1A";
+    private const string WidgetEventName = @"Local\DockHub.Widget.5B1E7C1A";
 
     private readonly Mutex _mutex = new(false, MutexName);
     private EventWaitHandle? _event;
     private EventWaitHandle? _exitEvent;
     private EventWaitHandle? _pinEvent;
+    private EventWaitHandle? _widgetEvent;
     private bool _owned;
 
     public bool TryAcquire()
@@ -36,6 +38,7 @@ public sealed class SingleInstance : IDisposable
             _event = new EventWaitHandle(false, EventResetMode.AutoReset, EventName);
             _exitEvent = new EventWaitHandle(false, EventResetMode.AutoReset, ExitEventName);
             _pinEvent = new EventWaitHandle(false, EventResetMode.AutoReset, PinEventName);
+            _widgetEvent = new EventWaitHandle(false, EventResetMode.AutoReset, WidgetEventName);
         }
         return _owned;
     }
@@ -67,10 +70,20 @@ public sealed class SingleInstance : IDisposable
         }
     }
 
-    public void Listen(Dispatcher dispatcher, Action onActivate, Action onExit, Action onPin)
+    /// <summary>Tells the running instance that a widget package is waiting in <see cref="RequestQueue.WidgetPackages"/>.</summary>
+    public static void SignalWidget()
     {
-        if (_event is null || _exitEvent is null || _pinEvent is null) return;
-        var handles = new WaitHandle[] { _event, _exitEvent, _pinEvent };
+        if (EventWaitHandle.TryOpenExisting(WidgetEventName, out var handle))
+        {
+            using (handle)
+                handle.Set();
+        }
+    }
+
+    public void Listen(Dispatcher dispatcher, Action onActivate, Action onExit, Action onPin, Action onWidget)
+    {
+        if (_event is null || _exitEvent is null || _pinEvent is null || _widgetEvent is null) return;
+        var handles = new WaitHandle[] { _event, _exitEvent, _pinEvent, _widgetEvent };
         var thread = new Thread(() =>
         {
             try
@@ -78,7 +91,7 @@ public sealed class SingleInstance : IDisposable
                 while (true)
                 {
                     int index = WaitHandle.WaitAny(handles);
-                    dispatcher.BeginInvoke(index switch { 0 => onActivate, 1 => onExit, _ => onPin });
+                    dispatcher.BeginInvoke(index switch { 0 => onActivate, 1 => onExit, 2 => onPin, _ => onWidget });
                     if (index == 1) break;
                 }
             }
@@ -104,5 +117,6 @@ public sealed class SingleInstance : IDisposable
         _event?.Dispose();
         _exitEvent?.Dispose();
         _pinEvent?.Dispose();
+        _widgetEvent?.Dispose();
     }
 }

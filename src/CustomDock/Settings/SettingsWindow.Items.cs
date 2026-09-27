@@ -147,6 +147,11 @@ public partial class SettingsWindow
                 _suppressVariant = true;
                 VariantCombo.ItemsSource = descriptor.Variants;
                 VariantCombo.SelectedItem = descriptor.Variants.FirstOrDefault(v => v.Id == item.Variant) ?? descriptor.Variants[0];
+                var displays = WidgetDisplays.Choices();
+                bool topLevel = _config.Items.Contains(item); // widgets inside folders stay with their folder
+                WidgetDisplayRow.Visibility = displays.Count > 1 && topLevel ? Visibility.Visible : Visibility.Collapsed;
+                WidgetDisplayCombo.ItemsSource = displays;
+                WidgetDisplayCombo.SelectedItem = WidgetDisplays.Current(displays, item);
                 _suppressVariant = false;
 
                 if (descriptor.SettingsType is null)
@@ -230,6 +235,12 @@ public partial class SettingsWindow
         if (row.Item.Variant == variant.Id) return;
         row.Item.Variant = variant.Id;
         AppServices.ConfigService.ScheduleSave();
+    }
+
+    private void OnWidgetDisplayChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_suppressVariant || ItemList.SelectedItem is not ItemRow row || WidgetDisplayCombo.SelectedItem is not WidgetDisplays.Choice choice) return;
+        WidgetDisplays.Move(row.Item, choice.Device);
     }
 
     private void OnAppNameChanged(object sender, RoutedEventArgs e)

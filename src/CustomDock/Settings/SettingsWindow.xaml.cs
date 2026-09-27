@@ -65,6 +65,7 @@ public partial class SettingsWindow : Window
         LoadProfiles();
         LoadUpdates();
         LoadTextScale();
+        LoadLanguages();
         DockPreview.Bind(_config);
         PreviewKeyDown += OnUndoKey;
         PreviewKeyDown += (_, e) =>
@@ -160,25 +161,88 @@ public partial class SettingsWindow : Window
 
     private void OnRestartClick(object sender, RoutedEventArgs e) => App.Instance.RestartApplication();
 
+    private bool _loadingLanguages;
+
+    private void LoadLanguages()
+    {
+        _loadingLanguages = true;
+        LanguageCombo.Items.Clear();
+        LanguageCombo.Items.Add(new ComboBoxItem { Content = L.T("System"), Tag = UiLanguage.System });
+        foreach (var language in L.Languages)
+            LanguageCombo.Items.Add(new ComboBoxItem { Content = language.NativeName, Tag = language.Language });
+        LanguageCombo.SelectedItem = LanguageCombo.Items.OfType<ComboBoxItem>().FirstOrDefault(i => Equals(i.Tag, _config.Language))
+            ?? LanguageCombo.Items[0];
+        _loadingLanguages = false;
+    }
+
+    private void OnLanguageChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loadingLanguages || LanguageCombo.SelectedItem is not ComboBoxItem { Tag: UiLanguage language }) return;
+        _config.Language = language;
+    }
+
     private void OnOpenConfigFolderClick(object sender, RoutedEventArgs e)
         => Process.Start(new ProcessStartInfo("explorer.exe", $"\"{AppPaths.Root}\"") { UseShellExecute = true });
 
     private void OnExitClick(object sender, RoutedEventArgs e) => App.Instance.ExitApplication();
 
-    private void OnCopyDiagnosticsClick(object sender, RoutedEventArgs e)
+    private void OnCopyDiagnosticsClick(object sender, RoutedEventArgs e) => CopyDiagnostics();
+
+    /// <summary>Puts the diagnostics report on the clipboard (and in log.txt); false when it couldn't.</summary>
+    private bool CopyDiagnostics()
     {
-        if (App.Instance.Shell is not { } shell) return;
+        if (App.Instance.Shell is not { } shell) return false;
         try
         {
             string report = WindowDiagnostics.Dump(shell, AppServices.Config);
             Log.Info("Diagnostics report:" + Environment.NewLine + report);
             Clipboard.SetText(report);
             DiagnosticsButton.Content = L.T("Copied");
+            return true;
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Failed to create diagnostics report");
             DiagnosticsButton.Content = L.T("Failed");
+            return false;
+        }
+    }
+
+    private void OnReportProblemClick(object sender, RoutedEventArgs e)
+    {
+        string language = L.Languages.FirstOrDefault(l => l.Code == L.Code).NativeName is { } name ? $"{name} ({L.Code})" : L.Code;
+        var environment = new IssueEnvironment(
+            AppInfo.Version,
+            WindowsVersionName(),
+            _config.Language == UiLanguage.System ? $"{language}, following Windows" : language,
+            _config.TaskbarMode.ToString(),
+            MonitorHelper.GetAll().Count,
+            ItemDataStore.Flatten(_config.Items).Where(i => i.Kind == DockItemKind.Widget && i.Widget is not null).Select(i => i.Widget!).ToList());
+        try
+        {
+            Process.Start(new ProcessStartInfo(IssueReport.BuildUrl(environment)) { UseShellExecute = true });
+        }
+        catch (System.ComponentModel.Win32Exception ex)
+        {
+            Log.Warn($"Couldn't open the browser for a bug report: {ex.Message}");
+        }
+
+        // The full report stays off the web page: it has window titles and app paths, so the user decides what to paste.
+        if (CopyDiagnostics())
+            ReportProblemRow.Description = L.T("The diagnostics report is on the clipboard. It lists the titles of open windows and the paths of pinned apps: paste it into the report only if it helps, and remove anything private.");
+    }
+
+    private static string WindowsVersionName()
+    {
+        try
+        {
+            using var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion");
+            return IssueReport.WindowsName(Environment.OSVersion.Version.Build, key?.GetValue("DisplayVersion") as string,
+                key?.GetValue("UBR") is int revision ? revision : 0);
+        }
+        catch (Exception ex) when (ex is System.Security.SecurityException or IOException or UnauthorizedAccessException)
+        {
+            return IssueReport.WindowsName(Environment.OSVersion.Version.Build, null, 0);
         }
     }
 
@@ -229,6 +293,8 @@ public partial class SettingsWindow : Window
     {
         if (e.PropertyName is nameof(AppConfig.MonitorDevice) or nameof(AppConfig.ShowOnAllDisplays))
             LoadDisplaySizes();
+        else if (e.PropertyName == nameof(AppConfig.Language) && !Equals((LanguageCombo.SelectedItem as ComboBoxItem)?.Tag, _config.Language))
+            LoadLanguages(); // changed by undo or a restored backup
     }
 
     private sealed record SizeOption(string Label, DockSize? Size);

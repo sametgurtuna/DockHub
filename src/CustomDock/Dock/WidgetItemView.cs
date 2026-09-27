@@ -103,6 +103,7 @@ public sealed class WidgetItemView : WidgetCard
     private void OnIdleSettingChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(DockItem.CollapseWhenIdle)) UpdateCompactMode();
+        else if (e.PropertyName == nameof(DockItem.Variant)) ApplyWidthClass();
     }
 
     private void SetCompactCore(bool compact)
@@ -132,11 +133,22 @@ public sealed class WidgetItemView : WidgetCard
     private void OnWidgetVisibilityChanged(object? sender, EventArgs e) => Visibility = Widget.Visibility;
 
     /// <summary>Picks up a changed "Even widget widths" setting.</summary>
-    public void RefreshGrid() => SnapToGrid = AlignWidths && !_compact;
+    public void RefreshGrid() => ApplyWidthClass();
+
+    /// <summary>
+    /// Snaps the card to the grid and gives it its variant's minimum width while "Even widget widths" is on (the card
+    /// style then centers the widget in any extra room).
+    /// </summary>
+    private void ApplyWidthClass()
+    {
+        SnapToGrid = AlignWidths && !_compact;
+        var width = Widget.Descriptor.Variants.FirstOrDefault(v => v.Id == Widget.Variant)?.Width ?? WidgetWidth.Auto;
+        MinWidth = SnapToGrid ? WidgetWidths.MinCardWidth(width) : 0;
+    }
 
     private void ApplyAppearance()
     {
-        SnapToGrid = AlignWidths && !_compact;
+        ApplyWidthClass();
         Apply(this, compact: _compact);
         if (_flyoutCard is not null) Apply(_flyoutCard, compact: false);
     }
@@ -274,6 +286,13 @@ public sealed class WidgetItemView : WidgetCard
                 Item.CollapseWhenIdle = !Item.CollapseWhenIdle;
                 AppServices.ConfigService.ScheduleSave();
             }));
+        // Widgets inside a folder stay with their folder.
+        if (AppServices.Config.Items.Contains(Item) && WidgetDisplays.Choices() is { Count: > 1 } displays)
+        {
+            var current = WidgetDisplays.Current(displays, Item);
+            menu.Items.Add(DockMenu.Submenu("Show on", "\uE7F4", displays.Select(choice =>
+                DockMenu.Check(choice.Label, ReferenceEquals(choice, current), () => WidgetDisplays.Move(Item, choice.Device)))));
+        }
         menu.Items.Add(DockMenu.Check("Pin to right edge", Item.PinnedEnd, () =>
         {
             Item.PinnedEnd = !Item.PinnedEnd;

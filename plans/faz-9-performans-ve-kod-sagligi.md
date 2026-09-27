@@ -88,3 +88,11 @@ _(Önce/sonra ölçüm tablosu buraya.)_
   - 9.3 büyük dosyaların bölünmesi: davranış değiştirmeyen ama yüksek riskli bir iş.
   - 9.5 açılış süresi.
   - Faz 5.4 (widget genişlik standardı) ve Faz 8.4 (GPU) buraya devredilmişti; onlar da yapılmadı.
+
+### 2026-09-27 — kalanlar tamamlandı (0.9.0)
+
+- **9.3 büyük dosyaların bölünmesi:** `GroupItemView`, `AppButton`, `WindowPreviewWindow` ve `DockWindow` partial dosyalara bölündü, `NativeMethods`'taki yapılar `NativeStructs.cs`'e taşındı; yalnızca taşıma. Bir betik her eski dosyanın kod satırlarının yeni parçalardakilerle birebir aynı olduğunu doğruladı. Ayrı sınıflar yerine partial seçildi, çünkü alanlara erişim değişmeden taşımanın tek yolu bu.
+- **9.5 açılış süresi:** `AppServices` servisleri ilk kullanımda ve UI thread'inde oluşturuyor; widget'ı olmayan servis hiç başlamıyor. `StartupPacing` ilk ağ ve donanım isteklerini dağıtıyor (pil 2 s, hava 4 s, AI 8 s). Süreçten ilk dock karesine kadar geçen süre `log.txt`'ye ve tanılamaya yazılıyor.
+- **9.1 ölçüm:** `tools/measure-idle.ps1` (dotnet-counters ile boşta CPU, bellek, GC ve log'dan açılış süresi). **Gerçek ölçüm Windows'ta yapılmalı**; önce/sonra tablosu buraya o zaman yazılacak.
+- **Açık kalan (not):** `ShellHost` Başlat menüsü görünürlüğünü 200 ms'de bir yokluyor (saniyede 5 uyanma). Olay tabanlı hale getirmek Windows'ta denenmeden riskli; ölçüm betiğiyle önce/sonra karşılaştırılarak ayrı iş olarak ele alınmalı.
+- Faz 5.4 (widget genişlik standardı) da yapıldı; notu `faz-5-ux-cilasi.md` içinde.

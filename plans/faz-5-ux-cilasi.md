@@ -110,3 +110,76 @@ Faz 1.7'deki `AIUsageStatus` kullanılarak:
 - **5.7** AI Usage: tooltip başlığı eklendi, %90 üzerinde kırmızı, veri yoksa soluk görünüm.
 - **5.8** Dock items: filtre kutusu (klasör içi dahil), eksik dosya uyarısı. Ağaç görünümü ve çoklu seçim yapılmadı.
 - **5.9** Kalan `MessageBox` → `ConfirmDialog`. Ayarlar'daki taşıma ve pin içe aktarma işlemleri undo geçmişine yazılıyor.
+
+### 2026-09-27 — 5.4 widget genişlik standardı tamamlandı
+
+- `WidgetWidth` sınıfları (`Widgets/WidgetWidths.cs`): **Compact** = kart yüksekliği (46), **Standard** = 2,5 × (115), **Wide** = 4 × (184). Üçü de kartların oturduğu yarım yükseklik ızgarasının (23) tam katı. Dock boyutu (Small/Large) içeriği `ScaleTransform` ile ölçeklediği için genişlikler de kendiliğinden ölçekleniyor.
+- Sınıf yalnızca **en az genişlik** olarak uygulanıyor. İçerik daha genişse kart büyüyor, hiçbir şey kırpılmıyor. "Even widget widths" kapalıyken hiçbir sınıf uygulanmıyor.
+- Fazla alanda widget ortalanıyor. Bunu kart stilindeki mevcut `SnapToGrid` tetikleyicisi zaten yapıyordu; sınıf tabanı da yalnızca SnapToGrid açıkken uygulandığı için ek bir şey gerekmedi.
+- Widget'lar arası boşluk tek bir kaynaktan okunuyor: `DockItemSpacing` (Controls.xaml, 3,0).
+- Sınıf seçerken ölçüt: varyantın doğal genişliğini (XAML'deki Width/MinWidth değerleri ve 2 × 11 px iç boşluk) aşmayan en yakın sınıf. Emin olunamayan yerde küçük sınıf seçildi (fazla genişletmektense).
+- Bir test, yerleşik her varyantın bir sınıfı olduğunu denetliyor. Web widget'ları `Auto` (taban yok).
+
+| Widget | Varyant | Sınıf |
+|---|---|---|
+| Clock | Analog | Standard |
+| Clock | Digital | Standard |
+| Clock | Calendar | Wide |
+| World clock | Single city | Standard |
+| World clock | Multiple cities | Standard |
+| Stopwatch | Stopwatch | Standard |
+| Focus timer | Focus timer | Standard |
+| Countdown | Countdown | Standard |
+| Alarm | Alarm | Standard |
+| Time progress | Bar | Wide |
+| Time progress | Ring | Standard |
+| Hydration | Timer | Standard |
+| Hydration | Daily goal | Standard |
+| Reminders | List | Wide |
+| Reminders | Next | Wide |
+| Reminders | Count | Standard |
+| Sticky note | Sticky note | Wide |
+| Now playing | Full | Wide |
+| Now playing | Compact | Wide |
+| Now playing | Mini | Compact |
+| CPU and memory | Numbers | Standard |
+| CPU and memory | Rings | Standard |
+| CPU and memory | Bars | Wide |
+| Network speed | Numbers only | Standard |
+| Network speed | Chart | Wide |
+| Status | Rings | Standard |
+| Status | Percentage ring | Standard |
+| Status | Icon only | Compact |
+| Weather | Current | Standard |
+| Weather | Conditions | Standard |
+| Weather | Hourly forecast | Wide |
+| Calendar | Next event | Wide |
+| Calendar | Time until | Compact |
+| Clipboard history | Latest item | Wide |
+| Clipboard history | Icon only | Compact |
+| Folder stack | Stack | Compact |
+| Folder stack | Detailed | Wide |
+| Exchange rates | Single pair | Standard |
+| Exchange rates | Several pairs | Standard |
+| To do | List | Wide |
+| To do | Count | Standard |
+| Screenshot | Icon only | Compact |
+| Screenshot | Buttons | Compact |
+| AI usage | Numbers | Standard |
+| AI usage | Rings | Standard |
+| AI usage | Bars | Wide |
+| Audio device | Compact | Standard |
+| Audio device | Slider | Wide |
+| GPU | Numbers | Standard |
+| GPU | Rings | Standard |
+| GPU | Bars | Wide |
+| Brightness | Slider | Wide |
+| Brightness | Icon only | Compact |
+| Wi-Fi and Bluetooth | Buttons | Compact |
+| Wi-Fi and Bluetooth | Icon only | Compact |
+| Recycle bin | Icon only | Compact |
+| Recycle bin | Detailed | Standard |
+| Device batteries | Single device | Standard |
+| Device batteries | Multiple devices | Standard |
+
+**Windows'ta görsel kontrol gerekir:** üç dock boyutunda, "Even widget widths" açık ve kapalıyken.

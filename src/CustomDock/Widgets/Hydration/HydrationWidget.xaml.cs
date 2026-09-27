@@ -33,6 +33,9 @@ public static class WidgetOptions
 
     public static IReadOnlyList<Option<int>> ScreenshotDelays { get; } =
         Options.Of((0, "No delay"), (3, "3 seconds"), (5, "5 seconds"), (10, "10 seconds"));
+
+    public static IReadOnlyList<Option<int>> LowBatteryLevels { get; } =
+        Options.Of((0, "Off"), (5, "5%"), (10, "10%"), (15, "15%"), (20, "20%"), (30, "30%"));
 }
 
 /// <summary>Hydration: countdown to next reminder or daily goal ring. Click → +1 glass.</summary>

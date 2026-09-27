@@ -107,3 +107,13 @@ dockhub.openUrl(url)                             // varsayılan tarayıcıda, ku
 - **Canlı test:** kullanıcı boşta iken geçici bir DOCKHUB_HOME ile iki örnek dock'ta çalıştırıldı. Saydam arka plan, accent rengi ve api.github.com'dan canlı veri doğrulandı; ardından kullanıcının dock'u geri başlatıldı.
 - **Yapılmayanlar:** `.dockwidget` dosya ilişkilendirmesi (installer), klasörden canlı yeniden yükleme, "güvenilir DLL eklentileri" (A seçeneği). Bilinen sınırlama: WebView2 bir HWND olduğundan dock'un hover büyütmesi bu kartlara uygulanmıyor.
 - Testler: 73.
+
+### 2026-09-27 — MVP sonrası eksikler tamamlandı (0.9.0)
+
+- **`.dockwidget` dosya ilişkilendirmesi:** installer HKCU'ya kaydediyor; çift tıklama `--install-widget` ile çalışan DockHub'a iletiliyor. Paket sınırları (20 MB, açılmış 50 MB, 256 girdi) ve klasör dışı girdiler açmadan önce denetleniyor.
+- **Canlı yeniden yükleme:** `debugLogging` açıkken widget klasöründeki değişiklikler 400 ms içinde yeniden yükleniyor; manifest değişirse yeniden okunuyor.
+- **Hover:** WebView2 HWND'si fareyi WPF'ten aldığı için sayfa hover'ı köprü üzerinden bildiriyor, kart `IsHighlighted` ile vurgulanıyor.
+- **Topluluk listesi:** `samples/widgets/index.json` galeride gösteriliyor (günde bir çekme, çevrimdışı önbellek, yerleşik liste yedeği).
+- **apiVersion 2:** `permissions.networkFromSettings` (kullanıcının girdiği sunucu adresi; manifest varsayılanı reddediliyor) ve `dockhub.http.request` (izinli host'lar, çerez ve yönlendirme yok, 64 KB istek / 1 MB yanıt, 15 s).
+- Yeni örnekler: `github-actions`, `home-assistant`.
+- Hâlâ yapılmayan: "güvenilir DLL eklentileri" (A seçeneği); bilinçli olarak dışarıda.

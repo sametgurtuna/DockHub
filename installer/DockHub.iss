@@ -45,18 +45,32 @@ SolidCompression=yes
 WizardStyle=modern
 CloseApplications=no
 RestartApplications=no
+; .dockwidget packages open in DockHub (registered for the current user below).
+ChangesAssociations=yes
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "turkish"; MessagesFile: "compiler:Languages\Turkish.isl"
+Name: "german"; MessagesFile: "compiler:Languages\German.isl"
+Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 
 [CustomMessages]
 english.StartupGroup=Startup:
 turkish.StartupGroup=Başlangıç:
+german.StartupGroup=Autostart:
+spanish.StartupGroup=Inicio:
 english.StartupTask=Start DockHub automatically when I sign in to Windows
 turkish.StartupTask=Windows'a giriş yaptığımda DockHub'ı otomatik başlat
+german.StartupTask=DockHub bei der Anmeldung an Windows automatisch starten
+spanish.StartupTask=Iniciar DockHub automáticamente al iniciar sesión en Windows
 english.LaunchApp=Launch DockHub now
 turkish.LaunchApp=DockHub'ı şimdi başlat
+german.LaunchApp=DockHub jetzt starten
+spanish.LaunchApp=Iniciar DockHub ahora
+english.WidgetFileType=DockHub widget
+turkish.WidgetFileType=DockHub widget'ı
+german.WidgetFileType=DockHub-Widget
+spanish.WidgetFileType=Widget de DockHub
 
 [Tasks]
 Name: "startup"; Description: "{cm:StartupTask}"; GroupDescription: "{cm:StartupGroup}"
@@ -81,6 +95,11 @@ Root: HKCU; Subkey: "Software\DockHub"; ValueType: dword; ValueName: "StartWithW
 ; Explorer "Pin to DockHub" verbs the app registers at runtime.
 Root: HKCU; Subkey: "Software\Classes\exefile\shell\DockHub.Pin"; Flags: uninsdeletekey dontcreatekey
 Root: HKCU; Subkey: "Software\Classes\lnkfile\shell\DockHub.Pin"; Flags: uninsdeletekey dontcreatekey
+; .dockwidget packages: opening one in File Explorer shows DockHub's install dialog ("DockHub.exe --install-widget").
+Root: HKCU; Subkey: "Software\Classes\.dockwidget"; ValueType: string; ValueName: ""; ValueData: "DockHub.Widget"; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\DockHub.Widget"; ValueType: string; ValueName: ""; ValueData: "{cm:WidgetFileType}"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\DockHub.Widget\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExe}"",0"
+Root: HKCU; Subkey: "Software\Classes\DockHub.Widget\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExe}"" --install-widget ""%1"""
 
 [Run]
 Filename: "{app}\{#MyAppExe}"; Description: "{cm:LaunchApp}"; Flags: nowait postinstall skipifsilent

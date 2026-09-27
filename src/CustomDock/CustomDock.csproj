@@ -15,11 +15,11 @@
     <AssemblyName>DockHub</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\DockHub.ico</ApplicationIcon>
-    <Version>0.8.1</Version>
+    <Version>0.9.0</Version>
     <Product>DockHub</Product>
     <Company>DockHub</Company>
     <Copyright>© 2026</Copyright>
-    <SatelliteResourceLanguages>en;tr</SatelliteResourceLanguages>
+    <SatelliteResourceLanguages>en;tr;de;es</SatelliteResourceLanguages>
     <!-- DPI awareness for WPF is configured via app.manifest (PerMonitorV2). -->
     <NoWarn>$(NoWarn);WFAC010</NoWarn>
   </PropertyGroup>
@@ -35,6 +35,7 @@
     <Resource Include="Assets\DockHub.ico" />
     <InternalsVisibleTo Include="CustomDock.Tests" />
     <EmbeddedResource Include="Resources\Strings_*.json" />
+    <EmbeddedResource Include="Resources\battery-devices.json" />
   </ItemGroup>
 
   <ItemGroup>

@@ -30,8 +30,12 @@ public partial class App : Application
     public static App Instance => (App)Current;
     public ShellHost? Shell => _shell;
 
+    private readonly Stopwatch _startupClock = Stopwatch.StartNew();
+
     protected override void OnStartup(StartupEventArgs e)
     {
+        StartupPacing.MarkStart();
+
         // Date and number formats in XAML bindings should follow system culture (defaults to en-US).
         FrameworkElement.LanguageProperty.OverrideMetadata(typeof(FrameworkElement),
             new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(CultureInfo.CurrentCulture.IetfLanguageTag)));
@@ -56,6 +60,10 @@ public partial class App : Application
         if (PinArgumentPath(e.Args) is { } pinPath)
             ExplorerPinMenu.Enqueue(pinPath);
 
+        // "DockHub.exe --install-widget <file>": a .dockwidget package opened in File Explorer
+        if (ArgumentValue(e.Args, InstallWidgetArgument) is { } packagePath)
+            RequestQueue.WidgetPackages.Enqueue(packagePath);
+
         _singleInstance = new SingleInstance();
         bool exitRequested = e.Args.Any(a => a.Equals("--exit", StringComparison.OrdinalIgnoreCase));
         if (exitRequested)
@@ -72,6 +80,8 @@ public partial class App : Application
             // Second instance triggered by toast click closes silently; otherwise show settings of running instance.
             if (PinArgumentPath(e.Args) is not null)
                 SingleInstance.SignalPin();
+            else if (ArgumentValue(e.Args, InstallWidgetArgument) is not null)
+                SingleInstance.SignalWidget();
             else if (!e.Args.Any(a => a.Contains("ToastActivated", StringComparison.OrdinalIgnoreCase)))
                 SingleInstance.SignalExisting();
             Shutdown();
@@ -94,6 +104,7 @@ public partial class App : Application
         TextScale.Initialize();
         Controls.WidgetCard.AlignWidths = config.AlignWidgetWidths;
         Widgets.Web.WebWidgetCatalog.LoadAll();
+        Widgets.Web.WebWidgetDevReload.Apply(config.DebugLogging);
         SystemEvents.UserPreferenceChanged += (_, e) =>
         {
             if (e.Category is UserPreferenceCategory.General or UserPreferenceCategory.Accessibility) ApplyMotionLevel();
@@ -128,8 +139,9 @@ public partial class App : Application
         config.PropertyChanged += OnConfigChanged;
         WidgetItemView.SettingsRequested += item => ShowSettings("items", item.Id);
 
-        _singleInstance.Listen(Dispatcher, () => ShowSettings(), ExitApplication, ProcessPinRequests);
+        _singleInstance.Listen(Dispatcher, () => ShowSettings(), ExitApplication, ProcessPinRequests, ProcessWidgetPackages);
         ProcessPinRequests();
+        ProcessWidgetPackages();
         SystemEvents.SessionEnding += (_, _) => Cleanup();
 
         if (config.IsFirstRun && !config.WelcomeShown)
@@ -230,9 +242,22 @@ public partial class App : Application
     private void CreateDock()
     {
         _dock = new DockWindow(AppServices.Config, _shell!);
+        _dock.ContentRendered += OnFirstDockFrame;
         _dock.Start();
         SyncSecondaryDocks();
         SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
+    }
+
+    private void OnFirstDockFrame(object? sender, EventArgs e)
+    {
+        if (sender is Window window) window.ContentRendered -= OnFirstDockFrame;
+        // Counted from the process start, so loading the runtime is included (a cold start after sign-in).
+        TimeSpan sinceProcessStart;
+        try { sinceProcessStart = DateTime.Now - Process.GetCurrentProcess().StartTime; }
+        catch { sinceProcessStart = _startupClock.Elapsed; }
+        AppInfo.StartupTime = sinceProcessStart;
+        Log.Info($"First dock frame {sinceProcessStart.TotalMilliseconds:0} ms after process start ({_startupClock.ElapsedMilliseconds} ms in DockHub's own startup); " +
+                 $"services created: {string.Join(", ", AppServices.CreatedServices())}.");
     }
 
     private void OnDisplaySettingsChanged(object? sender, EventArgs e)
@@ -266,9 +291,11 @@ public partial class App : Application
 
         foreach (var device in wanted.Where(d => !_secondaryDocks.ContainsKey(d)))
         {
+            DockWindow? dock = null;
             try
             {
-                var dock = new DockWindow(config, _shell, device);
+                DockWindow.MarkDisplayFailed(device, false);
+                dock = new DockWindow(config, _shell, device);
                 _secondaryDocks[device] = dock;
                 dock.Start();
                 changed = true;
@@ -276,6 +303,11 @@ public partial class App : Application
             catch (Exception ex)
             {
                 Log.Error(ex, $"Failed to create dock on {device}");
+                // Its widgets go back to the main dock; the next display change tries again.
+                DockWindow.MarkDisplayFailed(device, true);
+                _secondaryDocks.Remove(device);
+                try { dock?.CloseDock(); } catch (Exception closeError) { Log.Error(closeError, $"Failed to close the dock on {device}"); }
+                changed = true;
             }
         }
 
@@ -442,10 +474,25 @@ public partial class App : Application
             new DialogButton("restart", "Restart", DialogButtonKind.Primary)) == "restart";
     }
 
-    private static string? PinArgumentPath(string[] args)
+    public const string InstallWidgetArgument = "--install-widget";
+
+    private static string? PinArgumentPath(string[] args) => ArgumentValue(args, ExplorerPinMenu.PinArgument);
+
+    /// <summary>The value after <paramref name="name"/> on the command line ("--pin C:\app.exe").</summary>
+    private static string? ArgumentValue(string[] args, string name)
     {
-        int index = Array.FindIndex(args, a => a.Equals(ExplorerPinMenu.PinArgument, StringComparison.OrdinalIgnoreCase));
+        int index = Array.FindIndex(args, a => a.Equals(name, StringComparison.OrdinalIgnoreCase));
         return index >= 0 && index + 1 < args.Length && !string.IsNullOrWhiteSpace(args[index + 1]) ? args[index + 1] : null;
+    }
+
+    /// <summary>Opens the widget gallery and asks before installing each .dockwidget package opened in File Explorer.</summary>
+    private void ProcessWidgetPackages()
+    {
+        var packages = RequestQueue.WidgetPackages.Dequeue().Where(File.Exists).ToList();
+        if (packages.Count == 0) return;
+        ShowSettings("gallery");
+        foreach (var package in packages)
+            _settings?.InstallWidgetPackage(package);
     }
 
     /// <summary>Appends "pin" requests from Explorer to the end of pinned applications.</summary>
@@ -568,9 +615,7 @@ public partial class App : Application
             _shell?.Dispose();
             _winNumbers?.Dispose();
             _hotkeys?.Dispose();
-            AppServices.Reminders.Dispose();
-            AppServices.Audio.Dispose();
-            AppServices.Clock.Dispose();
+            AppServices.DisposeServices();
             NotificationService.Cleanup();
         }
         catch (Exception ex)

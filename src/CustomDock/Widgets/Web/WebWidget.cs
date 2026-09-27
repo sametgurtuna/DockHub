@@ -5,6 +5,7 @@ using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using CustomDock.Controls;
 using CustomDock.Core;
 using CustomDock.Dock;
 using CustomDock.Widgets.Web;
@@ -36,7 +37,8 @@ public sealed class WebWidget : WidgetBase
     private static CoreWebView2Environment? s_environment;
     private static Task<CoreWebView2Environment>? s_environmentTask;
 
-    private readonly WebWidgetManifest _manifest;
+    private WebWidgetManifest _manifest;
+    private bool _attached;
     private readonly Border _frame = new() { Background = Brushes.Transparent };
     private WebView2? _web;
     private WebWidgetSettings _settings = new();
@@ -47,7 +49,9 @@ public sealed class WebWidget : WidgetBase
     {
         _manifest = manifest;
         Content = _frame;
-        CardPadding = new Thickness(0);
+        // A web view is a window of its own and covers whatever WPF draws below it; one pixel of padding keeps the
+        // card's hover border visible around it.
+        CardPadding = new Thickness(1);
     }
 
     /// <summary>Widget type for a manifest, registered in <see cref="WidgetRegistry"/>.</summary>
@@ -59,10 +63,17 @@ public sealed class WebWidget : WidgetBase
         Description = string.IsNullOrWhiteSpace(manifest.Author) ? manifest.Description : $"{manifest.Description} ({manifest.Author}, {manifest.Version})",
         IconPath = WebWidgetCatalog.Icon,
         AccentKey = "AccentPurpleBrush",
-        Variants = manifest.Variants.Select(v => new WidgetVariant(v.Id, v.Name)).ToList(),
+        Variants = manifest.Variants.Select(v => new WidgetVariant(v.Id, v.Name, WidthOf(v.Size))).ToList(),
         Factory = () => new WebWidget(manifest),
         SettingsType = manifest.Settings.Count > 0 ? typeof(WebWidgetSettings) : null,
         SettingsViewFactory = manifest.Settings.Count > 0 ? s => WebWidgetSettingsView.Create(manifest, (WebWidgetSettings)s) : null,
+    };
+
+    private static WidgetWidth WidthOf(string size) => size switch
+    {
+        "compact" => WidgetWidth.Compact,
+        "wide" => WidgetWidth.Wide,
+        _ => WidgetWidth.Standard,
     };
 
     private string SizeName => _manifest.Variants.FirstOrDefault(v => v.Id == Variant)?.Size ?? "standard";
@@ -82,6 +93,8 @@ public sealed class WebWidget : WidgetBase
             _settings.PropertyChanged += OnSettingsChanged;
         }
         ThemeManager.ThemeChanged += PostTheme;
+        WebWidgetDevReload.Reloaded += OnDevReload;
+        _attached = true;
         _ = StartAsync();
     }
 
@@ -89,11 +102,45 @@ public sealed class WebWidget : WidgetBase
     {
         _settings.PropertyChanged -= OnSettingsChanged;
         ThemeManager.ThemeChanged -= PostTheme;
-        if (_web is not null)
+        WebWidgetDevReload.Reloaded -= OnDevReload;
+        _attached = false;
+        StopWebView();
+    }
+
+    private void StopWebView()
+    {
+        SetCardHover(false);
+        if (_web is null) return;
+        _frame.Child = null;
+        _web.Dispose();
+        _web = null;
+    }
+
+    /// <summary>Developer mode: a file of this widget changed; a new manifest restarts the web view with it.</summary>
+    private void OnDevReload(WebWidgetManifest manifest, bool manifestChanged)
+    {
+        if (manifest.Id != _manifest.Id) return;
+        if (!manifestChanged && _web?.CoreWebView2 is { } core)
         {
-            _frame.Child = null;
-            _web.Dispose();
-            _web = null;
+            core.Reload();
+            return;
+        }
+        _manifest = manifest;
+        StopWebView();
+        OnVariantChanged();
+        _ = StartAsync();
+    }
+
+    /// <summary>The web view takes the mouse away from WPF, so the page reports when the pointer is over it.</summary>
+    private void SetCardHover(bool hovered)
+    {
+        for (DependencyObject? node = this; node is not null; node = VisualTreeHelper.GetParent(node))
+        {
+            if (node is WidgetCard card)
+            {
+                card.IsContentHovered = hovered;
+                return;
+            }
         }
     }
 
@@ -115,13 +162,18 @@ public sealed class WebWidget : WidgetBase
 
     private async Task StartAsync()
     {
+        // A reload (developer mode) or detach can replace the web view while this start is still awaiting; each start
+        // only works on its own view and gives up once that view is no longer the current one.
+        WebView2? web = null;
         try
         {
             var environment = s_environment ??= await EnvironmentAsync();
-            _web = new WebView2 { DefaultBackgroundColor = System.Drawing.Color.Transparent };
-            _frame.Child = _web;
-            await _web.EnsureCoreWebView2Async(environment);
-            if (_web?.CoreWebView2 is not { } core) return;
+            if (!_attached || _web is not null) return; // detached meanwhile, or another start got there first
+            web = new WebView2 { DefaultBackgroundColor = System.Drawing.Color.Transparent };
+            _web = web;
+            _frame.Child = web;
+            await web.EnsureCoreWebView2Async(environment);
+            if (!ReferenceEquals(_web, web) || web.CoreWebView2 is not { } core) return;
 
             var settings = core.Settings;
             bool dev = AppServices.Config.DebugLogging;
@@ -143,14 +195,16 @@ public sealed class WebWidget : WidgetBase
             core.WebMessageReceived += OnMessage;
             core.NavigationCompleted += (_, _) => { PostTheme(); OnVariantChanged(); };
             await core.AddScriptToExecuteOnDocumentCreatedAsync(BridgeScript);
+            if (!ReferenceEquals(_web, web)) return;
             core.Navigate($"https://{_manifest.HostName}/{_manifest.Entry.Replace('\\', '/')}");
         }
         catch (WebView2RuntimeNotFoundException)
         {
-            ShowError(L.T("Web widgets need the Microsoft Edge WebView2 Runtime."));
+            if (web is null || ReferenceEquals(_web, web)) ShowError(L.T("Web widgets need the Microsoft Edge WebView2 Runtime."));
         }
         catch (Exception ex)
         {
+            if (web is not null && !ReferenceEquals(_web, web)) return; // an abandoned start (its view was replaced)
             Log.Error(ex, $"Web widget {_manifest.Id} failed to start");
             ShowError(L.T("This widget couldn't start."));
         }
@@ -167,9 +221,28 @@ public sealed class WebWidget : WidgetBase
     {
         if (!Uri.TryCreate(e.Request.Uri, UriKind.Absolute, out var uri)) return;
         if (uri.Scheme is "data" or "blob") return;
-        if (uri.Scheme is "https" or "wss" && WebWidgetCatalog.IsHostAllowed(_manifest, uri.Host)) return;
+        if (uri.Scheme is "https" or "wss" && IsHostAllowed(uri.Host)) return;
         e.Response = _web!.CoreWebView2.Environment.CreateWebResourceResponse(null, 403, "Blocked by DockHub", "");
         Log.Debug($"Web widget {_manifest.Id}: blocked {uri.Host}");
+    }
+
+    // Only what the user saved counts for a server setting (the manifest can't supply the address itself).
+    private bool IsHostAllowed(string host)
+        => WebWidgetCatalog.IsHostAllowed(_manifest, host, WebWidgetCatalog.SettingsHosts(_manifest, _settings.Values));
+
+    /// <summary>dockhub.http.request, answered when the request completes.</summary>
+    private async Task HttpRequestAsync(JsonNode id, JsonObject? args)
+    {
+        try
+        {
+            var request = WebWidgetHttp.Parse(args, IsHostAllowed);
+            Post(new JsonObject { ["id"] = id, ["result"] = await WebWidgetHttp.SendAsync(request) });
+        }
+        catch (Exception ex)
+        {
+            Log.Debug($"Web widget {_manifest.Id}: http.request failed: {ex.Message}");
+            Post(new JsonObject { ["id"] = id, ["error"] = ex is TaskCanceledException ? "The request timed out." : ex.Message });
+        }
     }
 
     private void OnMessage(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
@@ -177,8 +250,18 @@ public sealed class WebWidget : WidgetBase
         JsonObject? message;
         try { message = JsonNode.Parse(e.WebMessageAsJson) as JsonObject; }
         catch { return; }
+        if (message?["event"]?.GetValue<string>() == "hover")
+        {
+            SetCardHover(message["value"]?.GetValue<bool>() == true);
+            return;
+        }
         if (message?["id"] is not { } id || message["method"]?.GetValue<string>() is not { } method) return;
         var args = message["args"] as JsonObject;
+        if (method == "http.request")
+        {
+            _ = HttpRequestAsync(id.DeepClone(), args);
+            return;
+        }
 
         try
         {
@@ -330,13 +413,19 @@ public sealed class WebWidget : WidgetBase
               (listeners[m.event] || []).forEach(f => { try { f(m.data); } catch (err) { console.error(err); } });
             }
           });
+          // The page, not DockHub, sees the pointer while it is over the widget: report it for the card's hover border.
+          let hovered = false;
+          const hover = value => { if (hovered !== value) { hovered = value; window.chrome.webview.postMessage({ event: 'hover', value }); } };
+          window.addEventListener('mouseover', () => hover(true), { passive: true });
+          window.addEventListener('mouseout', e => { if (!e.relatedTarget) hover(false); }, { passive: true });
           window.dockhub = {
-            apiVersion: 1,
+            apiVersion: 2,
             size: 'standard',
             settings: { get: () => call('settings.get'), onChange: f => on('settings', f) },
             storage: { get: key => call('storage.get', { key }), set: (key, value) => call('storage.set', { key, value }) },
             notify: options => call('notify', options),
             openUrl: url => call('openUrl', { url }),
+            http: { request: options => call('http.request', options) },
             contextMenu: { set: items => call('contextMenu.set', { items }), onSelect: f => on('menu', f) },
             onTheme: f => on('theme', f),
             onSize: f => on('size', f),

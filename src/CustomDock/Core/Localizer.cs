@@ -6,19 +6,29 @@ using System.Windows.Data;
 
 namespace CustomDock.Core;
 
-public enum UiLanguage { System, English, Turkish }
+public enum UiLanguage { System, English, Turkish, German, Spanish }
 
 /// <summary>
-/// Interface translation, gettext style: the English text is the key and <c>Resources/Strings_tr.json</c> holds the
-/// Turkish text. Text in XAML is translated as each element loads (class handlers), so templates, popups and
-/// widgets are covered without markup changes; code uses <see cref="T(string)"/>. Missing entries stay English.
+/// Interface translation, gettext style: the English text is the key and <c>Resources/Strings_&lt;code&gt;.json</c> holds
+/// the translation (tr, de, es). Text in XAML is translated as each element loads (class handlers), so templates,
+/// popups and widgets are covered without markup changes; code uses <see cref="T(string)"/>. Missing entries stay
+/// English.
 /// </summary>
 public static class L
 {
     private static Dictionary<string, string> s_strings = new();
     private static bool s_hooked;
 
-    /// <summary>Two-letter code of the active interface language ("en" or "tr").</summary>
+    /// <summary>The interface languages, with the name each one has in its own language.</summary>
+    public static IReadOnlyList<(UiLanguage Language, string Code, string NativeName)> Languages { get; } = new[]
+    {
+        (UiLanguage.English, "en", "English"),
+        (UiLanguage.Turkish, "tr", "Türkçe"),
+        (UiLanguage.German, "de", "Deutsch"),
+        (UiLanguage.Spanish, "es", "Español"),
+    };
+
+    /// <summary>Two-letter code of the active interface language ("en", "tr", "de" or "es").</summary>
     public static string Code { get; private set; } = "en";
 
     public static bool IsTranslated => s_strings.Count > 0;
@@ -26,12 +36,7 @@ public static class L
     /// <summary>Loads the language chosen in settings (System follows the Windows display language).</summary>
     public static void Initialize(UiLanguage language)
     {
-        string code = language switch
-        {
-            UiLanguage.English => "en",
-            UiLanguage.Turkish => "tr",
-            _ => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "tr" ? "tr" : "en",
-        };
+        string code = CodeFor(language, CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
         Code = code;
         s_strings = code == "en" ? new() : LoadStrings(code);
         if (code != "en")
@@ -41,6 +46,17 @@ public static class L
             Thread.CurrentThread.CurrentUICulture = culture;
         }
         if (IsTranslated) HookElements();
+    }
+
+    /// <summary>
+    /// The language code to load: the chosen language, or for System the Windows display language when DockHub has
+    /// it (<paramref name="systemLanguage"/> is a two-letter code), else English.
+    /// </summary>
+    public static string CodeFor(UiLanguage language, string systemLanguage)
+    {
+        if (language != UiLanguage.System)
+            return Languages.FirstOrDefault(l => l.Language == language).Code ?? "en";
+        return Languages.FirstOrDefault(l => string.Equals(l.Code, systemLanguage, StringComparison.OrdinalIgnoreCase)).Code ?? "en";
     }
 
     private static Dictionary<string, string> LoadStrings(string code)

@@ -195,16 +195,7 @@
 
                     <TextBlock Text="Language" Style="{StaticResource SectionHeader}" />
                     <ctl:SettingRow Glyph="&#xF2B7;" Header="Interface language" Description="System follows your Windows display language. DockHub restarts to switch.">
-                        <Border Style="{StaticResource SegmentedHost}">
-                            <StackPanel Orientation="Horizontal">
-                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Language" Content="System"
-                                             IsChecked="{Binding Language, Converter={StaticResource EnumEq}, ConverterParameter=System}" />
-                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Language" Content="English"
-                                             IsChecked="{Binding Language, Converter={StaticResource EnumEq}, ConverterParameter=English}" />
-                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Language" Content="Türkçe"
-                                             IsChecked="{Binding Language, Converter={StaticResource EnumEq}, ConverterParameter=Turkish}" />
-                            </StackPanel>
-                        </Border>
+                        <ComboBox x:Name="LanguageCombo" Width="160" SelectionChanged="OnLanguageChanged" />
                     </ctl:SettingRow>
 
                 </StackPanel>
@@ -476,7 +467,7 @@
                         <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding HoverEffect}" />
                     </ctl:SettingRow>
                     <ctl:SettingRow Glyph="&#xE9A6;" Header="Even widget widths"
-                                    Description="Widget cards round their width up to a common grid, so the dock keeps an even rhythm.">
+                                    Description="Widget cards use a few standard widths and round up to a common grid, so the dock keeps an even rhythm.">
                         <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding AlignWidgetWidths}" />
                     </ctl:SettingRow>
                     <ctl:SettingRow Glyph="&#xE8D2;" Header="Text size" x:Name="TextSizeRow"
@@ -727,6 +718,9 @@
                                 <ctl:SettingRow Header="Variant" Description="Appearance style of the widget on the dock.">
                                     <ComboBox x:Name="VariantCombo" Width="200" DisplayMemberPath="Name" SelectionChanged="OnVariantChanged" />
                                 </ctl:SettingRow>
+                                <ctl:SettingRow x:Name="WidgetDisplayRow" Header="Show on" Description="The dock this widget sits on. On a display that is disconnected, it moves to the main dock until the display is back.">
+                                    <ComboBox x:Name="WidgetDisplayCombo" Width="200" DisplayMemberPath="Label" SelectionChanged="OnWidgetDisplayChanged" />
+                                </ctl:SettingRow>
                                 <ContentControl x:Name="WidgetSettingsHost" Focusable="False" />
                             </StackPanel>
 
@@ -781,7 +775,9 @@
                             <TextBlock x:Name="WidgetLinkStatus" Style="{StaticResource SettingDescription}" Margin="0,6,0,0" Visibility="Collapsed" />
                         </StackPanel>
                     </Border>
-                    <TextBlock Text="Featured web widgets" FontFamily="{DynamicResource DisplayFont}" FontSize="17" FontWeight="SemiBold" Margin="2,6,0,10" />
+                    <TextBlock Text="Community web widgets" FontFamily="{DynamicResource DisplayFont}" FontSize="17" FontWeight="SemiBold" Margin="2,6,0,2" />
+                    <TextBlock Text="From DockHub's widget list on GitHub, updated daily. Anyone can add a widget to it with a pull request."
+                               Style="{StaticResource SettingDescription}" TextWrapping="Wrap" Margin="2,0,0,10" />
                     <StackPanel x:Name="FeaturedWidgetsPanel" />
                     <StackPanel x:Name="GalleryPanel" />
                 </StackPanel>
@@ -839,6 +835,10 @@
                     <ctl:SettingRow Glyph="&#xEBE8;" Header="Copy diagnostics"
                                     Description="Copies how DockHub sees open windows and pinned apps to the clipboard (and log.txt). Useful when an app doesn't show up on the dock or its icon is missing.">
                         <Button x:Name="DiagnosticsButton" Content="Copy" Click="OnCopyDiagnosticsClick" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow x:Name="ReportProblemRow" Glyph="&#xE939;" Header="Report a problem"
+                                    Description="Opens a bug report on GitHub with your DockHub and Windows versions, language and widgets filled in, and copies the diagnostics report.">
+                        <Button Content="Report…" Click="OnReportProblemClick" />
                     </ctl:SettingRow>
                     <TextBlock Text="Tips" Style="{StaticResource SectionHeader}" />
                     <ctl:SettingRow Glyph="&#xE962;" Header="Right-click the dock" Description="Add widgets, pin apps, change position, and toggle auto-hide." />

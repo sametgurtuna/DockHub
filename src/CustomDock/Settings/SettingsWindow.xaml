@@ -727,6 +727,9 @@
                                 <ctl:SettingRow Header="Variant" Description="Appearance style of the widget on the dock.">
                                     <ComboBox x:Name="VariantCombo" Width="200" DisplayMemberPath="Name" SelectionChanged="OnVariantChanged" />
                                 </ctl:SettingRow>
+                                <ctl:SettingRow x:Name="WidgetDisplayRow" Header="Show on" Description="The dock this widget sits on. On a display that is disconnected, it moves to the main dock until the display is back.">
+                                    <ComboBox x:Name="WidgetDisplayCombo" Width="200" DisplayMemberPath="Label" SelectionChanged="OnWidgetDisplayChanged" />
+                                </ctl:SettingRow>
                                 <ContentControl x:Name="WidgetSettingsHost" Focusable="False" />
                             </StackPanel>
 

@@ -384,6 +384,15 @@ public sealed class DockItem : ObservableObject
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool PinnedEnd { get => _pinnedEnd; set => Set(ref _pinnedEnd, value); }
 
+    private string? _display;
+
+    /// <summary>
+    /// Widgets only: the display (device name, "\\.\DISPLAY2") whose dock shows the widget when "Show on all displays"
+    /// is on. Null, or a display without a dock, means the main dock.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Display { get => _display; set => Set(ref _display, value); }
+
     private bool _collapseWhenIdle;
 
     /// <summary>Widgets only: show the small tile while the widget has nothing to show (see WidgetBase.IsIdle).</summary>

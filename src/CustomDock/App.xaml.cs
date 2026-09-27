@@ -291,9 +291,11 @@ public partial class App : Application
 
         foreach (var device in wanted.Where(d => !_secondaryDocks.ContainsKey(d)))
         {
+            DockWindow? dock = null;
             try
             {
-                var dock = new DockWindow(config, _shell, device);
+                DockWindow.MarkDisplayFailed(device, false);
+                dock = new DockWindow(config, _shell, device);
                 _secondaryDocks[device] = dock;
                 dock.Start();
                 changed = true;
@@ -301,6 +303,11 @@ public partial class App : Application
             catch (Exception ex)
             {
                 Log.Error(ex, $"Failed to create dock on {device}");
+                // Its widgets go back to the main dock; the next display change tries again.
+                DockWindow.MarkDisplayFailed(device, true);
+                _secondaryDocks.Remove(device);
+                try { dock?.CloseDock(); } catch (Exception closeError) { Log.Error(closeError, $"Failed to close the dock on {device}"); }
+                changed = true;
             }
         }
 

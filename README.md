@@ -165,7 +165,7 @@ winget install SametGurtuna.DockHub
 - **Profiles:** save your setup as a profile (Work, Gaming, Laptop...) with its own items and look, switch from the dock menu or a shortcut, or let a profile switch in by itself: when a given number of displays is connected, while an app runs (for example `steam` or `cs2`), or during set hours (weekdays only if you like). When the app closes or the hours end, DockHub goes back to the profile you had. Rules live in *Settings › Profiles*.
 - **Open app indicator:** a line that widens for the active app and several windows, one dot per window, or none.
 - **Hide in full screen:** the dock steps aside for games, videos and F11 mode.
-- **Multi-monitor and DPI:** choose the monitor for the dock; per-monitor DPI (PerMonitorV2) is supported.
+- **Multi-monitor and DPI:** choose the monitor for the dock; per-monitor DPI (PerMonitorV2) is supported. With *Show on all displays*, every other display gets a dock too, with its own size; move a widget to one of them from its right-click menu (*Show on*) or in *Settings › Dock items*.
 - **Drag and drop:** reorder apps, widgets and separators on the dock. Dropping an `.exe` or `.lnk` from File Explorer pins it.
 - **Smooth motion:** scrolling, auto-hide and flyouts use frame-synchronized transitions at your display's refresh rate, including above 60 Hz. Hover highlights fade in, app icons grow slightly under the pointer, new items grow into place, and widget/folder popups open with macOS-style genie, zoom and shrink animations.
 - **Accessibility:** *Settings › Appearance › Animations* reduces motion to short fades (or turns it off), following Windows' animation effects by default. Windows contrast themes are picked up automatically. Screen readers get names and states for every dock item, and *Move focus to the dock* (Win+Alt+T) lets you use the dock with the arrow keys, Enter, Shift+Enter (new window), the menu key and Esc.
@@ -557,7 +557,7 @@ The widget then shows up in the gallery automatically. Other helpers:
 
 - **Window effects.** The blurred glass effect uses `SetWindowCompositionAttribute`, so it works even when the window is inactive. Corner rounding comes from DWM (about 8 px); corners stay square on Windows 10.
 - **Shell integration.** Windows 11's XAML tray items (network, volume and battery quick settings, language bar) belong to Explorer, so the dock shows its own network, volume and battery icons and opens Windows' quick settings panel from them. The per-app taskbar progress indicator may not appear for some apps, because the Windows key stays with Explorer.
-- **Multiple monitors.** The main dock (with widgets and tray icons) lives on one display; with *Show on all displays* the other displays get a dock with apps. The Windows taskbar is hidden on every display.
+- **Multiple monitors.** The tray icons live on the main dock. With *Show on all displays* the other displays get a dock with apps, and any widget can be moved to one of them; each widget sits on one dock only, and a widget whose display is disconnected waits on the main dock until it is back. The Windows taskbar is hidden on every display.
 - **Language.** The interface is available in English and Turkish (*Settings › General › Language*; System follows your Windows display language). Dates and numbers follow your Windows locale. Text that has no translation yet appears in English.
 
 ## FAQ

@@ -286,6 +286,13 @@ public sealed class WidgetItemView : WidgetCard
                 Item.CollapseWhenIdle = !Item.CollapseWhenIdle;
                 AppServices.ConfigService.ScheduleSave();
             }));
+        // Widgets inside a folder stay with their folder.
+        if (AppServices.Config.Items.Contains(Item) && WidgetDisplays.Choices() is { Count: > 1 } displays)
+        {
+            var current = WidgetDisplays.Current(displays, Item);
+            menu.Items.Add(DockMenu.Submenu("Show on", "\uE7F4", displays.Select(choice =>
+                DockMenu.Check(choice.Label, ReferenceEquals(choice, current), () => WidgetDisplays.Move(Item, choice.Device)))));
+        }
         menu.Items.Add(DockMenu.Check("Pin to right edge", Item.PinnedEnd, () =>
         {
             Item.PinnedEnd = !Item.PinnedEnd;

@@ -11,6 +11,14 @@ using CustomDock.Services;
 
 namespace CustomDock.Widgets;
 
+public sealed class BatteryDevicesSettings : ObservableObject
+{
+    private string[] _order = Array.Empty<string>();
+
+    /// <summary>Device ids in the order chosen in the panel; the first connected one is shown on the dock.</summary>
+    public string[] Order { get => _order; set => Set(ref _order, value ?? Array.Empty<string>()); }
+}
+
 public partial class BatteryDevicesWidget : WidgetBase
 {
     private const string HeadsetIconPath = "M12,3 A9,9 0 0 0 3,12 V18 A3,3 0 0 0 6,21 H7 A2,2 0 0 0 9,19 V15 A2,2 0 0 0 7,13 H5 V12 A7,7 0 0 1 19,12 V13 H17 A2,2 0 0 0 15,15 V19 A2,2 0 0 0 17,21 H18 A3,3 0 0 0 21,18 V12 A9,9 0 0 0 12,3 Z";
@@ -20,6 +28,8 @@ public partial class BatteryDevicesWidget : WidgetBase
     private static readonly Geometry HeadsetGeometry = Geometry.Parse(HeadsetIconPath);
     private static readonly Geometry MouseGeometry = Geometry.Parse(MouseIconPath);
     private static readonly Geometry BatteryGeometry = Geometry.Parse(BatteryIconPath);
+
+    private BatteryDevicesSettings _settings = new();
 
     static BatteryDevicesWidget()
     {
@@ -35,6 +45,7 @@ public partial class BatteryDevicesWidget : WidgetBase
 
     protected override void OnAttached()
     {
+        _settings = GetSettings<BatteryDevicesSettings>();
         AppServices.DeviceBattery.Updated += OnBatteryUpdated;
         Render();
     }
@@ -52,25 +63,33 @@ public partial class BatteryDevicesWidget : WidgetBase
 
     private void OnBatteryUpdated(object? sender, EventArgs e) => Render();
 
+    /// <summary>Connected devices in the user's order; devices never ordered follow in scan order.</summary>
+    private List<BatteryDeviceInfo> OrderedDevices()
+    {
+        var order = _settings.Order;
+        return AppServices.DeviceBattery.Devices
+            .Select((device, index) => (device, index))
+            .OrderBy(x => Array.IndexOf(order, x.device.Id) is var rank and >= 0 ? rank : int.MaxValue)
+            .ThenBy(x => x.index)
+            .Select(x => x.device)
+            .ToList();
+    }
+
     private void Render()
     {
-        var devices = AppServices.DeviceBattery.Devices;
-        var primary = AppServices.DeviceBattery.PrimaryDevice;
+        var devices = OrderedDevices();
+        var primary = devices.FirstOrDefault();
 
         // 1. Single view
         if (primary is not null)
         {
-            string shortName = primary.Name;
-            int paren = shortName.IndexOf('(');
-            if (paren > 3) shortName = shortName[..paren].Trim();
-
             SingleBatteryRing.Value = primary.BatteryPercent;
             var (fillKey, trackKey) = GetBrushKeys(primary.BatteryPercent, primary.IsCharging);
             SingleBatteryRing.SetResourceReference(RingGauge.FillProperty, fillKey);
             SingleBatteryRing.SetResourceReference(RingGauge.TrackProperty, trackKey);
 
             SingleIcon.Data = GetDeviceGeometry(primary);
-            SingleDeviceName.Text = shortName;
+            SingleDeviceName.Text = ShortName(primary);
             SingleBatteryText.Text = primary.IsCharging ? $"⚡ {primary.BatteryPercent}%" : $"{primary.BatteryPercent}%";
         }
         else
@@ -101,7 +120,7 @@ public partial class BatteryDevicesWidget : WidgetBase
         // Tooltip
         if (devices.Count > 0)
         {
-            var lines = devices.Select(d => $"{d.Name}: {d.BatteryPercent}%" + (d.IsCharging ? " (Charging)" : ""));
+            var lines = devices.Select(d => $"{d.Name}: {d.BatteryPercent}%" + (d.IsCharging ? $" ({L.T("Charging")})" : ""));
             ToolTip = string.Join("\n", lines);
         }
         else
@@ -109,7 +128,15 @@ public partial class BatteryDevicesWidget : WidgetBase
             ToolTip = L.T("No connected device battery found");
         }
 
+        if (DevicesPopup.IsOpen) BuildDeviceList(devices);
         RefreshCompact();
+    }
+
+    private static string ShortName(BatteryDeviceInfo device)
+    {
+        string name = device.Name;
+        int paren = name.IndexOf('(');
+        return paren > 3 ? name[..paren].Trim() : name;
     }
 
     private static (string fillKey, string trackKey) GetBrushKeys(int percent, bool isCharging)
@@ -127,6 +154,30 @@ public partial class BatteryDevicesWidget : WidgetBase
         return BatteryGeometry;
     }
 
+    private static Grid CreateRing(BatteryDeviceInfo dev, double size, double iconSize, double thickness)
+    {
+        var grid = new Grid { Width = size, Height = size };
+        var ring = new RingGauge { Thickness = thickness, Value = dev.BatteryPercent };
+        var (fillKey, trackKey) = GetBrushKeys(dev.BatteryPercent, dev.IsCharging);
+        ring.SetResourceReference(RingGauge.FillProperty, fillKey);
+        ring.SetResourceReference(RingGauge.TrackProperty, trackKey);
+
+        var path = new System.Windows.Shapes.Path
+        {
+            Data = GetDeviceGeometry(dev),
+            Width = iconSize,
+            Height = iconSize,
+            Stretch = Stretch.Uniform,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        path.SetResourceReference(System.Windows.Shapes.Path.FillProperty, "TextPrimaryBrush");
+
+        grid.Children.Add(ring);
+        grid.Children.Add(path);
+        return grid;
+    }
+
     private FrameworkElement CreateMultiItem(BatteryDeviceInfo dev)
     {
         var panel = new StackPanel
@@ -136,25 +187,8 @@ public partial class BatteryDevicesWidget : WidgetBase
             VerticalAlignment = VerticalAlignment.Center,
         };
 
-        var grid = new Grid { Width = 26, Height = 26, Margin = new Thickness(0, 0, 5, 0) };
-        var ring = new RingGauge { Thickness = 2.8, Value = dev.BatteryPercent };
-        var (fillKey, trackKey) = GetBrushKeys(dev.BatteryPercent, dev.IsCharging);
-        ring.SetResourceReference(RingGauge.FillProperty, fillKey);
-        ring.SetResourceReference(RingGauge.TrackProperty, trackKey);
-
-        var path = new System.Windows.Shapes.Path
-        {
-            Data = GetDeviceGeometry(dev),
-            Width = 11,
-            Height = 11,
-            Stretch = Stretch.Uniform,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-        };
-        path.SetResourceReference(System.Windows.Shapes.Path.FillProperty, "TextPrimaryBrush");
-
-        grid.Children.Add(ring);
-        grid.Children.Add(path);
+        var ring = CreateRing(dev, 26, 11, 2.8);
+        ring.Margin = new Thickness(0, 0, 5, 0);
 
         var text = new TextBlock
         {
@@ -163,22 +197,155 @@ public partial class BatteryDevicesWidget : WidgetBase
             VerticalAlignment = VerticalAlignment.Center,
         };
 
-        panel.Children.Add(grid);
+        panel.Children.Add(ring);
         panel.Children.Add(text);
         return panel;
     }
 
+    // ------------------------------------------------------------------ Devices panel
+
+    private void ToggleDevicesPanel()
+    {
+        if (!DevicesPopup.IsOpen)
+        {
+            BuildDeviceList(OrderedDevices());
+            AppServices.DeviceBattery.Refresh();
+        }
+        TogglePopup(DevicesPopup);
+    }
+
+    private void BuildDeviceList(List<BatteryDeviceInfo> devices)
+    {
+        DeviceList.Children.Clear();
+        if (devices.Count == 0)
+        {
+            var empty = new TextBlock
+            {
+                Text = L.T("No connected device battery found"),
+                Margin = new Thickness(6, 10, 6, 10),
+                TextWrapping = TextWrapping.Wrap,
+            };
+            empty.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondaryBrush");
+            DeviceList.Children.Add(empty);
+            return;
+        }
+
+        for (int i = 0; i < devices.Count; i++)
+            DeviceList.Children.Add(CreateDeviceRow(devices[i], i, devices.Count));
+    }
+
+    private FrameworkElement CreateDeviceRow(BatteryDeviceInfo dev, int index, int count)
+    {
+        var grid = new Grid();
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+        var ring = CreateRing(dev, 30, 12, 3);
+        ring.Margin = new Thickness(0, 0, 10, 0);
+        grid.Children.Add(ring);
+
+        var texts = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+        var name = new TextBlock
+        {
+            Text = ShortName(dev),
+            FontSize = 12,
+            FontWeight = FontWeights.SemiBold,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            ToolTip = dev.Name,
+        };
+        name.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimaryBrush");
+        texts.Children.Add(name);
+
+        var status = new List<string>();
+        if (index == 0) status.Add(L.T("Shown on dock"));
+        if (dev.IsCharging) status.Add(L.T("Charging"));
+        if (status.Count > 0)
+        {
+            var caption = new TextBlock { Text = string.Join(" · ", status), FontSize = 10.5 };
+            caption.SetResourceReference(TextBlock.ForegroundProperty, index == 0 ? "AccentBrush" : "TextSecondaryBrush");
+            texts.Children.Add(caption);
+        }
+        Grid.SetColumn(texts, 1);
+        grid.Children.Add(texts);
+
+        var percent = new TextBlock
+        {
+            Text = $"{dev.BatteryPercent}%",
+            FontSize = 12.5,
+            FontWeight = FontWeights.SemiBold,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(8, 0, 6, 0),
+        };
+        percent.SetResourceReference(TextBlock.ForegroundProperty, GetBrushKeys(dev.BatteryPercent, dev.IsCharging).fillKey);
+        Grid.SetColumn(percent, 2);
+        grid.Children.Add(percent);
+
+        var arrows = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+        arrows.Children.Add(CreateMoveButton("", L.T("Move up"), index > 0, () => Move(dev, -1)));
+        arrows.Children.Add(CreateMoveButton("", L.T("Move down"), index < count - 1, () => Move(dev, +1)));
+        Grid.SetColumn(arrows, 3);
+        grid.Children.Add(arrows);
+
+        var row = new Border
+        {
+            CornerRadius = new CornerRadius(10),
+            Padding = new Thickness(8, 7, 4, 7),
+            Margin = new Thickness(0, 0, 0, index < count - 1 ? 6 : 0),
+            Child = grid,
+        };
+        row.SetResourceReference(Border.BackgroundProperty, "SurfaceLightBrush");
+        return row;
+    }
+
+    private Button CreateMoveButton(string glyph, string toolTip, bool enabled, Action onClick)
+    {
+        var button = new Button
+        {
+            Content = glyph,
+            ToolTip = toolTip,
+            IsEnabled = enabled,
+            Style = (Style)FindResource("CardIconButton"),
+        };
+        button.Click += (_, _) => onClick();
+        return button;
+    }
+
+    /// <summary>Swaps the device with its visible neighbour, keeping disconnected devices where they were.</summary>
+    private void Move(BatteryDeviceInfo device, int delta)
+    {
+        var visible = OrderedDevices();
+        int from = visible.FindIndex(d => d.Id == device.Id);
+        int to = from + delta;
+        if (from < 0 || to < 0 || to >= visible.Count) return;
+
+        var order = _settings.Order.ToList();
+        foreach (var d in visible)
+            if (!order.Contains(d.Id)) order.Add(d.Id);
+
+        int a = order.IndexOf(visible[from].Id), b = order.IndexOf(visible[to].Id);
+        (order[a], order[b]) = (order[b], order[a]);
+        _settings.Order = order.ToArray();
+        Render();
+    }
+
+    private void OnRefreshClick(object sender, RoutedEventArgs e) => AppServices.DeviceBattery.Refresh();
+
+    // Clicks inside the panel must not bubble up to the widget and toggle it closed.
+    private void OnPopupMouseUp(object sender, MouseButtonEventArgs e) => e.Handled = true;
+
     protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
     {
         base.OnMouseLeftButtonUp(e);
-        if (DockDragHelper.JustDragged) return;
-        AppServices.DeviceBattery.Refresh();
+        if (DockDragHelper.JustDragged || IsPreview || e.Handled) return;
+        ToggleDevicesPanel();
         e.Handled = true;
     }
 
     protected override void UpdateCompact(CompactTile tile)
     {
-        var primary = AppServices.DeviceBattery.PrimaryDevice;
+        var primary = OrderedDevices().FirstOrDefault();
         if (primary is not null)
         {
             var (fillKey, trackKey) = GetBrushKeys(primary.BatteryPercent, primary.IsCharging);
@@ -194,14 +361,15 @@ public partial class BatteryDevicesWidget : WidgetBase
 
     public override bool OnCompactClick()
     {
-        AppServices.DeviceBattery.Refresh();
+        ToggleDevicesPanel();
         return true;
     }
 
     public override void AddContextMenuItems(ItemCollection items)
     {
-        items.Add(DockMenu.Item("Refresh now", "\uE72C", () => AppServices.DeviceBattery.Refresh()));
-        items.Add(DockMenu.Item("Bluetooth settings…", "\uE702", () =>
+        items.Add(DockMenu.Item(L.T("Show all devices"), "", ToggleDevicesPanel));
+        items.Add(DockMenu.Item("Refresh now", "", () => AppServices.DeviceBattery.Refresh()));
+        items.Add(DockMenu.Item("Bluetooth settings…", "", () =>
         {
             try
             {

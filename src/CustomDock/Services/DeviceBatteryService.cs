@@ -17,7 +17,8 @@ public sealed record BatteryDeviceInfo(string Id, string Name, int BatteryPercen
         || Name.Contains("buds", StringComparison.OrdinalIgnoreCase);
 
     public bool IsMouse => Name.Contains("mouse", StringComparison.OrdinalIgnoreCase)
-        || Name.Contains("fare", StringComparison.OrdinalIgnoreCase);
+        || Name.Contains("fare", StringComparison.OrdinalIgnoreCase)
+        || Name.Contains("lamzu", StringComparison.OrdinalIgnoreCase);
 
     public bool IsKeyboard => Name.Contains("keyboard", StringComparison.OrdinalIgnoreCase)
         || Name.Contains("klavye", StringComparison.OrdinalIgnoreCase);
@@ -60,10 +61,13 @@ public sealed class DeviceBatteryService
             var list = new List<BatteryDeviceInfo>();
 
             // 1. HyperX Cloud II Wireless and 2.4 GHz USB Dongle scan
-            var dongleDevices = ScanUsbDongles();
-            list.AddRange(dongleDevices);
+            var hidPaths = EnumerateHidPaths();
+            list.AddRange(ScanUsbDongles(hidPaths));
 
-            // 2. Windows Bluetooth connected devices scan
+            // 2. Compx-based mice (LAMZU Atlantis Mini) over their vendor HID collections
+            list.AddRange(ScanCompxMice(hidPaths));
+
+            // 3. Windows Bluetooth connected devices scan
             var btDevices = await ScanBluetoothDevicesAsync();
             list.AddRange(btDevices);
 
@@ -108,10 +112,10 @@ public sealed class DeviceBatteryService
         return result;
     }
 
-    /// <summary>Scans HyperX Cloud II Wireless and similar 2.4GHz RF USB Dongle devices via HID.</summary>
-    private static List<BatteryDeviceInfo> ScanUsbDongles()
+    /// <summary>Device interface paths of every HID collection currently present.</summary>
+    private static List<string> EnumerateHidPaths()
     {
-        var result = new List<BatteryDeviceInfo>();
+        var result = new List<string>();
 
         try
         {
@@ -140,13 +144,7 @@ public sealed class DeviceBatteryService
                         {
                             IntPtr pDevicePath = new IntPtr(detailData.ToInt64() + 4);
                             string? devicePath = Marshal.PtrToStringAuto(pDevicePath);
-                            if (string.IsNullOrEmpty(devicePath)) continue;
-
-                            var dev = CheckHyperXDevice(devicePath);
-                            if (dev is not null && !result.Any(d => d.Id == dev.Id))
-                            {
-                                result.Add(dev);
-                            }
+                            if (!string.IsNullOrEmpty(devicePath)) result.Add(devicePath);
                         }
                     }
                     finally
@@ -162,10 +160,167 @@ public sealed class DeviceBatteryService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error during USB Dongle HID scan");
+            Log.Error(ex, "Error during HID enumeration");
         }
 
         return result;
+    }
+
+    /// <summary>Scans HyperX Cloud II Wireless and similar 2.4GHz RF USB Dongle devices via HID.</summary>
+    private static List<BatteryDeviceInfo> ScanUsbDongles(IEnumerable<string> hidPaths)
+    {
+        var result = new List<BatteryDeviceInfo>();
+        foreach (var devicePath in hidPaths)
+        {
+            var dev = CheckHyperXDevice(devicePath);
+            if (dev is not null && !result.Any(d => d.Id == dev.Id))
+                result.Add(dev);
+        }
+        return result;
+    }
+
+    // ------------------------------------------------------------------ Compx-based mice (LAMZU)
+
+    /// <summary>Mice built on the Compx wireless chipset. Wired entries mean the mouse is plugged in (charging).</summary>
+    private static readonly (ushort Vid, ushort Pid, string Id, string Name, bool Wired)[] s_compxMice =
+    {
+        (0x25A7, 0xFA7B, "lamzu-atlantis-mini", "LAMZU Atlantis Mini", true),
+        (0x25A7, 0xFA7C, "lamzu-atlantis-mini", "LAMZU Atlantis Mini", false),
+    };
+
+    private const byte CompxCommandReport = 0x08;
+    private const byte CompxResponseReport = 0x09;
+    private const byte CompxBatteryCommand = 0x04;
+    private const int CompxReportLength = 17;
+
+    private static readonly Dictionary<string, (int Battery, bool IsCharging)> s_lastKnownCompx = new();
+
+    /// <summary>
+    /// Compx protocol: a 17-byte feature report (ID 0x08, byte 1 = command, last byte = 0x55 minus the sum of the
+    /// others) is answered on the vendor input collection with report 0x09 echoing the command. For the battery
+    /// query (0x04) byte 6 is the level in percent and byte 7 the charging flag.
+    /// </summary>
+    private static List<BatteryDeviceInfo> ScanCompxMice(IReadOnlyList<string> hidPaths)
+    {
+        var result = new List<BatteryDeviceInfo>();
+        foreach (var mouse in s_compxMice)
+        {
+            if (result.Any(d => d.Id == mouse.Id)) continue;
+            string tag = $"vid_{mouse.Vid:x4}&pid_{mouse.Pid:x4}";
+            var paths = hidPaths.Where(p => p.Contains(tag, StringComparison.OrdinalIgnoreCase)).ToList();
+            if (paths.Count == 0) continue;
+
+            try
+            {
+                if (QueryCompxBattery(paths) is { Battery: > 0 and <= 100 } reading)
+                {
+                    bool charging = mouse.Wired || reading.IsCharging;
+                    s_lastKnownCompx[mouse.Id] = (reading.Battery, charging);
+                    result.Add(new BatteryDeviceInfo(mouse.Id, mouse.Name, reading.Battery, charging, true));
+                }
+                else if (s_lastKnownCompx.TryGetValue(mouse.Id, out var cached))
+                {
+                    result.Add(new BatteryDeviceInfo(mouse.Id, mouse.Name, cached.Battery, cached.IsCharging, true));
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"Compx battery query failed: {mouse.Name}");
+            }
+        }
+        return result;
+    }
+
+    private static (int Battery, bool IsCharging)? QueryCompxBattery(List<string> paths)
+    {
+        IntPtr featureHandle = IntPtr.Zero, inputHandle = IntPtr.Zero;
+        try
+        {
+            foreach (var path in paths)
+            {
+                IntPtr handle = HidInterop.CreateFile(path,
+                    HidInterop.GENERIC_READ | HidInterop.GENERIC_WRITE,
+                    HidInterop.FILE_SHARE_READ | HidInterop.FILE_SHARE_WRITE,
+                    IntPtr.Zero, HidInterop.OPEN_EXISTING, HidInterop.FILE_FLAG_OVERLAPPED, IntPtr.Zero);
+                if (handle == IntPtr.Zero || handle == new IntPtr(-1)) continue;
+
+                var caps = GetCaps(handle);
+                bool vendor = caps is { UsagePage: >= 0xFF00 };
+                if (vendor && featureHandle == IntPtr.Zero && caps!.Value.FeatureReportByteLength == CompxReportLength)
+                    featureHandle = handle;
+                else if (vendor && inputHandle == IntPtr.Zero && caps!.Value.InputReportByteLength == CompxReportLength)
+                    inputHandle = handle;
+                else
+                    HidInterop.CloseHandle(handle);
+            }
+            if (featureHandle == IntPtr.Zero || inputHandle == IntPtr.Zero) return null;
+
+            // The input handle is open before the command goes out, so the answer lands in its report queue.
+            var command = new byte[CompxReportLength];
+            command[0] = CompxCommandReport;
+            command[1] = CompxBatteryCommand;
+            int sum = 0;
+            for (int i = 0; i < command.Length - 1; i++) sum += command[i];
+            command[^1] = (byte)(0x55 - sum);
+            if (!HidInterop.HidD_SetFeature(featureHandle, command, command.Length)) return null;
+
+            var response = new byte[CompxReportLength];
+            for (int attempt = 0; attempt < 6; attempt++)
+            {
+                if (!ReadInputReport(inputHandle, response, 300)) return null;
+                if (response[0] == CompxResponseReport && response[1] == CompxBatteryCommand)
+                    return (response[6], response[7] != 0);
+            }
+            return null;
+        }
+        finally
+        {
+            if (featureHandle != IntPtr.Zero) HidInterop.CloseHandle(featureHandle);
+            if (inputHandle != IntPtr.Zero) HidInterop.CloseHandle(inputHandle);
+        }
+    }
+
+    private static HidInterop.HIDP_CAPS? GetCaps(IntPtr handle)
+    {
+        if (!HidInterop.HidD_GetPreparsedData(handle, out var preparsed)) return null;
+        try
+        {
+            return HidInterop.HidP_GetCaps(preparsed, out var caps) == HidInterop.HIDP_STATUS_SUCCESS ? caps : null;
+        }
+        finally
+        {
+            HidInterop.HidD_FreePreparsedData(preparsed);
+        }
+    }
+
+    /// <summary>Reads one input report from an overlapped HID handle; false on timeout or error.</summary>
+    private static bool ReadInputReport(IntPtr handle, byte[] buffer, uint timeoutMs)
+    {
+        IntPtr native = Marshal.AllocHGlobal(buffer.Length);
+        IntPtr readEvent = HidInterop.CreateEvent(IntPtr.Zero, true, false, null);
+        try
+        {
+            var overlapped = new HidInterop.OVERLAPPED { hEvent = readEvent };
+            bool ok = HidInterop.ReadFile(handle, native, (uint)buffer.Length, out uint bytesRead, ref overlapped);
+            if (!ok)
+            {
+                if (Marshal.GetLastWin32Error() != 997) return false; // ERROR_IO_PENDING
+                if (HidInterop.WaitForSingleObject(readEvent, timeoutMs) != 0)
+                {
+                    HidInterop.CancelIoEx(handle, ref overlapped);
+                    HidInterop.GetOverlappedResult(handle, ref overlapped, out _, true);
+                    return false;
+                }
+                if (!HidInterop.GetOverlappedResult(handle, ref overlapped, out bytesRead, false)) return false;
+            }
+            Marshal.Copy(native, buffer, 0, (int)Math.Min(bytesRead, (uint)buffer.Length));
+            return bytesRead > 0;
+        }
+        finally
+        {
+            HidInterop.CloseHandle(readEvent);
+            Marshal.FreeHGlobal(native);
+        }
     }
 
     private static readonly Dictionary<ushort, (int Battery, bool IsCharging)> s_lastKnownBattery = new();

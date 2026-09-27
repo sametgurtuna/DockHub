@@ -198,7 +198,7 @@ Every widget can be added more than once, and each copy has its own settings. Ch
 | | **Network** | Numbers only, With graph | Live download and upload speed. |
 | | **Status** | Rings, Percentage ring, Icons only | Battery, disk, memory and processor. |
 | | **Recycle bin** | Icon only, Detailed | Drag files onto it to delete them, click to open, right-click to empty. |
-| | **Device batteries** | Single device, Multiple devices | Battery levels for Bluetooth and USB peripherals (wireless headsets, mice, keyboards). |
+| | **Device batteries** | Single device, Multiple devices | Battery levels for Bluetooth and USB peripherals (HyperX Cloud II Wireless, LAMZU Atlantis Mini, wireless headsets, mice, keyboards). Click it to see every device and choose which one the dock shows. |
 | | **GPU** | Numbers, Rings, Bars | Graphics card load and video memory from the Task Manager counters. |
 | | **Brightness** | Slider, Icon only | Scroll to change the brightness of laptop screens and DDC/CI monitors; shows when night light is on. |
 | | **Wi-Fi and Bluetooth** | Buttons, Icon only | Turn Wi-Fi and Bluetooth on or off in one click, like Quick Settings. |

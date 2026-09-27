@@ -476,7 +476,7 @@
                         <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding HoverEffect}" />
                     </ctl:SettingRow>
                     <ctl:SettingRow Glyph="&#xE9A6;" Header="Even widget widths"
-                                    Description="Widget cards round their width up to a common grid, so the dock keeps an even rhythm.">
+                                    Description="Widget cards use a few standard widths and round up to a common grid, so the dock keeps an even rhythm.">
                         <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding AlignWidgetWidths}" />
                     </ctl:SettingRow>
                     <ctl:SettingRow Glyph="&#xE8D2;" Header="Text size" x:Name="TextSizeRow"

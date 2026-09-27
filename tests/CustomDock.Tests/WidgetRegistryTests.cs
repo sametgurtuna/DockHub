@@ -29,6 +29,15 @@ public class WidgetRegistryTests
     }
 
     [Fact]
+    public void Every_built_in_variant_has_a_width_class()
+    {
+        var missing = WidgetRegistry.All
+            .SelectMany(d => d.Variants.Where(v => v.Width == WidgetWidth.Auto).Select(v => $"{d.Id}/{v.Id}"))
+            .ToList();
+        Assert.True(missing.Count == 0, "No width class: " + string.Join(", ", missing));
+    }
+
+    [Fact]
     public void Gallery_texts_are_translated()
     {
         var turkish = Turkish();

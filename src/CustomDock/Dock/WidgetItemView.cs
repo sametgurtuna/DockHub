@@ -103,6 +103,7 @@ public sealed class WidgetItemView : WidgetCard
     private void OnIdleSettingChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(DockItem.CollapseWhenIdle)) UpdateCompactMode();
+        else if (e.PropertyName == nameof(DockItem.Variant)) ApplyWidthClass();
     }
 
     private void SetCompactCore(bool compact)
@@ -132,11 +133,23 @@ public sealed class WidgetItemView : WidgetCard
     private void OnWidgetVisibilityChanged(object? sender, EventArgs e) => Visibility = Widget.Visibility;
 
     /// <summary>Picks up a changed "Even widget widths" setting.</summary>
-    public void RefreshGrid() => SnapToGrid = AlignWidths && !_compact;
+    public void RefreshGrid() => ApplyWidthClass();
+
+    /// <summary>
+    /// Snaps the card to the grid and gives it its variant's minimum width while "Even widget widths" is on. The
+    /// widget keeps its own width and is centered in any extra room; a compact tile fills its card.
+    /// </summary>
+    private void ApplyWidthClass()
+    {
+        SnapToGrid = AlignWidths && !_compact;
+        var width = Widget.Descriptor.Variants.FirstOrDefault(v => v.Id == Widget.Variant)?.Width ?? WidgetWidth.Auto;
+        MinWidth = SnapToGrid ? WidgetWidths.MinCardWidth(width) : 0;
+        HorizontalContentAlignment = _compact ? HorizontalAlignment.Stretch : HorizontalAlignment.Center;
+    }
 
     private void ApplyAppearance()
     {
-        SnapToGrid = AlignWidths && !_compact;
+        ApplyWidthClass();
         Apply(this, compact: _compact);
         if (_flyoutCard is not null) Apply(_flyoutCard, compact: false);
     }

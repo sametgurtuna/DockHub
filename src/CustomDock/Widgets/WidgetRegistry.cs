@@ -5,7 +5,7 @@ using CustomDock.Services;
 
 namespace CustomDock.Widgets;
 
-public sealed record WidgetVariant(string Id, string EnglishName)
+public sealed record WidgetVariant(string Id, string EnglishName, WidgetWidth Width = WidgetWidth.Auto)
 {
     /// <summary>Display name in the interface language.</summary>
     public string Name => L.T(EnglishName);
@@ -108,7 +108,7 @@ public static class WidgetRegistry
             Id = "clock", Name = "Clock", Category = WidgetCategories.Clocks,
             Description = "Clock and date. Analog, digital, or calendar view; calendar view also displays the next reminder.",
             IconPath = ClockIcon, AccentKey = "AccentOrangeBrush",
-            Variants = new[] { new WidgetVariant("analog", "Analog"), new WidgetVariant("digital", "Digital"), new WidgetVariant("calendar", "Calendar") },
+            Variants = new[] { new WidgetVariant("analog", "Analog", WidgetWidth.Standard), new WidgetVariant("digital", "Digital", WidgetWidth.Standard), new WidgetVariant("calendar", "Calendar", WidgetWidth.Wide) },
             Factory = () => new ClockWidget(), SettingsType = typeof(ClockSettings),
         },
         new()
@@ -116,7 +116,7 @@ public static class WidgetRegistry
             Id = "world-clock", Name = "World clock", Category = WidgetCategories.Clocks,
             Description = "Clocks for different cities.",
             IconPath = "M12,3 A9,9 0 1 1 11.99,3 Z M3,12 H21 M12,3 C15,6 15,18 12,21 C9,18 9,6 12,3 Z", AccentKey = "AccentBlueBrush",
-            Variants = new[] { new WidgetVariant("single", "Single city"), new WidgetVariant("multi", "Multiple cities") },
+            Variants = new[] { new WidgetVariant("single", "Single city", WidgetWidth.Standard), new WidgetVariant("multi", "Multiple cities", WidgetWidth.Standard) },
             Factory = () => new WorldClockWidget(), SettingsType = typeof(WorldClockSettings),
             SettingsViewFactory = s => new WorldClockSettingsView((WorldClockSettings)s),
         },
@@ -125,7 +125,7 @@ public static class WidgetRegistry
             Id = "stopwatch", Name = "Stopwatch", Category = WidgetCategories.Clocks,
             Description = "Click to start/stop, right-click to reset.",
             IconPath = "M12,5 A8,8 0 1 1 11.99,5 Z M12,9 V13 M10,2 H14 M19,6 L20.5,4.5", AccentKey = "AccentOrangeBrush",
-            Variants = new[] { new WidgetVariant("default", "Stopwatch") },
+            Variants = new[] { new WidgetVariant("default", "Stopwatch", WidgetWidth.Standard) },
             Factory = () => new StopwatchWidget(),
         },
         new()
@@ -133,7 +133,7 @@ public static class WidgetRegistry
             Id = "focus", Name = "Focus timer", Category = WidgetCategories.Clocks,
             Description = "Pomodoro-style focus and break timer; sends notifications when time expires.",
             IconPath = "M12,3 A9,9 0 1 1 11.99,3 Z M12,6 A6,6 0 0 1 18,12", AccentKey = "AccentOrangeBrush",
-            Variants = new[] { new WidgetVariant("default", "Focus timer") },
+            Variants = new[] { new WidgetVariant("default", "Focus timer", WidgetWidth.Standard) },
             Factory = () => new FocusWidget(), SettingsType = typeof(FocusSettings),
         },
         new()
@@ -141,7 +141,7 @@ public static class WidgetRegistry
             Id = "countdown", Name = "Countdown", Category = WidgetCategories.Clocks,
             Description = "Countdown with presets; sends notification when finished.",
             IconPath = "M12,5 A8,8 0 1 1 11.99,5 Z M12,13 L15,10 M10,2 H14", AccentKey = "AccentYellowBrush",
-            Variants = new[] { new WidgetVariant("default", "Countdown") },
+            Variants = new[] { new WidgetVariant("default", "Countdown", WidgetWidth.Standard) },
             Factory = () => new CountdownWidget(), SettingsType = typeof(CountdownSettings),
         },
         new()
@@ -149,7 +149,7 @@ public static class WidgetRegistry
             Id = "alarm", Name = "Alarm", Category = WidgetCategories.Clocks,
             Description = "Notification at a specific time (optional daily repeat).",
             IconPath = "M12,6 A7,7 0 1 1 11.99,6 Z M12,9 V13 L14,14 M4,5 L7,2.5 M20,5 L17,2.5", AccentKey = "AccentRedBrush",
-            Variants = new[] { new WidgetVariant("default", "Alarm") },
+            Variants = new[] { new WidgetVariant("default", "Alarm", WidgetWidth.Standard) },
             Factory = () => new AlarmWidget(), SettingsType = typeof(AlarmSettings),
         },
         new()
@@ -157,7 +157,7 @@ public static class WidgetRegistry
             Id = "time-progress", Name = "Time progress", Category = WidgetCategories.Clocks,
             Description = "Elapsed progress of the day, week, month, or year.",
             IconPath = "M3,8 H21 V16 H3 Z M6,8 V16 M9,8 V16 M12,8 V16", AccentKey = "AccentPurpleBrush",
-            Variants = new[] { new WidgetVariant("bar", "Bar"), new WidgetVariant("ring", "Ring") },
+            Variants = new[] { new WidgetVariant("bar", "Bar", WidgetWidth.Wide), new WidgetVariant("ring", "Ring", WidgetWidth.Standard) },
             Factory = () => new TimeProgressWidget(), SettingsType = typeof(TimeProgressSettings),
         },
 
@@ -167,7 +167,7 @@ public static class WidgetRegistry
             Id = "hydration", Name = "Hydration", Category = WidgetCategories.Reminders,
             Description = "Countdown to next water reminder and daily goal. Click to add a glass.",
             IconPath = "M12,3 C12,3 5.5,10 5.5,14.5 A6.5,6.5 0 0 0 18.5,14.5 C18.5,10 12,3 12,3 Z", AccentKey = "AccentCyanBrush",
-            Variants = new[] { new WidgetVariant("timer", "Timer"), new WidgetVariant("progress", "Daily goal") },
+            Variants = new[] { new WidgetVariant("timer", "Timer", WidgetWidth.Standard), new WidgetVariant("progress", "Daily goal", WidgetWidth.Standard) },
             Factory = () => new HydrationWidget(), SettingsType = typeof(HydrationSettings),
         },
         new()
@@ -175,7 +175,7 @@ public static class WidgetRegistry
             Id = "reminders", Name = "Reminders", Category = WidgetCategories.Reminders,
             Description = "Add reminders with text and time; shows a Windows notification when due.",
             IconPath = "M8,6 H20 M8,12 H20 M8,18 H20 M4,6 H4.5 M4,12 H4.5 M4,18 H4.5", AccentKey = "AccentBlueBrush",
-            Variants = new[] { new WidgetVariant("list", "List"), new WidgetVariant("next", "Next"), new WidgetVariant("count", "Count") },
+            Variants = new[] { new WidgetVariant("list", "List", WidgetWidth.Wide), new WidgetVariant("next", "Next", WidgetWidth.Wide), new WidgetVariant("count", "Count", WidgetWidth.Standard) },
             Factory = () => new RemindersWidget(),
         },
 
@@ -185,7 +185,7 @@ public static class WidgetRegistry
             Id = "notes", Name = "Sticky note", Category = WidgetCategories.Notes,
             Description = "Color-customizable, auto-saving sticky note.",
             IconPath = "M5,4 H19 V14 L14,20 H5 Z M14,20 V14 H19", AccentKey = "AccentYellowBrush",
-            Variants = new[] { new WidgetVariant("sticky", "Sticky note") },
+            Variants = new[] { new WidgetVariant("sticky", "Sticky note", WidgetWidth.Wide) },
             Factory = () => new NotesWidget(), SettingsType = typeof(NotesSettings),
         },
 
@@ -195,7 +195,7 @@ public static class WidgetRegistry
             Id = "media", Name = "Now playing", Category = WidgetCategories.Media,
             Description = "Track info and controls from Spotify, YouTube Music, browsers, etc. (Windows SMTC).",
             IconPath = "M9,17 V5 L20,3 V15 M9,17 A2.5,2.5 0 1 1 4,17 A2.5,2.5 0 1 1 9,17 Z M20,15 A2.5,2.5 0 1 1 15,15 A2.5,2.5 0 1 1 20,15 Z", AccentKey = "AccentPinkBrush",
-            Variants = new[] { new WidgetVariant("full", "Full"), new WidgetVariant("compact", "Compact"), new WidgetVariant("mini", "Mini") },
+            Variants = new[] { new WidgetVariant("full", "Full", WidgetWidth.Wide), new WidgetVariant("compact", "Compact", WidgetWidth.Wide), new WidgetVariant("mini", "Mini", WidgetWidth.Compact) },
             Factory = () => new MediaWidget(), SettingsType = typeof(MediaSettings),
         },
 
@@ -205,7 +205,7 @@ public static class WidgetRegistry
             Id = "system", Name = "CPU and memory", Category = WidgetCategories.System,
             Description = "Live CPU and memory usage.",
             IconPath = "M3,12 H7 L10,4 L14,20 L17,12 H21", AccentKey = "AccentMagentaBrush",
-            Variants = new[] { new WidgetVariant("numbers", "Numbers"), new WidgetVariant("rings", "Rings"), new WidgetVariant("bars", "Bars") },
+            Variants = new[] { new WidgetVariant("numbers", "Numbers", WidgetWidth.Standard), new WidgetVariant("rings", "Rings", WidgetWidth.Standard), new WidgetVariant("bars", "Bars", WidgetWidth.Wide) },
             Factory = () => new SystemWidget(), SettingsType = typeof(SystemSettings),
         },
         new()
@@ -213,7 +213,7 @@ public static class WidgetRegistry
             Id = "network", Name = "Network speed", Category = WidgetCategories.System,
             Description = "Real-time download and upload speeds.",
             IconPath = "M8,4 V20 M4,16 L8,20 L12,16 M16,20 V4 M12,8 L16,4 L20,8", AccentKey = "AccentBlueBrush",
-            Variants = new[] { new WidgetVariant("numbers", "Numbers only"), new WidgetVariant("chart", "Chart") },
+            Variants = new[] { new WidgetVariant("numbers", "Numbers only", WidgetWidth.Standard), new WidgetVariant("chart", "Chart", WidgetWidth.Wide) },
             Factory = () => new NetworkWidget(),
         },
         new()
@@ -221,7 +221,7 @@ public static class WidgetRegistry
             Id = "status", Name = "Status", Category = WidgetCategories.System,
             Description = "Battery, disk, memory, and CPU usage rings.",
             IconPath = "M12,4 A8,8 0 1 1 11.99,4 Z M12,8 A4,4 0 1 1 11.99,8 Z", AccentKey = "AccentGreenBrush",
-            Variants = new[] { new WidgetVariant("rings", "Rings"), new WidgetVariant("percent", "Percentage ring"), new WidgetVariant("icons", "Icon only") },
+            Variants = new[] { new WidgetVariant("rings", "Rings", WidgetWidth.Standard), new WidgetVariant("percent", "Percentage ring", WidgetWidth.Standard), new WidgetVariant("icons", "Icon only", WidgetWidth.Compact) },
             Factory = () => new StatusWidget(), SettingsType = typeof(StatusSettings),
         },
 
@@ -231,7 +231,7 @@ public static class WidgetRegistry
             Id = "weather", Name = "Weather", Category = WidgetCategories.Weather,
             Description = "Current and hourly weather from Open-Meteo (no API key required).",
             IconPath = "M17.5,19 H8 A5,5 0 1 1 9.6,9.3 A6,6 0 0 1 20.8,11.6 A3.8,3.8 0 0 1 17.5,19 Z", AccentKey = "AccentCyanBrush",
-            Variants = new[] { new WidgetVariant("current", "Current"), new WidgetVariant("conditions", "Conditions"), new WidgetVariant("hourly", "Hourly forecast") },
+            Variants = new[] { new WidgetVariant("current", "Current", WidgetWidth.Standard), new WidgetVariant("conditions", "Conditions", WidgetWidth.Standard), new WidgetVariant("hourly", "Hourly forecast", WidgetWidth.Wide) },
             Factory = () => new WeatherWidget(), SettingsType = typeof(WeatherSettings),
             SettingsViewFactory = s => new WeatherSettingsView((WeatherSettings)s),
         },
@@ -242,7 +242,7 @@ public static class WidgetRegistry
             Id = "calendar", Name = "Calendar", Category = WidgetCategories.Productivity,
             Description = "Your next meeting from Google, Outlook or any iCal (.ics) calendar link, with a Join button for Teams, Meet and Zoom and a reminder before it starts.",
             IconPath = CalendarWidget.Icon, AccentKey = "AccentRedBrush",
-            Variants = new[] { new WidgetVariant("next", "Next event"), new WidgetVariant("compact", "Time until") },
+            Variants = new[] { new WidgetVariant("next", "Next event", WidgetWidth.Wide), new WidgetVariant("compact", "Time until", WidgetWidth.Compact) },
             Factory = () => new CalendarWidget(), SettingsType = typeof(CalendarSettings),
         },
         new()
@@ -250,7 +250,7 @@ public static class WidgetRegistry
             Id = "clipboard", Name = "Clipboard history", Category = WidgetCategories.Productivity,
             Description = "The last 25 things you copied, text and images. Click to copy again, pin the ones you need. Kept only in memory; password managers are never recorded.",
             IconPath = ClipboardWidget.Icon, AccentKey = "AccentCyanBrush",
-            Variants = new[] { new WidgetVariant("latest", "Latest item"), new WidgetVariant("icon", "Icon only") },
+            Variants = new[] { new WidgetVariant("latest", "Latest item", WidgetWidth.Wide), new WidgetVariant("icon", "Icon only", WidgetWidth.Compact) },
             Factory = () => new ClipboardWidget(),
         },
         new()
@@ -258,7 +258,7 @@ public static class WidgetRegistry
             Id = "stack", Name = "Folder stack", Category = WidgetCategories.Productivity,
             Description = "The newest files of your Downloads (or any) folder. Click to browse, drag files straight into other apps.",
             IconPath = "M4,7.5 A1.5,1.5 0 0 1 5.5,6 H9.5 L11.5,8 H18.5 A1.5,1.5 0 0 1 20,9.5 V18 A1.5,1.5 0 0 1 18.5,19.5 H5.5 A1.5,1.5 0 0 1 4,18 Z M12,10.5 V16 M9.5,13.5 L12,16 L14.5,13.5", AccentKey = "AccentYellowBrush",
-            Variants = new[] { new WidgetVariant("stack", "Stack"), new WidgetVariant("details", "Detailed") },
+            Variants = new[] { new WidgetVariant("stack", "Stack", WidgetWidth.Compact), new WidgetVariant("details", "Detailed", WidgetWidth.Wide) },
             Factory = () => new StackWidget(), SettingsType = typeof(StackSettings),
         },
         new()
@@ -266,7 +266,7 @@ public static class WidgetRegistry
             Id = "currency", Name = "Exchange rates", Category = WidgetCategories.Productivity,
             Description = "Daily exchange rates from the European Central Bank with the change since the previous day and a two-week trend.",
             IconPath = CurrencyWidget.Icon, AccentKey = "AccentGreenBrush",
-            Variants = new[] { new WidgetVariant("single", "Single pair"), new WidgetVariant("list", "Several pairs") },
+            Variants = new[] { new WidgetVariant("single", "Single pair", WidgetWidth.Standard), new WidgetVariant("list", "Several pairs", WidgetWidth.Standard) },
             Factory = () => new CurrencyWidget(), SettingsType = typeof(CurrencySettings),
         },
 
@@ -275,7 +275,7 @@ public static class WidgetRegistry
             Id = "todo", Name = "To do", Category = WidgetCategories.Productivity,
             Description = "Today's tasks: a simple list on this PC or today's and overdue tasks from Todoist. Tick to complete, add new ones from the flyout.",
             IconPath = TodoWidget.Icon, AccentKey = "AccentGreenBrush",
-            Variants = new[] { new WidgetVariant("list", "List"), new WidgetVariant("count", "Count") },
+            Variants = new[] { new WidgetVariant("list", "List", WidgetWidth.Wide), new WidgetVariant("count", "Count", WidgetWidth.Standard) },
             Factory = () => new TodoWidget(), SettingsType = typeof(TodoSettings),
             SettingsViewFactory = s => new TodoSettingsView((TodoSettings)s),
         },
@@ -284,7 +284,7 @@ public static class WidgetRegistry
             Id = "screenshot", Name = "Screenshot", Category = WidgetCategories.Productivity,
             Description = "One click opens the Windows snipping overlay; the other button saves every screen to Pictures\\Screenshots and copies it.",
             IconPath = ScreenshotWidget.Icon, AccentKey = "AccentPinkBrush",
-            Variants = new[] { new WidgetVariant("icon", "Icon only"), new WidgetVariant("buttons", "Buttons") },
+            Variants = new[] { new WidgetVariant("icon", "Icon only", WidgetWidth.Compact), new WidgetVariant("buttons", "Buttons", WidgetWidth.Compact) },
             Factory = () => new ScreenshotWidget(), SettingsType = typeof(ScreenshotSettings),
         },
 
@@ -294,7 +294,7 @@ public static class WidgetRegistry
             Id = "ai-usage", Name = "AI usage", Category = WidgetCategories.AI,
             Description = "Limits of your AI coding assistant: Claude Code (5-hour and weekly), OpenAI Codex (5-hour and weekly) or Gemini CLI (requests today). Read on this PC, no account needed.",
             IconPath = "M12,3 L14.2,9.2 L20.8,9.2 L15.5,13.1 L17.5,19.3 L12,15.6 L6.5,19.3 L8.5,13.1 L3.2,9.2 L9.8,9.2 Z", AccentKey = "AccentOrangeBrush",
-            Variants = new[] { new WidgetVariant("numbers", "Numbers"), new WidgetVariant("rings", "Rings"), new WidgetVariant("bars", "Bars") },
+            Variants = new[] { new WidgetVariant("numbers", "Numbers", WidgetWidth.Standard), new WidgetVariant("rings", "Rings", WidgetWidth.Standard), new WidgetVariant("bars", "Bars", WidgetWidth.Wide) },
             Factory = () => new AIUsageWidget(), SettingsType = typeof(AIUsageSettings),
         },
 
@@ -304,7 +304,7 @@ public static class WidgetRegistry
             Id = "audio", Name = "Audio device", Category = WidgetCategories.Media,
             Description = "Quick switch between headphones and speakers, volume adjustment with mouse wheel, and mute.",
             IconPath = "M12,3 A9,9 0 0 0 3,12 V18 A3,3 0 0 0 6,21 H7 A2,2 0 0 0 9,19 V15 A2,2 0 0 0 7,13 H5 V12 A7,7 0 0 1 19,12 V13 H17 A2,2 0 0 0 15,15 V19 A2,2 0 0 0 17,21 H18 A3,3 0 0 0 21,18 V12 A9,9 0 0 0 12,3 Z", AccentKey = "AccentCyanBrush",
-            Variants = new[] { new WidgetVariant("compact", "Compact"), new WidgetVariant("slider", "Slider") },
+            Variants = new[] { new WidgetVariant("compact", "Compact", WidgetWidth.Standard), new WidgetVariant("slider", "Slider", WidgetWidth.Wide) },
             Factory = () => new AudioWidget(),
         },
         new()
@@ -312,7 +312,7 @@ public static class WidgetRegistry
             Id = "gpu", Name = "GPU", Category = WidgetCategories.System,
             Description = "Graphics card load and video memory, from the same counters Task Manager uses.",
             IconPath = "M4,7 H20 V17 H4 Z M8,17 V20 M16,17 V20 M8,10 H10 V14 H8 Z M13,10 H16 V14 H13 Z M2,10 H4 M2,14 H4", AccentKey = "AccentGreenBrush",
-            Variants = new[] { new WidgetVariant("numbers", "Numbers"), new WidgetVariant("rings", "Rings"), new WidgetVariant("bars", "Bars") },
+            Variants = new[] { new WidgetVariant("numbers", "Numbers", WidgetWidth.Standard), new WidgetVariant("rings", "Rings", WidgetWidth.Standard), new WidgetVariant("bars", "Bars", WidgetWidth.Wide) },
             Factory = () => new GpuWidget(), SettingsType = typeof(GpuSettings),
         },
         new()
@@ -320,7 +320,7 @@ public static class WidgetRegistry
             Id = "display", Name = "Brightness", Category = WidgetCategories.System,
             Description = "Screen brightness with the mouse wheel or a slider (laptop screens and DDC/CI monitors), and whether night light is on.",
             IconPath = DisplayWidget.Icon, AccentKey = "AccentYellowBrush",
-            Variants = new[] { new WidgetVariant("slider", "Slider"), new WidgetVariant("icon", "Icon only") },
+            Variants = new[] { new WidgetVariant("slider", "Slider", WidgetWidth.Wide), new WidgetVariant("icon", "Icon only", WidgetWidth.Compact) },
             Factory = () => new DisplayWidget(),
         },
         new()
@@ -328,7 +328,7 @@ public static class WidgetRegistry
             Id = "radios", Name = "Wi-Fi and Bluetooth", Category = WidgetCategories.System,
             Description = "Turn Wi-Fi and Bluetooth on or off in one click, like Quick Settings.",
             IconPath = RadiosWidget.Icon, AccentKey = "AccentBlueBrush",
-            Variants = new[] { new WidgetVariant("buttons", "Buttons"), new WidgetVariant("icons", "Icon only") },
+            Variants = new[] { new WidgetVariant("buttons", "Buttons", WidgetWidth.Compact), new WidgetVariant("icons", "Icon only", WidgetWidth.Compact) },
             Factory = () => new RadiosWidget(),
         },
         new()
@@ -336,7 +336,7 @@ public static class WidgetRegistry
             Id = "recycle-bin", Name = "Recycle bin", Category = WidgetCategories.System,
             Description = "macOS-style recycle bin. Drag and drop files to delete, click to open, or right-click to empty.",
             IconPath = "M8,5 H16 M3,6 H21 M5,6 V19 A2,2 0 0 0 7,21 H17 A2,2 0 0 0 19,19 V6 M10,10 V17 M14,10 V17", AccentKey = "AccentBlueBrush",
-            Variants = new[] { new WidgetVariant("icon", "Icon only"), new WidgetVariant("details", "Detailed") },
+            Variants = new[] { new WidgetVariant("icon", "Icon only", WidgetWidth.Compact), new WidgetVariant("details", "Detailed", WidgetWidth.Standard) },
             Factory = () => new RecycleBinWidget(),
         },
         new()
@@ -344,7 +344,7 @@ public static class WidgetRegistry
             Id = "battery-devices", Name = "Device batteries", Category = WidgetCategories.System,
             Description = "Battery levels of Bluetooth headphones, mice and keyboards, Xbox and PlayStation controllers, and Logitech, Razer, HyperX, SteelSeries and LAMZU receivers. Click to see and reorder all devices.",
             IconPath = "M4,7 H18 A2,2 0 0 1 20,9 V15 A2,2 0 0 1 18,17 H4 A2,2 0 0 1 2,15 V9 A2,2 0 0 1 4,7 Z M20,11 H22 V13 H20 Z", AccentKey = "AccentGreenBrush",
-            Variants = new[] { new WidgetVariant("single", "Single device"), new WidgetVariant("multi", "Multiple devices") },
+            Variants = new[] { new WidgetVariant("single", "Single device", WidgetWidth.Standard), new WidgetVariant("multi", "Multiple devices", WidgetWidth.Standard) },
             Factory = () => new BatteryDevicesWidget(), SettingsType = typeof(BatteryDevicesSettings),
         },
     };

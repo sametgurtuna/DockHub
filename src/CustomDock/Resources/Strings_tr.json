@@ -937,7 +937,7 @@
   "Save current layout as a preset": "Geçerli düzeni hazır ayar olarak kaydet",
   "Keeps the look and the widgets of your dock as a preset you can apply again later.": "Dock'unuzun görünümünü ve widget'larını daha sonra yeniden uygulayabileceğiniz bir hazır ayar olarak saklar.",
   "Even widget widths": "Eşit widget genişlikleri",
-  "Widget cards round their width up to a common grid, so the dock keeps an even rhythm.": "Widget kartları genişliklerini ortak bir ızgaraya yuvarlar, böylece dock düzenli görünür.",
+  "Widget cards use a few standard widths and round up to a common grid, so the dock keeps an even rhythm.": "Widget kartları birkaç standart genişlik kullanır ve ortak bir ızgaraya yuvarlanır, böylece dock düzenli görünür.",
   "Share your dock's look: colors, glass, size, shape and position in a .dockhub-theme file.": "Dock'unuzun görünümünü paylaşın: renkler, cam, boyut, şekil ve konum tek bir .dockhub-theme dosyasında.",
   "Open location": "Konumu aç",
   "Install a web widget from a manifest.json, .dockwidget or GitHub folder link": "manifest.json, .dockwidget veya GitHub klasör bağlantısından web widget'ı yükle",

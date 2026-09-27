@@ -58,11 +58,14 @@ No admin rights. Your original taskbar always comes back.
 
 - **Replaces the taskbar, keeps Windows intact.** The Start button opens the real Windows Start menu, and the Windows key, search, notification center and quick settings work exactly as before.
 - **28 widgets, many layouts each.** Clocks, timers, reminders, your calendar, a to-do list with Todoist, clipboard history, a Downloads stack, exchange rates, sticky notes, screenshots, now playing, audio, brightness, Wi-Fi and Bluetooth, CPU, GPU and network monitors, AI usage (Claude Code, Codex, Gemini CLI) and weather. Add the same widget as many times as you like; every copy keeps its own settings.
+- **Every battery at a glance.** Bluetooth headsets, mice, keyboards and controllers, Xbox and PlayStation controllers, and Logitech, Razer, HyperX, SteelSeries and LAMZU receivers, with a warning before one runs flat.
+- **Build your own widgets.** Web widgets in HTML and JavaScript install from a `.dockwidget` file, a link or the community list in the gallery.
 - **Live app buttons.** Hover for a real window thumbnail, right-click for a Jump List, watch badge counts and progress, and drag apps together into a folder.
 - **Fluent to the core.** Blurred glass, Acrylic or solid backgrounds, light and dark themes, and your Windows accent color. Popups, folders and widgets animate with macOS-inspired genie, zoom and fan effects, all at your display's refresh rate.
 - **Any edge, any shape.** Bottom, top, left or right; floating or attached; small, medium or large. On vertical docks, widgets collapse into compact tiles.
 - **Safe by design.** No admin rights. When DockHub exits, crashes, or the session ends, the Windows taskbar and its tray icons come back.
 - **Starts with Windows.** The installer enables autostart by default, and you can turn it off at any time.
+- **In your language.** English, Turkish, German and Spanish.
 - **Keyboard first.** Win+1…9 open and switch dock apps like on the Windows taskbar, a Spotlight-style quick launcher (Win+Alt+Space) finds apps, settings and commands, and every DockHub action can get its own global shortcut.
 
 ## Screenshots

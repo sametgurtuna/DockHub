@@ -15,7 +15,7 @@
     <AssemblyName>DockHub</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\DockHub.ico</ApplicationIcon>
-    <Version>0.8.1</Version>
+    <Version>0.9.0</Version>
     <Product>DockHub</Product>
     <Company>DockHub</Company>
     <Copyright>© 2026</Copyright>

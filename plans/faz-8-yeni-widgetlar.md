@@ -100,3 +100,17 @@ Yeni "Productivity" kategorisinde dört widget eklendi. Her biri için Türkçe 
 | 8.4 GPU | ⬜ |
 | 8.5 Klasör yığını | ✅ |
 | 8.6 AI Usage çoklu sağlayıcı | ⬜ |
+
+### 2026-09-27 — kalanlar tamamlandı (0.9.0)
+
+- **8.3 kripto:** `CurrencyService` CoinGecko'dan 19 coin'in fiyatını baz para biriminde alıyor (`market_chart`, 15 gün, günlük). Önceki güne göre değişim ve eğilim günlük son fiyatlardan. Hedef listesinde döviz ve kripto karışık yazılabiliyor; 429'da son fiyat gösteriliyor, bir kaynak hata verirse diğeri yine görünüyor. 5 test.
+- **8.4 GPU** ve **8.6 AI Usage çoklu sağlayıcı** 0.8.0'da geldi (GPU widget'ı; Codex ve Gemini CLI günlüklerden okunuyor). Tablo güncellendi.
+
+| Widget | Durum |
+|---|---|
+| 8.1 Takvim | ✅ |
+| 8.2 Pano geçmişi | ✅ |
+| 8.3 Döviz/kripto | ✅ |
+| 8.4 GPU | ✅ (0.8.0) |
+| 8.5 Klasör yığını | ✅ |
+| 8.6 AI Usage çoklu sağlayıcı | ✅ (0.8.0) |

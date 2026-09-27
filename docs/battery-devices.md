@@ -30,7 +30,7 @@ If a device is asleep or switched off, its last known level stays on the dock.
 > [!NOTE]
 > The PlayStation, Logitech, Razer and SteelSeries protocols follow the open source drivers that document them (the
 > Linux kernel, Solaar, OpenRazer, HeadsetControl) and were not tested with every model. If a device you own is
-> missing or shows a wrong level, open an issue with *Settings › About › Copy diagnostics* and, with
+> missing or shows a wrong level, open an issue with *Settings › About › Report a problem* and, with
 > `"debugLogging": true` in `config.json`, the related lines of `log.txt`.
 
 ## Adding a device

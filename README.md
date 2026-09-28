@@ -175,7 +175,7 @@ winget install SametGurtuna.DockHub
 - **Global shortcuts:** show the dock (Ctrl+Alt+D by default), open the quick launcher (Win+Alt+Space), open settings, pin an app, toggle auto-hide, mute the sound or the microphone, change the volume, switch profile, all configurable in *Settings › Keyboard shortcuts*. Shortcuts another app already uses are flagged there.
 - **Text size:** *Settings › Appearance › Text size* scales the text of settings, widget panels and menus (System follows Windows' text size).
 - **Even widget widths:** widget cards round their width up to a common grid and are at least a tile, a standard card or a wide card wide, depending on the layout, so the dock keeps an even rhythm. The widget sits centered in its card; nothing is cut off (on by default, *Settings › Appearance*).
-- **Theme files:** *Settings › Appearance › Theme file* exports your dock's look (colors, glass, size, shape, position) to a `.dockhub-theme` file that anyone can import. *Save current layout as a preset* keeps your look and widgets as a preset you can apply again later.
+- **Theme files:** *Settings › Appearance › Theme file* exports your dock's look (colors, glass, size, shape) to a `.dockhub-theme` file that anyone can import. *Save current layout as a preset* keeps your look and widgets as a preset you can apply again later. Presets and themes never move the dock: the screen edge stays where you put it.
 - **Menus:** context menus and widget panels always open outside the dock, next to the pointer or the item.
 - **Dock menu** (right-click an empty area): Add widget, Pin app, Add separator, Task Manager, Quick settings, Auto-hide, Hide Windows taskbar, Position, Settings, Exit.
 

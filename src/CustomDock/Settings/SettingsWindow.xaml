@@ -475,7 +475,7 @@
                         <ComboBox x:Name="TextScaleCombo" Width="160" SelectionChanged="OnTextScaleChanged" />
                     </ctl:SettingRow>
                     <ctl:SettingRow Glyph="&#xE790;" Header="Theme file"
-                                    Description="Share your dock's look: colors, glass, size, shape and position in a .dockhub-theme file.">
+                                    Description="Share your dock's look: colors, glass, size and shape in a .dockhub-theme file.">
                         <StackPanel Orientation="Horizontal">
                             <Button Content="Export…" Click="OnExportThemeClick" Margin="0,0,8,0" />
                             <Button Content="Import…" Click="OnImportThemeClick" />

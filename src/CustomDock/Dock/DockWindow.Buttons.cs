@@ -37,6 +37,16 @@ public partial class DockWindow
 
     private void OnTaskViewClick(object sender, RoutedEventArgs e) => _shell.ShowTaskView();
 
+    /// <summary>
+    /// Opens Windows' quick settings next to this dock. Windows places (and on some builds only shows) the panel
+    /// against the tray host rectangle, so it is refreshed first, as for the Start menu and the clock.
+    /// </summary>
+    internal void OpenQuickSettings()
+    {
+        UpdateTrayHost();
+        _shell.ShowQuickSettings();
+    }
+
     private void OnClockClick(object sender, RoutedEventArgs e)
     {
         UpdateTrayHost();
@@ -51,7 +61,7 @@ public partial class DockWindow
         var menu = ClockButton.ContextMenu;
         menu.Items.Clear();
         menu.Items.Add(DockMenu.Item("Notification center", "\uE91C", _shell.ShowNotificationCenter));
-        menu.Items.Add(DockMenu.Item("Quick settings", "\uE9E9", () => { UpdateTrayHost(); _shell.ShowQuickSettings(); }));
+        menu.Items.Add(DockMenu.Item("Quick settings", "\uE9E9", OpenQuickSettings));
         menu.Items.Add(DockMenu.Separator());
         menu.Items.Add(DockMenu.Item("Adjust date and time", "\uE787",
             () => Process.Start(new ProcessStartInfo("ms-settings:dateandtime") { UseShellExecute = true })));
@@ -113,7 +123,7 @@ public partial class DockWindow
         menu.Items.Add(DockMenu.Separator());
         menu.Items.Add(DockMenu.Item("Task Manager", "\uE9D9", () => Process.Start(new ProcessStartInfo("taskmgr.exe") { UseShellExecute = true })));
         menu.Items.Add(DockMenu.Item("Windows Settings", "\uE770", () => Process.Start(new ProcessStartInfo("ms-settings:") { UseShellExecute = true })));
-        menu.Items.Add(DockMenu.Item("Quick settings", "\uE9E9", () => { UpdateTrayHost(); _shell.ShowQuickSettings(); }));
+        menu.Items.Add(DockMenu.Item("Quick settings", "\uE9E9", OpenQuickSettings));
         menu.Items.Add(DockMenu.Check("Auto-hide", _config.AutoHide, () => _config.AutoHide = !_config.AutoHide));
         menu.Items.Add(DockMenu.Check("Hide Windows taskbar", _config.TaskbarMode == TaskbarMode.Replace,
             () => _config.TaskbarMode = _config.TaskbarMode == TaskbarMode.Replace ? TaskbarMode.ShowBoth : TaskbarMode.Replace));

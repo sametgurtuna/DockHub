@@ -73,10 +73,6 @@ public sealed class BatteryStatusIconView : StatusIconViewBase
     protected override void BuildMenu(ItemCollection items)
     {
         items.Add(DockMenu.Item("Power and battery settings", "", () => NetworkStatusIconView.OpenSettings("ms-settings:batterysaver")));
-        items.Add(DockMenu.Item("Quick settings", "", () =>
-        {
-            try { AppServices.Shell?.ShowQuickSettings(); }
-            catch (Exception ex) { Log.Error(ex, "Failed to open quick settings from battery icon"); }
-        }));
+        items.Add(DockMenu.Item("Quick settings", "", OpenQuickSettings));
     }
 }

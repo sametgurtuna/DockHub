@@ -119,8 +119,7 @@ public sealed class AudioService : IMMNotificationClient, IAudioEndpointVolumeCa
             var policy = (IPolicyConfig)new PolicyConfigComObject();
             policy.SetDefaultEndpoint(deviceId, ERole.eConsole);
             policy.SetDefaultEndpoint(deviceId, ERole.eMultimedia);
-            RefreshDevices();
-            HookDefaultVolume();
+            QueueDeviceRefresh(rebindVolume: true);
         }
         catch (Exception ex)
         {
@@ -387,32 +386,59 @@ public sealed class AudioService : IMMNotificationClient, IAudioEndpointVolumeCa
         return EndpointFormFactor.UnknownFormFactor;
     }
 
+    private int _refreshQueued;
+    private int _rebindQueued;
+
+    /// <summary>
+    /// Device notifications arrive on audio threads, often several at once (a default change comes once per role).
+    /// Calling back into the audio API from them can deadlock, and rebinding from two of them at the same time released
+    /// the volume object under the other one, so the volume icon and widget stopped responding. All work moves to the
+    /// UI thread and a burst of notifications becomes one pass.
+    /// </summary>
+    private void QueueDeviceRefresh(bool rebindVolume)
+    {
+        if (rebindVolume) Interlocked.Exchange(ref _rebindQueued, 1);
+        if (Interlocked.Exchange(ref _refreshQueued, 1) == 1) return;
+
+        void Run()
+        {
+            Interlocked.Exchange(ref _refreshQueued, 0);
+            bool rebind = Interlocked.Exchange(ref _rebindQueued, 0) == 1;
+            if (_disposed) return;
+            RefreshDevices();
+            if (rebind) HookDefaultVolume();
+        }
+
+        if (Application.Current?.Dispatcher is { } dispatcher)
+            dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background, Run);
+        else
+            Run();
+    }
+
     // IMMNotificationClient
     int IMMNotificationClient.OnDeviceStateChanged(string pwstrDeviceId, DeviceState dwNewState)
     {
-        RefreshDevices();
+        // A default device that is unplugged may not get its own default-changed notification.
+        QueueDeviceRefresh(rebindVolume: true);
         return 0;
     }
 
     int IMMNotificationClient.OnDeviceAdded(string pwstrDeviceId)
     {
-        RefreshDevices();
+        QueueDeviceRefresh(rebindVolume: false);
         return 0;
     }
 
     int IMMNotificationClient.OnDeviceRemoved(string pwstrDeviceId)
     {
-        RefreshDevices();
+        QueueDeviceRefresh(rebindVolume: true);
         return 0;
     }
 
     int IMMNotificationClient.OnDefaultDeviceChanged(EDataFlow flow, ERole role, string pwstrDefaultDeviceId)
     {
         if (flow == EDataFlow.eRender && (role == ERole.eConsole || role == ERole.eMultimedia))
-        {
-            RefreshDevices();
-            HookDefaultVolume();
-        }
+            QueueDeviceRefresh(rebindVolume: true);
         return 0;
     }
 

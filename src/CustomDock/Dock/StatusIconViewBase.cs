@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using CustomDock.Core;
 
 namespace CustomDock.Dock;
 
@@ -84,6 +85,20 @@ public abstract class StatusIconViewBase : Border
 
     protected virtual void BuildMenu(ItemCollection items)
     {
+    }
+
+    /// <summary>Opens Windows' quick settings next to the dock that hosts this icon.</summary>
+    protected void OpenQuickSettings()
+    {
+        try
+        {
+            if (Window.GetWindow(this) is DockWindow dock) dock.OpenQuickSettings();
+            else AppServices.Shell?.ShowQuickSettings();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, $"Failed to open quick settings from {GetType().Name}");
+        }
     }
 
     /// <summary>Refresh on the UI thread (system notifications may arrive on other threads).</summary>

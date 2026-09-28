@@ -252,6 +252,12 @@ public sealed class AppConfig : ObservableObject
     /// <summary>Layouts the user saved from their own setup (Settings › Appearance › Layout presets).</summary>
     public List<CustomLayoutPreset> CustomPresets { get; set; } = new();
 
+    /// <summary>
+    /// Settings of widgets a layout preset took off the dock, by widget type (weather city, units...). A later preset
+    /// that brings the type back starts from them instead of the defaults.
+    /// </summary>
+    public Dictionary<string, JsonObject> RemovedWidgetSettings { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
     private bool _smartAutoHide;
 
     /// <summary>With auto-hide: the dock only hides while the active window overlaps it.</summary>

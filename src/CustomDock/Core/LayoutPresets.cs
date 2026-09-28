@@ -1,6 +1,9 @@
 namespace CustomDock.Core;
 
-/// <summary>A ready-made look: appearance settings plus a set of widgets. Pinned apps and folders are always kept.</summary>
+/// <summary>
+/// A ready-made look: appearance settings plus a set of widgets. Pinned apps and folders are always kept, and so is
+/// the screen edge: position and design are separate choices.
+/// </summary>
 public sealed record LayoutPreset(
     string Id,
     string Name,
@@ -15,7 +18,7 @@ public static class LayoutPresets
         new LayoutPreset("minimal", "Minimal", "A slim floating dock with just your apps and the clock.",
             c =>
             {
-                c.Edge = DockEdge.Bottom; c.Layout = DockLayout.Floating; c.WidthMode = DockWidthMode.Fit;
+                c.Layout = DockLayout.Floating; c.WidthMode = DockWidthMode.Fit;
                 c.Alignment = DockAlignment.Center; c.Size = DockSize.Small; c.Backdrop = BackdropKind.Blur;
                 c.TintOpacity = 0.45; c.ShowSearchButton = false; c.ShowTaskViewButton = false; c.ShowClock = true;
             },
@@ -24,7 +27,7 @@ public static class LayoutPresets
         new LayoutPreset("mac", "macOS style", "Centered, rounded and roomy, with the time and weather at hand.",
             c =>
             {
-                c.Edge = DockEdge.Bottom; c.Layout = DockLayout.Floating; c.WidthMode = DockWidthMode.Fit;
+                c.Layout = DockLayout.Floating; c.WidthMode = DockWidthMode.Fit;
                 c.Alignment = DockAlignment.Center; c.Size = DockSize.Medium; c.Backdrop = BackdropKind.Blur;
                 c.TintOpacity = 0.35; c.EdgeMargin = 8; c.ShowSearchButton = false; c.ShowTaskViewButton = false;
             },
@@ -33,16 +36,18 @@ public static class LayoutPresets
         new LayoutPreset("dashboard", "Dashboard", "A full-width bar packed with live information.",
             c =>
             {
-                c.Edge = DockEdge.Bottom; c.Layout = DockLayout.Attached; c.WidthMode = DockWidthMode.Full;
+                c.Layout = DockLayout.Attached; c.WidthMode = DockWidthMode.Full;
                 c.Alignment = DockAlignment.Start; c.Size = DockSize.Large; c.Backdrop = BackdropKind.Acrylic;
                 c.ShowSearchButton = true; c.ShowClock = true;
             },
             new[] { ("clock", "calendar"), ("weather", "hourly"), ("system", "rings"), ("media", "full"), ("reminders", "next") }),
 
-        new LayoutPreset("vertical", "Side bar", "A vertical dock on the left with compact widget tiles.",
+        new LayoutPreset("vertical", "Side bar", "A vertical dock on the side with compact widget tiles.",
             c =>
             {
-                c.Edge = DockEdge.Left; c.Layout = DockLayout.Floating; c.WidthMode = DockWidthMode.Fit;
+                // The one preset that needs a side: keeps left or right, moves a top or bottom dock to the left.
+                if (c.Edge is not (DockEdge.Left or DockEdge.Right)) c.Edge = DockEdge.Left;
+                c.Layout = DockLayout.Floating; c.WidthMode = DockWidthMode.Fit;
                 c.Alignment = DockAlignment.Center; c.Size = DockSize.Medium; c.Backdrop = BackdropKind.Blur;
             },
             new[] { ("clock", "analog"), ("weather", "current"), ("system", "rings"), ("hydration", "timer") }),
@@ -76,12 +81,19 @@ public static class LayoutPresets
         custom.Id,
         custom.Name,
         custom.Widgets.Count == 1 ? L.T("Your saved layout with 1 widget.") : L.T("Your saved layout with {0} widgets.", custom.Widgets.Count),
-        c => { if (custom.Appearance is { } appearance) ConfigHistory.RestoreAppearance(c, appearance); },
+        c =>
+        {
+            if (custom.Appearance is not { } appearance) return;
+            var edge = c.Edge;
+            ConfigHistory.RestoreAppearance(c, appearance);
+            c.Edge = edge;
+        },
         custom.Widgets.Select(w => (w.Widget, w.Variant ?? "")).ToList());
 
     /// <summary>
     /// Applies a preset as one undoable step. Apps, folders and separators stay; the widgets become the preset's,
-    /// reusing existing widgets of the same type so their settings and data (notes, reminders) are kept.
+    /// reusing existing widgets of the same type so their settings and data (notes, reminders) are kept. Settings of
+    /// widgets the preset takes off are remembered per type and given back when a later preset brings the type back.
     /// </summary>
     public static void Apply(LayoutPreset preset, ConfigService service)
     {
@@ -95,11 +107,25 @@ public static class LayoutPresets
         var widgets = new List<DockItem>();
         foreach (var (type, variant) in preset.Widgets)
         {
-            var item = widgetsByType.TryGetValue(type, out var queue) && queue.Count > 0 ? queue.Dequeue() : DockItem.ForWidget(type);
+            DockItem item;
+            if (widgetsByType.TryGetValue(type, out var queue) && queue.Count > 0)
+            {
+                item = queue.Dequeue();
+            }
+            else
+            {
+                item = DockItem.ForWidget(type);
+                if (config.RemovedWidgetSettings.TryGetValue(type, out var remembered))
+                    item.Settings = remembered.DeepClone().AsObject();
+            }
             item.Variant = string.IsNullOrEmpty(variant) ? item.Variant : variant;
             item.PinnedEnd = false;
             widgets.Add(item);
         }
+
+        foreach (var (type, queue) in widgetsByType)
+            foreach (var dropped in queue)
+                if (dropped.Settings is { } settings) config.RemovedWidgetSettings[type] = settings.DeepClone().AsObject();
 
         // Trailing separators look odd without widgets after them.
         while (kept.Count > 0 && kept[^1].Kind == DockItemKind.Separator) kept.RemoveAt(kept.Count - 1);

@@ -41,11 +41,7 @@ public sealed class VolumeStatusIconView : StatusIconViewBase
             : $"{Audio.DefaultDevice!.Name}: {(muted ? L.T("muted") : $"{percent}%")}";
     }
 
-    protected override void OnClick()
-    {
-        try { AppServices.Shell?.ShowQuickSettings(); }
-        catch (Exception ex) { Log.Error(ex, "Failed to open quick settings from volume icon"); }
-    }
+    protected override void OnClick() => OpenQuickSettings();
 
     protected override void OnMiddleClick() => Audio.ToggleMute();
 

@@ -4,8 +4,8 @@ using System.Text.Json.Nodes;
 namespace CustomDock.Core;
 
 /// <summary>
-/// A shareable look (.dockhub-theme): colors, glass, size, shape and position. Items and widgets are not included.
-/// Importing is one undoable step.
+/// A shareable look (.dockhub-theme): colors, glass, size and shape. Items, widgets and the screen edge are not
+/// included (an edge in older files is ignored), so importing a theme never moves the dock. Importing is one undoable step.
 /// </summary>
 public static class ThemeFile
 {
@@ -16,7 +16,7 @@ public static class ThemeFile
     {
         nameof(AppConfig.Theme), nameof(AppConfig.Backdrop), nameof(AppConfig.TintOpacity), nameof(AppConfig.Size),
         nameof(AppConfig.Layout), nameof(AppConfig.WidthMode), nameof(AppConfig.Alignment), nameof(AppConfig.EdgeMargin),
-        nameof(AppConfig.Edge), nameof(AppConfig.HoverEffect), nameof(AppConfig.RunningIndicator), nameof(AppConfig.AlignWidgetWidths),
+        nameof(AppConfig.HoverEffect), nameof(AppConfig.RunningIndicator), nameof(AppConfig.AlignWidgetWidths),
     };
 
     public static void Export(AppConfig config, string path)

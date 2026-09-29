@@ -137,18 +137,18 @@ public partial class App : Application
         AppServices.Reminders.Start();
         ItemDataStore.PurgeOld();
         AppServices.Updates.UpdateAvailable += release => AppServices.Notifications.Show(
-            $"DockHub {release.Version} is available", "Open DockHub settings to see what's new and install it.", "update",
-            new ToastAction("Details", NotificationService.ActionOpenUpdate),
-            new ToastAction("Skip this version", NotificationService.ActionSkipUpdate));
+            L.T("DockHub {0} is available", release.Version), L.T("Open DockHub settings to see what's new and install it."), "update",
+            new ToastAction(L.T("Details"), NotificationService.ActionOpenUpdate),
+            new ToastAction(L.T("Skip this version"), NotificationService.ActionSkipUpdate));
         AppServices.Updates.Start();
 
         CreateDock();
         ApplyTaskbarMode();
         StartKeyboardShortcuts();
+        // Before the profile rules: a profile a rule switches to at startup is applied in full (theme and all).
+        config.PropertyChanged += OnConfigChanged;
         StartProfileRules();
         UndoToast.Attach(AppServices.ConfigService.History);
-
-        config.PropertyChanged += OnConfigChanged;
         WidgetItemView.SettingsRequested += item => ShowSettings("items", item.Id);
 
         _singleInstance.Listen(Dispatcher, () => ShowSettings(), ExitApplication, ProcessPinRequests, ProcessWidgetPackages);
@@ -254,7 +254,7 @@ public partial class App : Application
 
     private void CreateDock()
     {
-        _dock = new DockWindow(AppServices.Config, _shell!);
+        _dock = new DockWindow(AppServices.Config, new ConfigDockSurface(AppServices.Config, DockRole.Main), _shell!);
         _dock.ContentRendered += OnFirstDockFrame;
         _dock.Start();
         SyncSecondaryDocks();
@@ -305,10 +305,12 @@ public partial class App : Application
         foreach (var device in wanted.Where(d => !_secondaryDocks.ContainsKey(d)))
         {
             DockWindow? dock = null;
+            ConfigDockSurface? surface = null;
             try
             {
                 DockWindow.MarkDisplayFailed(device, false);
-                dock = new DockWindow(config, _shell, device);
+                surface = new ConfigDockSurface(config, DockRole.Secondary);
+                dock = new DockWindow(config, surface, _shell, device);
                 _secondaryDocks[device] = dock;
                 dock.Start();
                 changed = true;
@@ -320,6 +322,8 @@ public partial class App : Application
                 DockWindow.MarkDisplayFailed(device, true);
                 _secondaryDocks.Remove(device);
                 try { dock?.CloseDock(); } catch (Exception closeError) { Log.Error(closeError, $"Failed to close the dock on {device}"); }
+                // A dock that failed to be built doesn't close; its surface stops listening here.
+                if (dock is null) surface?.Dispose();
                 changed = true;
             }
         }
@@ -458,6 +462,8 @@ public partial class App : Application
                 foreach (var dock in DockWindow.All.ToList()) dock.ApplySettings();
                 break;
             default:
+                // Edge, size, shape and the rest reach each dock through its own surface (DockSurface.Changed).
+                if (e.PropertyName is { } name && ConfigDockSurface.Properties.Contains(name)) break;
                 foreach (var dock in DockWindow.All.ToList()) dock.ApplySettings();
                 break;
         }

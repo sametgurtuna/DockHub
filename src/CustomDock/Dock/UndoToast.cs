@@ -119,7 +119,7 @@ public sealed class UndoToast : Window
     {
         var dock = DockWindow.All.FirstOrDefault(d => d.IsMain);
         if (dock is null || !dock.IsVisible) return;
-        var edge = AppServices.Config.Edge;
+        var edge = dock.Edge;
         double width = ActualWidth, height = ActualHeight;
         (Left, Top) = edge switch
         {

@@ -72,7 +72,7 @@ public partial class DockWindow
     private void OnTrayOverflowChecked(object sender, RoutedEventArgs e)
     {
         UpdateTrayHost();
-        (TrayOverflowPopup.Placement, TrayOverflowPopup.HorizontalOffset, TrayOverflowPopup.VerticalOffset) = _config.Edge switch
+        (TrayOverflowPopup.Placement, TrayOverflowPopup.HorizontalOffset, TrayOverflowPopup.VerticalOffset) = _surface.Edge switch
         {
             DockEdge.Top => (PlacementMode.Bottom, -60.0, 10.0),
             DockEdge.Left => (PlacementMode.Right, 10.0, 0.0),
@@ -81,14 +81,14 @@ public partial class DockWindow
         };
         BeginInteraction();
         GlobalPopupDismissHook.RegisterPopup(TrayOverflowPopup);
-        PopupAnimationHelper.AnimateOpen(TrayOverflowPopup, _config.Edge, TrayOverflowButton);
+        PopupAnimationHelper.AnimateOpen(TrayOverflowPopup, _surface.Edge, TrayOverflowButton);
     }
 
     private void OnTrayOverflowUnchecked(object sender, RoutedEventArgs e)
     {
         if (TrayOverflowPopup.IsOpen && !PopupAnimationHelper.IsClosing(TrayOverflowPopup))
         {
-            PopupAnimationHelper.ClosePopup(TrayOverflowPopup, _config.Edge, TrayOverflowButton);
+            PopupAnimationHelper.ClosePopup(TrayOverflowPopup, _surface.Edge, TrayOverflowButton);
         }
     }
 
@@ -131,7 +131,7 @@ public partial class DockWindow
         menu.Items.Add(DockMenu.Item("Task Manager", "\uE9D9", () => Process.Start(new ProcessStartInfo("taskmgr.exe") { UseShellExecute = true })));
         menu.Items.Add(DockMenu.Item("Windows Settings", "\uE770", () => Process.Start(new ProcessStartInfo("ms-settings:") { UseShellExecute = true })));
         menu.Items.Add(DockMenu.Item("Quick settings", "\uE9E9", OpenQuickSettings));
-        menu.Items.Add(DockMenu.Check("Auto-hide", _config.AutoHide, () => _config.AutoHide = !_config.AutoHide));
+        menu.Items.Add(DockMenu.Check("Auto-hide", _surface.AutoHide, () => _surface.AutoHide = !_surface.AutoHide));
         menu.Items.Add(DockMenu.Check("Hide Windows taskbar", _config.TaskbarMode == TaskbarMode.Replace,
             () => _config.TaskbarMode = _config.TaskbarMode == TaskbarMode.Replace ? TaskbarMode.ShowBoth : TaskbarMode.Replace));
         if (AppServices.Profiles.Profiles.Count > 1)
@@ -139,10 +139,10 @@ public partial class DockWindow
                 DockMenu.Check(p.Name, p.Id == _config.ActiveProfileId, () => AppServices.Profiles.SwitchTo(p.Id))).ToList()));
         menu.Items.Add(DockMenu.Submenu("Position", "\uE8A0", new[]
         {
-            DockMenu.Check("Bottom", _config.Edge == DockEdge.Bottom, () => _config.Edge = DockEdge.Bottom),
-            DockMenu.Check("Top", _config.Edge == DockEdge.Top, () => _config.Edge = DockEdge.Top),
-            DockMenu.Check("Left", _config.Edge == DockEdge.Left, () => _config.Edge = DockEdge.Left),
-            DockMenu.Check("Right", _config.Edge == DockEdge.Right, () => _config.Edge = DockEdge.Right),
+            DockMenu.Check("Bottom", _surface.Edge == DockEdge.Bottom, () => _surface.Edge = DockEdge.Bottom),
+            DockMenu.Check("Top", _surface.Edge == DockEdge.Top, () => _surface.Edge = DockEdge.Top),
+            DockMenu.Check("Left", _surface.Edge == DockEdge.Left, () => _surface.Edge = DockEdge.Left),
+            DockMenu.Check("Right", _surface.Edge == DockEdge.Right, () => _surface.Edge = DockEdge.Right),
         }));
         menu.Items.Add(DockMenu.Separator());
         menu.Items.Add(DockMenu.Item("DockHub settings…", "\uE713", () => App.Instance.ShowSettings()));

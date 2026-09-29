@@ -430,9 +430,9 @@ public partial class DockWindow : IEditableDock
             _addPicker = null;
             _addPickerClosedAt = DateTime.UtcNow;
         };
-        PopupPlacement.PlacePopup(popup, AddTile, _config.Edge, gap: 6);
+        PopupPlacement.PlacePopup(popup, AddTile, _surface.Edge, gap: 6);
         GlobalPopupDismissHook.RegisterPopup(popup);
-        PopupAnimationHelper.AnimateOpen(popup, _config.Edge, AddTile);
+        PopupAnimationHelper.AnimateOpen(popup, _surface.Edge, AddTile);
     }
 
     private static TextBlock Glyph(string glyph)
@@ -481,7 +481,7 @@ public partial class DockWindow : IEditableDock
         if (_addPicker is not { } popup) return;
         _addPicker = null;
         _addPickerClosedAt = DateTime.UtcNow;
-        if (popup.IsOpen && !PopupAnimationHelper.IsClosing(popup)) PopupAnimationHelper.ClosePopup(popup, _config.Edge, _addTile);
+        if (popup.IsOpen && !PopupAnimationHelper.IsClosing(popup)) PopupAnimationHelper.ClosePopup(popup, _surface.Edge, _addTile);
     }
 
     // ------------------------------------------------------------------ Done bar
@@ -525,7 +525,7 @@ public partial class DockWindow : IEditableDock
             };
         }
 
-        PopupPlacement.PlacePopup(_editBar, Root, _config.Edge, gap: 4);
+        PopupPlacement.PlacePopup(_editBar, Root, _surface.Edge, gap: 4);
         _editBar.IsOpen = true;
         if (_editBar.Child is FrameworkElement content) Motion.Appear(content, fromScale: 0.95);
         // Again once the "+" tile has changed the dock's size.
@@ -535,7 +535,7 @@ public partial class DockWindow : IEditableDock
     private void PlaceEditBar()
     {
         if (!_editing || _editBar is not { IsOpen: true } bar) return;
-        PopupPlacement.PlacePopup(bar, Root, _config.Edge, gap: 4);
+        PopupPlacement.PlacePopup(bar, Root, _surface.Edge, gap: 4);
         // An open popup measures its place again when its offset changes.
         bar.HorizontalOffset = 1;
         bar.HorizontalOffset = 0;

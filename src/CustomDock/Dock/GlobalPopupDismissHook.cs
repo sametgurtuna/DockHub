@@ -268,11 +268,10 @@ public static class GlobalPopupDismissHook
                         System.Windows.Threading.DispatcherPriority.Input,
                         () =>
                         {
-                            var edge = AppServices.Config.Edge;
                             foreach (var p in popups)
                             {
                                 if (p.IsOpen && !PopupAnimationHelper.IsClosing(p))
-                                    PopupAnimationHelper.ClosePopup(p, edge);
+                                    PopupAnimationHelper.ClosePopup(p, DockWindow.EdgeAt(p.PlacementTarget ?? p));
                             }
                         });
                 }

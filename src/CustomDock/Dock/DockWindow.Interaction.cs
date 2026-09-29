@@ -34,7 +34,7 @@ public partial class DockWindow
         if (!visible && owner && !IsMain)
             Dispatcher.BeginInvoke(() => s_docks.FirstOrDefault(d => d.IsMain)?.UpdateTrayHost());
 
-        if (!_config.AutoHide) return;
+        if (!_surface.AutoHide) return;
         if (!visible) ScheduleAutoHide();
         else if (owner) Reveal();
     }
@@ -43,7 +43,7 @@ public partial class DockWindow
 
     private void UpdateVisibility(bool animate)
     {
-        bool shouldShow = !IsFullscreenBlocked && (!_config.AutoHide || _revealed);
+        bool shouldShow = !IsFullscreenBlocked && (!_surface.AutoHide || _revealed);
         if (shouldShow == _shown && (_animating || IsVisible == shouldShow)) return;
         _shown = shouldShow;
         DockVisibility.Report(this, shouldShow);
@@ -134,14 +134,14 @@ public partial class DockWindow
 
     private void ScheduleAutoHide()
     {
-        if (!_config.AutoHide || _interactionCount > 0 || _closing) return;
+        if (!_surface.AutoHide || _interactionCount > 0 || _closing) return;
         _hideTimer.Stop();
         _hideTimer.Start();
     }
 
     private void TryAutoHide()
     {
-        if (!_config.AutoHide || _interactionCount > 0 || !_shown) return;
+        if (!_surface.AutoHide || _interactionCount > 0 || !_shown) return;
         if (_shell.IsLauncherVisible || IsCursorOverDock()) return;
         if (SmartHideActive && !ActiveWindowOverlapsDock()) return;
         if (_inputMode && IsActive) return;
@@ -159,7 +159,7 @@ public partial class DockWindow
 
     private void UpdateTrigger()
     {
-        bool active = _config.AutoHide && !IsFullscreenBlocked && !_shown && !_closing;
+        bool active = _surface.AutoHide && !IsFullscreenBlocked && !_shown && !_closing;
         if (!active)
         {
             _trigger?.SetActive(false);
@@ -176,7 +176,7 @@ public partial class DockWindow
 
         var b = _monitor.Bounds;
         var dock = _shownRect;
-        RECT rect = _config.Edge switch
+        RECT rect = _surface.Edge switch
         {
             DockEdge.Top => new RECT(dock.Left, b.Top, dock.Right, b.Top + TriggerThickness),
             DockEdge.Left => new RECT(b.Left, dock.Top, b.Left + TriggerThickness, dock.Bottom),
@@ -426,7 +426,7 @@ public partial class DockWindow
             return;
         }
         if (menuOwner is { ContextMenu: { } menu } owner)
-            PopupPlacement.PlaceMenu(menu, owner, _config.Edge);
+            PopupPlacement.PlaceMenu(menu, owner, _surface.Edge);
     }
 
     private static T? FindAncestor<T>(DependencyObject? source) where T : DependencyObject

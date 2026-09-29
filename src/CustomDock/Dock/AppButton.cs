@@ -296,7 +296,7 @@ public sealed partial class AppButton : Grid
     private void ShowThumbnailPreview()
     {
         if (_group is not { WindowCount: > 0 }) return;
-        WindowPreviewWindow.Instance.ShowFor(this, _group, AppServices.Config.Edge);
+        WindowPreviewWindow.Instance.ShowFor(this, _group, DockWindow.EdgeAt(this));
     }
 
     private void UpdateBadge(AppGroup? group)

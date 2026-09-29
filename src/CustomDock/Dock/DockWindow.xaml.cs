@@ -34,6 +34,8 @@ public partial class DockWindow : Window, IWidgetHost
     private static DockWindow? s_trayHostOwner;
 
     private readonly AppConfig _config;
+    /// <summary>This dock's layout settings (edge, size, shape, hiding, glass); read only through it.</summary>
+    private readonly DockSurface _surface;
     private readonly ShellHost _shell;
     private readonly Dictionary<string, FrameworkElement> _itemViews = new();
     private readonly Dictionary<string, AppButton> _runningViews = new();
@@ -91,10 +93,12 @@ public partial class DockWindow : Window, IWidgetHost
     }
 
     /// <param name="monitorDevice">Display of a secondary dock; null for the main dock, which follows <see cref="AppConfig.MonitorDevice"/>.</param>
-    public DockWindow(AppConfig config, ShellHost shell, string? monitorDevice = null)
+    public DockWindow(AppConfig config, DockSurface surface, ShellHost shell, string? monitorDevice = null)
     {
         s_docks.Add(this);
         _config = config;
+        _surface = surface;
+        _surface.Changed += OnSurfaceChanged;
         _shell = shell;
         _secondaryDevice = monitorDevice;
         _monitor = ResolveMonitor();
@@ -117,7 +121,7 @@ public partial class DockWindow : Window, IWidgetHost
 
         SourceInitialized += OnSourceInitialized;
         SizeChanged += (_, _) => QueueReposition();
-        ItemsPanel.SizeChanged += (_, _) => { if (_config.WidthMode == DockWidthMode.Fit) QueueReposition(); };
+        ItemsPanel.SizeChanged += (_, _) => { if (_surface.WidthMode == DockWidthMode.Fit) QueueReposition(); };
         MouseEnter += (_, _) => _hideTimer.Stop();
         MouseLeave += (_, _) => ScheduleAutoHide();
         Deactivated += OnDeactivated;
@@ -166,9 +170,13 @@ public partial class DockWindow : Window, IWidgetHost
 
     // ------------------------------------------------------------------ IWidgetHost
 
-    public DockEdge Edge => _config.Edge;
+    public DockEdge Edge => _surface.Edge;
 
-    public bool IsVertical => _config.Edge is DockEdge.Left or DockEdge.Right;
+    /// <summary>The screen edge of the dock that <paramref name="element"/> belongs to (popups open away from it).</summary>
+    public static DockEdge EdgeAt(DependencyObject? element) =>
+        (element is null ? null : GetWindow(element) as DockWindow)?.Edge ?? s_docks.FirstOrDefault(d => d.IsMain)?.Edge ?? AppServices.Config.Edge;
+
+    public bool IsVertical => _surface.Edge is DockEdge.Left or DockEdge.Right;
 
     Window IWidgetHost.Window => this;
 
@@ -293,7 +301,7 @@ public partial class DockWindow : Window, IWidgetHost
     public void ToggleDock()
     {
         if (_closing) return;
-        if (_config.AutoHide)
+        if (_surface.AutoHide)
         {
             if (_shown && _revealed)
             {
@@ -338,6 +346,9 @@ public partial class DockWindow : Window, IWidgetHost
         return IntPtr.Zero;
     }
 
+    /// <summary>A layout setting of this dock changed (App leaves these to the docks' surfaces).</summary>
+    private void OnSurfaceChanged(string property) => ApplySettings();
+
     /// <summary>Applies all dock settings from configuration.</summary>
     public void ApplySettings()
     {
@@ -361,7 +372,7 @@ public partial class DockWindow : Window, IWidgetHost
         if (FilterRunningByDisplay) _displayFilterTimer.Start();
         else _displayFilterTimer.Stop();
 
-        if (_config.AutoHide) ScheduleAutoHide();
+        if (_surface.AutoHide) ScheduleAutoHide();
         else _revealed = true;
 
         UpdateVisibility(animate: false);
@@ -396,6 +407,9 @@ public partial class DockWindow : Window, IWidgetHost
     {
         if (_closing) return;
         _closing = true;
+        // First, so that nothing below can keep the closed dock listening to the settings.
+        _surface.Changed -= OnSurfaceChanged;
+        _surface.Dispose();
         // No undo toast while the dock goes away (DockHub exits, or its display was unplugged).
         if (_editing) DockEditMode.Exit(announce: false);
         _animationVersion++;

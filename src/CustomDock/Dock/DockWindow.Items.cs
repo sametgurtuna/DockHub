@@ -58,6 +58,7 @@ public partial class DockWindow
     {
         var items = _config.Items;
         bool vertical = IsVertical;
+        ClearEditDecorations();
         var positionsBefore = CapturePositions();
         _secondaryDisplays = SecondaryDisplays();
 
@@ -104,8 +105,16 @@ public partial class DockWindow
             (IsPinnedEnd(item) ? EndItemsPanel : ItemsPanel).Children.Add(view);
         }
 
+        if (_editing)
+        {
+            // The "+" tile of edit mode follows the dock's own items, before the running apps.
+            AddTile.Margin = vertical ? new Thickness(0, 3, 0, 3) : new Thickness(3, 0, 3, 0);
+            ItemsPanel.Children.Add(AddTile);
+        }
+
         _runningSeparator.SetOrientation(vertical);
         RefreshRunningApps();
+        if (_editing) ApplyEditDecorations();
         AnimateShifts(positionsBefore);
     }
 
@@ -239,8 +248,8 @@ public partial class DockWindow
             _runningViews.Remove(key);
         }
 
-        // Rebuild the tail section (separator + running apps)
-        int itemCount = _config.Items.Count(i => !IsPinnedEnd(i) && _itemViews.ContainsKey(i.Id));
+        // Rebuild the tail section (separator + running apps); edit mode's "+" tile stays with the dock's items.
+        int itemCount = PinnedViewCount + (_addTile is not null && ItemsPanel.Children.Contains(_addTile) ? 1 : 0);
         while (ItemsPanel.Children.Count > itemCount)
             ItemsPanel.Children.RemoveAt(ItemsPanel.Children.Count - 1);
 

@@ -23,6 +23,19 @@ public sealed class DockMagnifier : IDisposable
     private readonly Action<bool> _onDragging;
     private readonly Dictionary<FrameworkElement, double> _lastTarget = new();
     private bool _active;
+    private bool _enabled = true;
+
+    /// <summary>Off while the dock is being edited (items then wiggle and must stay the size they are).</summary>
+    public bool Enabled
+    {
+        get => _enabled;
+        set
+        {
+            if (_enabled == value) return;
+            _enabled = value;
+            if (!value) Reset();
+        }
+    }
 
     public DockMagnifier(Panel host, Func<bool> isVertical)
     {
@@ -39,7 +52,7 @@ public sealed class DockMagnifier : IDisposable
 
     private void OnMouseMove(object sender, MouseEventArgs e)
     {
-        if (DockDragHelper.JustDragged) return;
+        if (DockDragHelper.JustDragged || !_enabled) return;
 
         bool vertical = _isVertical();
         var pointer = e.GetPosition(_host);
@@ -87,7 +100,7 @@ public sealed class DockMagnifier : IDisposable
         _active = false;
         foreach (var child in _host.Children)
         {
-            if (child is not AppButton { RenderTransform: TransformGroup { Children: [ScaleTransform scale, _] } })
+            if (child is not AppButton { RenderTransform: TransformGroup { Children: [ScaleTransform scale, ..] } })
                 continue;
             Motion.Scale(scale, 1, 200);
         }

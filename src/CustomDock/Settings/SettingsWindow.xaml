@@ -619,6 +619,12 @@
                                 <TextBlock Text="Add separator" Margin="8,0,0,0" />
                             </StackPanel>
                         </Button>
+                        <Button Margin="0,0,8,0" Click="OnEditOnDockClick" ToolTip="Move, remove and resize items right on the dock">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE70F;" Style="{StaticResource IconText}" FontSize="12" />
+                                <TextBlock Text="Edit on the dock" Margin="8,0,0,0" />
+                            </StackPanel>
+                        </Button>
                         <Button Click="OnImportPinsClick" ToolTip="Adds applications pinned to the Windows taskbar">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="&#xE896;" Style="{StaticResource IconText}" FontSize="12" />

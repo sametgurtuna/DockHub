@@ -98,6 +98,8 @@ public static class LayoutPresets
     public static void Apply(LayoutPreset preset, ConfigService service)
     {
         var config = service.Config;
+        // The preset is a step of its own, not part of an edit of the dock.
+        Dock.DockEditMode.Exit();
         service.History.Push(config, L.T("Applied the {0} layout", preset.Name), destructive: true, includeAppearance: true);
 
         var kept = config.Items.Where(i => i.Kind != DockItemKind.Widget).ToList();

@@ -111,11 +111,18 @@ public partial class DockWindow
         }
         var menu = Root.ContextMenu;
         menu.Items.Clear();
-        if (AppServices.ConfigService.History.Latest is { } last)
+        if (_editing)
+        {
+            menu.Items.Add(DockMenu.Item("Done", "\uE73E", () => DockEditMode.Exit()));
+            menu.Items.Add(DockMenu.Item("Add to the dock…", "\uE710", ToggleAddPicker));
+            return;
+        }
+        if (AppServices.ConfigService.History.CanUndo && AppServices.ConfigService.History.Latest is { } last)
         {
             menu.Items.Add(DockMenu.Item(L.T("Undo: {0}", last.Description), "\uE7A7", () => AppServices.ConfigService.Undo()));
             menu.Items.Add(DockMenu.Separator());
         }
+        menu.Items.Add(DockMenu.Item("Edit dock", "\uE70F", () => EnterEditMode()));
         menu.Items.Add(DockMenu.Item("Add widget…", "\uE710", () => App.Instance.ShowSettings("gallery")));
         menu.Items.Add(DockMenu.Item("Pin application…", "\uE718", () => App.Instance.ShowAppPicker()));
         menu.Items.Add(DockMenu.Item("Add separator", "\uE76F", () => AppServices.ConfigService.AddItem(DockItem.Separator())));

@@ -60,6 +60,8 @@ public static class ThemeFile
         foreach (var property in Properties)
             if (appearance[property] is { } value) filtered[property] = value.DeepClone();
 
+        // The theme is a step of its own, not part of an edit of the dock.
+        Dock.DockEditMode.Exit();
         service.History.Push(service.Config, L.T("Applied the {0} theme", name), includeAppearance: true);
         ConfigHistory.RestoreAppearance(service.Config, filtered);
         Log.Info($"Theme imported: {name}");

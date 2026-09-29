@@ -1100,5 +1100,21 @@
   "DockHub closed several times in a row, so Windows no longer starts it again after a crash.": "DockHub art arda birkaç kez kapandı, bu yüzden Windows onu bir çökmeden sonra artık yeniden başlatmıyor.",
   "Turn back on": "Yeniden aç",
   "Last crash": "Son çökme",
-  "Copy details": "Ayrıntıları kopyala"
+  "Copy details": "Ayrıntıları kopyala",
+
+  // ---------------------------------------------------------------- Dock edit mode
+  "Edit dock": "Dock'u düzenle",
+  "Edit the dock": "Dock'u düzenle",
+  "Move, remove and resize dock items in place; press it again to finish.": "Dock öğelerini yerinde taşıyın, kaldırın ve boyutlandırın; bitirmek için yeniden basın.",
+  "Edited the dock": "Dock düzenlendi",
+  "Editing": "Düzenleniyor",
+  "Add to the dock": "Dock'a ekle",
+  "Add to the dock…": "Dock'a ekle…",
+  "Drag items to move them. × removes, the handle on a widget's edge resizes it.": "Taşımak için öğeleri sürükleyin. × kaldırır, widget kenarındaki tutamaç boyutunu değiştirir.",
+  "Done editing the dock": "Dock düzenlemeyi bitir",
+  "Drag to resize": "Boyutlandırmak için sürükleyin",
+  "Resize {0}": "Boyutlandır: {0}",
+  "Remove {0}": "Kaldır: {0}",
+  "Move, remove and resize items right on the dock": "Öğeleri doğrudan dock üzerinde taşıyın, kaldırın ve boyutlandırın",
+  "Edit on the dock": "Dock üzerinde düzenle"
 }

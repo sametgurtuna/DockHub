@@ -19,6 +19,7 @@ public sealed class WidgetItemView : WidgetCard
     private Popup? _flyout;
     private WidgetCard? _flyoutCard;
     private bool _compact;
+    private bool _editing;
     private bool _flyoutInteraction;
     private DateTime _flyoutClosedAt;
 
@@ -96,7 +97,10 @@ public sealed class WidgetItemView : WidgetCard
 
     private bool CollapsedWhileIdle => Item.CollapseWhenIdle && Widget.IsIdle;
 
-    private void UpdateCompactMode() => SetCompactCore(_verticalDock || CollapsedWhileIdle);
+    /// <summary>In edit mode a widget that hides itself (nothing playing) shows as its tile, so it can be moved or removed.</summary>
+    private bool ShownForEditing => _editing && Widget.Visibility != Visibility.Visible;
+
+    private void UpdateCompactMode() => SetCompactCore(_verticalDock || CollapsedWhileIdle || ShownForEditing);
 
     private void OnWidgetIdleChanged() => Dispatcher.BeginInvoke(UpdateCompactMode);
 
@@ -130,7 +134,13 @@ public sealed class WidgetItemView : WidgetCard
         ApplyAppearance();
     }
 
-    private void OnWidgetVisibilityChanged(object? sender, EventArgs e) => Visibility = Widget.Visibility;
+    private void OnWidgetVisibilityChanged(object? sender, EventArgs e) => UpdateVisibility();
+
+    private void UpdateVisibility()
+    {
+        Visibility = _editing ? Visibility.Visible : Widget.Visibility;
+        UpdateCompactMode();
+    }
 
     /// <summary>Picks up a changed "Even widget widths" setting.</summary>
     public void RefreshGrid() => ApplyWidthClass();
@@ -173,7 +183,7 @@ public sealed class WidgetItemView : WidgetCard
     protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
     {
         base.OnMouseLeftButtonUp(e);
-        if (!_compact || DockDragHelper.JustDragged || e.Handled) return;
+        if (!_compact || DockDragHelper.JustDragged || e.Handled || _editing) return;
         e.Handled = true;
         if (Widget.OnCompactClick()) return;
         if (_flyout?.IsOpen == true || (_flyout is not null && PopupAnimationHelper.IsClosing(_flyout))) CloseFlyout();
@@ -239,6 +249,16 @@ public sealed class WidgetItemView : WidgetCard
 
     private void OnContextMenuOpening(object sender, ContextMenuEventArgs e) => BuildContextMenu();
 
+    /// <summary>Edit mode: the panel closes and the widget's own controls stop taking clicks (the card is dragged instead).</summary>
+    public void SetEditing(bool editing)
+    {
+        if (_editing == editing) return;
+        _editing = editing;
+        if (editing) CloseFlyout();
+        Widget.SetEditing(editing);
+        UpdateVisibility();
+    }
+
     /// <summary>Enter on the focused widget: runs its main action or opens its panel (compact), otherwise its menu.</summary>
     public void ActivateFromKeyboard()
     {
@@ -298,6 +318,7 @@ public sealed class WidgetItemView : WidgetCard
             Item.PinnedEnd = !Item.PinnedEnd;
             AppServices.Config.NotifyItemsChanged();
         }));
+        menu.Items.Add(DockMenu.Item("Edit dock", "\uE70F", () => (Window.GetWindow(this) as DockWindow)?.EnterEditMode()));
         menu.Items.Add(DockMenu.Item("Remove from dock", "\uE77A", () => AppServices.ConfigService.RemoveItem(Item.Id)));
     }
 

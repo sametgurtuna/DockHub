@@ -31,8 +31,34 @@ public static class GlobalPopupDismissHook
     private static HookProc? s_proc;
     private static readonly HashSet<Popup> s_activePopups = new();
     private static readonly HashSet<ContextMenu> s_activeMenus = new();
+    private static readonly List<OutsideClickWatch> s_watches = new();
 
     public static bool HasActivePopupsOrMenus => s_activePopups.Count > 0 || s_activeMenus.Count > 0;
+
+    /// <summary>A caller that wants to know about clicks outside the windows it considers its own.</summary>
+    private sealed class OutsideClickWatch(Func<IntPtr, bool> isInside, Action onOutside) : IDisposable
+    {
+        public Func<IntPtr, bool> IsInside { get; } = isInside;
+        public Action OnOutside { get; } = onOutside;
+
+        public void Dispose()
+        {
+            if (s_watches.Remove(this)) CheckUnhook();
+        }
+    }
+
+    /// <summary>
+    /// Calls <paramref name="onOutside"/> (on the UI thread) when a mouse button goes down on a window for which
+    /// <paramref name="isInside"/> returns false; it gets the top-level window under the pointer. Menus and popups of
+    /// DockHub itself always count as inside. Dispose the result to stop watching.
+    /// </summary>
+    public static IDisposable WatchOutsideClicks(Func<IntPtr, bool> isInside, Action onOutside)
+    {
+        var watch = new OutsideClickWatch(isInside, onOutside);
+        s_watches.Add(watch);
+        EnsureHook();
+        return watch;
+    }
 
     private delegate IntPtr HookProc(int nCode, IntPtr wParam, IntPtr lParam);
 
@@ -142,7 +168,7 @@ public static class GlobalPopupDismissHook
 
     private static void CheckUnhook()
     {
-        if (s_activePopups.Count == 0 && s_activeMenus.Count == 0 && s_hook != IntPtr.Zero)
+        if (s_activePopups.Count == 0 && s_activeMenus.Count == 0 && s_watches.Count == 0 && s_hook != IntPtr.Zero)
         {
             UnhookWindowsHookEx(s_hook);
             s_hook = IntPtr.Zero;
@@ -209,6 +235,16 @@ public static class GlobalPopupDismissHook
                     if (hwndSource?.RootVisual is DependencyObject root && FindVisualChildren<MenuItem>(root).Any())
                     {
                         clickedInsideMenu = true;
+                    }
+                }
+
+                if (s_watches.Count > 0 && !clickedOurPopupRoot && !clickedInsideMenu)
+                {
+                    IntPtr top = clickedHwnd == IntPtr.Zero ? IntPtr.Zero : GetAncestor(clickedHwnd, GA_ROOT);
+                    foreach (var watch in s_watches.ToList())
+                    {
+                        if (watch.IsInside(top)) continue;
+                        Application.Current?.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Input, watch.OnOutside);
                     }
                 }
 

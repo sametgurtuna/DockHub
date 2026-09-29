@@ -305,6 +305,9 @@ public partial class SettingsWindow
     private void OnAddSeparatorClick(object sender, RoutedEventArgs e)
         => AppServices.ConfigService.AddItem(DockItem.Separator(), DockItemsIndex.EndOfApps());
 
+    /// <summary>Puts the main dock into edit mode; the dock sits above this window, so it can be edited right away.</summary>
+    private void OnEditOnDockClick(object sender, RoutedEventArgs e) => DockWindow.EditMainDock();
+
     private void OnImportPinsClick(object sender, RoutedEventArgs e)
     {
         var existing = _config.Items.Where(i => i.Kind == DockItemKind.App).Select(i => i.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);

@@ -73,10 +73,13 @@ public static class Motion
     /// </summary>
     public readonly record struct ItemTransform(ScaleTransform Magnify, TranslateTransform Reorder);
 
-    /// <summary>Returns the item's RenderTransform (Scale + Translate); creates it if absent.</summary>
+    /// <summary>
+    /// Returns the item's RenderTransform (Scale, then an optional Rotate for edit mode's wiggle, then Translate);
+    /// creates it if absent.
+    /// </summary>
     public static ItemTransform GetItemTransform(FrameworkElement element)
     {
-        if (element.RenderTransform is TransformGroup { Children: [ScaleTransform scale, TranslateTransform translate] })
+        if (element.RenderTransform is TransformGroup { Children: [ScaleTransform scale, .., TranslateTransform translate] })
             return new ItemTransform(scale, translate);
 
         var newScale = new ScaleTransform();
@@ -84,6 +87,52 @@ public static class Motion
         element.RenderTransform = new TransformGroup { Children = { newScale, newTranslate } };
         element.RenderTransformOrigin = new Point(0.5, 0.5);
         return new ItemTransform(newScale, newTranslate);
+    }
+
+    /// <summary>The rotation between an item's scale and translation, added the first time it is needed.</summary>
+    private static RotateTransform GetItemRotation(FrameworkElement element)
+    {
+        GetItemTransform(element);
+        var group = (TransformGroup)element.RenderTransform;
+        if (group.Children is [_, RotateTransform rotate, _]) return rotate;
+        if (group.IsFrozen)
+        {
+            group = group.Clone();
+            element.RenderTransform = group;
+        }
+        rotate = new RotateTransform();
+        group.Children.Insert(1, rotate);
+        return rotate;
+    }
+
+    /// <summary>
+    /// Edit mode's wiggle: the item rocks by about a degree, each one out of step with its neighbours. Skipped when
+    /// motion is reduced (the edit badges show the mode on their own).
+    /// </summary>
+    public static void Wiggle(FrameworkElement element, bool on)
+    {
+        if (!on)
+        {
+            if (element.RenderTransform is TransformGroup { Children: [_, RotateTransform rotate, _] })
+            {
+                rotate.BeginAnimation(RotateTransform.AngleProperty, null);
+                rotate.Angle = 0;
+            }
+            return;
+        }
+        if (IsReduced) return;
+
+        var rotation = GetItemRotation(element);
+        var rock = new DoubleAnimationUsingKeyFrames
+        {
+            RepeatBehavior = RepeatBehavior.Forever,
+            // Starting each item at a different point of the cycle keeps the row from swaying as one block.
+            BeginTime = TimeSpan.FromMilliseconds(Random.Shared.Next(0, 260)),
+        };
+        rock.KeyFrames.Add(new EasingDoubleKeyFrame(-1.2, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(130))));
+        rock.KeyFrames.Add(new EasingDoubleKeyFrame(1.2, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(260))));
+        rock.KeyFrames.Add(new EasingDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(330))));
+        rotation.BeginAnimation(RotateTransform.AngleProperty, rock);
     }
 
     /// <summary>Item appears by scaling up from smaller size and fading in (items added to dock, opened panels).</summary>
@@ -168,7 +217,7 @@ public static class Motion
         ScaleTransform scale;
         TranslateTransform translate;
 
-        if (tg is { Children: [ScaleTransform s, TranslateTransform t] })
+        if (tg is { Children: [ScaleTransform s, .., TranslateTransform t] })
         {
             scale = s;
             translate = t;

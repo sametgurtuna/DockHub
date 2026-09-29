@@ -184,6 +184,8 @@ public sealed class ProfileService
         var target = Config.Profiles.FirstOrDefault(p => p.Id == profileId);
         if (target is null || target.Id == Config.ActiveProfileId) return;
 
+        // An edit of the dock belongs to the profile it was made in.
+        Dock.DockEditMode.Exit(announce: false);
         StoreActive();
 
         var items = target.Items?.Deserialize<List<DockItem>>(JsonStore.Options) ?? new List<DockItem>();

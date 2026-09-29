@@ -358,6 +358,7 @@ public partial class App : Application
         RegisterHotkeyHandler(HotkeyActions.VolumeDown, () => AppServices.Audio.StepVolume(-0.05f));
         RegisterHotkeyHandler(HotkeyActions.ToggleMicrophone, AppServices.Microphone.ToggleMute);
         RegisterHotkeyHandler(HotkeyActions.OpenLauncher, Dock.LauncherWindow.Toggle);
+        RegisterHotkeyHandler(HotkeyActions.EditDock, DockWindow.ToggleEditMainDock);
         _hotkeys = new HotkeyService(config, _hotkeyHandlers);
 
         _winNumbers = new WinNumberHotkeys(DockWindow.InvokeAppShortcut, DockWindow.ShowShortcutNumbers);

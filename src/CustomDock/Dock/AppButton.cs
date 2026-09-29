@@ -139,7 +139,7 @@ public sealed partial class AppButton : Grid
         {
             Motion.Fade(_hover, 1, 120);
             AnimatePress(HoverScale);
-            if (_group is { WindowCount: > 0 })
+            if (_group is { WindowCount: > 0 } && !DockWindow.IsEditingAt(this))
             {
                 if (WindowPreviewWindow.Instance.IsVisible)
                     ShowThumbnailPreview();
@@ -357,7 +357,8 @@ public sealed partial class AppButton : Grid
     private void OnLeftUp(object sender, MouseButtonEventArgs e)
     {
         AnimatePress(IsMouseOver ? HoverScale : 1);
-        if (DockDragHelper.JustDragged) return;
+        // In edit mode a click only picks the button up for moving.
+        if (DockDragHelper.JustDragged || DockWindow.IsEditingAt(this)) return;
         if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) && Item is not null)
         {
             BeginLaunchFeedback();
@@ -431,7 +432,7 @@ public sealed partial class AppButton : Grid
 
     private void OnMiddleDown(object sender, MouseButtonEventArgs e)
     {
-        if (e.ChangedButton != MouseButton.Middle) return;
+        if (e.ChangedButton != MouseButton.Middle || DockWindow.IsEditingAt(this)) return;
         e.Handled = true;
         _previewTimer.Stop();
         WindowPreviewWindow.Instance.HidePreview();

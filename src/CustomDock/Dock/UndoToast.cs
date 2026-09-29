@@ -97,6 +97,11 @@ public sealed class UndoToast : Window
             s_instance ??= new UndoToast();
             s_instance.ShowFor(entry.Description);
         };
+        // Undo waits while the dock is edited, and the step the toast offers then sits behind the edit.
+        DockEditMode.Changed += editing =>
+        {
+            if (editing) s_instance?.HideToast();
+        };
     }
 
     private void ShowFor(string description)

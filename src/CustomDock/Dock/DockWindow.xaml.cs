@@ -396,6 +396,8 @@ public partial class DockWindow : Window, IWidgetHost
     {
         if (_closing) return;
         _closing = true;
+        // No undo toast while the dock goes away (DockHub exits, or its display was unplugged).
+        if (_editing) DockEditMode.Exit(announce: false);
         _animationVersion++;
         s_docks.Remove(this);
         if (s_trayHostOwner == this) s_trayHostOwner = null;

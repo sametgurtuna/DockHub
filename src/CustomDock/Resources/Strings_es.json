@@ -1100,5 +1100,21 @@
   "DockHub closed several times in a row, so Windows no longer starts it again after a crash.": "DockHub se cerró varias veces seguidas, así que Windows ya no lo vuelve a iniciar tras un fallo.",
   "Turn back on": "Volver a activar",
   "Last crash": "Último fallo",
-  "Copy details": "Copiar detalles"
+  "Copy details": "Copiar detalles",
+
+  // ---------------------------------------------------------------- Dock edit mode
+  "Edit dock": "Editar dock",
+  "Edit the dock": "Editar el dock",
+  "Move, remove and resize dock items in place; press it again to finish.": "Mueve, quita y cambia el tamaño de los elementos del dock en su sitio; vuelve a pulsarlo para terminar.",
+  "Edited the dock": "Se editó el dock",
+  "Editing": "Editando",
+  "Add to the dock": "Agregar al dock",
+  "Add to the dock…": "Agregar al dock…",
+  "Drag items to move them. × removes, the handle on a widget's edge resizes it.": "Arrastra los elementos para moverlos. × los quita y el tirador del borde de un widget cambia su tamaño.",
+  "Done editing the dock": "Terminar de editar el dock",
+  "Drag to resize": "Arrastra para cambiar el tamaño",
+  "Resize {0}": "Cambiar el tamaño de {0}",
+  "Remove {0}": "Quitar {0}",
+  "Move, remove and resize items right on the dock": "Mueve, quita y cambia el tamaño de los elementos directamente en el dock",
+  "Edit on the dock": "Editar en el dock"
 }

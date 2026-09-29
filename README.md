@@ -170,14 +170,15 @@ winget install SametGurtuna.DockHub
 - **Hide in full screen:** the dock steps aside for games, videos and F11 mode.
 - **Multi-monitor and DPI:** choose the monitor for the dock; per-monitor DPI (PerMonitorV2) is supported. With *Show on all displays*, every other display gets a dock too, with its own size; move a widget to one of them from its right-click menu (*Show on*) or in *Settings › Dock items*.
 - **Drag and drop:** reorder apps, widgets and separators on the dock. Dropping an `.exe` or `.lnk` from File Explorer pins it.
+- **Edit mode:** right-click an empty area of the dock (or any widget) and choose **Edit dock**, press the *Edit the dock* shortcut, or use *Settings › Dock items › Edit on the dock*. The items wiggle; drag them to reorder, press **×** to remove one, and drag the handle on a widget's edge to switch it to a narrower or wider layout. The **+** tile at the end adds a widget, a separator or an app. Press **Done**, Esc or Enter, or click outside DockHub (or on another dock) to finish. Everything you changed is one step that *Undo* reverts; leaving without a change leaves no step behind. With the keyboard, the arrow keys move the focus, Ctrl+arrow keys move the item, Delete removes it and + or - resize it. Start, search, the tray and the clock stay put, and with reduced motion the items don't wiggle.
 - **Smooth motion:** scrolling, auto-hide and flyouts use frame-synchronized transitions at your display's refresh rate, including above 60 Hz. Hover highlights fade in, app icons grow slightly under the pointer, new items grow into place, and widget/folder popups open with macOS-style genie, zoom and shrink animations.
 - **Accessibility:** *Settings › Appearance › Animations* reduces motion to short fades (or turns it off), following Windows' animation effects by default. Windows contrast themes are picked up automatically. Screen readers get names and states for every dock item, and *Move focus to the dock* (Win+Alt+T) lets you use the dock with the arrow keys, Enter, Shift+Enter (new window), the menu key and Esc.
-- **Global shortcuts:** show the dock (Ctrl+Alt+D by default), open the quick launcher (Win+Alt+Space), open settings, pin an app, toggle auto-hide, mute the sound or the microphone, change the volume, switch profile, all configurable in *Settings › Keyboard shortcuts*. Shortcuts another app already uses are flagged there.
+- **Global shortcuts:** show the dock (Ctrl+Alt+D by default), open the quick launcher (Win+Alt+Space), open settings, edit the dock, pin an app, toggle auto-hide, mute the sound or the microphone, change the volume, switch profile, all configurable in *Settings › Keyboard shortcuts*. Shortcuts another app already uses are flagged there.
 - **Text size:** *Settings › Appearance › Text size* scales the text of settings, widget panels and menus (System follows Windows' text size).
 - **Even widget widths:** widget cards round their width up to a common grid and are at least a tile, a standard card or a wide card wide, depending on the layout, so the dock keeps an even rhythm. The widget sits centered in its card; nothing is cut off (on by default, *Settings › Appearance*).
 - **Theme files:** *Settings › Appearance › Theme file* exports your dock's look (colors, glass, size, shape) to a `.dockhub-theme` file that anyone can import. *Save current layout as a preset* keeps your look and widgets as a preset you can apply again later. Presets and themes never move the dock: the screen edge stays where you put it.
 - **Menus:** context menus and widget panels always open outside the dock, next to the pointer or the item.
-- **Dock menu** (right-click an empty area): Add widget, Pin app, Add separator, Task Manager, Quick settings, Auto-hide, Hide Windows taskbar, Position, Settings, Exit.
+- **Dock menu** (right-click an empty area): Undo, Edit dock, Add widget, Pin app, Add separator, Task Manager, Quick settings, Auto-hide, Hide Windows taskbar, Position, Settings, Exit.
 
 ## Widgets
 
@@ -214,7 +215,7 @@ Every widget can be added more than once, and each copy has its own settings. Ch
 | | **To do** | List, Count | Today's tasks: a simple list kept on this PC or today's and overdue tasks from [Todoist](https://todoist.com/) (personal API token, stored encrypted). Tick to complete, type to add. |
 | | **Screenshot** | Icon only, Buttons | Opens the Windows snipping overlay, or saves every screen to *Pictures › Screenshots* and copies it, with an optional delay. |
 
-To add a widget, press **+** next to its preview in *Settings › Widget gallery*, or right-click an empty area of the dock and choose **Add widget**. Right-clicking a widget on the dock gives it its own actions, layouts and settings.
+To add a widget, press **+** next to its preview in *Settings › Widget gallery*, right-click an empty area of the dock and choose **Add widget**, or press the **+** tile in edit mode. Right-clicking a widget on the dock gives it its own actions, layouts and settings.
 
 <p align="center">
   <img src="docs/images/widget-menu.jpg" alt="Right-click menu of the hydration widget with drink a glass, reset today, appearance and widget settings" width="62%">

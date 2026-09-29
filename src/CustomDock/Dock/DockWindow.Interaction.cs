@@ -349,7 +349,14 @@ public partial class DockWindow
             return;
         }
         if (e.Handled) return;
-        if (PopupPlacement.FindMenuOwner(e.OriginalSource as DependencyObject) is { ContextMenu: { } menu } owner)
+        var menuOwner = PopupPlacement.FindMenuOwner(e.OriginalSource as DependencyObject);
+        // In edit mode the items' own menus stay closed; the dock's menu has the edit commands.
+        if (_editing && menuOwner is not null && !ReferenceEquals(menuOwner, Root))
+        {
+            e.Handled = true;
+            return;
+        }
+        if (menuOwner is { ContextMenu: { } menu } owner)
             PopupPlacement.PlaceMenu(menu, owner, _config.Edge);
     }
 

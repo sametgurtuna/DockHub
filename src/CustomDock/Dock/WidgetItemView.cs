@@ -64,7 +64,7 @@ public sealed class WidgetItemView : WidgetCard
                 }
             };
         }
-        DockDragHelper.Attach(this, () => new DataObject(DockDragHelper.ItemFormat, item.Id));
+        DockDragHelper.Attach(this, () => DockDragHelper.StringData(DockDragHelper.ItemFormat, item.Id));
         MouseEnter += (_, _) => WindowPreviewWindow.Instance.HidePreview();
         Loaded += OnFirstLoaded;
     }
@@ -330,7 +330,7 @@ public sealed class SeparatorView : Border
         SetOrientation(vertical);
         ContextMenu = new ContextMenu();
         ContextMenu.Items.Add(DockMenu.Item("Remove separator", "\uE77A", () => AppServices.ConfigService.RemoveItem(item.Id)));
-        DockDragHelper.Attach(this, () => new DataObject(DockDragHelper.ItemFormat, item.Id));
+        DockDragHelper.Attach(this, () => DockDragHelper.StringData(DockDragHelper.ItemFormat, item.Id));
     }
 
     public DockItem? Item { get; }

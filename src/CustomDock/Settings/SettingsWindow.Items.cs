@@ -365,7 +365,7 @@ public partial class SettingsWindow
         if (Math.Abs((e.GetPosition(ItemList) - _dragStart).Y) < SystemParameters.MinimumVerticalDragDistance) return;
         var row = _dragCandidate;
         _dragCandidate = null;
-        DragDrop.DoDragDrop(ItemList, new DataObject(DragFormat, row), DragDropEffects.Move);
+        DragDrop.DoDragDrop(ItemList, DockDragHelper.StringData(DragFormat, row.Item.Id), DragDropEffects.Move);
     }
 
     private void OnItemListDragOver(object sender, DragEventArgs e)
@@ -376,7 +376,9 @@ public partial class SettingsWindow
 
     private void OnItemListDrop(object sender, DragEventArgs e)
     {
-        if (e.Data.GetData(DragFormat) is not ItemRow dragged) return;
+        string? draggedId = DockDragHelper.ReadString(e.Data, DragFormat);
+        var dragged = _rows.FirstOrDefault(r => r.Item.Id == draggedId);
+        if (dragged is null) return;
         var hit = VisualTreeHelper.HitTest(ItemList, e.GetPosition(ItemList))?.VisualHit;
         while (hit is not null and not ListBoxItem) hit = VisualTreeHelper.GetParent(hit);
         var target = (hit as ListBoxItem)?.DataContext as ItemRow;

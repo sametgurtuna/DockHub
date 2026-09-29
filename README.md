@@ -12,7 +12,7 @@ Start, search, running apps, the system tray and live widgets, all in one floati
 No admin rights. Your original taskbar always comes back.
 
 [![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?style=flat-square&logo=windows11&logoColor=white)](#requirements)
-[![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4?style=flat-square&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?style=flat-square&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![WPF](https://img.shields.io/badge/UI-WPF-4CC2FF?style=flat-square)](#tech-stack)
 [![Latest release](https://img.shields.io/github/v/release/sametgurtuna/DockHub?style=flat-square&color=4CC2FF&label=release)](https://github.com/sametgurtuna/DockHub/releases/latest)
 [![CI](https://img.shields.io/github/actions/workflow/status/sametgurtuna/DockHub/ci.yml?branch=master&style=flat-square&label=build)](https://github.com/sametgurtuna/DockHub/actions/workflows/ci.yml)
@@ -123,7 +123,7 @@ winget install SametGurtuna.DockHub
 |---|---|
 | Operating system | Windows 10 version 1809 (build 17763) or later, x64 |
 | Recommended | Windows 11 22H2 or later (rounded corners, Mica settings window) |
-| Runtime | Bundled with the installer. Running a framework-dependent build requires the [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0). |
+| Runtime | Bundled with the installer. Running a framework-dependent build requires the [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0). |
 
 ## Features
 
@@ -268,7 +268,7 @@ DockHub.exe --restore-taskbar
 ### Prerequisites
 
 - Windows 10 1809 or later
-- [.NET 8 SDK](https://dotnet.microsoft.com/download) or newer (.NET 9 and 10 SDKs also build the `net8.0` target)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) or newer
 - Optional: [Inno Setup 6](https://jrsoftware.org/isinfo.php) to build the installer (`winget install JRSoftware.InnoSetup`)
 
 NuGet dependencies are restored automatically:
@@ -285,7 +285,7 @@ dotnet build CustomDock.sln -c Release
 dotnet run --project src/CustomDock -c Release
 ```
 
-You can also open `CustomDock.sln` in Visual Studio 2022 and press F5.
+You can also open `CustomDock.sln` in Visual Studio 2026 and press F5.
 
 ### Running tests
 

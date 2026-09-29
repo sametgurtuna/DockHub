@@ -153,7 +153,7 @@ public partial class DockWindow
             {
                 case DockItemKind.App when !string.IsNullOrWhiteSpace(item.Path):
                     var app = new AppButton(item, null);
-                    DockDragHelper.Attach(app, () => new DataObject(DockDragHelper.ItemFormat, item.Id));
+                    DockDragHelper.Attach(app, () => DockDragHelper.StringData(DockDragHelper.ItemFormat, item.Id));
                     return app;
                 // Widgets keep their own state (timers, notes, alarms); a second copy would diverge, so each lives on one dock.
                 case DockItemKind.Widget when !ShowsHere(item):
@@ -168,7 +168,7 @@ public partial class DockWindow
                     return new SeparatorView(item, IsVertical);
                 case DockItemKind.Group:
                     var groupView = new GroupItemView(item, this);
-                    DockDragHelper.Attach(groupView, () => new DataObject(DockDragHelper.ItemFormat, item.Id));
+                    DockDragHelper.Attach(groupView, () => DockDragHelper.StringData(DockDragHelper.ItemFormat, item.Id));
                     return groupView;
             }
         }
@@ -255,7 +255,7 @@ public partial class DockWindow
             {
                 var g = group;
                 button = new AppButton(null, group);
-                DockDragHelper.Attach(button, () => new DataObject(DockDragHelper.RunningAppFormat, g.Key));
+                DockDragHelper.Attach(button, () => DockDragHelper.StringData(DockDragHelper.RunningAppFormat, g.Key));
                 _runningViews[group.Key] = button;
                 isNew = true;
             }

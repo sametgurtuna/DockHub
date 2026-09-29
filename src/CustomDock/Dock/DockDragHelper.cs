@@ -21,6 +21,16 @@ public static class DockDragHelper
 
     public static event Action<bool>? DraggingChanged;
 
+    /// <summary>
+    /// Drag data carrying only a string (an item id or app key). Other objects would have to be serialized when a
+    /// drag leaves the process, and .NET no longer has the BinaryFormatter that did it.
+    /// </summary>
+    public static DataObject StringData(string format, string value) => new(format, value);
+
+    /// <summary>The string <see cref="StringData"/> put in <paramref name="data"/>, or null.</summary>
+    public static string? ReadString(IDataObject data, string format) =>
+        data.GetDataPresent(format) ? data.GetData(format) as string : null;
+
     public static void Attach(FrameworkElement element, Func<DataObject?> dataFactory)
     {
         element.PreviewMouseLeftButtonDown += (_, e) =>

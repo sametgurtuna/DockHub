@@ -16,7 +16,7 @@ public sealed record MonitorOption(string Label, string? Device);
 
 public partial class SettingsWindow : Window
 {
-    private const string DragFormat = "CustomDock.SettingsItemRow";
+    private const string DragFormat = "DockHub.SettingsItemId";
 
     private readonly AppConfig _config = AppServices.Config;
     private readonly ObservableCollection<ItemRow> _rows = new();

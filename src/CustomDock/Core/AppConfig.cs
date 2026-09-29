@@ -33,6 +33,9 @@ public enum MotionPreference { System, Full, Reduced, Off }
 
 public enum RunningIndicatorStyle { Line, Dots, Off }
 
+/// <summary>Widgets on the dock: each on its own card, or straight on the dock with a thin line between them.</summary>
+public enum WidgetStyle { Cards, Seamless }
+
 public enum DockLayout
 {
     /// <summary>Floating bar with margins and rounded corners.</summary>
@@ -245,6 +248,11 @@ public sealed class AppConfig : ObservableObject
 
     /// <summary>Widget cards snap their width to a grid of half the dock height, so the dock keeps an even rhythm.</summary>
     public bool AlignWidgetWidths { get => _alignWidgetWidths; set => Set(ref _alignWidgetWidths, value); }
+
+    private WidgetStyle _widgetStyle = WidgetStyle.Cards;
+
+    /// <summary>Cards (each widget on its own card, as before) or Seamless (no card; a thin line between widgets).</summary>
+    public WidgetStyle WidgetStyle { get => _widgetStyle; set => Set(ref _widgetStyle, value); }
 
     private double _textScale;
 

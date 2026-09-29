@@ -142,9 +142,6 @@ public sealed class WidgetItemView : WidgetCard
         UpdateCompactMode();
     }
 
-    /// <summary>Picks up a changed "Even widget widths" setting.</summary>
-    public void RefreshGrid() => ApplyWidthClass();
-
     /// <summary>
     /// Snaps the card to the grid and gives it its variant's minimum width while "Even widget widths" is on (the card
     /// style then centers the widget in any extra room).
@@ -165,10 +162,19 @@ public sealed class WidgetItemView : WidgetCard
 
     private void Apply(WidgetCard card, bool compact)
     {
+        // Seamless style: no card on the dock (the panel of a tile keeps its card). A widget with a color of its own
+        // (sticky note, water) keeps it, a little fainter.
+        bool seamless = AppServices.Config.WidgetStyle == WidgetStyle.Seamless && !ReferenceEquals(card, _flyoutCard);
         if (Widget.CardBackground is { } background)
         {
-            card.Background = background;
-            card.BorderBrush = new SolidColorBrush(Color.FromArgb(0x26, 0xFF, 0xFF, 0xFF));
+            card.Background = seamless ? Faded(background) : background;
+            card.BorderBrush = seamless ? Brushes.Transparent : new SolidColorBrush(Color.FromArgb(0x26, 0xFF, 0xFF, 0xFF));
+        }
+        else if (seamless)
+        {
+            // Transparent, not null: the whole card still takes the mouse (drag, menu, hover).
+            card.Background = Brushes.Transparent;
+            card.BorderBrush = Brushes.Transparent;
         }
         else
         {
@@ -177,6 +183,19 @@ public sealed class WidgetItemView : WidgetCard
         }
         card.Padding = compact ? new Thickness(0) : Widget.CardPadding;
     }
+
+    /// <summary>A little fainter, so the colored card sits on the dock; its dark text keeps enough contrast. Contrast themes keep their colors.</summary>
+    private static Brush Faded(Brush brush)
+    {
+        if (SystemParameters.HighContrast) return brush;
+        var faded = brush.CloneCurrentValue();
+        faded.Opacity = brush.Opacity * 0.8;
+        faded.Freeze();
+        return faded;
+    }
+
+    /// <summary>Picks up changed look settings (widget style, even widths).</summary>
+    public void RefreshLook() => ApplyAppearance();
 
     // ------------------------------------------------------------------ Compact mode: click and panel
 

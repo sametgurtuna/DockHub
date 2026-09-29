@@ -32,6 +32,7 @@ public sealed class ConfigHistory
         nameof(AppConfig.EdgeMargin), nameof(AppConfig.AutoHide), nameof(AppConfig.HoverEffect),
         nameof(AppConfig.ShowClock), nameof(AppConfig.ShowTray), nameof(AppConfig.ShowRunningApps),
         nameof(AppConfig.ShowSearchButton), nameof(AppConfig.ShowTaskViewButton), nameof(AppConfig.ShowStartButton),
+        nameof(AppConfig.WidgetStyle),
     };
 
     private readonly LinkedList<HistoryEntry> _entries = new();
@@ -182,8 +183,22 @@ public sealed class ConfigHistory
         return node;
     }
 
-    public static void RestoreAppearance(AppConfig config, JsonObject appearance)
+    /// <summary>
+    /// Puts the look in <paramref name="appearance"/> back. With <paramref name="missingAsDefault"/> a setting the
+    /// snapshot doesn't have (a profile saved before the setting existed) goes back to its default instead of keeping
+    /// the current value, so one profile's choice doesn't spill into another.
+    /// </summary>
+    public static void RestoreAppearance(AppConfig config, JsonObject appearance, bool missingAsDefault = false)
     {
+        if (missingAsDefault)
+        {
+            var defaults = new AppConfig();
+            foreach (var name in AppearanceProperties.Where(n => !appearance.ContainsKey(n)))
+            {
+                var property = typeof(AppConfig).GetProperty(name, BindingFlags.Public | BindingFlags.Instance)!;
+                property.SetValue(config, property.GetValue(defaults));
+            }
+        }
         foreach (var (name, value) in appearance)
         {
             var property = typeof(AppConfig).GetProperty(name, BindingFlags.Public | BindingFlags.Instance);

@@ -502,6 +502,17 @@
                             </StackPanel>
                         </Border>
                     </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE80A;" Header="Widget style"
+                                    Description="Cards puts every widget on a card of its own. Seamless sets them right on the dock, with a thin line between two widgets.">
+                        <Border Style="{StaticResource SegmentedHost}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="WidgetStyle" Content="Cards"
+                                             IsChecked="{Binding WidgetStyle, Converter={StaticResource EnumEq}, ConverterParameter=Cards}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="WidgetStyle" Content="Seamless"
+                                             IsChecked="{Binding WidgetStyle, Converter={StaticResource EnumEq}, ConverterParameter=Seamless}" />
+                            </StackPanel>
+                        </Border>
+                    </ctl:SettingRow>
                     <ctl:SettingRow Glyph="&#xE7B3;" Header="Card hover" Description="Widget card gently lights up when hovered.">
                         <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding HoverEffect}" />
                     </ctl:SettingRow>

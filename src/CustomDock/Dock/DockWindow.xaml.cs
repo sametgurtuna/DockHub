@@ -352,7 +352,7 @@ public partial class DockWindow : Window, IWidgetHost
         ApplyZoneVisibility();
         ApplyBackdrop();
         RebuildItems();
-        foreach (var view in _itemViews.Values.OfType<WidgetItemView>()) view.RefreshGrid();
+        foreach (var view in _itemViews.Values.OfType<WidgetItemView>()) view.RefreshLook();
         UpdateClock(DateTime.Now);
         SubscribeClock();
         UpdateReserver();

@@ -109,8 +109,12 @@ public sealed class MiniDockPreview : Border
         string[] appColors = { "AccentBlueBrush", "AccentYellowBrush", "AccentGreenBrush", "AccentPurpleBrush", "AccentRedBrush" };
         items.Children.Add(Dot(button, "TextPrimaryBrush", 0.9));
         foreach (var color in appColors) items.Children.Add(Dot(button, color, 1));
-        foreach (var _ in new[] { 0, 1 })
-            items.Children.Add(Card(vertical ? button : button * 2.6, vertical ? button : button * 0.8));
+        bool seamless = c.WidgetStyle == WidgetStyle.Seamless;
+        foreach (int i in new[] { 0, 1 })
+        {
+            if (seamless && i > 0) items.Children.Add(Divider(vertical, button));
+            items.Children.Add(Card(vertical ? button : button * 2.6, vertical ? button : button * 0.8, seamless));
+        }
         bar.Child = new Grid
         {
             Children =
@@ -143,7 +147,7 @@ public sealed class MiniDockPreview : Border
         return tile;
     }
 
-    private FrameworkElement Card(double width, double height)
+    private FrameworkElement Card(double width, double height, bool seamless)
     {
         var card = new Rectangle
         {
@@ -151,10 +155,36 @@ public sealed class MiniDockPreview : Border
             Height = height,
             RadiusX = height * 0.25,
             RadiusY = height * 0.25,
-            Margin = new Thickness(height * 0.12),
         };
         card.SetResourceReference(Shape.FillProperty, "CardBrush");
-        return card;
+        // A line of "text" shows the widget itself; with the seamless style that is all there is.
+        var content = new Rectangle
+        {
+            Width = width * 0.6,
+            Height = Math.Max(1, height * 0.16),
+            RadiusX = height * 0.08,
+            RadiusY = height * 0.08,
+            Opacity = 0.55,
+        };
+        content.SetResourceReference(Shape.FillProperty, "TextSecondaryBrush");
+        // The widget keeps its width without a card, as on the dock.
+        var grid = new Grid { Width = width, Height = height, Margin = new Thickness(height * 0.12) };
+        if (!seamless) grid.Children.Add(card);
+        grid.Children.Add(content);
+        return grid;
+    }
+
+    private static FrameworkElement Divider(bool vertical, double size)
+    {
+        var line = new Rectangle
+        {
+            Width = vertical ? size * 0.6 : Math.Max(0.8, size * 0.03),
+            Height = vertical ? Math.Max(0.8, size * 0.03) : size * 0.6,
+            VerticalAlignment = VerticalAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Center,
+        };
+        line.SetResourceReference(Shape.FillProperty, "SeparatorBrush");
+        return line;
     }
 
     private static ImageSource? LoadWallpaper()

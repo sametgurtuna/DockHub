@@ -189,7 +189,7 @@ public sealed class ProfileService
         StoreActive();
 
         var items = target.Items?.Deserialize<List<DockItem>>(JsonStore.Options) ?? new List<DockItem>();
-        if (target.Appearance is { } appearance) ConfigHistory.RestoreAppearance(Config, appearance);
+        if (target.Appearance is { } appearance) ConfigHistory.RestoreAppearance(Config, appearance, missingAsDefault: true);
         Config.ActiveProfileId = target.Id;
         target.Items = null;
         Config.Items = items;

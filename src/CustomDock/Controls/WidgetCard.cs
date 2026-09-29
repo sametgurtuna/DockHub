@@ -4,9 +4,16 @@ using System.Windows.Input;
 
 namespace CustomDock.Controls;
 
+/// <summary>Where a card draws the thin line that separates it from the widget before it (Seamless widget style).</summary>
+public enum CardDivider { None, Left, Top }
+
 /// <summary>Rounded-corner widget card inside the dock.</summary>
 public class WidgetCard : ContentControl
 {
+    /// <summary>A thin line in the gap before the card: at its left, or at its top on a side dock.</summary>
+    public static readonly DependencyProperty DividerProperty = DependencyProperty.Register(
+        nameof(Divider), typeof(CardDivider), typeof(WidgetCard), new PropertyMetadata(CardDivider.None));
+
     public static readonly DependencyProperty HoverEnabledProperty = DependencyProperty.Register(
         nameof(HoverEnabled), typeof(bool), typeof(WidgetCard), new PropertyMetadata(true));
 
@@ -34,6 +41,8 @@ public class WidgetCard : ContentControl
     public static readonly DependencyProperty IsHighlightedProperty = IsHighlightedPropertyKey.DependencyProperty;
 
     public bool HoverEnabled { get => (bool)GetValue(HoverEnabledProperty); set => SetValue(HoverEnabledProperty, value); }
+
+    public CardDivider Divider { get => (CardDivider)GetValue(DividerProperty); set => SetValue(DividerProperty, value); }
 
     public bool IsContentHovered { get => (bool)GetValue(IsContentHoveredProperty); set => SetValue(IsContentHoveredProperty, value); }
 

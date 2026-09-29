@@ -1136,5 +1136,11 @@
   "No widget matches “{0}”.": "“{0}” ile eşleşen widget yok.",
   "Nothing here yet.": "Burada henüz bir şey yok.",
   "Press Add, or drag a widget's card onto the dock. Right-click a widget on the dock to change its layout or open its settings.": "Ekle'ye basın ya da bir widget'ın kartını dock'a sürükleyin. Düzenini değiştirmek veya ayarlarını açmak için dock'taki widget'a sağ tıklayın.",
-  "Search widgets": "Widget ara"
+  "Search widgets": "Widget ara",
+
+  // ---------------------------------------------------------------- Widget style
+  "Widget style": "Widget stili",
+  "Cards puts every widget on a card of its own. Seamless sets them right on the dock, with a thin line between two widgets.": "Kartlar her widget'ı kendi kartına koyar. Kutusuz ise onları doğrudan dock'a yerleştirir, iki widget arasında ince bir çizgi olur.",
+  "Cards": "Kartlar",
+  "Seamless": "Kutusuz"
 }

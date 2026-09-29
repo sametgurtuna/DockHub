@@ -1136,5 +1136,11 @@
   "No widget matches “{0}”.": "Kein Widget passt zu „{0}“.",
   "Nothing here yet.": "Hier ist noch nichts.",
   "Press Add, or drag a widget's card onto the dock. Right-click a widget on the dock to change its layout or open its settings.": "Klicken Sie auf „Hinzufügen“ oder ziehen Sie die Karte eines Widgets ins Dock. Klicken Sie mit der rechten Maustaste auf ein Widget im Dock, um sein Layout zu ändern oder seine Einstellungen zu öffnen.",
-  "Search widgets": "Widgets suchen"
+  "Search widgets": "Widgets suchen",
+
+  // ---------------------------------------------------------------- Widget style
+  "Widget style": "Widget-Stil",
+  "Cards puts every widget on a card of its own. Seamless sets them right on the dock, with a thin line between two widgets.": "„Karten“ setzt jedes Widget auf eine eigene Karte. „Nahtlos“ setzt sie direkt ins Dock, mit einer dünnen Linie zwischen zwei Widgets.",
+  "Cards": "Karten",
+  "Seamless": "Nahtlos"
 }

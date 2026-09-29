@@ -196,6 +196,28 @@ public partial class DockWindow
 
     private double ViewportLength => IsVertical ? Scroller.ViewportHeight : Scroller.ViewportWidth;
 
+    private double ExtentLength => IsVertical ? Scroller.ExtentHeight : Scroller.ExtentWidth;
+
+    /// <summary>
+    /// Where each item begins along the strip (its margin included), for <see cref="ScrollSnap"/>. Layout slots, not
+    /// drawn positions: hover magnification, wiggle and move animations don't shift the stops.
+    /// </summary>
+    private List<double> ItemStarts()
+    {
+        bool vertical = IsVertical;
+        var starts = new List<double>();
+        foreach (var child in ItemsPanel.Children.OfType<FrameworkElement>())
+        {
+            if (child.Visibility != Visibility.Visible) continue;
+            var slot = System.Windows.Controls.Primitives.LayoutInformation.GetLayoutSlot(child);
+            starts.Add(vertical ? slot.Y : slot.X);
+        }
+        return starts;
+    }
+
+    /// <summary>Wheel movement not yet enough to reach the next item (touchpads send many small steps).</summary>
+    private double _pendingScroll;
+
     private void OnPreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
         // Do not scroll dock horizontally when menu or popup (mixer, calendar, etc.) is open
@@ -222,10 +244,17 @@ public partial class DockWindow
         SmoothScrollBy(-e.Delta * 0.9);
     }
 
+    /// <summary>Scrolls by about <paramref name="delta"/>, stopping where an item begins (no item is cut at the leading edge).</summary>
     private void SmoothScrollBy(double delta)
     {
         double from = double.IsNaN(_scrollTarget) ? ScrollOffset : _scrollTarget;
-        _scrollTarget = Math.Clamp(from + delta, 0, ScrollableLength);
+        // A change of direction starts counting again.
+        if (Math.Sign(delta) != Math.Sign(_pendingScroll)) _pendingScroll = 0;
+        _pendingScroll += delta;
+        double snapped = ScrollSnap.Snap(ItemStarts(), ViewportLength, ExtentLength, from, from + _pendingScroll);
+        if (Math.Abs(snapped - from) < 0.5) return; // not halfway to the next item yet
+        _pendingScroll = 0;
+        _scrollTarget = snapped;
         if (_scrollAnimating) return;
         _scrollAnimating = true;
         _lastScrollFrame = TimeSpan.Zero;
@@ -256,9 +285,58 @@ public partial class DockWindow
         }
     }
 
-    private void OnScrollBackClick(object sender, RoutedEventArgs e) => SmoothScrollBy(-ViewportLength * 0.6);
+    // ------------------------------------------------------------------ Scrolling from the faded edges
 
-    private void OnScrollForwardClick(object sender, RoutedEventArgs e) => SmoothScrollBy(ViewportLength * 0.6);
+    /// <summary>Length of the faded edge where a dragged item scrolls the strip (at most the fade, see <see cref="ScrollSnap.EdgeDirection"/>).</summary>
+    private const double EdgeZone = 28;
+
+    private DispatcherTimer? _edgeScrollTimer;
+    private int _edgeScrollDirection;
+    private double _edgePointer;
+
+    /// <summary>
+    /// The strip has no scroll arrows: where it continues, its edge fades. The wheel scrolls it, and an item dragged
+    /// to a faded edge (to be dropped out of view) scrolls it after a moment, one step at a time. The mouse alone
+    /// doesn't: the edges lie over items, which must not move under a pointer that rests on them.
+    /// </summary>
+    private void UpdateEdgeScroll(Point pointer)
+    {
+        _edgePointer = IsVertical ? pointer.Y : pointer.X;
+        int direction = ScrollSnap.EdgeDirection(_edgePointer, ViewportLength, EdgeZone, ScrollOffset, ScrollableLength);
+        if (direction == _edgeScrollDirection) return;
+        _edgeScrollDirection = direction;
+        _edgeScrollTimer?.Stop();
+        if (direction == 0) return;
+        _edgeScrollTimer ??= CreateEdgeScrollTimer();
+        _edgeScrollTimer.Interval = TimeSpan.FromMilliseconds(450);
+        _edgeScrollTimer.Start();
+    }
+
+    private void StopEdgeScroll()
+    {
+        _edgeScrollDirection = 0;
+        _edgeScrollTimer?.Stop();
+    }
+
+    private DispatcherTimer CreateEdgeScrollTimer()
+    {
+        var timer = new DispatcherTimer();
+        timer.Tick += (_, _) =>
+        {
+            double offset = double.IsNaN(_scrollTarget) ? ScrollOffset : _scrollTarget;
+            if (_closing || _edgeScrollDirection == 0
+                || ScrollSnap.EdgeDirection(_edgePointer, ViewportLength, EdgeZone, offset, ScrollableLength) != _edgeScrollDirection)
+            {
+                StopEdgeScroll(); // reached the end
+                return;
+            }
+            // Like the wheel: a popup open on an item stays with it.
+            if (GlobalPopupDismissHook.HasActivePopupsOrMenus) return;
+            SmoothScrollBy(_edgeScrollDirection * ViewportLength * 0.5);
+            timer.Interval = TimeSpan.FromMilliseconds(650);
+        };
+        return timer;
+    }
 
     private DispatcherTimer? _newAppHintTimer;
     private readonly DateTime _startedAt = DateTime.UtcNow;
@@ -301,15 +379,6 @@ public partial class DockWindow
         if (NewAppHint.Visibility == Visibility.Visible && (IsVertical ? e.VerticalChange : e.HorizontalChange) > 0)
             HideNewAppHint();
 
-        bool scrollable = ScrollableLength > 0.5;
-        var visibility = scrollable ? Visibility.Visible : Visibility.Collapsed;
-        if (ScrollBackButton.Visibility != visibility)
-        {
-            ScrollBackButton.Visibility = ScrollForwardButton.Visibility = visibility;
-            UpdateTrayVisibility();
-        }
-        ScrollBackButton.IsEnabled = ScrollOffset > 0.5;
-        ScrollForwardButton.IsEnabled = ScrollOffset < ScrollableLength - 0.5;
         UpdateFadeMask();
     }
 

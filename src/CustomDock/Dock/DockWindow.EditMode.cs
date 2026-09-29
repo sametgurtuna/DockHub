@@ -163,11 +163,8 @@ public partial class DockWindow : IEditableDock
     /// <summary>Start, search, tray and clock stay where they are; they fade while the items are edited.</summary>
     private void DimSystemItems(bool dim)
     {
-        // The scroll arrows keep working: the "+" tile and later items may be out of view.
-        var scrollArrows = new[] { ScrollBackButton, ScrollForwardButton.Parent as UIElement ?? ScrollForwardButton };
         foreach (var element in StartZone.Children.OfType<UIElement>()
-                     .Concat(EndZone.Children.OfType<UIElement>().Where(e => !ReferenceEquals(e, EndItemsPanel)))
-                     .Where(e => !scrollArrows.Contains(e)))
+                     .Concat(EndZone.Children.OfType<UIElement>().Where(e => !ReferenceEquals(e, EndItemsPanel))))
         {
             if (dim)
             {

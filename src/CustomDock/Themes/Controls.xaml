@@ -74,11 +74,22 @@
                                 BorderThickness="1" CornerRadius="{TemplateBinding CornerRadius}" />
                         <Border x:Name="Hover" Background="{DynamicResource HoverOverlayBrush}" Opacity="0"
                                 CornerRadius="{TemplateBinding CornerRadius}" />
+                        <!-- Seamless widget style: a thin line centered in the gap before the card (item margins 3 across, 2 down). -->
+                        <Border x:Name="DividerLeft" Width="1" HorizontalAlignment="Left" Margin="-3.5,11,0,11" IsHitTestVisible="False"
+                                Background="{DynamicResource SeparatorBrush}" Visibility="Collapsed" />
+                        <Border x:Name="DividerTop" Height="1" VerticalAlignment="Top" Margin="9,-2.5,9,0" IsHitTestVisible="False"
+                                Background="{DynamicResource SeparatorBrush}" Visibility="Collapsed" />
                         <ContentPresenter Margin="{TemplateBinding Padding}"
                                           HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                           VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
                     </Grid>
                     <ControlTemplate.Triggers>
+                        <Trigger Property="Divider" Value="Left">
+                            <Setter TargetName="DividerLeft" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                        <Trigger Property="Divider" Value="Top">
+                            <Setter TargetName="DividerTop" Property="Visibility" Value="Visible" />
+                        </Trigger>
                         <MultiTrigger>
                             <MultiTrigger.Conditions>
                                 <!-- IsHighlighted = the mouse is over the card, or over content that keeps the mouse (a web view). -->

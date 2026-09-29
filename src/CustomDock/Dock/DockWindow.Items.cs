@@ -115,6 +115,7 @@ public partial class DockWindow
         _runningSeparator.SetOrientation(vertical);
         RefreshRunningApps();
         if (_editing) ApplyEditDecorations();
+        UpdateWidgetDividers();
         AnimateShifts(positionsBefore);
     }
 
@@ -315,6 +316,52 @@ public partial class DockWindow
             RefreshRunningApps();
     }
 
+    private bool _dividersQueued;
+
+    /// <summary>
+    /// Seamless widget style: a thin line between two widgets that stand next to each other (in either strip). Widgets
+    /// that hide or show themselves (nothing playing) move the lines along.
+    /// </summary>
+    private void UpdateWidgetDividers()
+    {
+        bool seamless = _config.WidgetStyle == WidgetStyle.Seamless;
+        foreach (var panel in new[] { ItemsPanel, EndItemsPanel })
+        {
+            // Along the panel: the right-edge panel stays a row even on a side dock.
+            var divider = panel.Orientation == Orientation.Vertical ? CardDivider.Top : CardDivider.Left;
+            FrameworkElement? previous = null;
+            foreach (var child in panel.Children.OfType<FrameworkElement>())
+            {
+                if (child.Visibility != Visibility.Visible) continue;
+                if (child is WidgetItemView widget)
+                {
+                    widget.IsVisibleChanged -= OnWidgetVisibilityChanged;
+                    widget.IsVisibleChanged += OnWidgetVisibilityChanged;
+                    widget.Divider = seamless && previous is WidgetItemView ? divider : CardDivider.None;
+                }
+                previous = child;
+            }
+            // Hidden widgets keep no line of their own.
+            foreach (var hidden in panel.Children.OfType<WidgetItemView>().Where(v => v.Visibility != Visibility.Visible))
+            {
+                hidden.IsVisibleChanged -= OnWidgetVisibilityChanged;
+                hidden.IsVisibleChanged += OnWidgetVisibilityChanged;
+                hidden.Divider = CardDivider.None;
+            }
+        }
+    }
+
+    private void OnWidgetVisibilityChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        if (_dividersQueued || _closing) return;
+        _dividersQueued = true;
+        Dispatcher.BeginInvoke(DispatcherPriority.Loaded, () =>
+        {
+            _dividersQueued = false;
+            UpdateWidgetDividers();
+        });
+    }
+
     private int PinnedViewCount => _config.Items.Count(i => !IsPinnedEnd(i) && _itemViews.ContainsKey(i.Id));
 
     /// <summary>
@@ -386,6 +433,7 @@ public partial class DockWindow
         }
 
         if (!_shown) Reveal();
+        UpdateEdgeScroll(e.GetPosition(Scroller)); // dragging to a faded edge scrolls toward the hidden items
         e.Effects = e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Link : DragDropEffects.Move;
         DropIndexAt(e.GetPosition(ItemsPanel), out double caret);
 
@@ -398,12 +446,17 @@ public partial class DockWindow
         DropCaret.Visibility = Visibility.Visible;
     }
 
-    private void OnItemsDragLeave(object sender, DragEventArgs e) => DropCaret.Visibility = Visibility.Collapsed;
+    private void OnItemsDragLeave(object sender, DragEventArgs e)
+    {
+        DropCaret.Visibility = Visibility.Collapsed;
+        StopEdgeScroll();
+    }
 
     private void OnItemsDrop(object sender, DragEventArgs e)
     {
         e.Handled = true;
         DropCaret.Visibility = Visibility.Collapsed;
+        StopEdgeScroll();
         var config = AppServices.ConfigService;
 
         // Check if dropped directly onto a group folder

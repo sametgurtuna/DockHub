@@ -85,7 +85,7 @@ public static class LayoutPresets
         {
             if (custom.Appearance is not { } appearance) return;
             var edge = c.Edge;
-            ConfigHistory.RestoreAppearance(c, appearance);
+            ConfigHistory.RestoreAppearance(c, appearance, missingAsDefault: true);
             c.Edge = edge;
         },
         custom.Widgets.Select(w => (w.Widget, w.Variant ?? "")).ToList());

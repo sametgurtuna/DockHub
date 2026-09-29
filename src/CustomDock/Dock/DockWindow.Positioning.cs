@@ -47,10 +47,9 @@ public partial class DockWindow
         StartSeparator.SetOrientation(vertical);
         EndSeparator.SetOrientation(vertical);
         _runningSeparator.SetOrientation(vertical);
-        ScrollBackButton.Content = vertical ? "\uE70E" : "\uE76B";
-        ScrollForwardButton.Content = vertical ? "\uE70D" : "\uE76C";
-        ScrollBackButton.Width = ScrollForwardButton.Width = vertical ? 44 : 26;
-        ScrollBackButton.Height = ScrollForwardButton.Height = vertical ? 26 : 46;
+        NewAppHint.HorizontalAlignment = HorizontalAlignment.Right;
+        NewAppHint.VerticalAlignment = vertical ? VerticalAlignment.Bottom : VerticalAlignment.Top;
+        NewAppHint.Margin = vertical ? new Thickness(0, 0, 4, 2) : new Thickness(0, 4, 2, 0);
 
         bool center = _config.Alignment == DockAlignment.Center;
         ItemsPanel.HorizontalAlignment = vertical ? HorizontalAlignment.Center : center ? HorizontalAlignment.Center : HorizontalAlignment.Left;
@@ -101,8 +100,7 @@ public partial class DockWindow
         bool tray = HasTray;
         bool hasHidden = tray && _shell.Tray!.UnpinnedIcons is { IsEmpty: false };
         TrayOverflowButton.Visibility = hasHidden ? Visibility.Visible : Visibility.Collapsed;
-        EndSeparator.Visibility = tray || _config.ShowClock || ScrollBackButton.Visibility == Visibility.Visible
-            ? Visibility.Visible : Visibility.Collapsed;
+        EndSeparator.Visibility = tray || _config.ShowClock ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void ApplyBackdrop()

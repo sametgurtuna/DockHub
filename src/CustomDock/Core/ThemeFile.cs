@@ -17,6 +17,7 @@ public static class ThemeFile
         nameof(AppConfig.Theme), nameof(AppConfig.Backdrop), nameof(AppConfig.TintOpacity), nameof(AppConfig.Size),
         nameof(AppConfig.Layout), nameof(AppConfig.WidthMode), nameof(AppConfig.Alignment), nameof(AppConfig.EdgeMargin),
         nameof(AppConfig.HoverEffect), nameof(AppConfig.RunningIndicator), nameof(AppConfig.AlignWidgetWidths),
+        nameof(AppConfig.WidgetStyle),
     };
 
     public static void Export(AppConfig config, string path)

@@ -1142,5 +1142,9 @@
   "Widget style": "Estilo de widgets",
   "Cards puts every widget on a card of its own. Seamless sets them right on the dock, with a thin line between two widgets.": "Tarjetas pone cada widget en su propia tarjeta. Sin bordes los coloca directamente en el dock, con una línea fina entre dos widgets.",
   "Cards": "Tarjetas",
-  "Seamless": "Sin bordes"
+  "Seamless": "Sin bordes",
+
+  // ---------------------------------------------------------------- Widget panels
+  "Today and tomorrow": "Hoy y mañana",
+  "Turn on a Bluetooth headset, mouse, keyboard or controller, or plug in its receiver.": "Enciende unos auriculares, un ratón, un teclado o un mando Bluetooth, o conecta su receptor."
 }

@@ -245,11 +245,6 @@ public partial class MediaWidget : WidgetBase
         AppServices.Audio.VolumePercent = (int)Math.Round(e.NewValue);
     }
 
-    private void OnPopupCloseClick(object sender, RoutedEventArgs e)
-    {
-        ClosePopup(MediaPopup);
-    }
-
     private void OnPopupMixerClick(object sender, RoutedEventArgs e)
     {
         AppLauncher.Launch("ms-settings:sound", newInstance: false);

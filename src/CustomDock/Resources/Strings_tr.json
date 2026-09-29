@@ -1142,5 +1142,9 @@
   "Widget style": "Widget stili",
   "Cards puts every widget on a card of its own. Seamless sets them right on the dock, with a thin line between two widgets.": "Kartlar her widget'ı kendi kartına koyar. Kutusuz ise onları doğrudan dock'a yerleştirir, iki widget arasında ince bir çizgi olur.",
   "Cards": "Kartlar",
-  "Seamless": "Kutusuz"
+  "Seamless": "Kutusuz",
+
+  // ---------------------------------------------------------------- Widget panels
+  "Today and tomorrow": "Bugün ve yarın",
+  "Turn on a Bluetooth headset, mouse, keyboard or controller, or plug in its receiver.": "Bluetooth kulaklığı, fareyi, klavyeyi ya da oyun kumandasını açın veya alıcısını takın."
 }

@@ -42,6 +42,8 @@
     <SolidColorBrush x:Key="TickOffBrush" Color="#FF3F3F44" />
     <SolidColorBrush x:Key="TickOnBrush" Color="#FFF2F2F4" />
     <SolidColorBrush x:Key="SubtleFillBrush" Color="#14FFFFFF" />
+    <!-- Rows and tiles inside panels (audio devices, recycle bin, device batteries) -->
+    <SolidColorBrush x:Key="SurfaceLightBrush" Color="#14FFFFFF" />
     <SolidColorBrush x:Key="SubtleFillHoverBrush" Color="#24FFFFFF" />
     <SolidColorBrush x:Key="HoverOverlayBrush" Color="#16FFFFFF" />
     <SolidColorBrush x:Key="PressedOverlayBrush" Color="#0C000000" />

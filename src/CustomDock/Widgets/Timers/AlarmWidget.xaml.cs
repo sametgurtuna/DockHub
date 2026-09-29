@@ -160,8 +160,7 @@ public partial class AlarmWidget : WidgetBase
 
     private void OnEditorKeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Enter) Save();
-        else if (e.Key == Key.Escape) ClosePopup(EditorPopup);
+        if (e.Key == Key.Enter) Save(); // Esc closes every panel (WidgetFlyoutHost)
     }
 
     private void OnSaveClick(object sender, RoutedEventArgs e) => Save();

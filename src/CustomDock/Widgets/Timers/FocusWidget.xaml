@@ -17,21 +17,13 @@
 
         <!-- Control panel -->
         <Popup x:Name="EditorPopup" StaysOpen="True" AllowsTransparency="True" PopupAnimation="None">
-            <Border Width="270" Margin="10" Padding="18" CornerRadius="14"
-                    Background="{DynamicResource PopupBrush}" BorderBrush="{DynamicResource PopupBorderBrush}" BorderThickness="1"
-                    TextElement.Foreground="{DynamicResource TextPrimaryBrush}" TextElement.FontFamily="{StaticResource UiFont}">
+            <ctl:WidgetFlyout Title="Focus timer" Icon="&#xE916;" Size="Narrow" ShowCloseButton="True">
+                <ctl:WidgetFlyout.HeaderActions>
+                    <Button Style="{StaticResource CardIconButton}" Content="&#xE9E9;" ToolTip="Widget settings" Click="OnSettingsClick" />
+                </ctl:WidgetFlyout.HeaderActions>
                 <StackPanel>
-                    <DockPanel>
-                        <Button DockPanel.Dock="Right" Style="{StaticResource CardIconButton}" Content="&#xE711;"
-                                ToolTip="Close" Click="OnCloseClick" />
-                        <Button DockPanel.Dock="Right" Style="{StaticResource CardIconButton}" Content="&#xE9E9;"
-                                ToolTip="Widget settings" Click="OnSettingsClick" Margin="0,0,2,0" />
-                        <TextBlock Text="Focus timer" FontFamily="{StaticResource DisplayFont}" FontSize="15"
-                                   FontWeight="SemiBold" VerticalAlignment="Center" />
-                    </DockPanel>
-
                     <TextBlock x:Name="PopupTime" Style="{StaticResource ValueText}" FontSize="42" LineHeight="48"
-                               LineStackingStrategy="BlockLineHeight" HorizontalAlignment="Center" Margin="0,14,0,0" />
+                               LineStackingStrategy="BlockLineHeight" HorizontalAlignment="Center" Margin="0,4,0,0" />
                     <TextBlock x:Name="PopupPhase" Style="{StaticResource CaptionText}" HorizontalAlignment="Center" Margin="0,2,0,0" />
 
                     <Grid Margin="0,18,0,0">
@@ -46,7 +38,7 @@
 
                     <WrapPanel x:Name="PresetList" Margin="0,16,0,0" HorizontalAlignment="Center" />
                 </StackPanel>
-            </Border>
+            </ctl:WidgetFlyout>
         </Popup>
     </Grid>
 </w:WidgetBase>

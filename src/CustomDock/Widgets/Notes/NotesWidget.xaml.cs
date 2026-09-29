@@ -128,7 +128,7 @@ public partial class NotesWidget : WidgetBase
 
         string paper = $"Note{_settings.Color}Brush";
         SetResourceReference(CardBackgroundProperty, paper);
-        Sheet.SetResourceReference(Border.BackgroundProperty, paper);
+        Sheet.SetResourceReference(Control.BackgroundProperty, paper);
 
         NoteBox.FontSize = _settings.FontSize;
         TextBlock.SetLineHeight(NoteBox, Math.Round(_settings.FontSize * 1.3));
@@ -298,13 +298,6 @@ public partial class NotesWidget : WidgetBase
         _dirty = true;
         _saveTimer.Stop();
         _saveTimer.Start();
-    }
-
-    private void OnEditorKeyDown(object sender, KeyEventArgs e)
-    {
-        if (e.Key != Key.Escape) return;
-        ClosePopup(EditorPopup);
-        e.Handled = true;
     }
 
     private void Save()

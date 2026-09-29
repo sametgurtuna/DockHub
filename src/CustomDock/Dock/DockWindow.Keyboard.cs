@@ -1,8 +1,10 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using CustomDock.Core;
 using CustomDock.Shell;
+using CustomDock.Widgets;
 using static CustomDock.Native.NativeMethods;
 
 namespace CustomDock.Dock;
@@ -18,6 +20,15 @@ public partial class DockWindow
     private IntPtr _windowBeforeKeyboard;
 
     public bool IsKeyboardMode => _keyboardIndex >= 0;
+
+    bool IWidgetHost.IsKeyboardNavigating => IsKeyboardMode;
+
+    /// <summary>
+    /// Keys typed in a widget's panel pass through the dock's window first (the panel is a logical child); they belong
+    /// to the panel, not to the dock's keyboard or edit mode.
+    /// </summary>
+    private bool IsFromOwnWindow(KeyEventArgs e) =>
+        e.OriginalSource is not Visual source || ReferenceEquals(source, this) || IsAncestorOf(source);
 
     /// <summary>Global shortcut target: puts the main dock into keyboard mode.</summary>
     public static void FocusMainDock()
@@ -67,6 +78,7 @@ public partial class DockWindow
 
     private void OnKeyboardModeKey(object sender, KeyEventArgs e)
     {
+        if (!IsFromOwnWindow(e)) return;
         var items = KeyboardItems();
         if (items.Count == 0) { ExitKeyboardMode(true); return; }
         var key = e.Key == Key.System ? e.SystemKey : e.Key;

@@ -34,25 +34,16 @@
 
         <!-- All devices, reorderable; the top one is shown on the dock -->
         <Popup x:Name="DevicesPopup" StaysOpen="True" AllowsTransparency="True" PopupAnimation="None" Placement="Top">
-            <Border CornerRadius="14" Padding="10" BorderThickness="1" Margin="8" Width="300"
-                    Background="{DynamicResource PopupBrush}" BorderBrush="{DynamicResource PopupBorderBrush}"
-                    MouseLeftButtonUp="OnPopupMouseUp">
-                <Border.Effect>
-                    <DropShadowEffect BlurRadius="20" ShadowDepth="4" Opacity="0.4" Direction="270" />
-                </Border.Effect>
-                <DockPanel>
-                    <DockPanel DockPanel.Dock="Top" Margin="4,0,0,8">
-                        <Button DockPanel.Dock="Right" Style="{StaticResource CardIconButton}" Content="&#xE72C;"
-                                ToolTip="Refresh" Click="OnRefreshClick" />
-                        <TextBlock Text="Device batteries" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center"
-                                   Foreground="{DynamicResource TextPrimaryBrush}" />
-                    </DockPanel>
-                    <TextBlock DockPanel.Dock="Bottom" Margin="4,8,4,0" FontSize="11" TextWrapping="Wrap"
-                               Foreground="{DynamicResource TextTertiaryBrush}"
+            <ctl:WidgetFlyout Title="Device batteries" Icon="&#xE83F;" Size="Standard" Padding="12,10" MouseLeftButtonUp="OnPopupMouseUp">
+                <ctl:WidgetFlyout.HeaderActions>
+                    <Button Style="{StaticResource CardIconButton}" Content="&#xE72C;" ToolTip="Refresh" Click="OnRefreshClick" />
+                </ctl:WidgetFlyout.HeaderActions>
+                <ctl:WidgetFlyout.Footer>
+                    <TextBlock FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource TextTertiaryBrush}"
                                Text="The device at the top is the one shown on the dock." />
-                    <StackPanel x:Name="DeviceList" />
-                </DockPanel>
-            </Border>
+                </ctl:WidgetFlyout.Footer>
+                <StackPanel x:Name="DeviceList" />
+            </ctl:WidgetFlyout>
         </Popup>
     </Grid>
 </w:WidgetBase>

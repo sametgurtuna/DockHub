@@ -55,6 +55,7 @@
     <SolidColorBrush x:Key="SubtleFillHoverBrush" Color="{x:Static SystemColors.HighlightColor}" />
     <SolidColorBrush x:Key="SurfaceBorderBrush" Color="{x:Static SystemColors.WindowTextColor}" />
     <SolidColorBrush x:Key="SurfaceBrush" Color="{x:Static SystemColors.WindowColor}" />
+    <SolidColorBrush x:Key="SurfaceLightBrush" Color="{x:Static SystemColors.WindowColor}" />
     <SolidColorBrush x:Key="SurfaceHoverBrush" Color="{x:Static SystemColors.HighlightColor}" />
     <SolidColorBrush x:Key="TextOnColorBrush" Color="{x:Static SystemColors.HighlightTextColor}" />
     <SolidColorBrush x:Key="TextPrimaryBrush" Color="{x:Static SystemColors.WindowTextColor}" />

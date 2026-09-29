@@ -2,6 +2,7 @@
               xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
               xmlns:w="clr-namespace:CustomDock.Widgets"
+              xmlns:ctl="clr-namespace:CustomDock.Controls"
               CardPadding="12,6,10,6">
     <w:WidgetBase.Resources>
         <!-- Circular icon button on note sheet -->
@@ -89,12 +90,9 @@
 
         <!-- Big note sheet -->
         <Popup x:Name="EditorPopup" StaysOpen="True" AllowsTransparency="True" PopupAnimation="None" Opened="OnPopupOpened" Closed="OnPopupClosed">
-            <Border x:Name="Sheet" Width="310" Margin="16" CornerRadius="18" BorderThickness="1" BorderBrush="#26000000"
-                    Background="{DynamicResource NoteYellowBrush}"
-                    TextElement.Foreground="{DynamicResource NoteTextBrush}" TextElement.FontFamily="{StaticResource UiFont}">
-                <Border.Effect>
-                    <DropShadowEffect BlurRadius="26" ShadowDepth="5" Direction="270" Opacity="0.3" />
-                </Border.Effect>
+            <!-- The shared panel frame, dressed as paper: no header (the pages have their own), the note's color. -->
+            <ctl:WidgetFlyout x:Name="Sheet" Size="Standard" Margin="16" CornerRadius="18" Padding="0" BorderBrush="#26000000"
+                              Background="{DynamicResource NoteYellowBrush}" Foreground="{DynamicResource NoteTextBrush}">
                 <Grid>
                     <!-- Note page -->
                     <Grid x:Name="NotePage" Height="270" Margin="18,12,12,16">
@@ -111,7 +109,7 @@
                         </DockPanel>
                         <TextBox x:Name="NoteBox" Grid.Row="1" Style="{StaticResource NoteTextBox}" Tag="Take a note…"
                                  FontSize="20" Margin="0,12,4,0" FontFamily="{StaticResource DisplayFont}"
-                                 TextChanged="OnTextChanged" PreviewKeyDown="OnEditorKeyDown" />
+                                 TextChanged="OnTextChanged" />
                     </Grid>
 
                     <!-- Customize page -->
@@ -141,7 +139,7 @@
                         <StackPanel x:Name="FontSizeList" Orientation="Horizontal" Margin="2,0,0,0" />
                     </StackPanel>
                 </Grid>
-            </Border>
+            </ctl:WidgetFlyout>
         </Popup>
     </Grid>
 </w:WidgetBase>

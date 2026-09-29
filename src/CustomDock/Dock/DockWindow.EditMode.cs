@@ -320,7 +320,7 @@ public partial class DockWindow : IEditableDock
 
     private void OnEditModeKey(object sender, KeyEventArgs e)
     {
-        if (!_editing) return;
+        if (!_editing || !IsFromOwnWindow(e)) return;
         var key = e.Key == Key.System ? e.SystemKey : e.Key;
         bool ctrl = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
         bool back = IsVertical ? key == Key.Up : key == Key.Left;
@@ -396,8 +396,7 @@ public partial class DockWindow : IEditableDock
         AddTile.BringIntoView();
         UpdateLayout();
 
-        var (popup, content) = WidgetUi.PopupShell(330);
-        content.Children.Add(WidgetUi.PopupHeader(L.T("Add to the dock")));
+        var (popup, _, content) = WidgetUi.Flyout(FlyoutSize.Standard, L.T("Add to the dock"), "\uE710");
         var list = new StackPanel();
         list.Children.Add(PickerRow(Glyph(""), L.T("Separator"), () => AddFromEditMode(DockItem.Separator())));
         list.Children.Add(PickerRow(Glyph(""), L.T("Pin application…"), () =>

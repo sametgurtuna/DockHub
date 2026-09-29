@@ -21,6 +21,7 @@ public sealed class WidgetItemView : WidgetCard
     private bool _compact;
     private bool _editing;
     private bool _flyoutInteraction;
+    private bool _flyoutFromKeyboard;
     private DateTime _flyoutClosedAt;
 
     public WidgetItemView(DockItem item, WidgetBase widget, IWidgetHost host)
@@ -211,24 +212,21 @@ public sealed class WidgetItemView : WidgetCard
 
     private void OpenFlyout()
     {
-        if (_flyout is not null && PopupAnimationHelper.IsClosing(_flyout))
+        if (_flyout is not null && (_flyout.IsOpen || PopupAnimationHelper.IsClosing(_flyout)))
             return;
 
         if (_flyout is null)
         {
             _flyoutCard = new WidgetCard { HoverEnabled = false };
             _flyoutCard.SetResourceReference(StyleProperty, typeof(WidgetCard));
-            var frame = new Border
+            // The shared panel frame around the full widget; it is as wide as the widget's card.
+            var frame = new WidgetFlyout
             {
-                CornerRadius = new CornerRadius(14),
-                Padding = new Thickness(6),
-                BorderThickness = new Thickness(1),
-                Child = _flyoutCard,
-                Margin = new Thickness(8),
-                Effect = new System.Windows.Media.Effects.DropShadowEffect { BlurRadius = 16, ShadowDepth = 3, Opacity = 0.35 },
+                Title = Widget.Descriptor.Name,
+                Padding = new Thickness(8, 8, 8, 6),
+                Width = double.NaN,
+                Content = _flyoutCard,
             };
-            frame.SetResourceReference(Border.BackgroundProperty, "PopupBrush");
-            frame.SetResourceReference(Border.BorderBrushProperty, "PopupBorderBrush");
             _flyout = new Popup
             {
                 Child = frame,
@@ -240,6 +238,8 @@ public sealed class WidgetItemView : WidgetCard
             _flyout.Closed += (_, _) =>
             {
                 _flyoutClosedAt = DateTime.UtcNow;
+                // Keyboard mode goes on at the tile.
+                if (_flyoutFromKeyboard) WidgetFlyoutHost.ReturnFocus(_flyout, _host.Window);
                 if (!_flyoutInteraction) return;
                 _flyoutInteraction = false;
                 _host.EndInteraction();
@@ -256,8 +256,11 @@ public sealed class WidgetItemView : WidgetCard
         PopupPlacement.PlacePopup(_flyout, this, _host.Edge, gap: 2);
         _flyoutInteraction = true;
         _host.BeginInteraction();
+        WidgetFlyoutHost.Attach(_flyout, CloseFlyout);
         GlobalPopupDismissHook.RegisterPopup(_flyout);
         PopupAnimationHelper.AnimateOpen(_flyout, _host.Edge, this);
+        _flyoutFromKeyboard = _host.IsKeyboardNavigating;
+        if (_flyoutFromKeyboard) WidgetFlyoutHost.FocusFirst(_flyout);
     }
 
     private void CloseFlyout()
@@ -282,6 +285,7 @@ public sealed class WidgetItemView : WidgetCard
     public void ActivateFromKeyboard()
     {
         if (!_compact) { OpenContextMenu(); return; }
+        if (_flyout?.IsOpen == true) { CloseFlyout(); return; }
         if (Widget.OnCompactClick()) return;
         OpenFlyout();
     }

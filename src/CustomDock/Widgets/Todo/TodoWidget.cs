@@ -154,10 +154,9 @@ public sealed class TodoWidget : WidgetBase
             },
         };
 
-        (_popup, var content) = WidgetUi.PopupShell(320);
         var refresh = WidgetUi.IconButton("", L.T("Refresh"), 26, 11);
         refresh.Click += (_, _) => _ = LoadAsync();
-        content.Children.Add(WidgetUi.PopupHeader(L.T("Today"), refresh));
+        (_popup, _, var content) = WidgetUi.Flyout(FlyoutSize.Standard, L.T("Today"), "\uE73A", refresh);
         _popupRows = new StackPanel();
         content.Children.Add(new ScrollViewer { MaxHeight = 320, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = _popupRows });
         _popupStatus = WidgetUi.Text("CaptionText");
@@ -410,7 +409,7 @@ public sealed class TodoWidget : WidgetBase
             _popupRows.Children.Add(new Border { Padding = new Thickness(6, 6, 6, 6), Child = row });
         }
         if (_tasks.Count == 0)
-            _popupRows.Children.Add(new Border { Padding = new Thickness(6, 8, 6, 8), Child = WidgetUi.Text("CaptionText", L.T("All done for today")) });
+            _popupRows.Children.Add(WidgetUi.EmptyState("\uE73E", L.T("All done for today")));
         _popupStatus.Text = _error ?? (UsesTodoist ? L.T("Today and overdue tasks from Todoist. New tasks are due today.") : "");
         _popupStatus.Visibility = _popupStatus.Text.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
         _newTask.IsEnabled = !UsesTodoist || _settings.TodoistToken.Length > 0;

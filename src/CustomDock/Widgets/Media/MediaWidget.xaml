@@ -1,7 +1,8 @@
 <w:WidgetBase x:Class="CustomDock.Widgets.MediaWidget"
               xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-              xmlns:w="clr-namespace:CustomDock.Widgets">
+              xmlns:w="clr-namespace:CustomDock.Widgets"
+              xmlns:ctl="clr-namespace:CustomDock.Controls">
     <w:WidgetBase.Resources>
         <Style x:Key="MediaButton" TargetType="Button" BasedOn="{StaticResource CardIconButton}">
             <Setter Property="Width" Value="24" />
@@ -75,31 +76,12 @@
 
         <!-- Media Player Popup -->
         <Popup x:Name="MediaPopup" StaysOpen="True" AllowsTransparency="True" PopupAnimation="None" Placement="Top">
-            <Border CornerRadius="16" Padding="18,14" BorderThickness="1" Margin="8" Width="280"
-                    Background="{DynamicResource PopupBrush}" BorderBrush="{DynamicResource PopupBorderBrush}">
-                <Border.Effect>
-                    <DropShadowEffect BlurRadius="20" ShadowDepth="4" Opacity="0.4" Direction="270" />
-                </Border.Effect>
+            <ctl:WidgetFlyout Title="Now Playing" Icon="&#xE8D6;" Size="Narrow" ShowCloseButton="True" Padding="16,12">
+                <ctl:WidgetFlyout.HeaderActions>
+                    <Button Style="{StaticResource CardIconButton}" Width="24" Height="24" Cursor="Hand" ToolTip="Audio Settings"
+                            Content="&#xE9E9;" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Click="OnPopupMixerClick" />
+                </ctl:WidgetFlyout.HeaderActions>
                 <StackPanel>
-                    <!-- Header and buttons -->
-                    <Grid Margin="0,0,0,6">
-                        <TextBlock Text="Now Playing" FontSize="13" FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextSecondaryBrush}" FontFamily="{StaticResource UiFont}"
-                                   VerticalAlignment="Center" />
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Button Style="{StaticResource CardIconButton}" Width="24" Height="24" Margin="0,0,4,0"
-                                    Cursor="Hand" ToolTip="Audio Settings" Click="OnPopupMixerClick">
-                                <TextBlock Text="&#xE9E9;" FontFamily="{StaticResource IconFont}" FontSize="12"
-                                           Foreground="{DynamicResource TextSecondaryBrush}" />
-                            </Button>
-                            <Button Style="{StaticResource CardIconButton}" Width="24" Height="24"
-                                    Cursor="Hand" Click="OnPopupCloseClick">
-                                <TextBlock Text="&#xE8BB;" FontFamily="{StaticResource IconFont}" FontSize="10"
-                                           Foreground="{DynamicResource TextSecondaryBrush}" />
-                            </Button>
-                        </StackPanel>
-                    </Grid>
-
                     <!-- Album art image -->
                     <Border x:Name="PopupArtBorder" Width="148" Height="148" CornerRadius="12"
                             Background="{DynamicResource SubtleFillBrush}" HorizontalAlignment="Center"
@@ -170,7 +152,7 @@
                                Foreground="{DynamicResource TextSecondaryBrush}" FontFamily="{StaticResource UiFont}"
                                TextTrimming="CharacterEllipsis" Margin="4,8,4,0" />
                 </StackPanel>
-            </Border>
+            </ctl:WidgetFlyout>
         </Popup>
     </Grid>
 </w:WidgetBase>

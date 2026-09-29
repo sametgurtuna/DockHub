@@ -50,14 +50,9 @@
 
         <!-- Audio Mixer Popup (EarTrumpet / Windows 11 style mixer) -->
         <Popup x:Name="MixerPopup" StaysOpen="True" AllowsTransparency="True" PopupAnimation="None" Placement="Top">
-            <Border x:Name="MixerBorder" CornerRadius="14" Padding="14,12" BorderThickness="1" Margin="8" Width="310"
-                    Background="{DynamicResource PopupBrush}" BorderBrush="{DynamicResource PopupBorderBrush}"
-                    PreviewMouseWheel="OnMixerBorderPreviewMouseWheel">
-                <Border.Effect>
-                    <DropShadowEffect BlurRadius="20" ShadowDepth="4" Opacity="0.4" Direction="270" />
-                </Border.Effect>
+            <ctl:WidgetFlyout Title="Volume Mixer" Icon="&#xE767;" Size="Standard" PreviewMouseWheel="OnMixerBorderPreviewMouseWheel">
                 <StackPanel x:Name="MixerPanel" />
-            </Border>
+            </ctl:WidgetFlyout>
         </Popup>
     </Grid>
 </w:WidgetBase>

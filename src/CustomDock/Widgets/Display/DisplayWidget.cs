@@ -59,9 +59,8 @@ public sealed class DisplayWidget : WidgetBase
         bar.Row.Children.Add(_nightDot);
         _sliderLayout = new Grid { Name = "Layout_slider", VerticalAlignment = VerticalAlignment.Center, Children = { bar.Row } };
 
-        (_popup, var content) = WidgetUi.PopupShell(300);
         _sliderValue = WidgetUi.Text("TitleText");
-        content.Children.Add(WidgetUi.PopupHeader(L.T("Brightness"), _sliderValue));
+        (_popup, _, var content) = WidgetUi.Flyout(FlyoutSize.Narrow, L.T("Brightness"), "\uE706", _sliderValue);
         _slider = new Slider { Minimum = 0, Maximum = 100, Height = 22, IsMoveToPointEnabled = true, SmallChange = 5, LargeChange = 10, Margin = new Thickness(4, 0, 4, 6) };
         _slider.ValueChanged += (_, e) =>
         {

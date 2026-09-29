@@ -131,6 +131,9 @@ public static class L
             case HeaderedItemsControl headered:
                 TranslateProperty(headered, HeaderedItemsControl.HeaderProperty);
                 break;
+            case Controls.WidgetFlyout flyout:
+                TranslateProperty(flyout, Controls.WidgetFlyout.TitleProperty);
+                break;
             case ContentControl content when content is not Window:
                 TranslateProperty(content, ContentControl.ContentProperty);
                 break;

@@ -26,6 +26,9 @@ public interface IWidgetHost
 
     /// <summary>Activates the dock window for text input.</summary>
     void ActivateForInput();
+
+    /// <summary>The dock is used with the keyboard (keyboard mode): panels take the focus when they open.</summary>
+    bool IsKeyboardNavigating => false;
 }
 
 /// <summary>
@@ -295,19 +298,7 @@ public abstract class WidgetBase : UserControl
             target = CompactAnchor;
         }
         var anchor = target as FrameworkElement ?? this;
-        var edge = Host.Edge;
-        Dock.PopupPlacement.PlacePopup(popup, anchor, edge, IsPreview ? 6 : 8);
-
-        Host.BeginInteraction();
-        void OnClosed(object? sender, EventArgs e)
-        {
-            popup.Closed -= OnClosed;
-            _lastPopupClosedAt = DateTime.UtcNow;
-            Host.EndInteraction();
-        }
-        popup.Closed += OnClosed;
-        Dock.GlobalPopupDismissHook.RegisterPopup(popup);
-        Dock.PopupAnimationHelper.AnimateOpen(popup, edge, anchor);
+        WidgetFlyoutHost.Open(popup, anchor, Host, IsPreview ? 6 : 8, () => ClosePopup(popup), () => _lastPopupClosedAt = DateTime.UtcNow);
     }
 
     /// <summary>Shows notification (suppressed in preview mode).</summary>

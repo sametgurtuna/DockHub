@@ -1142,5 +1142,9 @@
   "Widget style": "Widget-Stil",
   "Cards puts every widget on a card of its own. Seamless sets them right on the dock, with a thin line between two widgets.": "„Karten“ setzt jedes Widget auf eine eigene Karte. „Nahtlos“ setzt sie direkt ins Dock, mit einer dünnen Linie zwischen zwei Widgets.",
   "Cards": "Karten",
-  "Seamless": "Nahtlos"
+  "Seamless": "Nahtlos",
+
+  // ---------------------------------------------------------------- Widget panels
+  "Today and tomorrow": "Heute und morgen",
+  "Turn on a Bluetooth headset, mouse, keyboard or controller, or plug in its receiver.": "Schalten Sie ein Bluetooth-Headset, eine Maus, eine Tastatur oder einen Controller ein oder stecken Sie den Empfänger ein."
 }

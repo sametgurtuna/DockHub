@@ -64,7 +64,8 @@ public sealed class TaskbarController : IDisposable
         }
 
         _originalState = GetState(tray);
-        SessionState.Save(new SessionState { TaskbarHidden = true, OriginalTaskbarState = _originalState });
+        int original = _originalState;
+        SessionState.Update(s => { s.TaskbarHidden = true; s.OriginalTaskbarState = original; });
 
         SetState(tray, ABS_AUTOHIDE | (_originalState & ABS_ALWAYSONTOP));
         SetVisible(tray, false);
@@ -83,7 +84,7 @@ public sealed class TaskbarController : IDisposable
             if (tray != IntPtr.Zero)
                 SetState(tray, _originalState);
             SetVisible(tray, true);
-            SessionState.Clear();
+            SessionState.ClearTaskbar();
             Log.Info("Windows taskbar restored.");
         }
 
@@ -199,7 +200,7 @@ public sealed class TaskbarController : IDisposable
         if (tray != IntPtr.Zero && state is int s)
             SetState(tray, s);
         SetVisible(tray, true);
-        SessionState.Clear();
+        SessionState.ClearTaskbar();
 
         // Tell applications to re-register their tray icons with Explorer (ManagedShell does this on clean exit;
         // prevent icons from being lost after a crash).
@@ -230,22 +231,5 @@ public sealed class TaskbarController : IDisposable
     {
         Restore();
         _monitor.Tick -= _onTick;
-    }
-}
-
-/// <summary>Session state for crash safety (session.json).</summary>
-public sealed class SessionState
-{
-    public bool TaskbarHidden { get; set; }
-
-    public int OriginalTaskbarState { get; set; }
-
-    public static SessionState Load() => JsonStore.Load<SessionState>(AppPaths.SessionFile);
-
-    public static void Save(SessionState state) => JsonStore.Save(AppPaths.SessionFile, state);
-
-    public static void Clear()
-    {
-        try { File.Delete(AppPaths.SessionFile); } catch { /* ignore */ }
     }
 }

@@ -252,6 +252,10 @@
                                     Description="If the taskbar remains hidden due to an issue. (Command line: DockHub.exe --restore-taskbar)">
                         <Button Content="Restore" Click="OnRestoreTaskbarClick" />
                     </ctl:SettingRow>
+                    <ctl:SettingRow x:Name="AutoRestartRow" Glyph="&#xE7BA;" Header="Restart after a crash is off" Visibility="Collapsed"
+                                    Description="DockHub closed several times in a row, so Windows no longer starts it again after a crash.">
+                        <Button Content="Turn back on" Click="OnEnableAutoRestartClick" />
+                    </ctl:SettingRow>
                     <ctl:SettingRow Glyph="&#xE72C;" Header="Restart DockHub">
                         <Button Content="Restart" Click="OnRestartClick" />
                     </ctl:SettingRow>
@@ -841,6 +845,9 @@
                     <ctl:SettingRow x:Name="ReportProblemRow" Glyph="&#xE939;" Header="Report a problem"
                                     Description="Opens a bug report on GitHub with your DockHub and Windows versions, language and widgets filled in, and copies the diagnostics report.">
                         <Button Content="Report…" Click="OnReportProblemClick" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow x:Name="LastCrashRow" Glyph="&#xE7BA;" Header="Last crash" Visibility="Collapsed">
+                        <Button x:Name="CopyCrashButton" Content="Copy details" Click="OnCopyCrashClick" />
                     </ctl:SettingRow>
                     <TextBlock Text="Tips" Style="{StaticResource SectionHeader}" />
                     <ctl:SettingRow Glyph="&#xE962;" Header="Right-click the dock" Description="Add widgets, pin apps, change position, and toggle auto-hide." />

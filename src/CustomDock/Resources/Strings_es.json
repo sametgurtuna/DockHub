@@ -1087,5 +1087,18 @@
   "{0} items · {1}": "{0} elementos · {1}",
   "Download: {0}\nUpload: {1}": "Descarga: {0}\nSubida: {1}",
   "Selected: ": "Seleccionado: ",
-  "or any time zone": "o cualquier zona horaria"
+  "or any time zone": "o cualquier zona horaria",
+
+  // ---------------------------------------------------------------- 0.10.0
+  "DockHub closed repeatedly": "DockHub se cerró varias veces seguidas",
+  "It closed {0} times within {1} minutes, so Windows no longer restarts it after a crash. Turn it back on in Settings › Backup and troubleshooting.": "Se cerró {0} veces en {1} minutos, así que Windows ya no lo reinicia tras un fallo. Puedes volver a activarlo en Configuración › Copia de seguridad y solución de problemas.",
+  "Open log": "Abrir registro",
+  "DockHub closed unexpectedly": "DockHub se cerró de forma inesperada",
+  "It didn't shut down properly last time, for example because it was ended in Task Manager. If it crashed, reporting it helps fix the problem.": "La última vez no se cerró correctamente, por ejemplo porque se terminó desde el Administrador de tareas. Si falló, informar del problema ayuda a solucionarlo.",
+  "It crashed last time and was started again. Reporting the problem helps fix it: the report includes where it crashed, nothing personal.": "Falló la última vez y se volvió a iniciar. Informar del problema ayuda a solucionarlo: el informe incluye dónde falló, nada personal.",
+  "Restart after a crash is off": "El reinicio tras un fallo está desactivado",
+  "DockHub closed several times in a row, so Windows no longer starts it again after a crash.": "DockHub se cerró varias veces seguidas, así que Windows ya no lo vuelve a iniciar tras un fallo.",
+  "Turn back on": "Volver a activar",
+  "Last crash": "Último fallo",
+  "Copy details": "Copiar detalles"
 }

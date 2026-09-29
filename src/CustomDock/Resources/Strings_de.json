@@ -1087,5 +1087,18 @@
   "{0} items · {1}": "{0} Elemente · {1}",
   "Download: {0}\nUpload: {1}": "Download: {0}\nUpload: {1}",
   "Selected: ": "Ausgewählt: ",
-  "or any time zone": "oder eine beliebige Zeitzone"
+  "or any time zone": "oder eine beliebige Zeitzone",
+
+  // ---------------------------------------------------------------- 0.10.0
+  "DockHub closed repeatedly": "DockHub wurde wiederholt beendet",
+  "It closed {0} times within {1} minutes, so Windows no longer restarts it after a crash. Turn it back on in Settings › Backup and troubleshooting.": "DockHub wurde innerhalb von {1} Minuten {0}-mal beendet. Windows startet es nach einem Absturz daher nicht mehr neu. Sie können das unter Einstellungen › Sicherung und Problembehandlung wieder aktivieren.",
+  "Open log": "Protokoll öffnen",
+  "DockHub closed unexpectedly": "DockHub wurde unerwartet beendet",
+  "It didn't shut down properly last time, for example because it was ended in Task Manager. If it crashed, reporting it helps fix the problem.": "DockHub wurde beim letzten Mal nicht ordnungsgemäß beendet, zum Beispiel über den Task-Manager. Falls es abgestürzt ist, hilft eine Meldung, das Problem zu beheben.",
+  "It crashed last time and was started again. Reporting the problem helps fix it: the report includes where it crashed, nothing personal.": "DockHub ist beim letzten Mal abgestürzt und wurde neu gestartet. Eine Meldung hilft, das Problem zu beheben: Sie enthält nur, wo der Absturz passiert ist, keine persönlichen Daten.",
+  "Restart after a crash is off": "Neustart nach einem Absturz ist aus",
+  "DockHub closed several times in a row, so Windows no longer starts it again after a crash.": "DockHub wurde mehrmals hintereinander beendet. Windows startet es nach einem Absturz daher nicht mehr neu.",
+  "Turn back on": "Wieder aktivieren",
+  "Last crash": "Letzter Absturz",
+  "Copy details": "Details kopieren"
 }

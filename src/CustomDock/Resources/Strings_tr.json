@@ -1087,5 +1087,18 @@
   "{0} items · {1}": "{0} öğe · {1}",
   "Download: {0}\nUpload: {1}": "İndirme: {0}\nYükleme: {1}",
   "Selected: ": "Seçili: ",
-  "or any time zone": "veya herhangi bir saat dilimi"
+  "or any time zone": "veya herhangi bir saat dilimi",
+
+  // ---------------------------------------------------------------- 0.10.0
+  "DockHub closed repeatedly": "DockHub art arda kapandı",
+  "It closed {0} times within {1} minutes, so Windows no longer restarts it after a crash. Turn it back on in Settings › Backup and troubleshooting.": "{1} dakika içinde {0} kez kapandı, bu yüzden Windows onu bir çökmeden sonra artık yeniden başlatmıyor. Ayarlar › Yedekleme ve sorun giderme'den yeniden açabilirsiniz.",
+  "Open log": "Log'u aç",
+  "DockHub closed unexpectedly": "DockHub beklenmedik şekilde kapandı",
+  "It didn't shut down properly last time, for example because it was ended in Task Manager. If it crashed, reporting it helps fix the problem.": "Son seferinde düzgün kapanmadı, örneğin Görev Yöneticisi'nden sonlandırılmış olabilir. Çöktüyse bildirmeniz sorunun düzeltilmesine yardımcı olur.",
+  "It crashed last time and was started again. Reporting the problem helps fix it: the report includes where it crashed, nothing personal.": "Son seferinde çöktü ve yeniden başlatıldı. Sorunu bildirmeniz düzeltilmesine yardımcı olur: rapor yalnızca nerede çöktüğünü içerir, kişisel bilgi içermez.",
+  "Restart after a crash is off": "Çökme sonrası yeniden başlatma kapalı",
+  "DockHub closed several times in a row, so Windows no longer starts it again after a crash.": "DockHub art arda birkaç kez kapandı, bu yüzden Windows onu bir çökmeden sonra artık yeniden başlatmıyor.",
+  "Turn back on": "Yeniden aç",
+  "Last crash": "Son çökme",
+  "Copy details": "Ayrıntıları kopyala"
 }

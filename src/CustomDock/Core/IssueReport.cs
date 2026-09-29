@@ -2,9 +2,13 @@ using System.Text;
 
 namespace CustomDock.Core;
 
-/// <summary>What a bug report says about the PC. Nothing personal: no window titles, paths or names.</summary>
+/// <summary>
+/// What a bug report says about the PC. Nothing personal: no window titles, paths or names. <paramref name="Crash"/> is
+/// <see cref="CrashRecord.Report"/> of the last crash (module, code, offset, exception type and frames) or null.
+/// </summary>
 public sealed record IssueEnvironment(
-    string Version, string Windows, string Language, string TaskbarMode, int Displays, IReadOnlyList<string> Widgets);
+    string Version, string Windows, string Language, string TaskbarMode, int Displays, IReadOnlyList<string> Widgets,
+    string? Crash = null);
 
 /// <summary>
 /// The GitHub issue that Settings › About › Report a problem opens, prefilled through the bug report form
@@ -19,6 +23,7 @@ public static class IssueReport
     public const int MaxUrlLength = 4000;
 
     private const int MaxSetupLength = 1500;
+    private const int MaxCrashLength = 1200;
 
     /// <summary>"Windows 11 23H2 (build 22631.4037)"; Windows 11 still calls itself Windows 10 in the registry.</summary>
     public static string WindowsName(int build, string? displayVersion, int updateRevision)
@@ -54,21 +59,23 @@ public static class IssueReport
     {
         string version = Clip(environment.Version, 40);
         string windows = Clip(environment.Windows, 100);
+        string? crash = environment.Crash is { } c ? Clip(c, MaxCrashLength) : null;
         // Fewer widgets until it fits, so the list ends with "and N more" rather than a cut-off name
         // (non-Latin text grows up to nine times when escaped).
         foreach (int maxWidgets in new[] { int.MaxValue, 30, 15, 5, 0 })
         {
             string setup = Setup(environment, maxWidgets);
             if (setup.Length > MaxSetupLength) continue;
-            string url = Url(version, windows, setup);
+            string url = Url(version, windows, setup, crash);
             if (url.Length <= MaxUrlLength) return url;
         }
-        return Url(version, windows, Clip(Setup(environment, 0), 200));
+        return Url(version, windows, Clip(Setup(environment, 0), 200), crash is null ? null : Clip(crash, 300));
     }
 
-    private static string Url(string version, string windows, string setup)
+    private static string Url(string version, string windows, string setup, string? crash)
         => $"{NewIssueUrl}?template={Template}&version={Uri.EscapeDataString(version)}"
-           + $"&windows={Uri.EscapeDataString(windows)}&setup={Uri.EscapeDataString(setup)}";
+           + $"&windows={Uri.EscapeDataString(windows)}&setup={Uri.EscapeDataString(setup)}"
+           + (crash is null ? "" : $"&crash={Uri.EscapeDataString(crash)}");
 
     private static string Clip(string text, int max) => text.Length <= max ? text : text[..(max - 1)] + "…";
 }

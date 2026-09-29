@@ -63,7 +63,7 @@ No admin rights. Your original taskbar always comes back.
 - **Live app buttons.** Hover for a real window thumbnail, right-click for a Jump List, watch badge counts and progress, and drag apps together into a folder.
 - **Fluent to the core.** Blurred glass, Acrylic or solid backgrounds, light and dark themes, and your Windows accent color. Popups, folders and widgets animate with macOS-inspired genie, zoom and fan effects, all at your display's refresh rate.
 - **Any edge, any shape.** Bottom, top, left or right; floating or attached; small, medium or large. On vertical docks, widgets collapse into compact tiles.
-- **Safe by design.** No admin rights. When DockHub exits, crashes, or the session ends, the Windows taskbar and its tray icons come back.
+- **Safe by design.** No admin rights. When DockHub exits, crashes, or the session ends, the Windows taskbar and its tray icons come back. After a crash Windows starts DockHub again, and the next start tells you what happened.
 - **Starts with Windows.** The installer enables autostart by default, and you can turn it off at any time.
 - **In your language.** English, Turkish, German and Spanish.
 - **Keyboard first.** Win+1…9 open and switch dock apps like on the Windows taskbar, a Spotlight-style quick launcher (Win+Alt+Space) finds apps, settings and commands, and every DockHub action can get its own global shortcut.
@@ -260,6 +260,13 @@ DockHub.exe --restore-taskbar
 - Tray menu › *Restore taskbar*
 - Last resort: restart `explorer.exe` and turn off *Settings › Personalization › Taskbar › Automatically hide the taskbar* in Windows.
 
+### When DockHub crashes
+
+- **Windows starts it again.** DockHub asks Windows Error Reporting to restart it after a crash or a hang. Windows only does this for a process that has run for at least a minute, and never after an update or a restart of the PC.
+- **No endless loop.** If Windows has to restart DockHub a third time within 10 minutes, DockHub stops instead, gives the taskbar back and turns the automatic restart off (a notification says so). Starting DockHub yourself still works; turn the restart back on in *Settings › Backup and troubleshooting*. Ending DockHub in Task Manager does not count as a crash here.
+- **You hear about it.** When the previous session did not end cleanly (a crash, or ending it in Task Manager), the next start shows a notification with *Report a problem* and *Open log*. A PC that restarted in the meantime (shutdown, power loss) is not reported.
+- **The report says where, nothing personal.** DockHub reads what Windows recorded in the Application event log: the faulting module, exception code and offset, the .NET exception type and the first stack frames. Exception messages, file paths and window titles are left out. *Report a problem* adds this to the bug report, and *Settings › About › Last crash* shows it.
+
 > [!IMPORTANT]
 > Windows 11's network, volume and battery icons live inside Explorer, so the dock shows its own equivalents. Reach the quick settings panel by right-clicking the clock or the dock, or with Win+A. Do not run other taskbar replacements (StartAllBack, ExplorerPatcher, RetroBar and similar) at the same time.
 
@@ -331,6 +338,8 @@ What the installer does:
 | `DockHub.exe --install-widget "<file>"` | Asks to install a `.dockwidget` package (used when you open one in File Explorer). Starts the dock if needed. |
 | `DockHub.exe --restore-taskbar` | **Emergency:** restores the Windows taskbar under any circumstances. |
 | `DockHub.exe --startup` | Used by the autostart entry. |
+| `DockHub.exe --restarted-after-crash` | Used by Windows when it restarts DockHub after a crash. |
+| `DockHub.exe --crash-test` | Only with `"debugLogging": true`: crashes on purpose 65 seconds after starting, to try out the restart and the crash notice. |
 
 The `DOCKHUB_HOME` environment variable changes the settings and data folder, which is useful for portable use or testing, for example `set DOCKHUB_HOME=D:\DockTest`.
 
@@ -344,7 +353,7 @@ The `DOCKHUB_HOME` environment variable changes the settings and data folder, wh
 | `%AppData%\DockHub\data\hydration.json` | Daily water counter |
 | `%AppData%\DockHub\data\weather-cache.json` | Latest weather per location, for an instant first paint |
 | `%AppData%\DockHub\data\trash\` | Data of removed widgets (for example sticky notes), kept for 7 days |
-| `%AppData%\DockHub\session.json` | Taskbar restore information (exists only while the taskbar is hidden) |
+| `%AppData%\DockHub\session.json` | Taskbar restore information, whether the last session ended cleanly, recent crashes and the last crash report |
 | `%AppData%\DockHub\pin-requests.txt`, `widget-requests.txt` | Pending pin and widget install requests from File Explorer (temporary) |
 | `%AppData%\DockHub\log.txt` | Log file (rotates at 512 KB) |
 | `%AppData%\DockHub\backups\` | A copy of `config.json` from each of the last 7 days, plus the state saved before an import |

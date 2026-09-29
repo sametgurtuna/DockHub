@@ -1,0 +1,4 @@
+Application: DockHub.exe
+CoreCLR Version: 8.0.3126.42015
+.NET Version: 8.0.31
+Description: The process was terminated due to an internal error in the .NET Runtime at IP 00007FFB2A3D45DC (00007FFB2A200000) with exit code 80131506.

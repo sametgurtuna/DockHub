@@ -19,6 +19,8 @@ public sealed class NotificationService
     public const string ActionSkipUpdate = "skip-update";
     public const string ActionOpenScreenshot = "open-screenshot";
     public const string ActionShowScreenshot = "show-screenshot";
+    public const string ActionReportCrash = "report-crash";
+    public const string ActionOpenLog = "open-log";
 
     private bool _initialized;
 
@@ -120,6 +122,12 @@ public sealed class NotificationService
                 break;
             case ActionSkipUpdate when AppServices.Updates.Available is { } skipped:
                 AppServices.Updates.Skip(skipped);
+                break;
+            case ActionReportCrash:
+                ProblemReport.Open(withLastCrash: id == "last");
+                break;
+            case ActionOpenLog when File.Exists(AppPaths.LogFile):
+                StartShell(AppPaths.LogFile, null);
                 break;
             case ActionOpenScreenshot or ActionShowScreenshot when IsScreenshot(id):
                 StartShell(action == ActionOpenScreenshot ? id! : "explorer.exe", action == ActionOpenScreenshot ? null : $"/select,\"{id}\"");

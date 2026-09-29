@@ -4,8 +4,10 @@ namespace CustomDock.Tests;
 
 public class IssueReportTests
 {
-    private static IssueEnvironment Environment(IReadOnlyList<string>? widgets = null, string windows = "Windows 11 24H2 (build 26100.4061)")
-        => new("0.9.0", windows, "Deutsch (de)", "Replace", 2, widgets ?? new[] { "clock", "weather", "clock" });
+    private const string Crash = "DockHub 0.9.1, .NET 8.0.31, 2026-09-28 11:02 UTC\nModule: coreclr.dll 8.0.3126.42015\nException code: c0000005 at 0x1d45dc";
+
+    private static IssueEnvironment Environment(IReadOnlyList<string>? widgets = null, string windows = "Windows 11 24H2 (build 26100.4061)", string? crash = Crash)
+        => new("0.9.0", windows, "Deutsch (de)", "Replace", 2, widgets ?? new[] { "clock", "weather", "clock" }, crash);
 
     private static Dictionary<string, string> Query(string url)
     {
@@ -46,6 +48,24 @@ public class IssueReportTests
         string template = File.ReadAllText(Path.Combine(TestEnvironment.RepositoryRoot, ".github", "ISSUE_TEMPLATE", IssueReport.Template));
         foreach (string field in Query(IssueReport.BuildUrl(Environment())).Keys.Where(k => k != "template"))
             Assert.Contains($"id: {field}", template);
+    }
+
+    [Fact]
+    public void The_last_crash_goes_into_its_own_field()
+    {
+        Assert.Equal(Crash, Query(IssueReport.BuildUrl(Environment()))["crash"]);
+        Assert.DoesNotContain("crash", Query(IssueReport.BuildUrl(Environment(crash: null))).Keys);
+    }
+
+    [Fact]
+    public void A_long_crash_report_and_many_widgets_still_fit()
+    {
+        var widgets = Enumerable.Range(0, 400).Select(i => $"web:com.example.widget-with-a-long-name-{i}").ToList();
+        string crash = Crash + string.Concat(Enumerable.Range(0, 60).Select(i => $"\n   at CustomDock.Some.Long.Namespace.Type{i}.Method(System.Object, System.EventArgs)"));
+        string url = IssueReport.BuildUrl(Environment(widgets, crash: crash));
+
+        Assert.True(url.Length <= IssueReport.MaxUrlLength, $"{url.Length} characters");
+        Assert.StartsWith("DockHub 0.9.1", Query(url)["crash"]);
     }
 
     [Fact]

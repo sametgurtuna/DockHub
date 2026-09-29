@@ -14,6 +14,9 @@ public static class WindowDiagnostics
         sb.AppendLine($"Mode: {config.TaskbarMode}, running apps: {config.ShowRunningApps}, all displays: {config.ShowOnAllDisplays}");
         sb.AppendLine($"Startup: {(AppInfo.StartupTime is { } startup ? $"{startup.TotalMilliseconds:0} ms to the first dock frame" : "dock not rendered yet")}");
         sb.AppendLine($"Services in use: {string.Join(", ", AppServices.CreatedServices())}");
+        var session = SessionState.Load();
+        sb.AppendLine($"Last crash: {(session.LastCrash?.OneLine() ?? "none recorded")}");
+        sb.AppendLine($"Restart after a crash: {(session.AutoRestartOff ? "off (closed repeatedly)" : "on")}");
         sb.AppendLine();
 
         sb.AppendLine("== Task list (all windows known to ManagedShell)");

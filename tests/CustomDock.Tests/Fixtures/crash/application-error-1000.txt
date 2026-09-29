@@ -1,0 +1,11 @@
+Faulting application name: DockHub.exe, version: 0.9.1.0, time stamp: 0x68d90000
+Faulting module name: coreclr.dll, version: 8.0.3126.42015, time stamp: 0x68b8e8c3
+Exception code: 0xc0000005
+Fault offset: 0x00000000001d45dc
+Faulting process id: 0x0x2F14
+Faulting application start time: 0x0x1DC30B5A1B2C3D4
+Faulting application path: C:\Program Files\DockHub\DockHub.exe
+Faulting module path: C:\Program Files\DockHub\coreclr.dll
+Report Id: 3f8d2a1e-9c4b-4e0a-8f5d-1b2c3d4e5f60
+Faulting package full name: 
+Faulting package-relative application ID: 

@@ -2,11 +2,13 @@ using System.Diagnostics;
 using System.Windows;
 using CustomDock.Core;
 using CustomDock.Dock;
+using CustomDock.Services;
+using CustomDock.Shell;
 using Microsoft.Win32;
 
 namespace CustomDock.Settings;
 
-/// <summary>Settings › General › Backup and restore.</summary>
+/// <summary>Settings › Backup and troubleshooting, and the crash rows of About.</summary>
 public partial class SettingsWindow
 {
     private void OnExportSettingsClick(object sender, RoutedEventArgs e)
@@ -73,5 +75,43 @@ public partial class SettingsWindow
     {
         Directory.CreateDirectory(BackupService.BackupDir);
         Process.Start(new ProcessStartInfo("explorer.exe", $"\"{BackupService.BackupDir}\"") { UseShellExecute = true });
+    }
+
+    /// <summary>The "restart after a crash is off" and "last crash" rows, shown only when there is something to say.</summary>
+    private void LoadCrashInfo()
+    {
+        var session = SessionState.Load();
+        AutoRestartRow.Visibility = session.AutoRestartOff ? Visibility.Visible : Visibility.Collapsed;
+        CopyCrashButton.Content = L.T("Copy details");
+        if (session.LastCrash is { } crash)
+        {
+            LastCrashRow.Description = crash.OneLine();
+            LastCrashRow.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            LastCrashRow.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private void OnEnableAutoRestartClick(object sender, RoutedEventArgs e)
+    {
+        CrashRecovery.EnableAutoRestart();
+        LoadCrashInfo();
+    }
+
+    private void OnCopyCrashClick(object sender, RoutedEventArgs e)
+    {
+        if (SessionState.Load().LastCrash is not { } crash) return;
+        try
+        {
+            Clipboard.SetText(crash.Report());
+            CopyCrashButton.Content = L.T("Copied");
+        }
+        catch (System.Runtime.InteropServices.ExternalException ex)
+        {
+            Log.Warn($"Couldn't copy the crash details: {ex.Message}");
+            CopyCrashButton.Content = L.T("Failed");
+        }
     }
 }

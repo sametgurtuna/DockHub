@@ -100,6 +100,18 @@ public partial class App : Application
         var config = AppServices.Config;
         if (config.DebugLogging) Log.DebugEnabled = true;
         L.Initialize(config.Language);
+
+        // How the last session ended, and restart by Windows if this one crashes.
+        if (!CrashRecovery.Begin(e.Args))
+        {
+            // Windows restarted DockHub after it crashed repeatedly: stop here and leave the taskbar to Windows. Nothing
+            // was started yet, and the full clean-up would also clear the notification.
+            CrashRecovery.NotifyLoop();
+            CrashRecovery.End();
+            _running = false;
+            Shutdown();
+            return;
+        }
         ApplyMotionLevel();
         TextScale.Initialize();
         Controls.WidgetCard.AlignWidths = config.AlignWidgetWidths;
@@ -148,6 +160,7 @@ public partial class App : Application
             ShowWelcome();
 
         Log.Info($"DockHub started (v{typeof(App).Assembly.GetName().Version}, mode: {config.TaskbarMode}).");
+        CrashRecovery.AfterStartup(Dispatcher);
 
         if (Log.DebugEnabled)
         {
@@ -598,6 +611,7 @@ public partial class App : Application
         }
 
         SafeRestoreTaskbar();
+        CrashRecovery.End();
         try
         {
             _settings?.Close();

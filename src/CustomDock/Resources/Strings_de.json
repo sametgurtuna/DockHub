@@ -1146,5 +1146,31 @@
 
   // ---------------------------------------------------------------- Widget panels
   "Today and tomorrow": "Heute und morgen",
-  "Turn on a Bluetooth headset, mouse, keyboard or controller, or plug in its receiver.": "Schalten Sie ein Bluetooth-Headset, eine Maus, eine Tastatur oder einen Controller ein oder stecken Sie den Empfänger ein."
+  "Turn on a Bluetooth headset, mouse, keyboard or controller, or plug in its receiver.": "Schalten Sie ein Bluetooth-Headset, eine Maus, eine Tastatur oder einen Controller ein oder stecken Sie den Empfänger ein.",
+
+  // ---------------------------------------------------------------- Settings overview and dialogs
+  "This file isn't a DockHub backup.": "Diese Datei ist keine DockHub-Sicherung.",
+  "This backup was made by a newer DockHub ({0}). Update DockHub first.": "Diese Sicherung stammt von einem neueren DockHub ({0}). Aktualisieren Sie DockHub zuerst.",
+  "The backup can't be read: {0}": "Die Sicherung kann nicht gelesen werden: {0}",
+  "DockHub backup": "DockHub-Sicherung",
+  "{0} applications added.": "{0} Apps hinzugefügt.",
+  "Next profile": "Nächstes Profil",
+  "DockHub {0} is available (you have {1}).": "DockHub {0} ist verfügbar (Sie haben {1}).",
+  "Install update": "Update installieren",
+  "Last saved {0}. DockHub keeps one copy of your settings a day, for a week.": "Zuletzt gespeichert am {0}. DockHub behält eine Woche lang täglich eine Kopie Ihrer Einstellungen.",
+  "None yet. DockHub keeps one copy of your settings a day, for a week.": "Noch keine. DockHub behält eine Woche lang täglich eine Kopie Ihrer Einstellungen.",
+  "{0} ({1} profiles)": "{0} ({1} Profile)",
+  "No profiles yet. Save your setup as one to switch between setups.": "Noch keine Profile. Speichern Sie Ihre Einrichtung als Profil, um zwischen Einrichtungen zu wechseln.",
+  "Add a widget": "Widget hinzufügen",
+  "Overview": "Übersicht",
+  "Settings": "Einstellungen",
+  "Dock": "Dock",
+  "You have {0}. Last checked {1}.": "Sie haben {0}. Zuletzt geprüft {1}.",
+  "You have {0}.": "Sie haben {0}.",
+  "DockHub {0} is the latest version.": "DockHub {0} ist die neueste Version.",
+  "Install DockHub {0}?": "DockHub {0} installieren?",
+  "Your dock at a glance, the settings you change most, and a few shortcuts.": "Ihr Dock auf einen Blick, die meistgeänderten Einstellungen und einige Verknüpfungen.",
+  "Shortcuts": "Verknüpfungen",
+  "Version": "Version",
+  "Automatic backup": "Automatische Sicherung"
 }

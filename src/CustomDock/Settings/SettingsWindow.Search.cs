@@ -14,12 +14,7 @@ public partial class SettingsWindow
 {
     public sealed record SearchHit(string Header, string Location, string Page, FrameworkElement? Target, string Haystack, string? WidgetId = null);
 
-    private static readonly Dictionary<string, string> PageNames = new()
-    {
-        ["general"] = "General", ["taskbar"] = "Taskbar", ["appearance"] = "Appearance",
-        ["items"] = "Dock items", ["gallery"] = "Widget gallery", ["profiles"] = "Profiles",
-        ["keyboard"] = "Keyboard shortcuts", ["backup"] = "Backup and troubleshooting", ["about"] = "About",
-    };
+    private static readonly Dictionary<string, string> PageNames = SettingsPages.All.ToDictionary(p => p.Tag, p => p.EnglishName);
 
     /// <summary>Extra words people might search for.</summary>
     private static readonly Dictionary<string, string> Keywords = new(StringComparer.OrdinalIgnoreCase)
@@ -49,8 +44,12 @@ public partial class SettingsWindow
     private List<SearchHit> BuildSearchIndex()
     {
         var hits = new List<SearchHit>();
+        // The Overview repeats a few settings of other pages; it is found as a page, its rows under their own pages.
+        hits.Add(new SearchHit(L.T("Overview"), L.T("Settings"), SettingsPages.Overview, null,
+            $"{L.T("Overview")} overview start home dashboard shortcuts status genel bakış"));
         foreach (var (key, page) in _pages)
         {
+            if (key == SettingsPages.Overview) continue;
             foreach (var row in FindRows(page))
             {
                 if (string.IsNullOrWhiteSpace(row.Header)) continue;

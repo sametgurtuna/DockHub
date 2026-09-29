@@ -38,6 +38,19 @@
                 <Setter Property="TextWrapping" Value="Wrap" />
                 <Setter Property="Margin" Value="2,0,0,10" />
             </Style>
+            <!-- Heading of a group in the menu (not selectable) -->
+            <Style x:Key="NavGroupHeader" TargetType="ListBoxItem">
+                <Setter Property="Focusable" Value="False" />
+                <Setter Property="IsHitTestVisible" Value="False" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ListBoxItem">
+                            <TextBlock Text="{TemplateBinding Content}" Margin="10,14,0,4" FontSize="11.5" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextTertiaryBrush}" />
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
             <!-- Category filter of the widget gallery -->
             <Style x:Key="GalleryChip" TargetType="RadioButton">
                 <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
@@ -126,60 +139,7 @@
 
                 <ListBox x:Name="NavList" Style="{StaticResource PlainListBox}" ItemContainerStyle="{StaticResource NavItem}"
                          SelectionChanged="OnNavigationChanged">
-                    <ListBoxItem Tag="general">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE713;" Style="{StaticResource NavGlyph}" />
-                            <TextBlock Text="General" Margin="14,0,0,0" />
-                        </StackPanel>
-                    </ListBoxItem>
-                    <ListBoxItem Tag="taskbar">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE75B;" Style="{StaticResource NavGlyph}" />
-                            <TextBlock Text="Taskbar" Margin="14,0,0,0" />
-                        </StackPanel>
-                    </ListBoxItem>
-                    <ListBoxItem Tag="appearance">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE790;" Style="{StaticResource NavGlyph}" />
-                            <TextBlock Text="Appearance" Margin="14,0,0,0" />
-                        </StackPanel>
-                    </ListBoxItem>
-                    <ListBoxItem Tag="items">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE8FD;" Style="{StaticResource NavGlyph}" />
-                            <TextBlock Text="Dock items" Margin="14,0,0,0" />
-                        </StackPanel>
-                    </ListBoxItem>
-                    <ListBoxItem Tag="gallery">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xECA5;" Style="{StaticResource NavGlyph}" />
-                            <TextBlock Text="Widget gallery" Margin="14,0,0,0" />
-                        </StackPanel>
-                    </ListBoxItem>
-                    <ListBoxItem Tag="profiles">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE77B;" Style="{StaticResource NavGlyph}" />
-                            <TextBlock Text="Profiles" Margin="14,0,0,0" />
-                        </StackPanel>
-                    </ListBoxItem>
-                    <ListBoxItem Tag="keyboard">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE765;" Style="{StaticResource NavGlyph}" />
-                            <TextBlock Text="Keyboard shortcuts" Margin="14,0,0,0" />
-                        </StackPanel>
-                    </ListBoxItem>
-                    <ListBoxItem Tag="backup">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE90F;" Style="{StaticResource NavGlyph}" />
-                            <TextBlock Text="Backup and troubleshooting" Margin="14,0,0,0" />
-                        </StackPanel>
-                    </ListBoxItem>
-                    <ListBoxItem Tag="about">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE946;" Style="{StaticResource NavGlyph}" />
-                            <TextBlock Text="About" Margin="14,0,0,0" />
-                        </StackPanel>
-                    </ListBoxItem>
+                    <!-- Built from SettingsPages (grouped: Dock, Widgets, System, About) -->
                 </ListBox>
             </DockPanel>
         </Border>
@@ -187,6 +147,92 @@
         <!-- ===================== Pages ===================== -->
         <ScrollViewer x:Name="PageScroller" Grid.Column="1" Margin="0,44,0,0" Padding="32,4,36,28" VerticalScrollBarVisibility="Auto">
             <Grid>
+                <!-- ============ Overview ============ -->
+                <StackPanel x:Name="OverviewPage" Style="{StaticResource Page}">
+                    <TextBlock Text="Overview" Style="{StaticResource PageTitle}" />
+                    <TextBlock Text="Your dock at a glance, the settings you change most, and a few shortcuts." Style="{StaticResource PageSubtitle}" />
+
+                    <ctl:MiniDockPreview x:Name="OverviewPreview" Margin="0,4,0,6" />
+
+                    <TextBlock Text="Shortcuts" Style="{StaticResource SectionHeader}" />
+                    <WrapPanel x:Name="OverviewActions" Margin="0,0,0,4" />
+
+                    <TextBlock Text="Quick settings" Style="{StaticResource SectionHeader}" />
+                    <ctl:SettingRow Glyph="&#xE790;" Header="Theme">
+                        <Border Style="{StaticResource SegmentedHost}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewTheme" Content="Dark"
+                                             IsChecked="{Binding Theme, Converter={StaticResource EnumEq}, ConverterParameter=Dark}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewTheme" Content="Light"
+                                             IsChecked="{Binding Theme, Converter={StaticResource EnumEq}, ConverterParameter=Light}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewTheme" Content="System"
+                                             IsChecked="{Binding Theme, Converter={StaticResource EnumEq}, ConverterParameter=System}" />
+                            </StackPanel>
+                        </Border>
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xF570;" Header="Backdrop">
+                        <Border Style="{StaticResource SegmentedHost}">
+                            <WrapPanel>
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewBackdrop" Content="Blur"
+                                             IsChecked="{Binding Backdrop, Converter={StaticResource EnumEq}, ConverterParameter=Blur}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewBackdrop" Content="Acrylic"
+                                             IsChecked="{Binding Backdrop, Converter={StaticResource EnumEq}, ConverterParameter=Acrylic}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewBackdrop" Content="Transparent"
+                                             IsChecked="{Binding Backdrop, Converter={StaticResource EnumEq}, ConverterParameter=Transparent}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewBackdrop" Content="Solid"
+                                             IsChecked="{Binding Backdrop, Converter={StaticResource EnumEq}, ConverterParameter=Solid}" />
+                            </WrapPanel>
+                        </Border>
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE740;" Header="Size">
+                        <Border Style="{StaticResource SegmentedHost}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewSize" Content="Small"
+                                             IsChecked="{Binding Size, Converter={StaticResource EnumEq}, ConverterParameter=Small}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewSize" Content="Medium"
+                                             IsChecked="{Binding Size, Converter={StaticResource EnumEq}, ConverterParameter=Medium}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewSize" Content="Large"
+                                             IsChecked="{Binding Size, Converter={StaticResource EnumEq}, ConverterParameter=Large}" />
+                            </StackPanel>
+                        </Border>
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE8A0;" Header="Screen edge">
+                        <Border Style="{StaticResource SegmentedHost}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewEdge" Content="Bottom"
+                                             IsChecked="{Binding Edge, Converter={StaticResource EnumEq}, ConverterParameter=Bottom}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewEdge" Content="Top"
+                                             IsChecked="{Binding Edge, Converter={StaticResource EnumEq}, ConverterParameter=Top}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewEdge" Content="Left"
+                                             IsChecked="{Binding Edge, Converter={StaticResource EnumEq}, ConverterParameter=Left}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewEdge" Content="Right"
+                                             IsChecked="{Binding Edge, Converter={StaticResource EnumEq}, ConverterParameter=Right}" />
+                            </StackPanel>
+                        </Border>
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE80A;" Header="Widget style">
+                        <Border Style="{StaticResource SegmentedHost}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewWidgetStyle" Content="Cards"
+                                             IsChecked="{Binding WidgetStyle, Converter={StaticResource EnumEq}, ConverterParameter=Cards}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewWidgetStyle" Content="Seamless"
+                                             IsChecked="{Binding WidgetStyle, Converter={StaticResource EnumEq}, ConverterParameter=Seamless}" />
+                            </StackPanel>
+                        </Border>
+                    </ctl:SettingRow>
+
+                    <TextBlock Text="Status" Style="{StaticResource SectionHeader}" />
+                    <ctl:SettingRow x:Name="OverviewVersionRow" Glyph="&#xE895;" Header="Version">
+                        <Button x:Name="OverviewUpdateButton" Content="Updates" Click="OnOverviewUpdatesClick" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow x:Name="OverviewBackupRow" Glyph="&#xE90F;" Header="Automatic backup">
+                        <Button Content="Backup and troubleshooting" Click="OnOverviewBackupClick" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow x:Name="OverviewProfileRow" Glyph="&#xE77B;" Header="Profile">
+                        <Button Content="Profiles" Click="OnOverviewProfilesClick" />
+                    </ctl:SettingRow>
+                </StackPanel>
+
                 <!-- ============ General ============ -->
                 <StackPanel x:Name="GeneralPage" Style="{StaticResource Page}">
                     <TextBlock Text="General" Style="{StaticResource PageTitle}" />
@@ -455,7 +501,7 @@
                     <ctl:SettingRow Glyph="&#xF570;" Header="Backdrop"
                                     Description="Blur: blurs content behind the dock. Acrylic: adds Windows translucent texture. Transparent: no blur, the desktop shows through. Solid: opaque. If Blur or Acrylic looks black on your PC (a graphics driver problem), pick Transparent.">
                         <Border Style="{StaticResource SegmentedHost}">
-                            <StackPanel Orientation="Horizontal">
+                            <WrapPanel>
                                 <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Backdrop" Content="Blur"
                                              IsChecked="{Binding Backdrop, Converter={StaticResource EnumEq}, ConverterParameter=Blur}" />
                                 <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Backdrop" Content="Acrylic"
@@ -464,7 +510,7 @@
                                              IsChecked="{Binding Backdrop, Converter={StaticResource EnumEq}, ConverterParameter=Transparent}" />
                                 <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Backdrop" Content="Solid"
                                              IsChecked="{Binding Backdrop, Converter={StaticResource EnumEq}, ConverterParameter=Solid}" />
-                            </StackPanel>
+                            </WrapPanel>
                         </Border>
                     </ctl:SettingRow>
                     <ctl:SettingRow Glyph="&#xE706;" Header="Tint opacity" Description="Color layer overlay on glass.">

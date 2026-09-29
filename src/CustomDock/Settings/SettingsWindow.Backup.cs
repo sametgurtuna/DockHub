@@ -17,7 +17,7 @@ public partial class SettingsWindow
         {
             Title = L.T("Export DockHub settings"),
             FileName = $"DockHub-backup-{DateTime.Now:yyyy-MM-dd}.zip",
-            Filter = "DockHub backup (*.zip)|*.zip",
+            Filter = L.T("DockHub backup") + " (*.zip)|*.zip",
             DefaultExt = ".zip",
             InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
         };
@@ -25,13 +25,13 @@ public partial class SettingsWindow
         try
         {
             BackupService.Export(dialog.FileName);
-            ConfirmDialog.Show("Settings exported", $"Saved to {dialog.FileName}", "", this,
+            ConfirmDialog.Show(L.T("Settings exported"), L.T("Saved to {0}", dialog.FileName), "", this,
                 new DialogButton("ok", "OK", DialogButtonKind.Primary));
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Export failed");
-            ConfirmDialog.Show("Export failed", ex.Message, "", this, new DialogButton("ok", "OK", DialogButtonKind.Primary));
+            ConfirmDialog.Show(L.T("Export failed"), ex.Message, "", this, new DialogButton("ok", "OK", DialogButtonKind.Primary));
         }
     }
 
@@ -40,22 +40,22 @@ public partial class SettingsWindow
         var dialog = new OpenFileDialog
         {
             Title = L.T("Import DockHub settings"),
-            Filter = "DockHub backup (*.zip)|*.zip",
+            Filter = L.T("DockHub backup") + " (*.zip)|*.zip",
             InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
         };
         if (dialog.ShowDialog(this) != true) return;
 
         if (BackupService.Validate(dialog.FileName) is { } error)
         {
-            ConfirmDialog.Show("Can't import this file", error, "", this, new DialogButton("ok", "OK", DialogButtonKind.Primary));
+            ConfirmDialog.Show(L.T("Can't import this file"), error, "", this, new DialogButton("ok", "OK", DialogButtonKind.Primary));
             return;
         }
 
-        if (ConfirmDialog.Show("Replace your current setup?",
-                "Your current settings are saved to the backups folder first. DockHub restarts to load the backup.",
+        if (ConfirmDialog.Show(L.T("Replace your current setup?"),
+                L.T("Your current settings are saved to the backups folder first. DockHub restarts to load the backup."),
                 "", this,
-                new DialogButton("cancel", "Cancel", IsCancel: true),
-                new DialogButton("import", "Import and restart", DialogButtonKind.Primary)) != "import")
+                new DialogButton("cancel", L.T("Cancel"), IsCancel: true),
+                new DialogButton("import", L.T("Import and restart"), DialogButtonKind.Primary)) != "import")
             return;
 
         try
@@ -67,7 +67,7 @@ public partial class SettingsWindow
         catch (Exception ex)
         {
             Log.Error(ex, "Import failed");
-            ConfirmDialog.Show("Import failed", ex.Message, "", this, new DialogButton("ok", "OK", DialogButtonKind.Primary));
+            ConfirmDialog.Show(L.T("Import failed"), ex.Message, "", this, new DialogButton("ok", "OK", DialogButtonKind.Primary));
         }
     }
 

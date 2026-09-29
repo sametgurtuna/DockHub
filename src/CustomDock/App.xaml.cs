@@ -481,11 +481,11 @@ public partial class App : Application
     private bool ConfirmTaskbarModeRestart(TaskbarMode newMode)
     {
         string message = newMode == TaskbarMode.Replace
-            ? "DockHub will restart and hide the Windows taskbar. It comes back whenever DockHub exits."
-            : "DockHub will restart and show the Windows taskbar next to the dock.";
-        return ConfirmDialog.Show("Restart DockHub?", message, "", _settings,
-            new DialogButton("cancel", "Cancel", IsCancel: true),
-            new DialogButton("restart", "Restart", DialogButtonKind.Primary)) == "restart";
+            ? L.T("DockHub will restart and hide the Windows taskbar. It comes back whenever DockHub exits.")
+            : L.T("DockHub will restart and show the Windows taskbar next to the dock.");
+        return ConfirmDialog.Show(L.T("Restart DockHub?"), message, "", _settings,
+            new DialogButton("cancel", L.T("Cancel"), IsCancel: true),
+            new DialogButton("restart", L.T("Restart"), DialogButtonKind.Primary)) == "restart";
     }
 
     public const string InstallWidgetArgument = "--install-widget";

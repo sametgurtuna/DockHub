@@ -40,6 +40,7 @@ public partial class SettingsWindow : Window
 
         _pages = new Dictionary<string, FrameworkElement>
         {
+            [SettingsPages.Overview] = OverviewPage,
             ["general"] = GeneralPage,
             ["taskbar"] = TaskbarPage,
             ["appearance"] = AppearancePage,
@@ -68,6 +69,7 @@ public partial class SettingsWindow : Window
         LoadLanguages();
         LoadCrashInfo();
         DockPreview.Bind(_config);
+        OverviewPreview.Bind(_config);
         PreviewKeyDown += OnUndoKey;
         PreviewKeyDown += (_, e) =>
         {
@@ -80,7 +82,8 @@ public partial class SettingsWindow : Window
         };
         ItemList.ItemsSource = _rows;
         LoadItems();
-        NavList.SelectedIndex = 0;
+        BuildNavigation();
+        NavigateTo(SettingsPages.Default.Tag);
 
         _config.ItemsChanged += OnConfigItemsChanged;
         SourceInitialized += (_, _) => ApplyWindowTheme();
@@ -127,11 +130,13 @@ public partial class SettingsWindow : Window
 
     // ------------------------------------------------------------------ Navigation
 
+    /// <summary>Opens a page by its tag (an unknown tag opens the Overview), optionally selecting a dock item.</summary>
     public void NavigateTo(string page, string? itemId = null)
     {
+        string tag = SettingsPages.Resolve(page).Tag;
         foreach (ListBoxItem item in NavList.Items)
         {
-            if (item.Tag as string != page) continue;
+            if (item.Tag as string != tag) continue;
             NavList.SelectedItem = item;
             break;
         }
@@ -155,6 +160,7 @@ public partial class SettingsWindow : Window
         }
         // Previews run only while the gallery is shown.
         QueueGalleryPreviews();
+        if (tag == SettingsPages.Overview) LoadOverview();
         if (tag == "taskbar") LoadTray();
         if (tag is "about" or "backup") LoadCrashInfo();
     }

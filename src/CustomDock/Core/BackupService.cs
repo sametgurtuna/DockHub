@@ -59,18 +59,18 @@ public static class BackupService
         {
             using var zip = ZipFile.OpenRead(zipPath);
             if (zip.GetEntry(ManifestName) is not { } manifestEntry || zip.GetEntry("config.json") is null)
-                return "This file isn't a DockHub backup.";
+                return L.T("This file isn't a DockHub backup.");
             using var reader = new StreamReader(manifestEntry.Open());
             var manifest = JsonNode.Parse(reader.ReadToEnd()) as JsonObject;
             if (manifest?["app"]?.GetValue<string>() != AppInfo.Name)
-                return "This file isn't a DockHub backup.";
+                return L.T("This file isn't a DockHub backup.");
             if ((manifest["configVersion"]?.GetValue<int>() ?? 0) > AppConfig.CurrentVersion)
-                return $"This backup was made by a newer DockHub ({manifest["version"]}). Update DockHub first.";
+                return L.T("This backup was made by a newer DockHub ({0}). Update DockHub first.", manifest["version"]?.ToString());
             return null;
         }
         catch (Exception ex)
         {
-            return $"The backup can't be read: {ex.Message}";
+            return L.T("The backup can't be read: {0}", ex.Message);
         }
     }
 

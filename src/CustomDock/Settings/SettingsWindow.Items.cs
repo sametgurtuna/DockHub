@@ -318,13 +318,13 @@ public partial class SettingsWindow
         var newPins = DefaultItems.ImportTaskbarPins().Where(i => !existing.Contains(i.Path)).ToList();
         if (newPins.Count > 0)
         {
-            AppServices.ConfigService.History.Push(_config, "Imported taskbar pins");
+            AppServices.ConfigService.History.Push(_config, L.T("Imported taskbar pins"));
             int index = DockItemsIndex.EndOfApps();
             foreach (var item in newPins) _config.Items.Insert(index++, item);
             _config.NotifyItemsChanged();
         }
-        ConfirmDialog.Show("Import taskbar pins",
-            newPins.Count switch { 0 => "No new pins found to import.", 1 => "1 application added.", _ => $"{newPins.Count} applications added." },
+        ConfirmDialog.Show(L.T("Import taskbar pins"),
+            newPins.Count switch { 0 => L.T("No new pins found to import."), 1 => L.T("1 application added."), _ => L.T("{0} applications added.", newPins.Count) },
             "", this, new DialogButton("ok", "OK", DialogButtonKind.Primary));
     }
 
@@ -349,7 +349,7 @@ public partial class SettingsWindow
         int from = _config.Items.IndexOf(row.Item);
         int to = Math.Clamp(from + delta, 0, _config.Items.Count - 1);
         if (from < 0 || from == to) return;
-        AppServices.ConfigService.History.Push(_config, $"Moved {ConfigService.Describe(row.Item)}");
+        AppServices.ConfigService.History.Push(_config, L.T("Moved {0}", ConfigService.Describe(row.Item)));
         _config.Items.RemoveAt(from);
         _config.Items.Insert(to, row.Item);
         _config.NotifyItemsChanged();

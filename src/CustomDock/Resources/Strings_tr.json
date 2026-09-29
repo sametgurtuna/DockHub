@@ -1146,5 +1146,31 @@
 
   // ---------------------------------------------------------------- Widget panels
   "Today and tomorrow": "Bugün ve yarın",
-  "Turn on a Bluetooth headset, mouse, keyboard or controller, or plug in its receiver.": "Bluetooth kulaklığı, fareyi, klavyeyi ya da oyun kumandasını açın veya alıcısını takın."
+  "Turn on a Bluetooth headset, mouse, keyboard or controller, or plug in its receiver.": "Bluetooth kulaklığı, fareyi, klavyeyi ya da oyun kumandasını açın veya alıcısını takın.",
+
+  // ---------------------------------------------------------------- Settings overview and dialogs
+  "This file isn't a DockHub backup.": "Bu dosya bir DockHub yedeği değil.",
+  "This backup was made by a newer DockHub ({0}). Update DockHub first.": "Bu yedek daha yeni bir DockHub ile alınmış ({0}). Önce DockHub'ı güncelleyin.",
+  "The backup can't be read: {0}": "Yedek okunamıyor: {0}",
+  "DockHub backup": "DockHub yedeği",
+  "{0} applications added.": "{0} uygulama eklendi.",
+  "Next profile": "Sonraki profil",
+  "DockHub {0} is available (you have {1}).": "DockHub {0} çıktı (sizdeki {1}).",
+  "Install update": "Güncellemeyi yükle",
+  "Last saved {0}. DockHub keeps one copy of your settings a day, for a week.": "Son kayıt {0}. DockHub ayarlarınızın günde bir kopyasını bir hafta saklar.",
+  "None yet. DockHub keeps one copy of your settings a day, for a week.": "Henüz yok. DockHub ayarlarınızın günde bir kopyasını bir hafta saklar.",
+  "{0} ({1} profiles)": "{0} ({1} profil)",
+  "No profiles yet. Save your setup as one to switch between setups.": "Henüz profil yok. Düzenler arasında geçiş için düzeninizi profil olarak kaydedin.",
+  "Add a widget": "Widget ekle",
+  "Overview": "Genel bakış",
+  "Settings": "Ayarlar",
+  "Dock": "Dock",
+  "You have {0}. Last checked {1}.": "Sizdeki sürüm {0}. Son denetim {1}.",
+  "You have {0}.": "Sizdeki sürüm {0}.",
+  "DockHub {0} is the latest version.": "DockHub {0} en son sürüm.",
+  "Install DockHub {0}?": "DockHub {0} yüklensin mi?",
+  "Your dock at a glance, the settings you change most, and a few shortcuts.": "Dock'unuza bir bakış, en çok değiştirdiğiniz ayarlar ve birkaç kısayol.",
+  "Shortcuts": "Kısayollar",
+  "Version": "Sürüm",
+  "Automatic backup": "Otomatik yedek"
 }

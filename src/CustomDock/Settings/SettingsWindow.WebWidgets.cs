@@ -155,40 +155,7 @@ public partial class SettingsWindow
         if (await WebWidgetIndex.RefreshAsync(WebWidgetDownloader.Client) is { } fresh) ShowWidgetIndex(fresh);
     }
 
-    private void ShowWidgetIndex(IReadOnlyList<WidgetIndexEntry> entries)
-    {
-        FeaturedWidgetsPanel.Children.Clear();
-        foreach (var featured in entries)
-        {
-            var installed = WebWidgetCatalog.Installed.FirstOrDefault(m => m.Id == featured.Id);
-            var button = new Button
-            {
-                Content = installed is null ? L.T("Install") : L.T("Installed"),
-                IsEnabled = installed is null,
-                Padding = new Thickness(14, 4, 14, 4),
-                MinWidth = 90,
-                VerticalAlignment = VerticalAlignment.Center,
-            };
-            if (installed is null) button.SetResourceReference(StyleProperty, "AccentButton");
-            button.Click += async (_, _) => await DownloadAndInstallAsync(featured.Links, button, null);
-
-            var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 12, 0) };
-            var title = new TextBlock { Text = featured.Author is { Length: > 0 } author && author != "DockHub" ? $"{featured.Name} · {author}" : featured.Name };
-            title.SetResourceReference(StyleProperty, "SettingTitle");
-            var description = new TextBlock { Text = featured.Description };
-            description.SetResourceReference(StyleProperty, "SettingDescription");
-            text.Children.Add(title);
-            text.Children.Add(description);
-
-            var row = new DockPanel();
-            DockPanel.SetDock(button, System.Windows.Controls.Dock.Right);
-            row.Children.Add(button);
-            row.Children.Add(text);
-            var card = new Border { Child = row, Margin = new Thickness(0, 0, 0, 6) };
-            card.SetResourceReference(StyleProperty, "SettingCard");
-            FeaturedWidgetsPanel.Children.Add(card);
-        }
-    }
+    private void ShowWidgetIndex(IReadOnlyList<WidgetIndexEntry> entries) => ShowCommunityCards(entries);
 
     private void OnOpenWidgetsFolderClick(object sender, RoutedEventArgs e)
     {
@@ -198,9 +165,6 @@ public partial class SettingsWindow
 
     private void RebuildGallery()
     {
-        foreach (var preview in _previews) preview.Detach();
-        _previews.Clear();
-        GalleryPanel.Children.Clear();
         BuildGallery();
         BuildFeaturedWidgets();
     }

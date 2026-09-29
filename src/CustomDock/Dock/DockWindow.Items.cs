@@ -365,7 +365,16 @@ public partial class DockWindow
     private static bool HasDockData(IDataObject data) =>
         data.GetDataPresent(DockDragHelper.ItemFormat) ||
         data.GetDataPresent(DockDragHelper.RunningAppFormat) ||
+        data.GetDataPresent(DockDragHelper.NewWidgetFormat) ||
         data.GetDataPresent(DataFormats.FileDrop);
+
+    /// <summary>A new widget dragged from the gallery, for this dock (on another display's dock it belongs to that display).</summary>
+    private DockItem? NewWidgetFrom(IDataObject data)
+    {
+        if (DockDragHelper.NewWidgetItem(data) is not { } item) return null;
+        item.Display = _secondaryDevice;
+        return item;
+    }
 
     private void OnItemsDragOver(object sender, DragEventArgs e)
     {
@@ -424,6 +433,12 @@ public partial class DockWindow
                 targetGroup.RefreshAppearance();
                 return;
             }
+            else if (NewWidgetFrom(e.Data) is { } newWidget)
+            {
+                config.AddToGroup(targetGroup.Item.Id, newWidget);
+                targetGroup.RefreshAppearance();
+                return;
+            }
             else if (e.Data.GetData(DataFormats.FileDrop) is string[] dropFiles)
             {
                 foreach (var file in dropFiles.Where(f => !string.IsNullOrWhiteSpace(f)))
@@ -452,6 +467,10 @@ public partial class DockWindow
         {
             config.AddItem(pinItem, index);
         }
+        else if (NewWidgetFrom(e.Data) is { } widget)
+        {
+            config.AddItem(widget, index);
+        }
         else if (e.Data.GetData(DataFormats.FileDrop) is string[] files)
         {
             foreach (var file in files.Where(f => !string.IsNullOrWhiteSpace(f)))
@@ -460,9 +479,10 @@ public partial class DockWindow
     }
 
     private static bool HasPinnableWidget(IDataObject data) =>
-        data.GetDataPresent(DockDragHelper.ItemFormat) &&
-        data.GetData(DockDragHelper.ItemFormat) is string id &&
-        AppServices.ConfigService.FindItem(id) is { Kind: DockItemKind.Widget };
+        data.GetDataPresent(DockDragHelper.NewWidgetFormat) ||
+        (data.GetDataPresent(DockDragHelper.ItemFormat) &&
+         data.GetData(DockDragHelper.ItemFormat) is string id &&
+         AppServices.ConfigService.FindItem(id) is { Kind: DockItemKind.Widget });
 
     private void OnEndItemsDragOver(object sender, DragEventArgs e)
     {
@@ -477,6 +497,12 @@ public partial class DockWindow
     private void OnEndItemsDrop(object sender, DragEventArgs e)
     {
         e.Handled = true;
+        if (NewWidgetFrom(e.Data) is { } newWidget)
+        {
+            newWidget.PinnedEnd = true;
+            AppServices.ConfigService.AddItem(newWidget);
+            return;
+        }
         if (e.Data.GetData(DockDragHelper.ItemFormat) is not string itemId) return;
         if (AppServices.ConfigService.FindItem(itemId) is not { Kind: DockItemKind.Widget } item) return;
         bool adopted = AdoptWidget(itemId);

@@ -215,7 +215,7 @@ Every widget can be added more than once, and each copy has its own settings. Ch
 | | **To do** | List, Count | Today's tasks: a simple list kept on this PC or today's and overdue tasks from [Todoist](https://todoist.com/) (personal API token, stored encrypted). Tick to complete, type to add. |
 | | **Screenshot** | Icon only, Buttons | Opens the Windows snipping overlay, or saves every screen to *Pictures › Screenshots* and copies it, with an optional delay. |
 
-To add a widget, press **+** next to its preview in *Settings › Widget gallery*, right-click an empty area of the dock and choose **Add widget**, or press the **+** tile in edit mode. Right-clicking a widget on the dock gives it its own actions, layouts and settings.
+To add a widget, open *Settings › Widget gallery* and press **Add** on its card or drag the card onto the dock (to a spot between items, into a folder, or onto the tray area to pin it to the right edge). Each widget has one card with its layouts to pick from, its width and how many are already on the dock; search by name in any language or filter by category. You can also right-click an empty area of the dock and choose **Add widget**, or press the **+** tile in edit mode. Right-clicking a widget on the dock gives it its own actions, layouts and settings.
 
 <p align="center">
   <img src="docs/images/widget-menu.jpg" alt="Right-click menu of the hydration widget with drink a glass, reset today, appearance and widget settings" width="62%">

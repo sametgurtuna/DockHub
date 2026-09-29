@@ -1116,5 +1116,25 @@
   "Resize {0}": "Boyutlandır: {0}",
   "Remove {0}": "Kaldır: {0}",
   "Move, remove and resize items right on the dock": "Öğeleri doğrudan dock üzerinde taşıyın, kaldırın ve boyutlandırın",
-  "Edit on the dock": "Dock üzerinde düzenle"
+  "Edit on the dock": "Dock üzerinde düzenle",
+
+  // ---------------------------------------------------------------- Widget gallery (cards)
+  "Community widgets": "Topluluk widget'ları",
+  "By {0}": "Hazırlayan: {0}",
+  "{0} is installed": "{0} yüklü",
+  "Install {0}": "Yükle: {0}",
+  "Widget layout": "Widget düzeni",
+  "Standard width": "Standart boyut",
+  "Compact width": "Kompakt boyut",
+  "Wide width": "Geniş boyut",
+  "On the dock ×{0}": "Dock'ta ×{0}",
+  "Add {0} to the dock": "Dock'a ekle: {0}",
+  "Drag onto the dock to add it there": "Oraya eklemek için dock'a sürükleyin",
+  "Internet: {0}": "İnternet: {0}",
+  "Internet: the address in “{0}”": "İnternet: “{0}” alanındaki adres",
+  "All widgets": "Tüm widget'lar",
+  "No widget matches “{0}”.": "“{0}” ile eşleşen widget yok.",
+  "Nothing here yet.": "Burada henüz bir şey yok.",
+  "Press Add, or drag a widget's card onto the dock. Right-click a widget on the dock to change its layout or open its settings.": "Ekle'ye basın ya da bir widget'ın kartını dock'a sürükleyin. Düzenini değiştirmek veya ayarlarını açmak için dock'taki widget'a sağ tıklayın.",
+  "Search widgets": "Widget ara"
 }

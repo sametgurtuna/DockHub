@@ -86,7 +86,11 @@ public sealed class ItemRow
 
 public partial class SettingsWindow
 {
-    private void OnConfigItemsChanged(object? sender, EventArgs e) => LoadItems();
+    private void OnConfigItemsChanged(object? sender, EventArgs e)
+    {
+        LoadItems();
+        RefreshGalleryBadges();
+    }
 
     private void LoadItems()
     {

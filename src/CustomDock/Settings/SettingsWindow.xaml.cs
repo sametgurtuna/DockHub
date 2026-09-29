@@ -22,7 +22,6 @@ public partial class SettingsWindow : Window
     private readonly AppConfig _config = AppServices.Config;
     private readonly ObservableCollection<ItemRow> _rows = new();
     private readonly Dictionary<string, FrameworkElement> _pages;
-    private readonly List<WidgetBase> _previews = new();
     private readonly PreviewHost _previewHost;
     private WidgetBase? _detailPreview;
     private DockItem? _detailSource;
@@ -85,7 +84,11 @@ public partial class SettingsWindow : Window
 
         _config.ItemsChanged += OnConfigItemsChanged;
         SourceInitialized += (_, _) => ApplyWindowTheme();
-        StateChanged += (_, _) => RootGrid.Margin = WindowState == WindowState.Maximized ? new Thickness(7) : new Thickness(0);
+        StateChanged += (_, _) =>
+        {
+            RootGrid.Margin = WindowState == WindowState.Maximized ? new Thickness(7) : new Thickness(0);
+            QueueGalleryPreviews(); // none while minimized
+        };
         ThemeManager.ThemeChanged += OnThemeChanged;
         Closed += OnClosed;
     }
@@ -95,7 +98,7 @@ public partial class SettingsWindow : Window
         ThemeManager.ThemeChanged -= OnThemeChanged;
         _config.ItemsChanged -= OnConfigItemsChanged;
         _config.PropertyChanged -= OnDisplayConfigChanged;
-        foreach (var preview in _previews) preview.Detach();
+        ReleaseGalleryPreviews();
         if (App.Instance.Hotkeys is { } hotkeys) hotkeys.RegistrationChanged -= RefreshHotkeyStatus;
         ShowDetail(null);
     }
@@ -150,6 +153,8 @@ public partial class SettingsWindow : Window
             BuildGallery();
             BuildFeaturedWidgets();
         }
+        // Previews run only while the gallery is shown.
+        QueueGalleryPreviews();
         if (tag == "taskbar") LoadTray();
         if (tag is "about" or "backup") LoadCrashInfo();
     }

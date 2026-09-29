@@ -399,7 +399,7 @@ public partial class DockWindow : IEditableDock
         AddTile.BringIntoView();
         UpdateLayout();
 
-        var (popup, content) = WidgetUi.PopupShell(290);
+        var (popup, content) = WidgetUi.PopupShell(330);
         content.Children.Add(WidgetUi.PopupHeader(L.T("Add to the dock")));
         var list = new StackPanel();
         list.Children.Add(PickerRow(Glyph(""), L.T("Separator"), () => AddFromEditMode(DockItem.Separator())));
@@ -415,29 +415,14 @@ public partial class DockWindow : IEditableDock
             var heading = WidgetUi.Text("CaptionText", L.T(category));
             heading.Margin = new Thickness(6, 10, 0, 4);
             list.Children.Add(heading);
+            // The same cards as the gallery's, in their small form.
             foreach (var descriptor in descriptors)
-            {
-                // Widget icons are outlines, drawn with a pen like on the tiles.
-                var icon = new System.Windows.Shapes.Path
-                {
-                    Data = descriptor.Icon,
-                    Width = 15,
-                    Height = 15,
-                    Stretch = Stretch.Uniform,
-                    StrokeThickness = 1.6,
-                    StrokeLineJoin = PenLineJoin.Round,
-                    StrokeStartLineCap = PenLineCap.Round,
-                    StrokeEndLineCap = PenLineCap.Round,
-                };
-                icon.SetResourceReference(Shape.StrokeProperty, descriptor.AccentKey);
-                var d = descriptor;
-                list.Children.Add(PickerRow(icon, descriptor.Name, () => AddFromEditMode(DockItem.ForWidget(d.Id))));
-            }
+                list.Children.Add(new Settings.GalleryCard(descriptor, null, (d, _) => AddFromEditMode(DockItem.ForWidget(d.Id))));
         }
         content.Children.Add(new ScrollViewer
         {
             Content = list,
-            MaxHeight = 380,
+            MaxHeight = 420,
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
         });

@@ -12,7 +12,7 @@ namespace CustomDock.Settings;
 /// <summary>Search box in the sidebar: finds setting rows on every page and widgets in the gallery.</summary>
 public partial class SettingsWindow
 {
-    public sealed record SearchHit(string Header, string Location, string Page, FrameworkElement? Target, string Haystack);
+    public sealed record SearchHit(string Header, string Location, string Page, FrameworkElement? Target, string Haystack, string? WidgetId = null);
 
     private static readonly Dictionary<string, string> PageNames = new()
     {
@@ -59,7 +59,8 @@ public partial class SettingsWindow
             }
         }
         foreach (var widget in WidgetRegistry.All)
-            hits.Add(new SearchHit(widget.Name, L.T("Widget gallery"), "gallery", null, $"{widget.Name} {widget.Description} {widget.Category} widget"));
+            hits.Add(new SearchHit(widget.Name, L.T("Widget gallery"), "gallery", null,
+                $"{widget.Name} {widget.Description} {widget.Category} {L.T(widget.Category)} widget", widget.Id));
         return hits;
     }
 
@@ -111,6 +112,11 @@ public partial class SettingsWindow
     private void OnSearchResultSelected(object sender, SelectionChangedEventArgs e)
     {
         if (SearchResults.SelectedItem is not SearchHit { Page.Length: > 0 } hit) return;
+        if (hit.WidgetId is { } widgetId)
+        {
+            ShowGalleryCard(widgetId);
+            return;
+        }
         NavigateTo(hit.Page);
         if (hit.Target is not null)
         {

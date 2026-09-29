@@ -38,6 +38,39 @@
                 <Setter Property="TextWrapping" Value="Wrap" />
                 <Setter Property="Margin" Value="2,0,0,10" />
             </Style>
+            <!-- Category filter of the widget gallery -->
+            <Style x:Key="GalleryChip" TargetType="RadioButton">
+                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+                <Setter Property="FontSize" Value="12.5" />
+                <Setter Property="Padding" Value="12,4" />
+                <Setter Property="Margin" Value="0,0,6,6" />
+                <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="RadioButton">
+                            <Border x:Name="Bd" Background="{DynamicResource SubtleFillBrush}" BorderBrush="{DynamicResource ControlBorderBrush}"
+                                    BorderThickness="1" CornerRadius="14" Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                    <Setter TargetName="Bd" Property="BorderThickness" Value="2" />
+                                </Trigger>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentBrush}" />
+                                    <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource OnAccentBrush}" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
             <Style x:Key="Page" TargetType="FrameworkElement">
                 <Setter Property="Visibility" Value="Collapsed" />
                 <Setter Property="MaxWidth" Value="980" />
@@ -752,22 +785,30 @@
                 <!-- ============ Widget gallery ============ -->
                 <StackPanel x:Name="GalleryPage" Style="{StaticResource Page}">
                     <TextBlock Text="Widget gallery" Style="{StaticResource PageTitle}" />
-                    <TextBlock Text="Click the + button next to a widget to add it to the dock. Right-click added widgets on the dock to change their variant or open their settings."
+                    <TextBlock Text="Press Add, or drag a widget's card onto the dock. Right-click a widget on the dock to change its layout or open its settings."
                                Style="{StaticResource PageSubtitle}" />
                     <WrapPanel Margin="0,0,0,12">
-                        <Button Margin="0,0,8,0" Click="OnInstallWebWidgetClick" ToolTip="Install a .dockwidget package (HTML/JavaScript widget)">
+                        <Grid Width="260" Margin="0,0,12,6">
+                            <TextBox x:Name="GallerySearchBox" MinHeight="32" VerticalContentAlignment="Center" Padding="30,0,8,0"
+                                     TextChanged="OnGallerySearchChanged" PreviewKeyDown="OnGallerySearchKeyDown" />
+                            <TextBlock Text="&#xE721;" Style="{StaticResource IconText}" FontSize="12" Margin="11,0,0,0" IsHitTestVisible="False"
+                                       VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="{DynamicResource TextTertiaryBrush}" />
+                            <TextBlock x:Name="GallerySearchHint" Text="Search widgets" Margin="30,0,0,0" IsHitTestVisible="False"
+                                       VerticalAlignment="Center" Foreground="{DynamicResource TextTertiaryBrush}" />
+                        </Grid>
+                        <Button Margin="0,0,8,6" Click="OnInstallWebWidgetClick" ToolTip="Install a .dockwidget package (HTML/JavaScript widget)">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="&#xE896;" Style="{StaticResource IconText}" FontSize="12" />
                                 <TextBlock Text="Install widget…" Margin="8,0,0,0" />
                             </StackPanel>
                         </Button>
-                        <Button Margin="0,0,8,0" Click="OnInstallFromLinkClick" ToolTip="Install a web widget from a manifest.json, .dockwidget or GitHub folder link">
+                        <Button Margin="0,0,8,6" Click="OnInstallFromLinkClick" ToolTip="Install a web widget from a manifest.json, .dockwidget or GitHub folder link">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="&#xE71B;" Style="{StaticResource IconText}" FontSize="12" />
                                 <TextBlock Text="Install from link…" Margin="8,0,0,0" />
                             </StackPanel>
                         </Button>
-                        <Button Click="OnOpenWidgetsFolderClick">
+                        <Button Margin="0,0,0,6" Click="OnOpenWidgetsFolderClick">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="&#xE838;" Style="{StaticResource IconText}" FontSize="12" />
                                 <TextBlock Text="Open widgets folder" Margin="8,0,0,0" />
@@ -787,10 +828,8 @@
                             <TextBlock x:Name="WidgetLinkStatus" Style="{StaticResource SettingDescription}" Margin="0,6,0,0" Visibility="Collapsed" />
                         </StackPanel>
                     </Border>
-                    <TextBlock Text="Community web widgets" FontFamily="{DynamicResource DisplayFont}" FontSize="17" FontWeight="SemiBold" Margin="2,6,0,2" />
-                    <TextBlock Text="From DockHub's widget list on GitHub, updated daily. Anyone can add a widget to it with a pull request."
-                               Style="{StaticResource SettingDescription}" TextWrapping="Wrap" Margin="2,0,0,10" />
-                    <StackPanel x:Name="FeaturedWidgetsPanel" />
+                    <WrapPanel x:Name="GalleryChips" Margin="0,0,0,4" />
+                    <TextBlock x:Name="GalleryEmpty" Style="{StaticResource SettingDescription}" Margin="2,14,0,0" Visibility="Collapsed" />
                     <StackPanel x:Name="GalleryPanel" />
                 </StackPanel>
 

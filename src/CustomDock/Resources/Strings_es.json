@@ -1116,5 +1116,25 @@
   "Resize {0}": "Cambiar el tamaño de {0}",
   "Remove {0}": "Quitar {0}",
   "Move, remove and resize items right on the dock": "Mueve, quita y cambia el tamaño de los elementos directamente en el dock",
-  "Edit on the dock": "Editar en el dock"
+  "Edit on the dock": "Editar en el dock",
+
+  // ---------------------------------------------------------------- Widget gallery (cards)
+  "Community widgets": "Widgets de la comunidad",
+  "By {0}": "De {0}",
+  "{0} is installed": "{0} está instalado",
+  "Install {0}": "Instalar {0}",
+  "Widget layout": "Diseño del widget",
+  "Standard width": "Ancho estándar",
+  "Compact width": "Ancho compacto",
+  "Wide width": "Ancho amplio",
+  "On the dock ×{0}": "En el dock ×{0}",
+  "Add {0} to the dock": "Agregar {0} al dock",
+  "Drag onto the dock to add it there": "Arrástralo al dock para agregarlo ahí",
+  "Internet: {0}": "Internet: {0}",
+  "Internet: the address in “{0}”": "Internet: la dirección de “{0}”",
+  "All widgets": "Todos los widgets",
+  "No widget matches “{0}”.": "Ningún widget coincide con “{0}”.",
+  "Nothing here yet.": "Aún no hay nada aquí.",
+  "Press Add, or drag a widget's card onto the dock. Right-click a widget on the dock to change its layout or open its settings.": "Pulsa Agregar o arrastra la tarjeta de un widget al dock. Haz clic derecho en un widget del dock para cambiar su diseño o abrir su configuración.",
+  "Search widgets": "Buscar widgets"
 }

@@ -23,6 +23,8 @@ public enum BackdropKind
     Acrylic,
     /// <summary>No blur, solid color.</summary>
     Solid,
+    /// <summary>No blur: the tint over the plain desktop. Works everywhere, unlike DWM blur, which some graphics drivers draw black.</summary>
+    Transparent,
 }
 
 public enum DockSize { Small, Medium, Large }

@@ -20,7 +20,7 @@ public sealed partial class AppButton
     private void LoadPinnedIcon()
     {
         if (Item is null) return;
-        _icon.Source = AppIcons.For(Item, 96, out _iconIsFallback);
+        _icon.Source = AppIcons.For(Item, IconSizing.Pixels, out _iconIsFallback);
         _iconRetryAttempt = 0;
         if (_iconIsFallback) ScheduleIconRetry();
     }
@@ -61,7 +61,7 @@ public sealed partial class AppButton
         _iconRetryTimer?.Stop();
         if (Item is null) return;
         AppIcons.Invalidate(Item);
-        if (AppIcons.TryFor(Item, 96) is { } image)
+        if (AppIcons.TryFor(Item, IconSizing.Pixels) is { } image)
         {
             _icon.Source = image;
             _iconIsFallback = false;

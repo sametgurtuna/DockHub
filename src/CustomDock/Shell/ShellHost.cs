@@ -17,14 +17,9 @@ namespace CustomDock.Shell;
 /// </summary>
 public sealed class ShellHost : IDisposable
 {
-    /// <summary>Safety net while Windows reports Start/Search visibility itself; a missed change drops to FastLauncherPoll.</summary>
-    private static readonly TimeSpan SlowLauncherPoll = TimeSpan.FromSeconds(1);
-    private static readonly TimeSpan FastLauncherPoll = TimeSpan.FromMilliseconds(200);
-
     private readonly AppVisibilityHelper _appVisibility;
     private readonly DispatcherTimer _launcherPoller;
     private readonly EventHandler _launcherTickHandler;
-    private readonly EventHandler<ManagedShell.Common.SupportingClasses.LauncherVisibilityEventArgs> _launcherEventHandler;
     private bool _launcherVisible;
 
     public ShellHost(bool replaceTaskbar, IEnumerable<string>? pinnedTrayIcons)
@@ -54,18 +49,13 @@ public sealed class ShellHost : IDisposable
             Log.Info("Taskman window returned to Explorer.");
         }
 
-        // Windows reports Start/Search visibility changes itself; polling it five times a second stays only as a
-        // fallback for systems where those notifications don't arrive.
-        _appVisibility = new AppVisibilityHelper(true);
-        var dispatcher = Dispatcher.CurrentDispatcher;
-        _launcherEventHandler = (_, e) => dispatcher.BeginInvoke(() => SetLauncherVisible(e.Visible));
-        _appVisibility.LauncherVisibilityChanged += _launcherEventHandler;
+        _appVisibility = new AppVisibilityHelper(false);
         Taskbar = new TaskbarController(() => Manager.NotificationArea?.Handle ?? IntPtr.Zero, () => _launcherVisible);
         RunningApps = new RunningAppsService(Manager);
         VisibilityWatcher = new WindowVisibilityWatcher(Manager);
 
         _launcherTickHandler = (_, _) => PollLauncher();
-        _launcherPoller = new DispatcherTimer(DispatcherPriority.Background) { Interval = SlowLauncherPoll };
+        _launcherPoller = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(200) };
         _launcherPoller.Tick += _launcherTickHandler;
         _launcherPoller.Start();
     }
@@ -99,19 +89,6 @@ public sealed class ShellHost : IDisposable
             visible = false;
         }
 
-        if (visible == _launcherVisible) return;
-
-        // The poll saw a change before Windows' notification did: notifications don't work here, so poll quickly again.
-        if (_launcherPoller.Interval != FastLauncherPoll)
-        {
-            _launcherPoller.Interval = FastLauncherPoll;
-            Log.Info("Start/Search visibility notifications missed a change; polling every 200 ms.");
-        }
-        SetLauncherVisible(visible);
-    }
-
-    private void SetLauncherVisible(bool visible)
-    {
         if (visible == _launcherVisible) return;
         _launcherVisible = visible;
         LauncherVisibilityChanged?.Invoke(visible);
@@ -191,7 +168,6 @@ public sealed class ShellHost : IDisposable
         {
             Log.Error(ex, "Failed to shut down ManagedShell");
         }
-        _appVisibility.LauncherVisibilityChanged -= _launcherEventHandler;
         _appVisibility.Dispose();
     }
 

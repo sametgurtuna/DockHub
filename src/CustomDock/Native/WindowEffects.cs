@@ -68,6 +68,10 @@ public static class WindowEffects
             case BackdropKind.Blur:
                 SetAccent(hwnd, ACCENT_ENABLE_BLURBEHIND, 0);
                 break;
+            case BackdropKind.Transparent:
+                // Plain per-pixel transparency: no DWM effect that a driver could draw black.
+                SetAccent(hwnd, ACCENT_DISABLED, 0);
+                break;
             default:
                 SetAccent(hwnd, ACCENT_DISABLED, 0);
                 break;

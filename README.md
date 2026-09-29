@@ -158,7 +158,7 @@ winget install SametGurtuna.DockHub
 
 ### The dock
 
-- **Look:** blurred glass, Acrylic or solid background with adjustable tint; dark, light or system theme; Windows accent color.
+- **Look:** blurred glass, Acrylic, transparent or solid background with adjustable tint; dark, light or system theme; Windows accent color.
 - **Size:** small (48 DIP, the same height as the Windows taskbar), medium (56 DIP) or large (66 DIP).
 - **Shape:** *floating* (inset from the screen edges with rounded corners) or *attached* (a classic taskbar).
 - **Width and alignment:** full width or fit to content; items centered or aligned to the start.

@@ -416,13 +416,15 @@
                         </Border>
                     </ctl:SettingRow>
                     <ctl:SettingRow Glyph="&#xF570;" Header="Backdrop"
-                                    Description="Blur: blurs content behind the dock. Acrylic: adds Windows translucent texture. Solid: no blur.">
+                                    Description="Blur: blurs content behind the dock. Acrylic: adds Windows translucent texture. Transparent: no blur, the desktop shows through. Solid: opaque. If Blur or Acrylic looks black on your PC (a graphics driver problem), pick Transparent.">
                         <Border Style="{StaticResource SegmentedHost}">
                             <StackPanel Orientation="Horizontal">
                                 <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Backdrop" Content="Blur"
                                              IsChecked="{Binding Backdrop, Converter={StaticResource EnumEq}, ConverterParameter=Blur}" />
                                 <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Backdrop" Content="Acrylic"
                                              IsChecked="{Binding Backdrop, Converter={StaticResource EnumEq}, ConverterParameter=Acrylic}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Backdrop" Content="Transparent"
+                                             IsChecked="{Binding Backdrop, Converter={StaticResource EnumEq}, ConverterParameter=Transparent}" />
                                 <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Backdrop" Content="Solid"
                                              IsChecked="{Binding Backdrop, Converter={StaticResource EnumEq}, ConverterParameter=Solid}" />
                             </StackPanel>

@@ -15,26 +15,14 @@
     <AssemblyName>DockHub</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\DockHub.ico</ApplicationIcon>
-    <Version>0.9.1</Version>
+    <Version>0.9.2</Version>
     <Product>DockHub</Product>
     <Company>DockHub</Company>
     <Copyright>© 2026</Copyright>
     <SatelliteResourceLanguages>en;tr;de;es</SatelliteResourceLanguages>
     <!-- DPI awareness for WPF is configured via app.manifest (PerMonitorV2). -->
     <NoWarn>$(NoWarn);WFAC010</NoWarn>
-    <!--
-      A dock is small and idle most of the time. Without background GC there is no extra GC thread and the heap is
-      compacted in place (its pauses are sub-millisecond at this heap size); profile-guided tiering only pays off for
-      hot server loops and costs memory for its instrumentation.
-    -->
-    <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
-    <TieredPGO>false</TieredPGO>
   </PropertyGroup>
-
-  <ItemGroup>
-    <!-- Compact the heap more eagerly so freed memory goes back to Windows instead of staying reserved. -->
-    <RuntimeHostConfigurationOption Include="System.GC.ConserveMemory" Value="5" />
-  </ItemGroup>
 
   <ItemGroup>
     <!-- Prevents collision between WPF and WinForms types (Application, Button, MessageBox...) -->

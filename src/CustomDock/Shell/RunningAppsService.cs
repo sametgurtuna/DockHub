@@ -95,7 +95,7 @@ public sealed class AppGroup : ObservableObject
 
         if (ExecutablePath is { } exe)
         {
-            Icon ??= ShellIcons.GetIcon(exe, 96);
+            Icon ??= ShellIcons.GetIcon(exe, IconSizing.Pixels);
             if (string.IsNullOrEmpty(Title))
             {
                 string? description = null;
@@ -115,7 +115,7 @@ public sealed class AppGroup : ObservableObject
                 .FirstOrDefault(a => !string.IsNullOrEmpty(a))
                 ?? (first.ProcId is { } pid ? NativeMethods.GetProcessAumid(pid) : null);
             if (aumid is not null && !Windows.Any(w => SafeIsUwp(w)))
-                Icon = ShellIcons.GetIcon(AppKeys.AppsFolderPrefix + aumid, 96);
+                Icon = ShellIcons.GetIcon(AppKeys.AppsFolderPrefix + aumid, IconSizing.Pixels);
         }
 
         if (Icon is null)
@@ -136,7 +136,7 @@ public sealed class AppGroup : ObservableObject
                         var w = Windows.FirstOrDefault();
                         if (w is not null)
                         {
-                            var reloaded = (ExecutablePath is { } p ? ShellIcons.GetIcon(p, 96) : null)
+                            var reloaded = (ExecutablePath is { } p ? ShellIcons.GetIcon(p, IconSizing.Pixels) : null)
                                 ?? w.Icon
                                 ?? ShellIcons.GetWindowIcon(w.Handle);
                             if (reloaded is not null)

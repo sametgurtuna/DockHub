@@ -43,6 +43,16 @@ public class ConfigServiceTests : IDisposable
         Assert.Equal(AppConfig.CurrentVersion, service.Config.Version);
     }
 
+    [Theory]
+    [InlineData(2, "Transparent", BackdropKind.Transparent)]
+    [InlineData(1, "Transparent", BackdropKind.Solid)]
+    [InlineData(2, "Mica", BackdropKind.Blur)]
+    public void Backdrop_names_from_older_files_are_mapped_only_where_they_meant_something_else(int version, string backdrop, BackdropKind expected)
+    {
+        var json = new JsonObject { ["version"] = version, ["backdrop"] = backdrop, ["items"] = new JsonArray() }.ToJsonString();
+        Assert.Equal(expected, LoadWith(json).Config.Backdrop);
+    }
+
     [Fact]
     public void Version_1_config_is_migrated()
     {

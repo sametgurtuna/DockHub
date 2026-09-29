@@ -133,7 +133,10 @@ public sealed class ConfigService
 
         // Map v1 enum values to new values (otherwise JSON cannot be deserialized)
         MapEnum(node, "taskbarMode", ("HideTaskbar", "Replace"));
-        MapEnum(node, "backdrop", ("Mica", "Blur"), ("Transparent", "Solid"));
+        MapEnum(node, "backdrop", ("Mica", "Blur"));
+        // "Transparent" meant a solid dock in v1; since 0.9.2 it is a backdrop of its own, so only old files are mapped.
+        if (node["version"] is JsonValue version && version.TryGetValue(out int fileVersion) && fileVersion < 2)
+            MapEnum(node, "backdrop", ("Transparent", "Solid"));
         return node.Deserialize<AppConfig>(JsonStore.Options) ?? new AppConfig();
     }
 

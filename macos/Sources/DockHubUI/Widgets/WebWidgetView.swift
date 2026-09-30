@@ -152,7 +152,8 @@ struct WebWidgetRepresentable: NSViewRepresentable {
 
     // MARK: - Coordinator
 
-    final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, @unchecked Sendable {
+    @MainActor
+    final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         var parent: WebWidgetRepresentable
         weak var webView: WKWebView?
         private var lastUrlOpen: Date = .distantPast
@@ -169,11 +170,13 @@ struct WebWidgetRepresentable: NSViewRepresentable {
                 object: nil,
                 queue: .main
             ) { [weak self] note in
-                guard let self,
-                      let targetItemId = note.userInfo?["itemId"] as? String,
-                      targetItemId == self.parent.item.id,
-                      let actionId = note.userInfo?["actionId"] as? String else { return }
-                self.post(event: "menu", data: actionId)
+                MainActor.assumeIsolated {
+                    guard let self,
+                          let targetItemId = note.userInfo?["itemId"] as? String,
+                          targetItemId == self.parent.item.id,
+                          let actionId = note.userInfo?["actionId"] as? String else { return }
+                    self.post(event: "menu", data: actionId)
+                }
             }
             notificationObservers.append(menuObs)
 
@@ -182,10 +185,12 @@ struct WebWidgetRepresentable: NSViewRepresentable {
                 object: nil,
                 queue: .main
             ) { [weak self] note in
-                guard let self,
-                      let targetItemId = note.userInfo?["itemId"] as? String,
-                      targetItemId == self.parent.item.id else { return }
-                self.webView?.reload()
+                MainActor.assumeIsolated {
+                    guard let self,
+                          let targetItemId = note.userInfo?["itemId"] as? String,
+                          targetItemId == self.parent.item.id else { return }
+                    self.webView?.reload()
+                }
             }
             notificationObservers.append(reloadObs)
         }
@@ -278,7 +283,7 @@ struct WebWidgetRepresentable: NSViewRepresentable {
                 }
                 let title = args?["title"] as? String ?? parent.manifest.name
                 let body = args?["body"] as? String ?? ""
-                Notifier.show(title: title, body: body)
+                Notifier.gonder(baslik: title, metin: body)
                 postResult(id: id, result: NSNull())
 
             case "openUrl":
@@ -330,7 +335,7 @@ struct WebWidgetRepresentable: NSViewRepresentable {
             let savedSettings = itemSettingsDict()
             let settingsHosts = WebWidgetCatalog.settingsHosts(manifest: manifest, values: savedSettings)
 
-            Task {
+            Task { @MainActor [weak self] in
                 do {
                     let request = try WebWidgetHttp.parse(args: convertedArgs) { host in
                         WebWidgetCatalog.isHostAllowed(manifest: manifest, host: host, settingsHosts: settingsHosts)
@@ -342,13 +347,9 @@ struct WebWidgetRepresentable: NSViewRepresentable {
                         "contentType": res.contentType as Any,
                         "body": res.body
                     ]
-                    await MainActor.run {
-                        self.postResult(id: id, result: resDict)
-                    }
+                    self?.postResult(id: id, result: resDict)
                 } catch {
-                    await MainActor.run {
-                        self.postResult(id: id, error: error.localizedDescription)
-                    }
+                    self?.postResult(id: id, error: error.localizedDescription)
                 }
             }
         }

@@ -36,15 +36,15 @@ Zero administrator privileges required. 100% native architecture on both platfor
 
 </div>
 
-> [!IMPORTANT]
-> ### 🚀 DockHub 1.0 is Officially Here — Full Windows & macOS Parity!
-> **A major milestone release:** DockHub brings complete cross-platform parity between **Windows 10/11 (.NET 10)** and **macOS 15+ Sequoia (native Swift 6)**.
-> - 🍎 **Native macOS 15 Support:** Built with Swift 6 and strict concurrency (`SWIFT_STRICT_CONCURRENCY=complete`), AppKit floating panels, SwiftUI views, and automatic macOS Dock concealment.
-> - 🧩 **Web Widgets & SDK 1.0:** Build custom desktop widgets with standard HTML, CSS, and modern JavaScript (`window.dockhub` API v2) packaged in single-file `.dockwidget` archives.
-> - 🛟 **Resilient Windows Architecture:** Upgraded to Microsoft .NET 10 (LTS through Nov 2028) with automated crash recovery and taskbar self-healing.
-> - ⚡ **Unified Configuration:** A single, clean `config.json` compatible across operating systems, with full localization in English, Turkish, German, and Spanish.
+> [!NOTE]
+> ### DockHub 1.0 is Here: Native macOS Support & Full Cross-Platform Parity
+> DockHub 1.0 marks a major milestone, bringing the complete DockHub experience to both **Windows 10/11** (.NET 10) and **macOS 15+ Sequoia** (native Swift 6 / AppKit).
+> - **Native macOS Support:** Built from the ground up for macOS Sequoia using AppKit and SwiftUI, featuring floating dock panels, native animations, and seamless dock concealment.
+> - **Web Widgets & SDK 1.0:** Build and distribute custom desktop widgets using standard HTML, CSS, and modern JavaScript with the stable `window.dockhub` API and single-file `.dockwidget` packages.
+> - **Modernized Windows Core:** Upgraded to .NET 10 LTS with robust crash isolation, automatic restart recovery, and taskbar self-healing.
+> - **Unified Configuration:** Shared `config.json` format across platforms, with full localization in English, Turkish, German, and Spanish.
 >
-> 📦 **Get DockHub 1.0.0:** [Download for Windows (`.exe`)](https://github.com/sametgurtuna/DockHub/releases/latest) &nbsp;|&nbsp; [Download for macOS (`.dmg`)](https://github.com/sametgurtuna/DockHub/releases/latest) &nbsp;|&nbsp; [Read the Release Notes ›](https://github.com/sametgurtuna/DockHub/releases/tag/v1.0.0)
+> **Get DockHub 1.0.0:** [Download for Windows (`.exe`)](https://github.com/sametgurtuna/DockHub/releases/latest) &nbsp;·&nbsp; [Download for macOS (`.dmg`)](https://github.com/sametgurtuna/DockHub/releases/latest) &nbsp;·&nbsp; [Read the Release Notes ›](https://github.com/sametgurtuna/DockHub/releases/tag/v1.0.0)
 
 <br>
 

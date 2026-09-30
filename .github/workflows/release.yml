@@ -48,9 +48,12 @@ jobs:
             Write-Output "::warning::Code signing is not set up, so this release is unsigned (see packaging/signing/README.md)."
           }
 
+      # One setup for each processor: x64, and arm64 for Windows 11 on ARM.
       - name: Publish
         shell: pwsh
-        run: pwsh installer/build.ps1 -Stage Publish
+        run: |
+          pwsh installer/build.ps1 -Stage Publish -Runtime win-x64
+          pwsh installer/build.ps1 -Stage Publish -Runtime win-arm64
 
       - name: Sign DockHub
         if: steps.signing.outputs.enabled == 'true'
@@ -66,13 +69,17 @@ jobs:
           files: |
             ${{ github.workspace }}\artifacts\publish\win-x64\DockHub.exe
             ${{ github.workspace }}\artifacts\publish\win-x64\DockHub.dll
+            ${{ github.workspace }}\artifacts\publish\win-arm64\DockHub.exe
+            ${{ github.workspace }}\artifacts\publish\win-arm64\DockHub.dll
           file-digest: SHA256
           timestamp-rfc3161: http://timestamp.acs.microsoft.com
           timestamp-digest: SHA256
 
-      - name: Build installer
+      - name: Build installers
         shell: pwsh
-        run: pwsh installer/build.ps1 -Stage Installer
+        run: |
+          pwsh installer/build.ps1 -Stage Installer -Runtime win-x64
+          pwsh installer/build.ps1 -Stage Installer -Runtime win-arm64
 
       - name: Sign installer
         if: steps.signing.outputs.enabled == 'true'
@@ -85,7 +92,9 @@ jobs:
           endpoint: ${{ vars.SIGNING_ENDPOINT }}
           signing-account-name: ${{ vars.SIGNING_ACCOUNT }}
           certificate-profile-name: ${{ vars.SIGNING_PROFILE }}
-          files: ${{ github.workspace }}\installer\Output\DockHub-Setup-${{ env.VERSION }}-x64.exe
+          files: |
+            ${{ github.workspace }}\installer\Output\DockHub-Setup-${{ env.VERSION }}-x64.exe
+            ${{ github.workspace }}\installer\Output\DockHub-Setup-${{ env.VERSION }}-arm64.exe
           file-digest: SHA256
           timestamp-rfc3161: http://timestamp.acs.microsoft.com
           timestamp-digest: SHA256
@@ -94,7 +103,10 @@ jobs:
         if: steps.signing.outputs.enabled == 'true'
         shell: pwsh
         run: |
-          $files = @('artifacts/publish/win-x64/DockHub.exe', 'artifacts/publish/win-x64/DockHub.dll', "installer/Output/DockHub-Setup-$env:VERSION-x64.exe")
+          $files = @()
+          foreach ($arch in 'x64', 'arm64') {
+            $files += "artifacts/publish/win-$arch/DockHub.exe", "artifacts/publish/win-$arch/DockHub.dll", "installer/Output/DockHub-Setup-$env:VERSION-$arch.exe"
+          }
           foreach ($file in $files) {
             $signature = Get-AuthenticodeSignature $file
             if ($signature.Status -ne 'Valid') { throw "$file is not signed correctly: $($signature.Status) $($signature.StatusMessage)" }
@@ -104,9 +116,12 @@ jobs:
       - name: Checksum
         shell: pwsh
         run: |
-          $file = "installer/Output/DockHub-Setup-$env:VERSION-x64.exe"
-          $hash = (Get-FileHash $file -Algorithm SHA256).Hash.ToLowerInvariant()
-          "$hash  DockHub-Setup-$env:VERSION-x64.exe" | Out-File installer/Output/SHA256SUMS.txt -Encoding ascii
+          $lines = foreach ($arch in 'x64', 'arm64') {
+            $name = "DockHub-Setup-$env:VERSION-$arch.exe"
+            $hash = (Get-FileHash "installer/Output/$name" -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash  $name"
+          }
+          $lines | Out-File installer/Output/SHA256SUMS.txt -Encoding ascii
 
       - name: Draft release
         uses: softprops/action-gh-release@v2
@@ -116,4 +131,5 @@ jobs:
           body_path: docs/release-notes/v${{ env.VERSION }}.md
           files: |
             installer/Output/DockHub-Setup-${{ env.VERSION }}-x64.exe
+            installer/Output/DockHub-Setup-${{ env.VERSION }}-arm64.exe
             installer/Output/SHA256SUMS.txt

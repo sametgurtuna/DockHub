@@ -24,6 +24,10 @@ jobs:
       - name: Test
         run: dotnet test CustomDock.sln -c Release --no-build --logger trx --collect:"XPlat Code Coverage"
 
+      # The ARM64 build (released next to x64) must compile too; ReadyToRun is left to the release.
+      - name: Publish for ARM64
+        run: dotnet publish src/CustomDock/CustomDock.csproj -c Release -r win-arm64 --self-contained true -p:PublishReadyToRun=false -o artifacts/ci-arm64 -warnaserror
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4

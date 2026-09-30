@@ -37,6 +37,13 @@ jobs:
           if ($tag -notmatch '^v\d+\.\d+\.\d+$') { throw "Unexpected tag '$tag'" }
           $version = $tag.TrimStart('v')
           $url = "https://github.com/${{ github.repository }}/releases/download/$tag/DockHub-Setup-$version-x64.exe"
+          $urlArm = "https://github.com/${{ github.repository }}/releases/download/$tag/DockHub-Setup-$version-arm64.exe"
+          # Releases before 1.0 have no ARM64 setup.
+          $hasArm = $true
+          try { Invoke-WebRequest $urlArm -Method Head | Out-Null } catch { $hasArm = $false }
+          # Inno Setup installers are 32-bit programs, so each one's processor is named rather than detected.
+          $urls = @("$url|x64")
+          if ($hasArm) { $urls += "$urlArm|arm64" }
           Invoke-WebRequest https://aka.ms/wingetcreate/latest -OutFile wingetcreate.exe
 
           $exists = $true
@@ -48,16 +55,24 @@ jobs:
           }
 
           if ($exists) {
-            ./wingetcreate.exe update $env:PACKAGE_ID --version $version --urls $url --submit --token $env:WINGET_TOKEN
+            ./wingetcreate.exe update $env:PACKAGE_ID --version $version --urls @urls --submit --token $env:WINGET_TOKEN
           } else {
             # First version: fill the templates with the real installer hash and submit them as a new package.
             Invoke-WebRequest $url -OutFile setup.exe
             $sha = (Get-FileHash setup.exe -Algorithm SHA256).Hash
+            $shaArm = ''
+            if ($hasArm) {
+              Invoke-WebRequest $urlArm -OutFile setup-arm64.exe
+              $shaArm = (Get-FileHash setup-arm64.exe -Algorithm SHA256).Hash
+            }
             $out = "winget/manifests/s/SametGurtuna/DockHub/$version"
             New-Item -ItemType Directory -Force $out | Out-Null
             $names = @{ 'version.yaml' = "$env:PACKAGE_ID.yaml"; 'installer.yaml' = "$env:PACKAGE_ID.installer.yaml"; 'locale.en-US.yaml' = "$env:PACKAGE_ID.locale.en-US.yaml" }
             foreach ($name in $names.Keys) {
-              (Get-Content "packaging/winget/$name" -Raw).Replace('{VERSION}', $version).Replace('{URL}', $url).Replace('{SHA256}', $sha) |
+              $text = Get-Content "packaging/winget/$name" -Raw
+              # Without an ARM64 setup its entry goes.
+              if (-not $hasArm) { $text = $text -replace '(?ms)^  - Architecture: arm64\r?\n.*?InstallerSha256: \{SHA256_ARM64\}\r?\n', '' }
+              $text.Replace('{VERSION}', $version).Replace('{URL_ARM64}', $urlArm).Replace('{SHA256_ARM64}', $shaArm).Replace('{URL}', $url).Replace('{SHA256}', $sha) |
                 Set-Content -Path (Join-Path $out $names[$name]) -Encoding utf8NoBOM
             }
             ./wingetcreate.exe submit --token $env:WINGET_TOKEN $out

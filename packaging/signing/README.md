@@ -56,8 +56,8 @@ validation has to be renewed too; Azure sends a reminder.
 
 | File | When |
 |---|---|
-| `DockHub.exe`, `DockHub.dll` | After `dotnet publish`, before the installer packs them (`installer/build.ps1 -Stage Publish`) |
-| `DockHub-Setup-<version>-x64.exe` | After the installer is built (`-Stage Installer`), before the checksum |
+| `DockHub.exe`, `DockHub.dll` (x64 and ARM64) | After `dotnet publish`, before the installers pack them (`installer/build.ps1 -Stage Publish`) |
+| `DockHub-Setup-<version>-x64.exe`, `DockHub-Setup-<version>-arm64.exe` | After the installers are built (`-Stage Installer`), before the checksums |
 
 The Inno Setup uninstaller (`unins000.exe`) is not signed. Signing it would need Inno Setup's `SignTool` directive with
 a signing command that runs during the build.

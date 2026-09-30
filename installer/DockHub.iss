@@ -10,8 +10,19 @@
   #define MyAppVersion "0.6.1"
 #endif
 
+; x64 or arm64: the processor the published DockHub is for (build.ps1 -Runtime win-arm64 passes arm64).
+#ifndef MyArch
+  #define MyArch "x64"
+#endif
+
 #ifndef SourceDir
-  #define SourceDir "..\artifacts\publish\win-x64"
+  #define SourceDir "..\artifacts\publish\win-" + MyArch
+#endif
+
+#if MyArch == "arm64"
+  #define MyArchitectures "arm64"
+#else
+  #define MyArchitectures "x64compatible"
 #endif
 
 [Setup]
@@ -29,11 +40,12 @@ DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 UsedUserAreasWarning=no
-ArchitecturesAllowed=x64compatible
-ArchitecturesInstallIn64BitMode=x64compatible
+; An x64 DockHub also installs on ARM64 Windows 11 (emulated); the arm64 one only there.
+ArchitecturesAllowed={#MyArchitectures}
+ArchitecturesInstallIn64BitMode={#MyArchitectures}
 MinVersion=10.0.17763
 OutputDir=Output
-OutputBaseFilename=DockHub-Setup-{#MyAppVersion}-x64
+OutputBaseFilename=DockHub-Setup-{#MyAppVersion}-{#MyArch}
 SetupIconFile=..\src\CustomDock\Assets\DockHub.ico
 UninstallDisplayIcon={app}\{#MyAppExe}
 UninstallDisplayName={#MyAppName}

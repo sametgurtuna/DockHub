@@ -101,7 +101,7 @@ No admin rights. Your original taskbar always comes back.
 
 ### Installer (recommended)
 
-1. Download **`DockHub-Setup-<version>-x64.exe`** from the [latest release](https://github.com/sametgurtuna/DockHub/releases/latest).
+1. Download **`DockHub-Setup-<version>-x64.exe`** from the [latest release](https://github.com/sametgurtuna/DockHub/releases/latest) (**`-arm64.exe`** for Windows 11 on ARM, such as Snapdragon laptops).
 2. Run it. DockHub installs for the current user, so no administrator prompt appears.
 3. Keep **"Start DockHub automatically when I sign in to Windows"** checked (the default) to have the dock ready every time Windows starts.
 
@@ -121,7 +121,7 @@ winget install SametGurtuna.DockHub
 
 | | |
 |---|---|
-| Operating system | Windows 10 version 1809 (build 17763) or later, x64 |
+| Operating system | Windows 10 version 1809 (build 17763) or later, x64; Windows 11 on ARM64 (native ARM64 build) |
 | Recommended | Windows 11 22H2 or later (rounded corners, Mica settings window) |
 | Runtime | Bundled with the installer. Running a framework-dependent build requires the [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0). |
 
@@ -326,10 +326,11 @@ dotnet publish src/CustomDock -c Release -r win-x64 --self-contained false -o pu
 ### Installer
 
 ```powershell
-pwsh installer/build.ps1
+pwsh installer/build.ps1                     # x64
+pwsh installer/build.ps1 -Runtime win-arm64  # ARM64
 ```
 
-The script publishes a self-contained ReadyToRun build to `artifacts/publish/win-x64` and compiles [`installer/DockHub.iss`](installer/DockHub.iss) into `installer/Output/DockHub-Setup-<version>-x64.exe`. The version comes from `src/CustomDock/CustomDock.csproj`.
+The script publishes a self-contained ReadyToRun build to `artifacts/publish/win-x64` (or `win-arm64`) and compiles [`installer/DockHub.iss`](installer/DockHub.iss) into `installer/Output/DockHub-Setup-<version>-x64.exe` (or `-arm64.exe`). The version comes from `src/CustomDock/CustomDock.csproj`. The release workflow builds both, and the updater picks the one for the PC's processor (an ARM64 PC with the x64 build moves to the ARM64 one; releases without an ARM64 setup keep the x64 one).
 
 What the installer does:
 

@@ -1196,5 +1196,12 @@
   "Combine app buttons": "Combinar los botones de las aplicaciones",
   "Always: one button for all of an app's windows. Never: each window has a button of its own with its title (only its icon on a side dock), and the icons don't grow under the pointer.": "Siempre: un botón para todas las ventanas de una aplicación. Nunca: cada ventana tiene su propio botón con su título (en un dock lateral, solo su icono) y los iconos no crecen bajo el puntero.",
   "Never": "Nunca",
-  "Close all windows ({0})": "Cerrar todas las ventanas ({0})"
+  "Close all windows ({0})": "Cerrar todas las ventanas ({0})",
+
+  // ---------------------------------------------------------------- Quick launcher: files, units, emoji
+  "Rate of {0}. Press Enter to copy the result.": "Tipo de cambio del {0}. Pulsa Intro para copiar el resultado.",
+  "Press Enter to copy the emoji": "Pulsa Intro para copiar el emoji",
+  "Search apps, files and settings, calculate, or type : for emoji": "Busca apps, archivos y ajustes, calcula o escribe : para emojis",
+  "Files in the quick launcher": "Archivos en el iniciador rápido",
+  "Finds files and folders in your user folder by name and content as you type, from the Windows Search index (AppData is left out). Nothing is found while Windows Search is turned off.": "Mientras escribes, encuentra archivos y carpetas de tu carpeta de usuario por nombre y contenido en el índice de Windows Search (sin AppData). Si Windows Search está desactivado, no encuentra nada."
 }

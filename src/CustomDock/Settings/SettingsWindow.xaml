@@ -373,6 +373,10 @@
                             </StackPanel>
                         </Border>
                     </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE8A5;" Header="Files in the quick launcher"
+                                    Description="Finds files and folders in your user folder by name and content as you type, from the Windows Search index (AppData is left out). Nothing is found while Windows Search is turned off.">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding LauncherFileSearch}" />
+                    </ctl:SettingRow>
                     <ctl:SettingRow Glyph="&#xE7C4;" Header="Task view">
                         <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ShowTaskViewButton}" />
                     </ctl:SettingRow>

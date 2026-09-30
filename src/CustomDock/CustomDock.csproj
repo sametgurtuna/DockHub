@@ -37,6 +37,8 @@
     <InternalsVisibleTo Include="CustomDock.Tests" />
     <EmbeddedResource Include="Resources\Strings_*.json" />
     <EmbeddedResource Include="Resources\battery-devices.json" />
+    <!-- Emoji names from Unicode CLDR (Unicode License v3), for the launcher's ":" search. -->
+    <EmbeddedResource Include="Resources\Emoji.json" />
   </ItemGroup>
 
   <ItemGroup>
@@ -47,6 +49,8 @@
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4258.31" />
     <!-- Laptop screen brightness (WMI) -->
     <PackageReference Include="System.Management" Version="10.0.12" />
+    <!-- The launcher's file search (Windows Search index, Search.CollatorDSO). -->
+    <PackageReference Include="System.Data.OleDb" Version="10.0.12" />
   </ItemGroup>
 
 </Project>

@@ -1196,5 +1196,12 @@
   "Combine app buttons": "Uygulama düğmelerini birleştir",
   "Always: one button for all of an app's windows. Never: each window has a button of its own with its title (only its icon on a side dock), and the icons don't grow under the pointer.": "Her zaman: bir uygulamanın tüm pencereleri için tek düğme. Asla: her pencerenin başlığıyla kendi düğmesi olur (yandaki dock'ta yalnızca simgesi) ve simgeler işaretçinin altında büyümez.",
   "Never": "Asla",
-  "Close all windows ({0})": "Tüm pencereleri kapat ({0})"
+  "Close all windows ({0})": "Tüm pencereleri kapat ({0})",
+
+  // ---------------------------------------------------------------- Quick launcher: files, units, emoji
+  "Rate of {0}. Press Enter to copy the result.": "{0} tarihli kur. Sonucu kopyalamak için Enter'a basın.",
+  "Press Enter to copy the emoji": "Emojiyi kopyalamak için Enter'a basın",
+  "Search apps, files and settings, calculate, or type : for emoji": "Uygulama, dosya ve ayar arayın, hesaplayın ya da emoji için : yazın",
+  "Files in the quick launcher": "Hızlı başlatıcıda dosyalar",
+  "Finds files and folders in your user folder by name and content as you type, from the Windows Search index (AppData is left out). Nothing is found while Windows Search is turned off.": "Siz yazarken kullanıcı klasörünüzdeki dosya ve klasörleri adına ve içeriğine göre Windows Search dizininden bulur (AppData hariç). Windows Search kapalıyken bir şey bulunmaz."
 }

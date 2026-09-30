@@ -186,6 +186,11 @@ public sealed class AppConfig : ObservableObject
 
     public SearchButtonAction SearchButtonAction { get => _searchButtonAction; set => Set(ref _searchButtonAction, value); }
 
+    private bool _launcherFileSearch = true;
+
+    /// <summary>The quick launcher also finds files and folders in the user's folder (Windows Search index).</summary>
+    public bool LauncherFileSearch { get => _launcherFileSearch; set => Set(ref _launcherFileSearch, value); }
+
     /// <summary>IDs of tray icons that are always shown in the dock (null = import from Windows settings).</summary>
     public List<string>? PinnedTrayIcons { get; set; }
 

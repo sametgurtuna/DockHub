@@ -1196,5 +1196,12 @@
   "Combine app buttons": "App-Schaltflächen zusammenfassen",
   "Always: one button for all of an app's windows. Never: each window has a button of its own with its title (only its icon on a side dock), and the icons don't grow under the pointer.": "Immer: eine Schaltfläche für alle Fenster einer App. Nie: Jedes Fenster erhält eine eigene Schaltfläche mit seinem Titel (an einem seitlichen Dock nur das Symbol), und die Symbole werden unter dem Mauszeiger nicht größer.",
   "Never": "Nie",
-  "Close all windows ({0})": "Alle Fenster schließen ({0})"
+  "Close all windows ({0})": "Alle Fenster schließen ({0})",
+
+  // ---------------------------------------------------------------- Quick launcher: files, units, emoji
+  "Rate of {0}. Press Enter to copy the result.": "Kurs vom {0}. Eingabetaste drücken, um das Ergebnis zu kopieren.",
+  "Press Enter to copy the emoji": "Eingabetaste drücken, um das Emoji zu kopieren",
+  "Search apps, files and settings, calculate, or type : for emoji": "Apps, Dateien und Einstellungen suchen, rechnen oder : für Emojis eingeben",
+  "Files in the quick launcher": "Dateien im Schnellstarter",
+  "Finds files and folders in your user folder by name and content as you type, from the Windows Search index (AppData is left out). Nothing is found while Windows Search is turned off.": "Findet beim Tippen Dateien und Ordner in Ihrem Benutzerordner nach Name und Inhalt, aus dem Windows Search-Index (ohne AppData). Ist Windows Search ausgeschaltet, wird nichts gefunden."
 }

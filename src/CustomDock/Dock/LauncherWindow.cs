@@ -29,6 +29,9 @@ public sealed class LauncherResult
 
     public Func<ImageSource?>? Icon { get; init; }
 
+    /// <summary>An emoji shown as the icon (emoji results).</summary>
+    public string? Emoji { get; init; }
+
     public required Action<bool> Run { get; init; }
 
     /// <summary>Small boost so apps come before settings and files for the same match.</summary>
@@ -39,8 +42,9 @@ public sealed class LauncherResult
 
 /// <summary>
 /// Spotlight-style quick launcher: apps, open windows, DockHub and Windows settings, DockHub commands, recent files,
-/// quick math and a web search. Opens with a global shortcut (Win+Alt+Space by default) or the dock's search button.
-/// Enter runs the selection, Ctrl+Enter runs an app as administrator, Esc closes.
+/// files from the Windows Search index, quick math, unit and currency conversion, emoji (":heart") and a web search.
+/// Opens with a global shortcut (Win+Alt+Space by default) or the dock's search button. Enter runs the selection,
+/// Ctrl+Enter runs an app as administrator or shows a file in its folder, Esc closes.
 /// </summary>
 public sealed class LauncherWindow : Window
 {
@@ -106,7 +110,7 @@ public sealed class LauncherWindow : Window
 
         _hint = new TextBlock
         {
-            Text = L.T("Search apps, settings and commands, or calculate"),
+            Text = L.T("Search apps, files and settings, calculate, or type : for emoji"),
             FontSize = 20,
             IsHitTestVisible = false,
             VerticalAlignment = VerticalAlignment.Center,
@@ -182,6 +186,8 @@ public sealed class LauncherWindow : Window
     {
         if (_closing) return;
         _closing = true;
+        _asyncTimer?.Stop();
+        _asyncSearch?.Cancel();
         Close();
     }
 
@@ -245,10 +251,50 @@ public sealed class LauncherWindow : Window
 
     // ------------------------------------------------------------------ Results
 
+    /// <summary>Results found right away, in order: the dock's apps and windows (also before anything is typed), then the rest.</summary>
+    private static readonly ILauncherSource[] Sources =
+    {
+        new LauncherSource(DockApps, whenEmpty: true),
+        new LauncherSource(OpenWindows, whenEmpty: true),
+        new LauncherSource(Apps),
+        new LauncherSource(DockHubPages),
+        new LauncherSource(WindowsSettings),
+        new LauncherSource(Commands),
+        new LauncherSource(RecentFiles),
+    };
+
+    /// <summary>Results that take a while: asked once typing pauses for <see cref="AsyncDelay"/>.</summary>
+    private static readonly IAsyncLauncherSource[] AsyncSources = { new CurrencySource(), new FileSource() };
+
+    private static readonly TimeSpan AsyncDelay = TimeSpan.FromMilliseconds(150);
+
+    private readonly UnitSource _units = new();
+    private List<LauncherResult> _found = new();
+    private readonly List<LauncherResult> _foundLater = new();
+    private LauncherResult? _webSearch;
+    private string _searched = "";
+    private DispatcherTimer? _asyncTimer;
+    private CancellationTokenSource? _asyncSearch;
+
     private void Search()
     {
         string query = _query.Text.Trim();
         _hint.Visibility = _query.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
+
+        // The slow sources start over with each keystroke.
+        _asyncSearch?.Cancel();
+        _asyncSearch = null;
+        _asyncTimer?.Stop();
+        _foundLater.Clear();
+        _searched = query;
+
+        if (EmojiSource.IsEmojiQuery(query))
+        {
+            _found = EmojiSource.Results(query, EmojiSource.MaxResults).ToList();
+            _webSearch = null;
+            Render(keepSelection: false);
+            return;
+        }
 
         var results = new List<LauncherResult>();
         if (LauncherMath.TryEvaluate(query, out double value))
@@ -258,46 +304,112 @@ public sealed class LauncherWindow : Window
             {
                 Title = "= " + formatted,
                 Subtitle = L.T("Press Enter to copy the result"),
-                Glyph = "",
+                Glyph = "\uE8EF",
                 Score = 1000,
                 Run = _ => Clipboard.SetText(formatted),
             });
         }
+        results.AddRange(_units.Results(query));
 
-        foreach (var candidate in Candidates(query))
+        foreach (var source in Sources)
         {
-            int score = LauncherMatch.Score(candidate.Title, candidate.Keywords, query);
-            if (score == 0) continue;
-            candidate.Score = score + candidate.Weight + Math.Min(20, s_launchCounts.GetValueOrDefault(candidate.Title) * 5);
-            results.Add(candidate);
-        }
-
-        results = results.OrderByDescending(r => r.Score).ThenBy(r => r.Title, StringComparer.CurrentCultureIgnoreCase)
-            .Take(MaxResults).ToList();
-
-        if (query.Length > 0)
-        {
-            string q = query;
-            results.Add(new LauncherResult
+            if (query.Length == 0 && !source.WhenEmpty) continue;
+            foreach (var candidate in source.Results(query))
             {
-                Title = L.T("Search the web for “{0}”", q),
-                Subtitle = L.T("Opens your browser"),
-                Glyph = "",
-                Run = _ => Open("https://www.google.com/search?q=" + Uri.EscapeDataString(q)),
-            });
+                int score = LauncherMatch.Score(candidate.Title, candidate.Keywords, query);
+                if (score == 0) continue;
+                candidate.Score = score + candidate.Weight + Math.Min(20, s_launchCounts.GetValueOrDefault(candidate.Title) * 5);
+                results.Add(candidate);
+            }
         }
+        _found = results;
+
+        string q = query;
+        _webSearch = query.Length == 0 ? null : new LauncherResult
+        {
+            Title = L.T("Search the web for “{0}”", q),
+            Subtitle = L.T("Opens your browser"),
+            Glyph = "\uE774",
+            Run = _ => Open("https://www.google.com/search?q=" + Uri.EscapeDataString(q)),
+        };
+        Render(keepSelection: false);
+
+        if (query.Length == 0) return;
+        if (_asyncTimer is null)
+        {
+            _asyncTimer = new DispatcherTimer { Interval = AsyncDelay };
+            _asyncTimer.Tick += (_, _) => StartAsyncSearch();
+        }
+        _asyncTimer.Start();
+    }
+
+    private void StartAsyncSearch()
+    {
+        _asyncTimer?.Stop();
+        if (_closing) return;
+        var search = new CancellationTokenSource();
+        _asyncSearch = search;
+        foreach (var source in AsyncSources) _ = SearchLaterAsync(source, _searched, search.Token);
+    }
+
+    /// <summary>Adds a slow source's results when they arrive, unless the text changed meanwhile.</summary>
+    private async Task SearchLaterAsync(IAsyncLauncherSource source, string query, CancellationToken token)
+    {
+        IReadOnlyList<LauncherResult> found;
+        try
+        {
+            found = await source.SearchAsync(query, token).ConfigureAwait(true);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"Launcher source {source.GetType().Name} failed: {ex.Message}");
+            return;
+        }
+        if (token.IsCancellationRequested || _closing || query != _searched || found.Count == 0) return;
+        _foundLater.AddRange(found);
+        Render(keepSelection: true);
+    }
+
+    /// <summary>
+    /// Shows the best results (the web search last). While slower results arrive the selection stays on the result it
+    /// was on, so Enter never runs something that just moved under it.
+    /// </summary>
+    private void Render(bool keepSelection)
+    {
+        var before = _results;
+        int selected = _list.SelectedIndex;
+        var results = _found.Concat(_foundLater)
+            .OrderByDescending(r => r.Score).ThenBy(r => r.Title, StringComparer.CurrentCultureIgnoreCase)
+            .Take(EmojiSource.IsEmojiQuery(_searched) ? EmojiSource.MaxResults : MaxResults).ToList();
+        if (_webSearch is not null) results.Add(_webSearch);
 
         _results = results;
         _list.Items.Clear();
         foreach (var result in results) _list.Items.Add(BuildRow(result));
-        if (_list.Items.Count > 0) _list.SelectedIndex = 0;
+        _list.SelectedIndex = keepSelection ? LauncherRanking.SelectionAfter(before, selected, results) : results.Count > 0 ? 0 : -1;
     }
 
     private static ListBoxItem BuildRow(LauncherResult result)
     {
         FrameworkElement icon;
         var image = result.Icon?.Invoke();
-        if (image is not null)
+        if (result.Emoji is { } emoji)
+        {
+            icon = new TextBlock
+            {
+                Text = emoji,
+                FontSize = 22,
+                FontFamily = new FontFamily("Segoe UI Emoji"),
+                Width = 28,
+                TextAlignment = TextAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+        }
+        else if (image is not null)
         {
             icon = new Image { Source = image, Width = 28, Height = 28 };
             RenderOptions.SetBitmapScalingMode(icon, BitmapScalingMode.HighQuality);
@@ -323,22 +435,6 @@ public sealed class LauncherWindow : Window
         var item = new ListBoxItem { Content = row, Padding = new Thickness(12, 7, 12, 7) };
         item.SetResourceReference(StyleProperty, "NavItem");
         return item;
-    }
-
-    private static IEnumerable<LauncherResult> Candidates(string query)
-    {
-        // Nothing typed yet: the dock's apps and open windows as a starting point.
-        bool empty = query.Length == 0;
-
-        foreach (var result in DockApps()) yield return result;
-        foreach (var result in OpenWindows()) yield return result;
-        if (empty) yield break;
-
-        foreach (var result in Apps()) yield return result;
-        foreach (var result in DockHubPages()) yield return result;
-        foreach (var result in WindowsSettings()) yield return result;
-        foreach (var result in Commands()) yield return result;
-        foreach (var result in RecentFiles()) yield return result;
     }
 
     private static IEnumerable<LauncherResult> DockApps()
@@ -569,9 +665,9 @@ public sealed class LauncherWindow : Window
         }
     }
 
-    private static void Open(string target)
+    internal static void Open(string target, string? arguments = null)
     {
-        try { Process.Start(new ProcessStartInfo(target) { UseShellExecute = true }); }
+        try { Process.Start(new ProcessStartInfo(target) { UseShellExecute = true, Arguments = arguments ?? "" }); }
         catch (Exception ex) { Log.Error(ex, $"Launcher could not open {target}"); }
     }
 

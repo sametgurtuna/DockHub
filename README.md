@@ -133,6 +133,10 @@ winget install SametGurtuna.DockHub
 - **The Windows key** works as usual. Start, search, the notification center and quick settings open in Windows' own panels.
 - **Search** and **Task View** buttons, each of which can be toggled. The search button can open Windows Search or DockHub's quick launcher (*Settings › Taskbar › Search button opens*).
 - **Quick launcher** (Win+Alt+Space, or the search button): type to find apps, open windows, DockHub and Windows settings pages, dock commands (auto-hide, mute, lock, new virtual desktop, switch profile...), recent files, quick math (`200*15%`, `sqrt(2)`) and a web search. Enter opens the first result, arrow keys move, Esc closes.
+  - **Files:** files and folders in your user folder, by name or content, from the Windows Search index (AppData is left out). Enter opens one, Ctrl+Enter shows it in its folder. Turn it off in *Settings › Taskbar › Files in the quick launcher*; nothing is searched while Windows Search is turned off.
+  - **Units:** `10 km to mi`, `20 c in f`, `5 GB in MB`, also in Turkish, German and Spanish (`10 km kaç mil`, `10 km in Meilen`, `10 km a millas`). Length, weight, temperature, volume, speed and data sizes; Enter copies the result.
+  - **Currencies:** `100 usd to try`, `50 € in $`, `0.5 btc to eur`, at the same rates as the Exchange rates widget (ECB, CoinGecko for coins).
+  - **Emoji:** type `:` and a name, `:heart` or `:kalp`, in your language or English; Enter copies the emoji.
 - **Virtual desktops.** A number next to Task View shows which desktop you are on; scroll it to switch desktops, right-click to add or close one. *Apps from all desktops* lists windows of every desktop on the dock, and clicking one switches to its desktop.
 - **Running apps**
   - Pinned apps are matched with their open windows, and windows of the same app are grouped into one button.
@@ -422,7 +426,7 @@ An app item's `path` can be an `.exe`, an `.lnk` shortcut, any file, or a Store 
 - **Microphone indicator.** DockHub reads which apps use the microphone from the same Windows privacy records as the Windows microphone icon; it never opens the microphone itself.
 - **Notification count.** Read from the Windows notification database of your account (read-only), only while the option is on.
 - **Wi-Fi and Bluetooth widget.** Uses the Windows radio API; if Windows doesn't allow it, the buttons open the matching Settings page instead.
-- **Network.** DockHub itself only contacts `api.open-meteo.com` (weather), `geocoding-api.open-meteo.com` (city search), `api.frankfurter.dev` and, for crypto symbols, `api.coingecko.com` (only with the Exchange rates widget), the calendar links you enter (Calendar widget) and, once a day unless you turn it off, `api.github.com` to look for a newer release. The *AI usage* widget, if you add it, runs your locally installed Claude CLI (`claude -p /usage`) at the interval you choose, and that CLI talks to Anthropic with your own login; for Codex and Gemini CLI it only reads the logs those tools keep in your user folder (`~/.codex/sessions`, `~/.gemini/tmp`). The *To do* widget talks to `api.todoist.com` only when you set it to Todoist, installing a web widget from a link downloads it from that link, and while *Settings › Widget gallery* is open DockHub fetches the community widget list from `raw.githubusercontent.com` (at most once a day). Web widgets reach only the hosts they declare, or a server address you enter in their settings. There is no telemetry.
+- **Network.** DockHub itself only contacts `api.open-meteo.com` (weather), `geocoding-api.open-meteo.com` (city search), `api.frankfurter.dev` and, for crypto symbols, `api.coingecko.com` (only with the Exchange rates widget, or when you convert a currency in the quick launcher), the calendar links you enter (Calendar widget) and, once a day unless you turn it off, `api.github.com` to look for a newer release. The *AI usage* widget, if you add it, runs your locally installed Claude CLI (`claude -p /usage`) at the interval you choose, and that CLI talks to Anthropic with your own login; for Codex and Gemini CLI it only reads the logs those tools keep in your user folder (`~/.codex/sessions`, `~/.gemini/tmp`). The *To do* widget talks to `api.todoist.com` only when you set it to Todoist, installing a web widget from a link downloads it from that link, and while *Settings › Widget gallery* is open DockHub fetches the community widget list from `raw.githubusercontent.com` (at most once a day). Web widgets reach only the hosts they declare, or a server address you enter in their settings. There is no telemetry.
 
 ## Project structure
 
@@ -632,5 +636,6 @@ DockHub builds on excellent open source work:
 - The Start menu (`IImmersiveLauncher`), tray icon mouse forwarding and "show desktop" techniques are adapted from [RetroBar](https://github.com/dremin/RetroBar) (Apache-2.0)
 - [Microsoft.Toolkit.Uwp.Notifications](https://github.com/CommunityToolkit/WindowsCommunityToolkit) (MIT)
 - Weather data by [Open-Meteo](https://open-meteo.com/) (CC BY 4.0)
+- Emoji names from the [Unicode CLDR](https://cldr.unicode.org/) ([Unicode License v3](https://www.unicode.org/license.txt)); the emoji list from [Emojibase](https://emojibase.dev/) (MIT)
 
 Windows is a trademark of Microsoft Corporation. DockHub is not affiliated with Microsoft.

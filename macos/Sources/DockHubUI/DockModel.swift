@@ -56,7 +56,89 @@ public final class DockModel: ObservableObject {
         }
     }
 
+    // ---------------- Duzenleme modu (Windows: Dock/DockEditMode.cs)
+
+    /// Ogeler x ile kaldirilir, surukleyerek siralanir, widget'in duzeni degistirilir.
+    /// Mod boyunca tek geri alma adimi acik kalir; degisiklik yoksa iz birakmaz.
+    @Published public private(set) var isEditing = false
+
+    /// Dock'un yerlesimi degisti (AppDelegate dock'u yeniden kurar). Duzenleme
+    /// boyunca beklenir, cikista bir kez gelir.
+    public var onLayoutChanged: (() -> Void)?
+    /// "+" kutucugu: galeriyi acar.
+    public var onOpenGallery: (() -> Void)?
+
+    public func beginEditing() {
+        guard let service, !isEditing else { return }
+        service.history.beginSession(service.config, L.t("Edited the dock"))
+        isEditing = true
+    }
+
+    /// `notify` false: dock zaten yeniden kuruluyor (ayarlar penceresinden gelen degisiklik).
+    public func endEditing(notify: Bool = true) {
+        guard let service, isEditing else { return }
+        isEditing = false
+        let changed = service.history.endSession(service.config)
+        if changed && notify { onLayoutChanged?() }
+    }
+
+    public func removeItem(_ id: String) {
+        guard let service, let item = service.config.items.first(where: { $0.id == id }) else { return }
+        service.history.push(service.config, L.t("Removed {0}", ItemText.title(item)), destructive: true)
+        write { $0.items.removeAll { $0.id == id } }
+    }
+
+    public func moveItem(_ id: String, before target: String?) {
+        write { $0.items = DockEditing.move($0.items, id, before: target) }
+    }
+
+    /// Galeriden birakilan widget; duzenleme disinda da calisir (Windows: galeriden dock'a surukleme).
+    public func insertWidget(_ widget: String, variant: String?, before target: String?) {
+        guard let service, let definition = WidgetRegistry.find(widget) else { return }
+        let item = DockItem.widget(widget, variant: variant)
+        service.history.push(service.config, L.t("Added {0}", definition.displayName))
+        write { $0.items = DockEditing.insert($0.items, item, before: target) }
+    }
+
+    /// Widget'in bir sonraki duzenine gecer (Windows'taki boyut tutamaginin Mac karsiligi).
+    public func cycleVariant(_ id: String) {
+        guard let item = items.first(where: { $0.id == id }), let definition = WidgetRegistry.find(item.widget),
+              let next = DockEditing.nextVariant(of: definition, current: item.effectiveVariant) else { return }
+        write { c in
+            guard let i = c.items.firstIndex(where: { $0.id == id }) else { return }
+            c.items[i].variant = next
+        }
+    }
+
+    /// Dock'a birakilan metin: galeriden widget ya da (duzenlemede) dock'taki bir oge.
+    @discardableResult
+    public func handleDrop(_ strings: [String], before target: String?) -> Bool {
+        for text in strings {
+            if let widget = DockDrag.decodeWidget(text) {
+                insertWidget(widget.id, variant: widget.variant, before: target)
+                return true
+            }
+            if isEditing, let id = DockDrag.decodeItem(text) {
+                moveItem(id, before: target)
+                return true
+            }
+        }
+        return false
+    }
+
+    private func write(_ change: (inout AppConfig) -> Void) {
+        guard let service else { return }
+        do {
+            try service.update(change)
+            items = service.config.items
+            if !isEditing { onLayoutChanged?() }
+        } catch {
+            Log.error("Dock kaydedilemedi", error)
+        }
+    }
+
     public func activate(_ item: DockItem) {
+        guard !isEditing else { return }
         guard item.kind == .app, let path = item.path else { return }
         AppCatalog.activateOrLaunch(appAt: path,
                                     arguments: LaunchArguments.split(item.arguments ?? "")) { _ in }

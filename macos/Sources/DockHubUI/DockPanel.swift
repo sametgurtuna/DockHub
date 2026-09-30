@@ -148,11 +148,18 @@ public final class DockPanel {
         // gizleme) ayri gorev; burada ayarlara giden yol ve cikis var.
         let menu = NSMenu()
         menu.delegate = menuActions
+        menuActions.toggleEdit = { [weak model = self.model] in
+            guard let model else { return }
+            model.isEditing ? model.endEditing() : model.beginEditing()
+        }
         let undo = NSMenuItem(title: L.t("Undo"), action: #selector(MenuActions.performUndo), keyEquivalent: "")
         undo.target = menuActions
         undo.isHidden = true
         menu.addItem(undo)
         menuActions.undoItem = undo
+        let edit = NSMenuItem(title: L.t("Edit the dock"), action: #selector(MenuActions.toggleEditing), keyEquivalent: "")
+        edit.target = menuActions
+        menu.addItem(edit)
         let widget = NSMenuItem(title: L.t("Add widget…"), action: #selector(MenuActions.openGallery), keyEquivalent: "")
         widget.target = menuActions
         menu.addItem(widget)
@@ -232,12 +239,14 @@ final class MenuActions: NSObject, NSMenuDelegate {
     var undo: (() -> Void)?
     var profiles: (() -> (list: [DockProfile], active: String?))?
     var switchProfile: ((String) -> Void)?
+    var toggleEdit: (() -> Void)?
     weak var undoItem: NSMenuItem?
     weak var profilesItem: NSMenuItem?
 
     @objc func openGeneral() { openSettings?(.general) }
     @objc func openGallery() { openSettings?(.gallery) }
     @objc func performUndo() { undo?() }
+    @objc func toggleEditing() { toggleEdit?() }
     @objc func pickProfile(_ sender: NSMenuItem) {
         if let id = sender.representedObject as? String { switchProfile?(id) }
     }

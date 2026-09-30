@@ -25,7 +25,7 @@ CALLS = [
     re.compile(r'WidgetDefinition\(id: "[^"]*", name: ' + LITERAL + r', category: ' + LITERAL),
     re.compile(r'WidgetVariant\("[^"]*", ' + LITERAL + r'\)'),
     re.compile(r'Info\(summary: ' + LITERAL),
-    re.compile(r'HotkeyAction\(id: \w+, name: ' + LITERAL + r', description: ' + LITERAL),
+    re.compile(r'HotkeyAction\(id: \w+, name: ' + LITERAL + r',\s*description: ' + LITERAL),
 ]
 
 

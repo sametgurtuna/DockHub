@@ -33,6 +33,14 @@ struct AppearancePage: View {
                     Text(L.t("Tint opacity"))
                     RowNote(L.t("Color layer over the glass."))
                 }
+                VStack(alignment: .leading, spacing: 4) {
+                    Picker(L.t("Widget style"), selection: store.binding(\.widgetStyle)) {
+                        Text(L.t("Cards")).tag(WidgetStyle.cards)
+                        Text(L.t("Seamless")).tag(WidgetStyle.seamless)
+                    }
+                    .pickerStyle(.segmented)
+                    RowNote(L.t("Cards puts every widget on a card of its own. Seamless sets them right on the dock, with a thin line between two widgets."))
+                }
                 Toggle(isOn: store.binding(\.hoverEffect)) {
                     Text(L.t("Hover effect"))
                     RowNote(L.t("App icons grow slightly under the pointer."))

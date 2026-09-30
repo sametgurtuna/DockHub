@@ -147,6 +147,7 @@ public enum HotkeyActions {
     public static let volumeUp = "volume-up"
     public static let volumeDown = "volume-down"
     public static let nextProfile = "next-profile"
+    public static let editDock = "edit-dock"
 
     public static let all: [HotkeyAction] = [
         HotkeyAction(id: toggleDock, name: "Show or hide the dock", description: "", defaultGesture: "Ctrl+Alt+D"),
@@ -155,6 +156,8 @@ public enum HotkeyActions {
         HotkeyAction(id: volumeUp, name: "Volume up", description: "", defaultGesture: nil),
         HotkeyAction(id: volumeDown, name: "Volume down", description: "", defaultGesture: nil),
         HotkeyAction(id: nextProfile, name: "Switch to the next profile", description: "", defaultGesture: nil),
+        HotkeyAction(id: editDock, name: "Edit the dock",
+                     description: "Move, remove and change dock items in place; press it again to finish.", defaultGesture: nil),
     ]
 
     public static func find(_ id: String) -> HotkeyAction? { all.first { $0.id == id } }

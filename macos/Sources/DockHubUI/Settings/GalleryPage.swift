@@ -8,9 +8,18 @@ struct GalleryPage: View {
     @ObservedObject var store: SettingsStore
     @State private var chosen: [String: String] = [:]
     @State private var justAdded: String?
+    @State private var query = ""
+
+    /// Arama: yerel ve Ingilizce ad, aciklama ve kategori (Windows: GalleryFilter).
+    private var visible: [WidgetDefinition] {
+        WidgetRegistry.all.filter { def in
+            GalleryFilter.matches(query, [def.displayName, def.name, def.displayCategory, def.category,
+                                          WidgetCatalog.info(def.id).summary, WidgetCatalog.englishSummary(def.id)])
+        }
+    }
 
     private var groups: [(String, [WidgetDefinition])] {
-        let byCategory = Dictionary(grouping: WidgetRegistry.all, by: \.category)
+        let byCategory = Dictionary(grouping: visible, by: \.category)
         let order = WidgetCatalog.categoryOrder + byCategory.keys.filter { !WidgetCatalog.categoryOrder.contains($0) }.sorted()
         return order.compactMap { cat in byCategory[cat].map { (cat, $0) } }
     }
@@ -18,6 +27,15 @@ struct GalleryPage: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
+                VStack(alignment: .leading, spacing: 6) {
+                    TextField(L.t("Search widgets"), text: $query)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(maxWidth: 320)
+                    RowNote(L.t("Press + or drag a card onto the dock. To change a widget's layout later, edit the dock."))
+                }
+                if groups.isEmpty {
+                    Text(L.t("No widgets match “{0}”.", query)).foregroundStyle(.secondary)
+                }
                 ForEach(groups, id: \.0) { category, defs in
                     VStack(alignment: .leading, spacing: 10) {
                         Text(L.t(category)).font(.headline)
@@ -79,5 +97,11 @@ struct GalleryPage: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(RoundedRectangle(cornerRadius: 10).fill(Color(nsColor: .controlBackgroundColor)))
         .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color(nsColor: .separatorColor)))
+        // Galeriden dock'a surukleme (Windows: NewWidgetFormat).
+        .draggable(DockDrag.widget(def.id, variant: variant)) {
+            Label(def.displayName, systemImage: info.symbol)
+                .padding(8)
+                .background(RoundedRectangle(cornerRadius: 8).fill(.regularMaterial))
+        }
     }
 }

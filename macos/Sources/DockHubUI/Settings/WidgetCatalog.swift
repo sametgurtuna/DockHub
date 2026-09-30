@@ -24,6 +24,9 @@ enum WidgetCatalog {
         return Info(summary: L.t(info.summary), symbol: info.symbol)
     }
 
+    /// Aciklamanin Ingilizcesi (arama iki dilde de bulsun).
+    static func englishSummary(_ id: String) -> String { table[id]?.summary ?? "" }
+
     private static let table: [String: Info] = [
         "clock": Info(summary: "Clock and date. Analog or digital view.", symbol: "clock"),
         "world-clock": Info(summary: "Clocks for different cities.", symbol: "globe"),

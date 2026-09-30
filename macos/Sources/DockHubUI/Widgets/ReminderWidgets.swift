@@ -203,12 +203,12 @@ struct StickyNoteWidget: View {
     }
 
     private var duzenleyici: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(L.t("Sticky note")).font(.headline)
+        WidgetPanel(title: L.t("Sticky note"), symbol: "note.text", width: .narrow) {
             TextEditor(text: $taslak)
                 .font(.system(size: 13))
-                .frame(width: 260, height: 140)
+                .frame(height: 140)
                 .overlay(RoundedRectangle(cornerRadius: 6).stroke(renk.opacity(0.5), lineWidth: 2))
+        } footer: {
             HStack {
                 Spacer()
                 Button(L.t("Save")) {
@@ -217,6 +217,5 @@ struct StickyNoteWidget: View {
                 }.keyboardShortcut(.defaultAction)
             }
         }
-        .padding(12)
     }
 }

@@ -44,11 +44,11 @@ açılabilmesi (ve Mac'in onu bozmadan geri yazması) 1.0'ın ön koşulu; bu y�
 
 | Yetenek | Windows | Karar | Öncelik | Durum |
 |---|---|---|---|---|
-| Düzenleme modu (taşı, kaldır, boyutla, ekle) | `DockEditMode`, `EditAdorner` | `var` | P1 | eksik |
-| Yeni widget galerisi (kart başına widget, arama, sürükle) | `GalleryCard`, `GalleryFilter` | `var` | P1 | kısmen (galeri sayfası var, arama/sürükleme yok) |
-| Kutusuz widget stili + ayraçlar | `WidgetStyle.Seamless` | `var` | P1 | eksik |
+| Düzenleme modu (taşı, kaldır, boyutla, ekle) | `DockEditMode`, `EditAdorner` | `var` | P1 | mevcut (Faz 23; boyut yerine sıradaki düzen) |
+| Yeni widget galerisi (kart başına widget, arama, sürükle) | `GalleryCard`, `GalleryFilter` | `var` | P1 | mevcut (Faz 23) |
+| Kutusuz widget stili + ayraçlar | `WidgetStyle.Seamless` | `var` | P1 | mevcut (Faz 23) |
 | Taşmada öğeye oturan kaydırma | `ScrollSnap` | `var` | P2 | eksik |
-| Ortak widget paneli şablonu | `WidgetFlyout` | `var` (SwiftUI `popover` + ortak görünüm) | P1 | eksik |
+| Ortak widget paneli şablonu | `WidgetFlyout` | `var` (SwiftUI `popover` + ortak görünüm) | P1 | mevcut (Faz 23; `WidgetPanel`) |
 | Gruplu ayarlar menüsü, Genel bakış | `SettingsPages` | `var` | P2 | kısmen |
 | Üst bar | `BarDockSurface`, `TopBarSettings` | `uyarla`: macOS menü çubuğu zaten üstte; bar ancak menü çubuğunun altında ya da başka kenarda ve alan ayıramadan | P2 | eksik |
 | Başlıklı görev çubuğu modu (Never combine) | `TaskbarButtons` | `uyarla`: pencere listesi Erişilebilirlik izniyle | P2 | eksik |

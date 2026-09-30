@@ -1400,5 +1400,9 @@
   "Saved dock setups and when they switch in by themselves.": "Gespeicherte Dock-Setups und wann sie von selbst aktiv werden.",
   "Use the 24-hour form, for example 09:00.": "Verwenden Sie das 24-Stunden-Format, zum Beispiel 09:00.",
   "{0} apps": "{0} Apps",
-  "Show or hide the dock": "Dock ein- oder ausblenden"
+  "Show or hide the dock": "Dock ein- oder ausblenden",
+  "Move, remove and change dock items in place; press it again to finish.": "Dock-Elemente direkt verschieben, entfernen und ändern; zum Beenden erneut drücken.",
+  "Next layout": "Nächstes Layout",
+  "No widgets match “{0}”.": "Keine Widgets passen zu „{0}“.",
+  "Press + or drag a card onto the dock. To change a widget's layout later, edit the dock.": "Drücken Sie + oder ziehen Sie eine Karte ins Dock. Um das Layout eines Widgets später zu ändern, bearbeiten Sie das Dock."
 }

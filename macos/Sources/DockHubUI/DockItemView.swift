@@ -10,11 +10,48 @@ struct DockItemView: View {
     @ObservedObject var model: DockModel
     let isRunning: Bool
     let hoverEffect: Bool
+    /// Kutusuz widget stili: kutucuk arka plani yok.
+    var seamless = false
     let onTap: () -> Void
 
     @State private var hovering = false
 
     var body: some View {
+        if model.isEditing {
+            base
+                // Duzenlemede widget'larin kendi tiklamalari calismasin.
+                .overlay(Color.black.opacity(0.001).contentShape(Rectangle()).onTapGesture {})
+                .overlay(RoundedRectangle(cornerRadius: style.itemRadius, style: .continuous)
+                    .strokeBorder(Color.secondary, style: StrokeStyle(lineWidth: 1, dash: [3, 3])))
+                .overlay(alignment: .topLeading) {
+                    Button { model.removeItem(item.id) } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .symbolRenderingMode(.palette)
+                            .foregroundStyle(.white, Color.red)
+                            .font(.system(size: max(11, style.height * 0.24)))
+                    }
+                    .buttonStyle(.plain)
+                    .offset(x: -3, y: -3)
+                    .help(L.t("Remove"))
+                }
+                .overlay(alignment: .bottomTrailing) {
+                    if item.kind == .widget, (WidgetRegistry.find(item.widget)?.variants.count ?? 0) > 1 {
+                        Button { model.cycleVariant(item.id) } label: {
+                            Image(systemName: "arrow.left.arrow.right.circle.fill")
+                                .font(.system(size: max(11, style.height * 0.22)))
+                        }
+                        .buttonStyle(.plain)
+                        .offset(x: 3, y: 3)
+                        .help(L.t("Next layout"))
+                    }
+                }
+                .draggable(DockDrag.item(item.id))
+        } else {
+            base
+        }
+    }
+
+    @ViewBuilder private var base: some View {
         switch item.kind {
         case .app:      appIcon
         case .widget:   widgetPill
@@ -92,7 +129,7 @@ struct DockItemView: View {
         .frame(height: style.itemHeight)
         .background(
             RoundedRectangle(cornerRadius: style.itemRadius, style: .continuous)
-                .fill(Color(nsColor: DockStyle.itemBackground))
+                .fill(Color(nsColor: seamless ? (hovering ? DockStyle.itemBackground : .clear) : DockStyle.itemBackground))
         )
         .onHover { hovering = $0 }
     }

@@ -1400,5 +1400,9 @@
   "Saved dock setups and when they switch in by themselves.": "Kayıtlı dock düzenleri ve ne zaman kendiliğinden geçildiği.",
   "Use the 24-hour form, for example 09:00.": "24 saat biçimini kullanın, örneğin 09:00.",
   "{0} apps": "{0} uygulama",
-  "Show or hide the dock": "Dock'u göster veya gizle"
+  "Show or hide the dock": "Dock'u göster veya gizle",
+  "Move, remove and change dock items in place; press it again to finish.": "Dock öğelerini yerinde taşıyın, kaldırın ve değiştirin; bitirmek için yeniden basın.",
+  "Next layout": "Sonraki düzen",
+  "No widgets match “{0}”.": "“{0}” ile eşleşen widget yok.",
+  "Press + or drag a card onto the dock. To change a widget's layout later, edit the dock.": "+ düğmesine basın ya da bir kartı dock'a sürükleyin. Bir widget'ın düzenini sonra değiştirmek için dock'u düzenleyin."
 }

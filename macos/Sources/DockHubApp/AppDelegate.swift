@@ -111,6 +111,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return (list: config?.profiles ?? [], active: config?.activeProfileId)
         }
         panel.onSwitchProfile = { [weak self] id in self?.switchProfile(id, manual: true) }
+        // Dock'un kendi degisiklikleri (galeriden birakma, duzenleme modu) dock'u yeniden kurdurur.
+        panel.model.onLayoutChanged = {
+            NotificationCenter.default.post(name: ConfigEvents.didChange, object: nil)
+        }
+        panel.model.onOpenGallery = { [weak self] in self?.openSettings(.gallery) }
         dock = panel
         builtSignature = service.config.layoutSignature()
         panel.show()
@@ -129,6 +134,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             appliedMode = cfg.taskbarMode
         }
         guard cfg.layoutSignature() != builtSignature else { return }
+        // Duzenleme acikken ayarlar penceresinden gelen degisiklik: oturum kapanir, dock yeniden kurulur.
+        dock?.model.endEditing(notify: false)
         dock?.close()
         buildDock(service)
         Log.info("Ayarlar degisti, dock yeniden kuruldu")
@@ -228,6 +235,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 let step: Float = action == HotkeyActions.volumeUp ? 0.0625 : -0.0625
                 AudioDevices.setVolume(min(max((AudioDevices.volume(of: id) ?? 0) + step, 0), 1), of: id)
             }
+        case HotkeyActions.editDock:
+            guard let dock else { return }
+            if !dock.panel.isVisible { dock.show() }
+            dock.model.isEditing ? dock.model.endEditing() : dock.model.beginEditing()
         case HotkeyActions.nextProfile:
             if let config = configService?.config, let id = Profiles.next(config) { switchProfile(id, manual: true) }
         default:

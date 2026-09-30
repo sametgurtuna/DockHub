@@ -106,7 +106,7 @@ Dikkat edilecek üç nokta:
 
    ```swift
    enum DockEdge: String, Codable { case bottom = "Bottom", top = "Top", left = "Left", right = "Right" }
-   enum BackdropKind: String, Codable { case blur = "Blur", acrylic = "Acrylic", solid = "Solid" }
+   enum BackdropKind: String, Codable { case blur = "Blur", acrylic = "Acrylic", solid = "Solid", transparent = "Transparent" }
    ```
 
 2. **Null yazılmaz.** Swift'in sentezlediği `Codable` kodlayıcısı Optional alanlar için
@@ -127,14 +127,30 @@ Dikkat edilecek üç nokta:
    Upstream v0.6.1 üç yeni üst düzey alan getirince (`showOnAllDisplays`,
    `runningAppsOnOwnDisplay`, `displaySizes`) bu fark gerçek bir risk oldu: eski
    dosya okunamazdı. Bu yüzden `AppConfig` ve `DockItem` için `init(from:)` elle
-   yazıldı, her alan `decodeIfPresent ?? varsayılan` ile okunuyor. Bilinmeyen enum
-   değeri ise iki tarafta da hata olarak kalıyor (`JsonStringEnumConverter` da
-   atar). Şema farkı her upstream merge'ünden sonra
-   `Scripts/compare-config-schema.py` ile ölçülmeli.
+   yazıldı, her alan `decodeIfPresent ?? varsayılan` ile okunuyor.
+   **1.0 güncellemesi:** okuma `JSONObjectReader` ile yapılıyor. Tipi uymayan
+   değer (bu sürümün bilmediği enum değeri dahil) yalnız o alanı varsayılana
+   düşürür; Windows'ta `JsonStringEnumConverter` hâlâ bütün dosyayı reddeder.
 
-5. **Yazma kuralları alan alan.** `DockItem.pinnedEnd` C#'ta `WhenWritingDefault`
-   taşıyor, yani `false` iken hiç yazılmaz. Grup alanları (`groupName`,
-   `groupAccent`, `children`) `WhenWritingNull`. `displaySizes` boş olsa da `{}`
+6. **Bilinmeyen anahtarlar korunur (1.0).** `AppConfig`, `DockItem`,
+   `TopBarSettings`, `DockProfile` ve `CustomLayoutPreset` okumadıkları anahtarları
+   `extras` sözlüğünde saklar ve aynen geri yazar; daha yeni bir sürümün ya da
+   Windows'un eklediği bir ayar Mac dosyayı kaydedince kaybolmaz.
+
+7. **Denetim CI'da.** macOS iş akışı iki yoldan denetler:
+   `Scripts/compare-config-schema.py` (Mac'in varsayılan olarak yazdığı anahtarlar =
+   Windows `AppConfig.cs`'nin yazdıkları; fark varsa adım kırmızı) ve
+   `WindowsConfigTests` (`tests/fixtures/config-windows.json`, Windows'un her ayarı
+   kullanılarak yazdığı dosya, Mac'te okunup birebir geri yazılır). Windows tarafında
+   `ConfigFixtureTests` aynı dosyanın Windows çıktısıyla aynı olduğunu denetler; bir
+   tarafa eklenen ayar öbür tarafı kırmızıya çevirir.
+
+5. **Yazma kuralları alan alan.** `DockItem.pinnedEnd` ve `collapseWhenIdle`,
+   `AppConfig.welcomeShown` ve `debugLogging` C#'ta `WhenWritingDefault` taşıyor,
+   yani `false` iken hiç yazılmaz. Grup alanları (`groupName`, `groupAccent`,
+   `children`), `display`, `surface` ve `activeProfileId` `WhenWritingNull`.
+   Niteliği olmayan nullable alanlar (`monitorDevice`, `syncFolder`,
+   `topBar.backdrop`...) nil iken `null` yazılır. `displaySizes` boş olsa da `{}`
    olarak yazılır. `children` iç içe `DockItem` listesi olduğu için Swift
    yapısı kendini içeriyor (`[DockItem]?`).
 

@@ -76,11 +76,18 @@ public final class DockPanel {
                                   cornerHeight: radius, transform: nil)
         }
 
-        // --- Cam katman: ag-blur-effect
-        let fx = NSVisualEffectView(frame: bounds)
-        fx.material = Appearance.material(for: config.backdrop)
-        fx.blendingMode = Appearance.blendingMode(for: config.backdrop)
-        fx.state = .active
+        // --- Cam katman: ag-blur-effect. Transparent'ta materyalsiz duz gorunum;
+        // renk yalniz asagidaki ton katmanindan gelir (Windows: BackdropKind.Transparent).
+        let fx: NSView
+        if Appearance.usesMaterial(config.backdrop) {
+            let effect = NSVisualEffectView(frame: bounds)
+            effect.material = Appearance.material(for: config.backdrop)
+            effect.blendingMode = Appearance.blendingMode(for: config.backdrop)
+            effect.state = .active
+            fx = effect
+        } else {
+            fx = NSView(frame: bounds)
+        }
         fx.autoresizingMask = [.width, .height]
         fx.wantsLayer = true
         fx.layer?.cornerRadius = radius

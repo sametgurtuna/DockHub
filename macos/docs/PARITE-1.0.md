@@ -29,8 +29,8 @@ açılabilmesi (ve Mac'in onu bozmadan geri yazması) 1.0'ın ön koşulu; bu y�
 
 | Yetenek | Windows | Karar | Öncelik | Durum |
 |---|---|---|---|---|
-| Ayar şeması 0.7–1.0 alanları | `Core/AppConfig.cs` | `var` | P1 | eksik |
-| Bilinmeyen alanları koruyarak okuma/yazma | `JsonStore` | `var` | P1 | eksik |
+| Ayar şeması 0.7–1.0 alanları | `Core/AppConfig.cs` | `var` | P1 | mevcut (Faz 23) |
+| Bilinmeyen alanları koruyarak okuma/yazma | `JsonStore` | `var` | P1 | mevcut (Faz 23) |
 | Geri al (Undo) | `ConfigHistory`, `UndoToast` | `var` | P1 | eksik |
 | Yedekleme ve geri yükleme (.zip), günlük yedek | `BackupService` | `var` | P2 | eksik |
 | Profiller (elle, ekran sayısı, uygulama, saat kuralları) | `ProfileService` | `var` (uygulama kuralı `NSWorkspace` bildirimleriyle) | P1 | eksik |
@@ -52,7 +52,7 @@ açılabilmesi (ve Mac'in onu bozmadan geri yazması) 1.0'ın ön koşulu; bu y�
 | Gruplu ayarlar menüsü, Genel bakış | `SettingsPages` | `var` | P2 | kısmen |
 | Üst bar | `BarDockSurface`, `TopBarSettings` | `uyarla`: macOS menü çubuğu zaten üstte; bar ancak menü çubuğunun altında ya da başka kenarda ve alan ayıramadan | P2 | eksik |
 | Başlıklı görev çubuğu modu (Never combine) | `TaskbarButtons` | `uyarla`: pencere listesi Erişilebilirlik izniyle | P2 | eksik |
-| Saydam arka plan | `BackdropKind.Transparent` | `var` | P1 | eksik |
+| Saydam arka plan | `BackdropKind.Transparent` | `var` | P1 | mevcut (Faz 23) |
 | Katman düzeni önayarları, tema dosyası | `LayoutPresets`, `ThemeFile` | `var` | P2 | eksik |
 
 ## 3. Görev çubuğu ve sistem göstergeleri

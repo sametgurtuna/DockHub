@@ -7,12 +7,14 @@ on:
       - 'macos/**'
       - 'src/CustomDock/Core/AppConfig.cs'
       - 'src/CustomDock/Resources/Strings_*.json'
+      - 'tests/fixtures/config-windows.json'
       - '.github/workflows/macos.yml'
   pull_request:
     paths:
       - 'macos/**'
       - 'src/CustomDock/Core/AppConfig.cs'
       - 'src/CustomDock/Resources/Strings_*.json'
+      - 'tests/fixtures/config-windows.json'
       - '.github/workflows/macos.yml'
 
 jobs:
@@ -37,9 +39,8 @@ jobs:
         run: swift test
 
       # The settings file must stay readable by both DockHubs: the keys the Mac writes against Windows' AppConfig.
-      # Report only until the Mac has caught up with the settings added since 0.6.1.
+      # (WindowsConfigTests above also reads and rewrites tests/fixtures/config-windows.json, a file Windows wrote.)
       - name: Config schema
-        continue-on-error: true
         run: |
           DOCKHUB_SCHEMA_OUT="$RUNNER_TEMP/config.json" swift test --filter ConfigSchemaDumpTests
           python3 Scripts/compare-config-schema.py "$RUNNER_TEMP/config.json"

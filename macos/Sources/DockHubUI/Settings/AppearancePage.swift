@@ -19,10 +19,11 @@ struct AppearancePage: View {
                     Picker("Backdrop", selection: store.binding(\.backdrop)) {
                         Text("Blur").tag(BackdropKind.blur)
                         Text("Acrylic").tag(BackdropKind.acrylic)
+                        Text("Transparent").tag(BackdropKind.transparent)
                         Text("Solid").tag(BackdropKind.solid)
                     }
                     .pickerStyle(.segmented)
-                    RowNote("Blur is a frosted glass, Acrylic a lighter material, Solid has no transparency.")
+                    RowNote("Blur is a frosted glass, Acrylic a lighter material, Transparent has no blur (the desktop shows through), Solid has no transparency.")
                 }
                 LabeledContent {
                     CommitSlider(value: store.config.tintOpacity, range: 0...1, step: 0.05,

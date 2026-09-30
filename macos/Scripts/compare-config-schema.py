@@ -48,7 +48,8 @@ def parse_cs(path: pathlib.Path):
             joined = " ".join(attrs)
             if "[JsonIgnore]" in joined:
                 ignored.append(name)
-            elif "WhenWritingNull" in joined:
+            elif "WhenWritingNull" in joined or "WhenWritingDefault" in joined:
+                # nil (ya da bool'da false) iken yazilmaz; varsayilan config'te yok.
                 omit_when_null.append(name)
             else:
                 always.append(name)
@@ -74,7 +75,7 @@ def main() -> int:
     print()
     print(f"C# public property        : {len(win_all)}")
     print(f"  her zaman yazilan       : {len(always)}")
-    print(f"  nil ise yazilmayan      : {len(omit_null)} -> {sorted(omit_null)}")
+    print(f"  nil/false ise yazilmayan: {len(omit_null)} -> {sorted(omit_null)}")
     print(f"  [JsonIgnore] (serialize edilmez): {len(ignored)} -> {sorted(ignored)}")
     print(f"macOS config.json anahtari: {len(mac_keys)}")
     print()
@@ -93,7 +94,7 @@ def main() -> int:
         print("HATA - Windows semasinda olmayan ama macOS'un yazdigi:")
         for k in fazla: print(f"   + {k}")
     if atlanan:
-        print("BEKLENEN - nil oldugu icin yazilmayan v1 uyum alanlari:")
+        print("BEKLENEN - varsayilanda (nil/false) yazilmayan alanlar:")
         for k in atlanan: print(f"   . {k}")
     print()
     print("SONUC: " + ("SEMA UYUMLU" if ok else "SEMA FARKI VAR"))

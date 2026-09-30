@@ -14,13 +14,17 @@ public enum Appearance {
     }
 
     /// Windows'taki Blur / Acrylic / Solid ayrimi macOS'ta materyal secimidir.
+    /// Transparent'ta materyal yok (usesMaterial false); deger yalniz switch tam olsun diye.
     public static func material(for backdrop: BackdropKind) -> NSVisualEffectView.Material {
         switch backdrop {
-        case .blur:    .hudWindow
+        case .blur, .transparent: .hudWindow
         case .acrylic: .underWindowBackground
         case .solid:   .windowBackground
         }
     }
+
+    /// Transparent: bulaniklik yok, masaustunun uzerinde yalniz ton katmani.
+    public static func usesMaterial(_ backdrop: BackdropKind) -> Bool { backdrop != .transparent }
 
     public static func blendingMode(for backdrop: BackdropKind) -> NSVisualEffectView.BlendingMode {
         backdrop == .solid ? .withinWindow : .behindWindow

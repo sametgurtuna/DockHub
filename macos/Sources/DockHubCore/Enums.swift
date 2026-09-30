@@ -15,8 +15,9 @@ public enum ThemePreference: String, Codable, Sendable {
     case dark = "Dark", light = "Light", system = "System"
 }
 
-public enum BackdropKind: String, Codable, Sendable {
-    case blur = "Blur", acrylic = "Acrylic", solid = "Solid"
+public enum BackdropKind: String, Codable, Sendable, CaseIterable {
+    /// Transparent: bulaniklik yok, masaustunun uzerinde yalniz ton.
+    case blur = "Blur", acrylic = "Acrylic", solid = "Solid", transparent = "Transparent"
 }
 
 public enum DockSize: String, Codable, Sendable {
@@ -56,4 +57,37 @@ public enum DockAlignment: String, Codable, Sendable {
 
 public enum DockItemKind: String, Codable, Sendable {
     case app = "App", widget = "Widget", separator = "Separator", group = "Group"
+}
+
+// ---------------- Windows 0.7-1.0 ayarlari
+
+public enum MotionPreference: String, Codable, Sendable, CaseIterable {
+    case system = "System", full = "Full", reduced = "Reduced", off = "Off"
+}
+
+public enum RunningIndicatorStyle: String, Codable, Sendable, CaseIterable {
+    case line = "Line", dots = "Dots", off = "Off"
+}
+
+/// Widget'lar kendi kartinda (Cards) ya da kartsiz, aralarinda ince bir cizgiyle (Seamless).
+public enum WidgetStyle: String, Codable, Sendable, CaseIterable {
+    case cards = "Cards", seamless = "Seamless"
+}
+
+/// Uygulamanin pencereleri tek dugmede (Always) ya da her pencere basligiyla kendi dugmesinde (Never).
+public enum CombineButtons: String, Codable, Sendable, CaseIterable {
+    case always = "Always", never = "Never"
+}
+
+public enum MicrophoneIconMode: String, Codable, Sendable, CaseIterable {
+    case whenInUse = "WhenInUse", always = "Always", off = "Off"
+}
+
+public enum SearchButtonAction: String, Codable, Sendable, CaseIterable {
+    case windowsSearch = "WindowsSearch", launcher = "Launcher"
+}
+
+/// Arayuz dili; System isletim sisteminin dilini izler.
+public enum UiLanguage: String, Codable, Sendable, CaseIterable {
+    case system = "System", english = "English", turkish = "Turkish", german = "German", spanish = "Spanish"
 }

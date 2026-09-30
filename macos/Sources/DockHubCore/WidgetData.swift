@@ -299,6 +299,12 @@ public struct TodoTask: Sendable, Equatable, Identifiable {
     public let id: String
     public let text: String
     public let due: Date?
+
+    public init(id: String, text: String, due: Date?) {
+        self.id = id
+        self.text = text
+        self.due = due
+    }
 }
 
 /// Yerel liste dosyasi, Windows'taki LocalData ile ayni bicim: {"items": [{"id", "text", "createdAt"}]}.

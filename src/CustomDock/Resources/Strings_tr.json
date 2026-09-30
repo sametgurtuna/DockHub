@@ -1255,5 +1255,23 @@
   "Battery saver on": "Pil tasarrufu açık",
   "Click to change it.": "Değiştirmek için tıklayın.",
   "Click to open the power settings.": "Güç ayarlarını açmak için tıklayın.",
-  "Power settings…": "Güç ayarları…"
+  "Power settings…": "Güç ayarları…",
+
+  // ---------------------------------------------------------------- Settings sync
+  "Shared this PC's settings at {0}.": "Bu bilgisayarın ayarları {0} itibarıyla paylaşıldı.",
+  "The sync folder can't be written: {0}": "Eşitleme klasörüne yazılamıyor: {0}",
+  "The shared settings file is damaged or from a newer DockHub; it was left as it is.": "Paylaşılan ayar dosyası bozuk ya da daha yeni bir DockHub'dan; olduğu gibi bırakıldı.",
+  "another PC": "başka bir bilgisayar",
+  "Settings from {0}": "{0} ayarları",
+  "Took the settings of {0} from {1}.": "{0} bilgisayarının {1} tarihli ayarları alındı.",
+  "The sync folder {0} doesn't exist.": "{0} eşitleme klasörü yok.",
+  "Folder to sync DockHub's settings through": "DockHub ayarlarının eşitleneceği klasör",
+  "Change folder…": "Klasörü değiştir…",
+  "Choose folder…": "Klasör seç…",
+  "Off. Nothing is written to any folder.": "Kapalı. Hiçbir klasöre bir şey yazılmıyor.",
+  "Syncing through {0}.": "{0} üzerinden eşitleniyor.",
+  "Sync between PCs": "Bilgisayarlar arasında eşitleme",
+  "Sync folder": "Eşitleme klasörü",
+  "Choose a folder that syncs between your PCs, such as OneDrive. DockHub shares your look, dock items, widget settings, profiles and shortcuts there, and takes changes made on your other PCs. Displays, the tray, the language and saved tokens stay on each PC.": "Bilgisayarlarınız arasında eşitlenen bir klasör seçin, örneğin OneDrive. DockHub görünümünüzü, dock öğelerinizi, widget ayarlarınızı, profillerinizi ve kısayollarınızı orada paylaşır ve diğer bilgisayarlarınızda yapılan değişiklikleri alır. Ekranlar, tepsi, dil ve kayıtlı anahtarlar her bilgisayarda kalır.",
+  "Stop syncing": "Eşitlemeyi durdur"
 }

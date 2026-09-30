@@ -150,7 +150,7 @@ public sealed class ConfigHistory
     }
 
     /// <summary>Keeps the live instance for items that still exist, updated to the snapshot's state.</summary>
-    private static DockItem Reuse(DockItem snapshot, Dictionary<string, DockItem> existing)
+    internal static DockItem Reuse(DockItem snapshot, Dictionary<string, DockItem> existing)
     {
         if (!existing.TryGetValue(snapshot.Id, out var live) || live.Kind != snapshot.Kind)
         {

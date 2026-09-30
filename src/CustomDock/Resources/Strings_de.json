@@ -1255,5 +1255,23 @@
   "Battery saver on": "Energiesparmodus an",
   "Click to change it.": "Zum Ändern klicken Sie hier.",
   "Click to open the power settings.": "Klicken Sie, um die Energieeinstellungen zu öffnen.",
-  "Power settings…": "Energieeinstellungen…"
+  "Power settings…": "Energieeinstellungen…",
+
+  // ---------------------------------------------------------------- Settings sync
+  "Shared this PC's settings at {0}.": "Die Einstellungen dieses PCs wurden um {0} geteilt.",
+  "The sync folder can't be written: {0}": "In den Synchronisierungsordner kann nicht geschrieben werden: {0}",
+  "The shared settings file is damaged or from a newer DockHub; it was left as it is.": "Die geteilte Einstellungsdatei ist beschädigt oder stammt von einem neueren DockHub; sie wurde nicht verändert.",
+  "another PC": "einem anderen PC",
+  "Settings from {0}": "Einstellungen von {0}",
+  "Took the settings of {0} from {1}.": "Die Einstellungen von {0} vom {1} wurden übernommen.",
+  "The sync folder {0} doesn't exist.": "Der Synchronisierungsordner {0} existiert nicht.",
+  "Folder to sync DockHub's settings through": "Ordner, über den die DockHub-Einstellungen synchronisiert werden",
+  "Change folder…": "Ordner ändern…",
+  "Choose folder…": "Ordner auswählen…",
+  "Off. Nothing is written to any folder.": "Aus. Es wird in keinen Ordner geschrieben.",
+  "Syncing through {0}.": "Synchronisierung über {0}.",
+  "Sync between PCs": "Zwischen PCs synchronisieren",
+  "Sync folder": "Synchronisierungsordner",
+  "Choose a folder that syncs between your PCs, such as OneDrive. DockHub shares your look, dock items, widget settings, profiles and shortcuts there, and takes changes made on your other PCs. Displays, the tray, the language and saved tokens stay on each PC.": "Wählen Sie einen Ordner, der zwischen Ihren PCs synchronisiert wird, zum Beispiel OneDrive. DockHub teilt dort Ihr Aussehen, Ihre Dock-Elemente, Widget-Einstellungen, Profile und Tastenkombinationen und übernimmt Änderungen von Ihren anderen PCs. Bildschirme, Infobereich, Sprache und gespeicherte Tokens bleiben auf jedem PC.",
+  "Stop syncing": "Synchronisierung beenden"
 }

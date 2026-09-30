@@ -165,6 +165,7 @@ public partial class SettingsWindow : Window
         if (tag == "taskbar") LoadTray();
         if (tag == "appearance") LoadTopBar();
         if (tag is "about" or "backup") LoadCrashInfo();
+        if (tag == "backup") LoadSync();
     }
 
     // ------------------------------------------------------------------ General

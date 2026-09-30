@@ -77,6 +77,42 @@ public partial class SettingsWindow
         Process.Start(new ProcessStartInfo("explorer.exe", $"\"{BackupService.BackupDir}\"") { UseShellExecute = true });
     }
 
+    // ------------------------------------------------------------------ Sync between PCs
+
+    /// <summary>The sync folder, what sync did last, and the buttons to choose a folder or stop.</summary>
+    private void LoadSync()
+    {
+        bool on = _config.SyncFolder is not null;
+        SyncStopButton.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+        SyncChooseButton.Content = on ? L.T("Change folder…") : L.T("Choose folder…");
+        string? status = AppServices.SyncStarted ? AppServices.Sync.Status : null;
+        SyncStatusText.Text = !on
+            ? L.T("Off. Nothing is written to any folder.")
+            : status is null ? L.T("Syncing through {0}.", _config.SyncFolder!) : L.T("Syncing through {0}.", _config.SyncFolder!) + " " + status;
+    }
+
+    private void OnChooseSyncFolderClick(object sender, RoutedEventArgs e)
+    {
+        // OneDrive, when there is one, is where settings sync usually lives.
+        string start = _config.SyncFolder
+                       ?? Environment.GetEnvironmentVariable("OneDrive")
+                       ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        var dialog = new OpenFolderDialog
+        {
+            Title = L.T("Folder to sync DockHub's settings through"),
+            InitialDirectory = Directory.Exists(start) ? start : "",
+        };
+        if (dialog.ShowDialog(this) != true) return;
+        _config.SyncFolder = dialog.FolderName;
+        LoadSync();
+    }
+
+    private void OnStopSyncClick(object sender, RoutedEventArgs e)
+    {
+        _config.SyncFolder = null;
+        LoadSync();
+    }
+
     /// <summary>The "restart after a crash is off" and "last crash" rows, shown only when there is something to say.</summary>
     private void LoadCrashInfo()
     {

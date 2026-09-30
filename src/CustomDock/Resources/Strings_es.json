@@ -1255,5 +1255,23 @@
   "Battery saver on": "Ahorro de batería activado",
   "Click to change it.": "Haz clic para cambiarlo.",
   "Click to open the power settings.": "Haz clic para abrir la configuración de energía.",
-  "Power settings…": "Configuración de energía…"
+  "Power settings…": "Configuración de energía…",
+
+  // ---------------------------------------------------------------- Settings sync
+  "Shared this PC's settings at {0}.": "Se compartieron los ajustes de este PC a las {0}.",
+  "The sync folder can't be written: {0}": "No se puede escribir en la carpeta de sincronización: {0}",
+  "The shared settings file is damaged or from a newer DockHub; it was left as it is.": "El archivo de ajustes compartido está dañado o es de un DockHub más reciente; se dejó como estaba.",
+  "another PC": "otro PC",
+  "Settings from {0}": "Ajustes de {0}",
+  "Took the settings of {0} from {1}.": "Se tomaron los ajustes de {0} del {1}.",
+  "The sync folder {0} doesn't exist.": "La carpeta de sincronización {0} no existe.",
+  "Folder to sync DockHub's settings through": "Carpeta para sincronizar los ajustes de DockHub",
+  "Change folder…": "Cambiar carpeta…",
+  "Choose folder…": "Elegir carpeta…",
+  "Off. Nothing is written to any folder.": "Desactivado. No se escribe nada en ninguna carpeta.",
+  "Syncing through {0}.": "Sincronizando mediante {0}.",
+  "Sync between PCs": "Sincronizar entre PC",
+  "Sync folder": "Carpeta de sincronización",
+  "Choose a folder that syncs between your PCs, such as OneDrive. DockHub shares your look, dock items, widget settings, profiles and shortcuts there, and takes changes made on your other PCs. Displays, the tray, the language and saved tokens stay on each PC.": "Elige una carpeta que se sincronice entre tus PC, como OneDrive. DockHub comparte allí tu aspecto, los elementos del dock, los ajustes de los widgets, los perfiles y los atajos, y toma los cambios hechos en tus otros PC. Las pantallas, la bandeja, el idioma y los tokens guardados se quedan en cada PC.",
+  "Stop syncing": "Dejar de sincronizar"
 }

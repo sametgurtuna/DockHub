@@ -263,6 +263,7 @@ public partial class App : Application
         WatchTopBar();
         SyncTopBar();
         SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
+        if (AppServices.Config.SyncFolder is not null) AppServices.Sync.Start();
     }
 
     /// <summary>Follows the top bar's on/off switch (also when a profile brings other bar settings).</summary>
@@ -513,6 +514,9 @@ public partial class App : Application
                 break;
             case nameof(AppConfig.PinnedTrayIcons):
                 break;
+            case nameof(AppConfig.SyncFolder):
+                AppServices.Sync.Start();
+                break;
             case nameof(AppConfig.TopBar):
                 // Replaced by a profile: follow the new switch and settings.
                 WatchTopBar();
@@ -694,6 +698,8 @@ public partial class App : Application
             _topBar = null;
             _dock?.CloseDock();
             AppServices.ConfigService.SaveNow();
+            // A change not shared yet (sync writes two seconds after a change) is shared before DockHub goes.
+            if (AppServices.SyncStarted) AppServices.Sync.Flush();
             if (_shell?.Tray is { } shellTray && _trayIconsChangedHandler is not null)
             {
                 shellTray.TrayIcons.CollectionChanged -= _trayIconsChangedHandler;

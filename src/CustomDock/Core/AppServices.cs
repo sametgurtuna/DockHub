@@ -66,6 +66,7 @@ public static class AppServices
     private static readonly OnFirstUse<RadioService> s_radios = new(() => new RadioService());
     private static readonly OnFirstUse<PingService> s_ping = new(() => new PingService());
     private static readonly OnFirstUse<PowerModeService> s_powerMode = new(() => new PowerModeService());
+    private static readonly OnFirstUse<SyncService> s_sync = new(() => new SyncService());
 
     public static ClockService Clock => s_clock.Value;
 
@@ -119,6 +120,11 @@ public static class AppServices
 
     public static PowerModeService PowerMode => s_powerMode.Value;
 
+    /// <summary>Settings sync (created when sync is on or Settings shows it).</summary>
+    public static SyncService Sync => s_sync.Value;
+
+    public static bool SyncStarted => s_sync.IsCreated && s_sync.Value.IsRunning;
+
     /// <summary>Names of the services created so far (for diagnostics).</summary>
     public static IEnumerable<string> CreatedServices()
     {
@@ -133,6 +139,7 @@ public static class AppServices
             ("Microphone", s_microphone.IsCreated), ("NotificationCenter", s_notificationCenter.IsCreated),
             ("VirtualDesktops", s_virtualDesktops.IsCreated), ("Gpu", s_gpu.IsCreated), ("Brightness", s_brightness.IsCreated),
             ("Radios", s_radios.IsCreated), ("Ping", s_ping.IsCreated), ("PowerMode", s_powerMode.IsCreated),
+            ("Sync", s_sync.IsCreated),
         };
         return all.Where(s => s.Created).Select(s => s.Name);
     }

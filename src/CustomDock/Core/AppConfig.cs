@@ -337,6 +337,24 @@ public sealed class AppConfig : ObservableObject
         OnPropertyChanged(nameof(Hotkeys));
     }
 
+    /// <summary>All shortcuts at once (settings from another PC).</summary>
+    public void ReplaceHotkeys(Dictionary<string, string> hotkeys)
+    {
+        Hotkeys = new Dictionary<string, string>(hotkeys);
+        OnPropertyChanged(nameof(Hotkeys));
+    }
+
+    private string? _syncFolder;
+
+    /// <summary>Folder the settings are shared through with other PCs (OneDrive...); null: settings sync is off.</summary>
+    public string? SyncFolder { get => _syncFolder; set => Set(ref _syncFolder, string.IsNullOrWhiteSpace(value) ? null : value); }
+
+    /// <summary>This PC in the sync folder (so it never takes back what it wrote itself).</summary>
+    public string? SyncDeviceId { get; set; }
+
+    /// <summary>When the settings this PC last wrote to, or took from, the sync folder were written (UTC).</summary>
+    public DateTime? SyncAppliedAt { get; set; }
+
     /// <summary>The first-run welcome screen was completed or closed.</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool WelcomeShown { get; set; }

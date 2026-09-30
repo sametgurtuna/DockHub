@@ -329,6 +329,17 @@
                         <Button Content="Open folder" Click="OnOpenBackupsClick" />
                     </ctl:SettingRow>
 
+                    <TextBlock Text="Sync between PCs" Style="{StaticResource SectionHeader}" />
+                    <ctl:SettingRow Glyph="&#xE895;" Header="Sync folder" x:Name="SyncRow"
+                                    Description="Choose a folder that syncs between your PCs, such as OneDrive. DockHub shares your look, dock items, widget settings, profiles and shortcuts there, and takes changes made on your other PCs. Displays, the tray, the language and saved tokens stay on each PC.">
+                        <StackPanel Orientation="Horizontal">
+                            <Button x:Name="SyncStopButton" Content="Stop syncing" Click="OnStopSyncClick" Margin="0,0,8,0" Visibility="Collapsed" />
+                            <Button x:Name="SyncChooseButton" Content="Choose folder…" Click="OnChooseSyncFolderClick" />
+                        </StackPanel>
+                    </ctl:SettingRow>
+                    <TextBlock x:Name="SyncStatusText" Margin="16,0,16,8" TextWrapping="Wrap" FontSize="12"
+                               Foreground="{DynamicResource TextSecondaryBrush}" />
+
                     <TextBlock Text="Maintenance" Style="{StaticResource SectionHeader}" />
                     <ctl:SettingRow Glyph="&#xE777;" Header="Restore Windows taskbar"
                                     Description="If the taskbar remains hidden due to an issue. (Command line: DockHub.exe --restore-taskbar)">

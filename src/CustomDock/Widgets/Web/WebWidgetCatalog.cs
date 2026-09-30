@@ -59,6 +59,9 @@ public sealed class WebWidgetManifest
 
     [JsonIgnore] public string Folder { get; set; } = "";
 
+    /// <summary>The link it was downloaded from (null for a package opened from disk); kept for update checks.</summary>
+    [JsonIgnore] public string? SourceLink { get; set; }
+
     /// <summary>Id of the DockHub widget type ("web." + manifest id).</summary>
     [JsonIgnore] public string WidgetId => "web." + Id;
 
@@ -212,10 +215,15 @@ public static class WebWidgetCatalog
         string target = Path.Combine(WidgetsDir, manifest.Id);
         if (Directory.Exists(target)) Directory.Delete(target, recursive: true);
         CopyDirectory(manifest.Folder, target);
+        // Where it came from, to look for newer versions there; a package from disk has no source.
+        File.Delete(Path.Combine(target, WidgetSource.FileName));
+        if (manifest.SourceLink is { } link)
+            new WidgetSource { Link = link, Version = manifest.Version, InstalledAt = DateTime.UtcNow }.Write(target);
         var installed = Read(target, out _) ?? throw new InvalidOperationException("The installed widget can't be read.");
         Installed.RemoveAll(m => m.Id == installed.Id);
         Installed.Add(installed);
         WidgetRegistry.Register(WebWidget.CreateDescriptor(installed));
+        WebWidgetUpdates.MarkInstalled(installed.Id, installed.Version);
         Log.Info($"Web widget installed: {installed.Id} {installed.Version}");
     }
 

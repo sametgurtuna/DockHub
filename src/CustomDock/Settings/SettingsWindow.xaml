@@ -966,6 +966,14 @@
                             <TextBlock x:Name="WidgetLinkStatus" Style="{StaticResource SettingDescription}" Margin="0,6,0,0" Visibility="Collapsed" />
                         </StackPanel>
                     </Border>
+                    <Border x:Name="WidgetUpdatesCard" Style="{StaticResource SettingCard}" Visibility="Collapsed" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="Widget updates" Style="{StaticResource SettingTitle}" />
+                            <TextBlock Text="Newer versions of web widgets you installed from a link. Their settings and data stay; you see new permissions before anything changes."
+                                       Style="{StaticResource SettingDescription}" />
+                            <StackPanel x:Name="WidgetUpdatesList" Margin="0,8,0,0" />
+                        </StackPanel>
+                    </Border>
                     <WrapPanel x:Name="GalleryChips" Margin="0,0,0,4" />
                     <TextBlock x:Name="GalleryEmpty" Style="{StaticResource SettingDescription}" Margin="2,14,0,0" Visibility="Collapsed" />
                     <StackPanel x:Name="GalleryPanel" />

@@ -1273,5 +1273,17 @@
   "Sync between PCs": "Sincronizar entre PC",
   "Sync folder": "Carpeta de sincronización",
   "Choose a folder that syncs between your PCs, such as OneDrive. DockHub shares your look, dock items, widget settings, profiles and shortcuts there, and takes changes made on your other PCs. Displays, the tray, the language and saved tokens stay on each PC.": "Elige una carpeta que se sincronice entre tus PC, como OneDrive. DockHub comparte allí tu aspecto, los elementos del dock, los ajustes de los widgets, los perfiles y los atajos, y toma los cambios hechos en tus otros PC. Las pantallas, la bandeja, el idioma y los tokens guardados se quedan en cada PC.",
-  "Stop syncing": "Dejar de sincronizar"
+  "Stop syncing": "Dejar de sincronizar",
+
+  // ---------------------------------------------------------------- Widget updates
+  "Widget update: {0}": "Actualización de widget: {0}",
+  "Version {0} is available (you have {1}).": "La versión {0} está disponible (tienes la {1}).",
+  "Open the gallery": "Abrir la galería",
+  "Can't update this widget": "No se puede actualizar este widget",
+  "Version {0} replaces version {1}. Settings and data of the widget stay.": "La versión {0} sustituye a la versión {1}. Los ajustes y los datos del widget se conservan.",
+  "The new version also asks for:": "La nueva versión también pide:",
+  "Update “{0}”?": "¿Actualizar “{0}”?",
+  "Update": "Actualizar",
+  "Widget updates": "Actualizaciones de widgets",
+  "Newer versions of web widgets you installed from a link. Their settings and data stay; you see new permissions before anything changes.": "Versiones más recientes de widgets web que instalaste desde un enlace. Sus ajustes y datos se conservan; ves los permisos nuevos antes de que cambie nada."
 }

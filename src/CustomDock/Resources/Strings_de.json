@@ -1273,5 +1273,17 @@
   "Sync between PCs": "Zwischen PCs synchronisieren",
   "Sync folder": "Synchronisierungsordner",
   "Choose a folder that syncs between your PCs, such as OneDrive. DockHub shares your look, dock items, widget settings, profiles and shortcuts there, and takes changes made on your other PCs. Displays, the tray, the language and saved tokens stay on each PC.": "Wählen Sie einen Ordner, der zwischen Ihren PCs synchronisiert wird, zum Beispiel OneDrive. DockHub teilt dort Ihr Aussehen, Ihre Dock-Elemente, Widget-Einstellungen, Profile und Tastenkombinationen und übernimmt Änderungen von Ihren anderen PCs. Bildschirme, Infobereich, Sprache und gespeicherte Tokens bleiben auf jedem PC.",
-  "Stop syncing": "Synchronisierung beenden"
+  "Stop syncing": "Synchronisierung beenden",
+
+  // ---------------------------------------------------------------- Widget updates
+  "Widget update: {0}": "Widget-Update: {0}",
+  "Version {0} is available (you have {1}).": "Version {0} ist verfügbar (Sie haben {1}).",
+  "Open the gallery": "Galerie öffnen",
+  "Can't update this widget": "Dieses Widget kann nicht aktualisiert werden",
+  "Version {0} replaces version {1}. Settings and data of the widget stay.": "Version {0} ersetzt Version {1}. Einstellungen und Daten des Widgets bleiben erhalten.",
+  "The new version also asks for:": "Die neue Version möchte außerdem:",
+  "Update “{0}”?": "„{0}“ aktualisieren?",
+  "Update": "Aktualisieren",
+  "Widget updates": "Widget-Updates",
+  "Newer versions of web widgets you installed from a link. Their settings and data stay; you see new permissions before anything changes.": "Neuere Versionen von Web-Widgets, die Sie über einen Link installiert haben. Ihre Einstellungen und Daten bleiben erhalten; neue Berechtigungen sehen Sie, bevor sich etwas ändert."
 }

@@ -143,6 +143,7 @@ public partial class App : Application
             new ToastAction(L.T("Details"), NotificationService.ActionOpenUpdate),
             new ToastAction(L.T("Skip this version"), NotificationService.ActionSkipUpdate));
         AppServices.Updates.Start();
+        _ = CheckWidgetUpdatesAsync();
 
         CreateDock();
         ApplyTaskbarMode();
@@ -252,6 +253,17 @@ public partial class App : Application
         {
             // Last resort: will be restored via session.json on next launch.
         }
+    }
+
+    /// <summary>Newer versions of the web widgets installed from a link, at most once a day, a minute after startup.</summary>
+    private static async Task CheckWidgetUpdatesAsync()
+    {
+        if (!Widgets.Web.WebWidgetCatalog.Installed.Any(m => Widgets.Web.WidgetSource.Read(m.Folder) is not null)) return;
+        await Task.Delay(TimeSpan.FromMinutes(1));
+        var fresh = await Widgets.Web.WebWidgetUpdates.CheckAsync(Widgets.Web.WebWidgetDownloader.Client);
+        foreach (var update in fresh)
+            AppServices.Notifications.Show(L.T("Widget update: {0}", update.Name), L.T("Version {0} is available (you have {1}).", update.Version, update.InstalledVersion),
+                "widget-update-" + update.Id, new ToastAction(L.T("Open the gallery"), NotificationService.ActionOpenGallery));
     }
 
     private void CreateDock()

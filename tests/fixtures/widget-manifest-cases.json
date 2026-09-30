@@ -1,0 +1,28 @@
+{
+  "//": "Manifests that DockHub (WebWidgetCatalog.Parse) and tools/dockhub-widget (checkManifest) must judge the same way. Both test suites read this file.",
+  "cases": [
+    { "name": "minimal", "valid": true, "manifest": { "id": "dev.test.minimal", "name": "Minimal" } },
+    { "name": "full", "valid": true, "manifest": {
+        "id": "com.example.pomodoro-plus", "name": "Pomodoro+", "version": "1.2.0", "entry": "index.html",
+        "settings": [ { "key": "server", "type": "text", "label": "Server" } ],
+        "permissions": { "network": ["api.example.com"], "networkFromSettings": ["server"], "notifications": true } } },
+    { "name": "upper-case id", "valid": false, "manifest": { "id": "Dev.Test", "name": "X" } },
+    { "name": "short id", "valid": false, "manifest": { "id": "ab", "name": "X" } },
+    { "name": "id with a space", "valid": false, "manifest": { "id": "dev.test widget", "name": "X" } },
+    { "name": "id starting with a dash", "valid": false, "manifest": { "id": "-dev.test", "name": "X" } },
+    { "name": "id too long", "valid": false, "manifest": { "id": "a234567890123456789012345678901234567890123456789012345678901234x", "name": "X" } },
+    { "name": "no name", "valid": false, "manifest": { "id": "dev.test.noname" } },
+    { "name": "blank name", "valid": false, "manifest": { "id": "dev.test.blank", "name": "   " } },
+    { "name": "server setting missing", "valid": false, "manifest": {
+        "id": "dev.test.server", "name": "X", "permissions": { "networkFromSettings": ["server"] } } },
+    { "name": "server setting not text", "valid": false, "manifest": {
+        "id": "dev.test.server", "name": "X", "settings": [ { "key": "server", "type": "number" } ],
+        "permissions": { "networkFromSettings": ["server"] } } },
+    { "name": "server setting with a default", "valid": false, "manifest": {
+        "id": "dev.test.server", "name": "X", "settings": [ { "key": "server", "type": "text", "default": "http://evil.example" } ],
+        "permissions": { "networkFromSettings": ["server"] } } },
+    { "name": "server setting with a null default", "valid": true, "manifest": {
+        "id": "dev.test.server", "name": "X", "settings": [ { "key": "server", "type": "text", "default": null } ],
+        "permissions": { "networkFromSettings": ["server"] } } }
+  ]
+}

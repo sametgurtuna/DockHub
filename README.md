@@ -476,6 +476,8 @@ packaging/winget/            winget manifest templates (submitted by .github/wor
 packaging/signing/           Optional code signing of releases (Azure Artifact Signing) and how to set it up
 samples/widgets/             Web widget examples (hello-world, github-stars, github-pulls, github-actions, home-assistant)
                              and index.json, the community list shown in the gallery
+sdk/                         Widget SDK: TypeScript types (types/dockhub.d.ts) and the samples' type check
+tools/dockhub-widget/        Widget developer tool: create, validate and pack (Node.js, no dependencies)
 tools/generate-icon.ps1      Renders Assets/DockHub.ico
 tools/measure-idle.ps1       Idle CPU, memory and start-up measurement
 docs/                        Widget SDK and supported battery devices; images/ holds the README artwork
@@ -486,6 +488,11 @@ docs/                        Widget SDK and supported battery devices; images/ h
 Anyone can build a widget with HTML, CSS and JavaScript, no C# needed. Web widgets run in Microsoft Edge WebView2, follow the dock theme and use a small `window.dockhub` API for settings, storage, notifications and their right-click menu. Each widget only reaches the internet hosts its manifest lists, and users see those permissions before installing a `.dockwidget` package (open the file, or use *Settings › Widget gallery › Install widget…*) or a link (a `manifest.json`, a `.dockwidget` file or a GitHub folder) with *Install from link…*. The gallery also lists community widgets from a list kept in this repository (GitHub pull requests, GitHub Actions, Home Assistant and more) that install with one click; anyone can add one with a pull request.
 
 With `"debugLogging": true`, a widget reloads by itself whenever you save one of its files. See the [widget SDK guide](docs/widget-sdk.md) and the examples in [`samples/widgets`](samples/widgets).
+
+- **SDK 1.0.** The API (`apiVersion` 2) and the manifest format are stable: nothing is removed within DockHub 1.x, and anything deprecated keeps working for at least one more major version.
+- **TypeScript types** in [`sdk/types/dockhub.d.ts`](sdk/types/dockhub.d.ts) give completion and type checks, even in plain JavaScript with `// @ts-check`.
+- **Developer tool:** [`tools/dockhub-widget`](tools/dockhub-widget/dockhub-widget.mjs) (Node.js, no dependencies) creates a widget from a template, checks it the way DockHub does and packs it into a `.dockwidget`.
+- **Updates:** widgets installed from a `manifest.json` or GitHub folder link are checked for a newer `version` once a day. DockHub shows a notification and an **Update** button in the gallery, keeps the widget's settings and data, and asks first when the new version wants more permissions.
 
 ## Writing a widget
 

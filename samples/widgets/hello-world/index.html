@@ -52,6 +52,7 @@
 
   function render() {
     document.getElementById('greeting').textContent = `Hello, ${settings.name}`;
+    /** @type {Intl.DateTimeFormatOptions} */
     const options = { hour: '2-digit', minute: '2-digit', second: settings.seconds ? '2-digit' : undefined };
     document.getElementById('time').textContent = new Date().toLocaleTimeString(undefined, options);
   }

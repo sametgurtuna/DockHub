@@ -1273,5 +1273,17 @@
   "Sync between PCs": "Bilgisayarlar arasında eşitleme",
   "Sync folder": "Eşitleme klasörü",
   "Choose a folder that syncs between your PCs, such as OneDrive. DockHub shares your look, dock items, widget settings, profiles and shortcuts there, and takes changes made on your other PCs. Displays, the tray, the language and saved tokens stay on each PC.": "Bilgisayarlarınız arasında eşitlenen bir klasör seçin, örneğin OneDrive. DockHub görünümünüzü, dock öğelerinizi, widget ayarlarınızı, profillerinizi ve kısayollarınızı orada paylaşır ve diğer bilgisayarlarınızda yapılan değişiklikleri alır. Ekranlar, tepsi, dil ve kayıtlı anahtarlar her bilgisayarda kalır.",
-  "Stop syncing": "Eşitlemeyi durdur"
+  "Stop syncing": "Eşitlemeyi durdur",
+
+  // ---------------------------------------------------------------- Widget updates
+  "Widget update: {0}": "Widget güncellemesi: {0}",
+  "Version {0} is available (you have {1}).": "{0} sürümü çıktı (sizdeki {1}).",
+  "Open the gallery": "Galeriyi aç",
+  "Can't update this widget": "Bu widget güncellenemiyor",
+  "Version {0} replaces version {1}. Settings and data of the widget stay.": "{0} sürümü {1} sürümünün yerini alır. Widget'ın ayarları ve verileri kalır.",
+  "The new version also asks for:": "Yeni sürüm ayrıca şunları istiyor:",
+  "Update “{0}”?": "“{0}” güncellensin mi?",
+  "Update": "Güncelle",
+  "Widget updates": "Widget güncellemeleri",
+  "Newer versions of web widgets you installed from a link. Their settings and data stay; you see new permissions before anything changes.": "Bağlantıdan kurduğunuz web widget'larının yeni sürümleri. Ayarları ve verileri kalır; bir şey değişmeden önce yeni izinleri görürsünüz."
 }

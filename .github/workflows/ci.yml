@@ -30,3 +30,20 @@ jobs:
         with:
           name: test-results
           path: '**/TestResults/**'
+
+  widget-sdk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Widget tool tests
+        run: node --test tools/dockhub-widget/test.mjs
+
+      - name: Type-check the sample widgets
+        run: |
+          npm install --global typescript@5
+          node sdk/check-samples.mjs

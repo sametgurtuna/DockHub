@@ -1,6 +1,25 @@
-# DockHub widget SDK
+# DockHub widget SDK 1.0
 
 Build a DockHub widget with HTML, CSS and JavaScript. It runs in Microsoft Edge WebView2 inside a dock card, follows the dock's theme, and talks to DockHub through a small `window.dockhub` API. No C#, no build step.
+
+**SDK 1.0** is `window.dockhub` with `apiVersion` 2 and the manifest format below. It is stable:
+
+- Nothing in SDK 1.0 is removed or changes meaning within DockHub 1.x. New methods, manifest fields and events may be added; check `dockhub.apiVersion` (or that a method exists) before using one added later.
+- If something has to go, it is first marked deprecated in this page and in [`sdk/types/dockhub.d.ts`](../sdk/types/dockhub.d.ts), keeps working for at least one more major version of DockHub, and the release notes say so.
+- A widget that needs a newer DockHub sets `minDockHubVersion`; older DockHub versions refuse to install it instead of running it half working.
+
+## Tools
+
+- **TypeScript types:** [`sdk/types/dockhub.d.ts`](../sdk/types/dockhub.d.ts) describes all of `window.dockhub`. Copy it next to your widget and start your script with `// @ts-check` and `/// <reference path="dockhub.d.ts" />` for completion and type checking in VS Code (or any editor with TypeScript), even in plain JavaScript. The samples are checked against it (`node sdk/check-samples.mjs`, which needs `npm install -g typescript`).
+- **dockhub-widget:** [`tools/dockhub-widget`](../tools/dockhub-widget/dockhub-widget.mjs), a single Node.js file without dependencies (Node 18 or newer):
+
+  ```
+  node dockhub-widget.mjs create com.example.my-widget   # a new widget: manifest, page, script, types
+  node dockhub-widget.mjs validate my-widget             # the checks DockHub makes when it installs it
+  node dockhub-widget.mjs pack my-widget                 # my-widget -> com.example.my-widget-1.0.0.dockwidget
+  ```
+
+  `validate` makes the same checks as DockHub (id, name, entry, server settings, paths, package limits) and warns about things that probably don't work as meant, such as a file missing from `files` (it wouldn't be there when installed from a link). `pack` refuses a widget DockHub would refuse and leaves editor files (`dockhub.d.ts`, `jsconfig.json`, dot files) out of the package.
 
 Three complete examples live in [`samples/widgets`](../samples/widgets):
 
@@ -91,7 +110,7 @@ Links must use HTTPS. Every file must sit next to `manifest.json` (no `..`, no o
 
 ## window.dockhub
 
-All calls return promises. `apiVersion` is `2` (DockHub 0.9 added `http.request`).
+All calls return promises. `apiVersion` is `2`: SDK 1.0 (DockHub 0.9 added `http.request`). The types are in [`sdk/types/dockhub.d.ts`](../sdk/types/dockhub.d.ts).
 
 ```ts
 dockhub.settings.get(): Promise<Record<string, unknown>>   // manifest defaults + the user's values
@@ -137,6 +156,14 @@ if (response.ok) show(JSON.parse(response.body).state);
 ```
 
 See `samples/widgets/home-assistant` for a complete widget.
+
+## Updates
+
+A widget installed from a link (a `manifest.json`, a GitHub folder or a `.dockwidget` link) remembers where it came from, in `source.json` in its folder. Once a day DockHub reads the `manifest.json` behind that link, and when its `version` is newer than the installed one (and the widget doesn't need a newer DockHub), it shows a notification and an **Update** button in *Settings › Widget gallery*.
+
+- Raise `version` in `manifest.json` for every release. Versions are compared part by part (`1.2.10` is newer than `1.2.9`), and a pre-release such as `1.3.0-beta.1` comes before `1.3.0`.
+- An update keeps every copy's settings and storage. If the new version asks for more than the installed one (a new host, a server setting or notifications), DockHub lists what is new and asks first.
+- Widgets installed from a `.dockwidget` link or file aren't checked (their version is only known after downloading the whole package); share a `manifest.json` or GitHub folder link if you want your users to get updates.
 
 ## Share it in the gallery
 

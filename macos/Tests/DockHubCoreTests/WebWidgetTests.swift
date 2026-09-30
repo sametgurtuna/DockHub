@@ -150,7 +150,7 @@ final class WebWidgetTests: XCTestCase {
         let disallowedArgs: [String: JSONValue] = [
             "url": .string("https://evil.com/data")
         ]
-        XCTAssertThrowsError(try WebWidgetHttp.parse(args: disallowedArgs, hostAllowed: { _ in false }))
+        XCTAssertThrowsError(try WebWidgetHttp.parse(args: disallowedArgs, isHostAllowed: { _ in false }))
 
         // Gecerli istek kabul edilir ve yasakli basliklar temizlenir
         let allowedArgs: [String: JSONValue] = [
@@ -163,7 +163,7 @@ final class WebWidgetTests: XCTestCase {
             "body": .string("{\"test\": true}"),
             "timeout": .number(20)
         ]
-        let req = try WebWidgetHttp.parse(args: allowedArgs, hostAllowed: { $0 == "api.github.com" })
+        let req = try WebWidgetHttp.parse(args: allowedArgs, isHostAllowed: { $0 == "api.github.com" })
         XCTAssertEqual(req.url.absoluteString, "https://api.github.com/repos")
         XCTAssertEqual(req.method, "POST")
         XCTAssertEqual(req.headers["Content-Type"], "application/json")

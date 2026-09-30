@@ -20,7 +20,7 @@ cat > "$WORK/Package.swift" <<'EOF'
 import PackageDescription
 let package = Package(
     name: "Probe",
-    platforms: [.macOS("27.0")],
+    platforms: [.macOS(.v15)],
     targets: [.executableTarget(name: "Probe", path: "Sources/Probe")]
 )
 EOF

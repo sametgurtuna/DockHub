@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "DockHub",
-    platforms: [.macOS("27.0")],          // d-macos-hedefi-v2
+    platforms: [.macOS(.v15)],            // DockHub for Mac needs macOS 15 (Sequoia) or later
     targets: [
         // Platformdan bagimsiz: AppKit import etmez, test edilebilir.
         .target(name: "DockHubCore"),

@@ -3,37 +3,54 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/logo-dark.png">
   <source media="(prefers-color-scheme: light)" srcset="docs/images/logo-light.png">
-  <img alt="DockHub" src="docs/images/logo-light.png" width="300">
+  <img alt="DockHub" src="docs/images/logo-light.png" width="340">
 </picture>
 
-### A glassy, widget-rich dock that replaces the Windows taskbar.
+# DockHub 1.0
 
-Start, search, running apps, the system tray and live widgets, all in one floating dock.<br>
-No admin rights. Your original taskbar always comes back.
+### The Modern Glassy Dock for Windows & macOS
 
-[![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?style=flat-square&logo=windows11&logoColor=white)](#requirements)
-[![macOS 15+](https://img.shields.io/badge/macOS-15%2B%20Sequoia-000000?style=flat-square&logo=apple&logoColor=white)](#macos-support)
-[![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?style=flat-square&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
-[![Swift 6](https://img.shields.io/badge/Swift-6.0-F05138?style=flat-square&logo=swift&logoColor=white)](https://swift.org)
-[![Latest release](https://img.shields.io/github/v/release/sametgurtuna/DockHub?style=flat-square&color=4CC2FF&label=release)](https://github.com/sametgurtuna/DockHub/releases/latest)
-[![CI](https://img.shields.io/github/actions/workflow/status/sametgurtuna/DockHub/ci.yml?branch=master&style=flat-square&label=build)](https://github.com/sametgurtuna/DockHub/actions/workflows/ci.yml)
-
-[**Download**](https://github.com/sametgurtuna/DockHub/releases/latest) &nbsp;·&nbsp;
-[**Live demo**](https://sametgurtuna.github.io/dockhub-website/) &nbsp;·&nbsp;
-[Features](#features) &nbsp;·&nbsp;
-[Build from source](#build-from-source) &nbsp;·&nbsp;
-[FAQ](#faq)
+Start menu, running apps, system status, and 30+ live interactive widgets in one unified floating dock.<br>
+Zero administrator privileges required. 100% native architecture on both platforms.
 
 <br>
 
-<img src="docs/images/dock-overview.jpg" alt="DockHub running on a Windows 11 desktop with pinned apps, a sticky note, headset battery, media controls, clock, AI usage rings, an app folder and weather" width="100%">
+[![Release 1.0.0](https://img.shields.io/badge/Release-v1.0.0%20Latest-2EA043?style=for-the-badge&logo=github&logoColor=white)](https://github.com/sametgurtuna/DockHub/releases/latest)
+[![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?style=for-the-badge&logo=windows11&logoColor=white)](#windows-installation)
+[![macOS 15+ Sequoia](https://img.shields.io/badge/macOS-15%2B%20Sequoia-000000?style=for-the-badge&logo=apple&logoColor=white)](#macos-installation)
+[![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![Swift 6](https://img.shields.io/badge/Swift-6.0-F05138?style=for-the-badge&logo=swift&logoColor=white)](https://swift.org)
+[![CI](https://img.shields.io/github/actions/workflow/status/sametgurtuna/DockHub/ci.yml?branch=master&style=for-the-badge&label=Windows%20CI)](https://github.com/sametgurtuna/DockHub/actions/workflows/ci.yml)
+[![macOS CI](https://img.shields.io/github/actions/workflow/status/sametgurtuna/DockHub/macos.yml?branch=master&style=for-the-badge&label=macOS%20CI)](https://github.com/sametgurtuna/DockHub/actions/workflows/macos.yml)
+
+<br><br>
+
+[**Download Windows (.exe)**](https://github.com/sametgurtuna/DockHub/releases/latest) &nbsp;·&nbsp;
+[**Download macOS (.dmg)**](https://github.com/sametgurtuna/DockHub/releases/latest) &nbsp;·&nbsp;
+[**Live Interactive Demo**](https://sametgurtuna.github.io/dockhub-website/) &nbsp;·&nbsp;
+[**Features**](#features) &nbsp;·&nbsp;
+[**Widgets**](#widgets) &nbsp;·&nbsp;
+[**Build from Source**](#build-from-source)
+
+<br><br>
 
 </div>
 
+> [!IMPORTANT]
+> ### 🚀 DockHub 1.0 is Officially Here — Full Windows & macOS Parity!
+> **A major milestone release:** DockHub brings complete cross-platform parity between **Windows 10/11 (.NET 10)** and **macOS 15+ Sequoia (native Swift 6)**.
+> - 🍎 **Native macOS 15 Support:** Built with Swift 6 and strict concurrency (`SWIFT_STRICT_CONCURRENCY=complete`), AppKit floating panels, SwiftUI views, and automatic macOS Dock concealment.
+> - 🧩 **Web Widgets & SDK 1.0:** Build custom desktop widgets with standard HTML, CSS, and modern JavaScript (`window.dockhub` API v2) packaged in single-file `.dockwidget` archives.
+> - 🛟 **Resilient Windows Architecture:** Upgraded to Microsoft .NET 10 (LTS through Nov 2028) with automated crash recovery and taskbar self-healing.
+> - ⚡ **Unified Configuration:** A single, clean `config.json` compatible across operating systems, with full localization in English, Turkish, German, and Spanish.
+>
+> 📦 **Get DockHub 1.0.0:** [Download for Windows (`.exe`)](https://github.com/sametgurtuna/DockHub/releases/latest) &nbsp;|&nbsp; [Download for macOS (`.dmg`)](https://github.com/sametgurtuna/DockHub/releases/latest) &nbsp;|&nbsp; [Read the Release Notes ›](https://github.com/sametgurtuna/DockHub/releases/tag/v1.0.0)
+
 <br>
 
-> [!NOTE]
-> Every screenshot below is a real capture of DockHub running on Windows 11. To try it without installing, open the [interactive web demo](https://sametgurtuna.github.io/dockhub-website/).
+<div align="center">
+  <img src="docs/images/dock-overview.jpg" alt="DockHub running on a modern desktop with pinned apps, a sticky note, headset battery, media controls, clock, AI usage rings, an app folder and weather" width="100%">
+</div>
 
 ## Contents
 
@@ -48,7 +65,8 @@ No admin rights. Your original taskbar always comes back.
 - [Configuration and data](#configuration-and-data)
 - [Permissions and privacy](#permissions-and-privacy)
 - [Project structure](#project-structure)
-- [Writing a widget](#writing-a-widget)
+- [Web widgets (SDK 1.0)](#web-widgets-html-and-javascript)
+- [Writing a native widget](#writing-a-widget)
 - [Performance](#performance)
 - [Known limitations](#known-limitations)
 - [FAQ](#faq)
@@ -100,36 +118,36 @@ No admin rights. Your original taskbar always comes back.
 
 ## Installation
 
-### Installer (recommended)
+### Windows Installation
 
-1. Download **`DockHub-Setup-<version>-x64.exe`** from the [latest release](https://github.com/sametgurtuna/DockHub/releases/latest) (**`-arm64.exe`** for Windows 11 on ARM, such as Snapdragon laptops).
-2. Run it. DockHub installs for the current user, so no administrator prompt appears.
-3. Keep **"Start DockHub automatically when I sign in to Windows"** checked (the default) to have the dock ready every time Windows starts.
+#### Installer (Recommended)
+1. Download **`DockHub-Setup-1.0.0-x64.exe`** from the [latest release](https://github.com/sametgurtuna/DockHub/releases/latest) (**`-arm64.exe`** for Windows 11 on Snapdragon / ARM laptops).
+2. Run the setup executable. DockHub installs purely into the user profile without requiring administrator privileges.
+3. Keep **"Start DockHub automatically when I sign in to Windows"** enabled (the default) to have your dock ready on boot.
 
-The installer is self-contained. It ships the .NET runtime, so there is nothing else to install. It is available in English, Turkish, German and Spanish.
+The installer bundles the .NET 10 runtime, making it 100% self-contained. Fully localized in English, Turkish, German, and Spanish.
 
-### winget
- 
-Once the package is published in the Windows Package Manager repository:
- 
+#### Windows Package Manager (winget)
 ```powershell
 winget install SametGurtuna.DockHub
 ```
- 
-**Uninstalling** from *Settings › Apps* closes DockHub, restores the Windows taskbar, and removes the autostart entry, the File Explorer menu command and the `.dockwidget` file type. Your settings in `%AppData%\DockHub` are kept.
 
-### macOS (Apple Silicon & Intel)
+> **Uninstalling:** Removing DockHub via *Windows Settings › Installed apps* cleanly restores the standard Windows taskbar, unregisters the shell context menu verbs, and cleans up autostart entries while safely preserving your configuration in `%AppData%\DockHub`.
 
-1. Download **`DockHub.dmg`** from the [latest release](https://github.com/sametgurtuna/DockHub/releases/latest).
-2. Open the disk image and drag **DockHub** to your **Applications** folder.
-3. Launch DockHub. While running, it can optionally hide the macOS Dock (*Settings › General*) or run alongside it.
+### macOS Installation
 
-### Requirements
+1. Download **`DockHub-1.0.0.dmg`** from the [latest release](https://github.com/sametgurtuna/DockHub/releases/latest).
+2. Open the `.dmg` disk image and drag **DockHub.app** to your **`/Applications`** folder.
+3. Launch DockHub from Applications or Spotlight. DockHub can run as a floating companion or automatically conceal the native macOS Dock (*Settings › General*) while active.
 
-| Platform | Requirements |
-|---|---|
-| **Windows** | Windows 10 version 1809 (build 17763) or later, x64; Windows 11 on ARM64. Built-in .NET 10 runtime. |
-| **macOS** | macOS 15.0 (Sequoia) or later; Apple Silicon or Intel Mac. Native Swift 6 + AppKit / SwiftUI. |
+---
+
+### System Requirements
+
+| Platform | Supported OS Versions | Architectures | Runtime Engine |
+|---|---|---|---|
+| **Windows** | Windows 10 (1809+, build 17763) or Windows 11 | x64 & ARM64 (Snapdragon X) | Native .NET 10 (C# / WPF / Win32) |
+| **macOS** | macOS 15.0 Sequoia or newer | Apple Silicon & Intel 64-bit | Native Swift 6 (AppKit / SwiftUI) |
 
 ## Features
 
@@ -291,9 +309,11 @@ DockHub.exe --restore-taskbar
 
 ## Build from source
 
-### Prerequisites
+### Windows (.NET 10)
 
-- Windows 10 1809 or later
+#### Prerequisites
+
+- Windows 10 1809 or later (x64 or ARM64)
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) or newer
 - Optional: [Inno Setup 6](https://jrsoftware.org/isinfo.php) to build the installer (`winget install JRSoftware.InnoSetup`)
 
@@ -302,7 +322,7 @@ NuGet dependencies are restored automatically:
 - [`ManagedShell`](https://www.nuget.org/packages/ManagedShell) 0.0.372: task list, system tray, AppBar and full screen detection (Apache-2.0)
 - [`Microsoft.Toolkit.Uwp.Notifications`](https://www.nuget.org/packages/Microsoft.Toolkit.Uwp.Notifications) 7.1.3: toast notifications (MIT)
 
-### Build and run
+#### Build and run
 
 ```powershell
 git clone https://github.com/sametgurtuna/DockHub.git
@@ -313,15 +333,15 @@ dotnet run --project src/CustomDock -c Release
 
 You can also open `CustomDock.sln` in Visual Studio 2026 and press F5.
 
-### Running tests
+#### Running tests
 
 ```powershell
 dotnet test CustomDock.sln
 ```
 
-The unit tests (`tests/CustomDock.Tests`) cover config loading and migration, dock item operations, app matching and pin repair, and parsing. They use a throwaway `DOCKHUB_HOME`, so your own settings are never touched. GitHub Actions runs the build and tests on every push, and a `v*` tag builds the installer into a draft release.
+The unit tests (`tests/CustomDock.Tests`) cover config loading and migration, dock item operations, app matching and pin repair, and parsing. They use a throwaway `DOCKHUB_HOME`, so your own settings are never touched.
 
-### Portable folder
+#### Portable folder
 
 ```powershell
 dotnet publish src/CustomDock -c Release -r win-x64 --self-contained false -o publish
@@ -329,24 +349,58 @@ dotnet publish src/CustomDock -c Release -r win-x64 --self-contained false -o pu
 
 `publish\DockHub.exe` runs as is. Use `--self-contained true` to bundle the .NET runtime.
 
-### Installer
+#### Windows installer
 
 ```powershell
 pwsh installer/build.ps1                     # x64
 pwsh installer/build.ps1 -Runtime win-arm64  # ARM64
 ```
 
-The script publishes a self-contained ReadyToRun build to `artifacts/publish/win-x64` (or `win-arm64`) and compiles [`installer/DockHub.iss`](installer/DockHub.iss) into `installer/Output/DockHub-Setup-<version>-x64.exe` (or `-arm64.exe`). The version comes from `src/CustomDock/CustomDock.csproj`. The release workflow builds both, and the updater picks the one for the PC's processor (an ARM64 PC with the x64 build moves to the ARM64 one; releases without an ARM64 setup keep the x64 one).
-
-What the installer does:
+The script publishes a self-contained ReadyToRun build to `artifacts/publish/win-x64` (or `win-arm64`) and compiles [`installer/DockHub.iss`](installer/DockHub.iss) into `installer/Output/DockHub-Setup-<version>-x64.exe` (or `-arm64.exe`). The version comes from `src/CustomDock/CustomDock.csproj`.
 
 | | |
 |---|---|
-| Install scope | Per user under `%LocalAppData%\Programs\DockHub` (admin install is available from the dialog) |
+| Install scope | Per user under `%LocalAppData%\Programs\DockHub` (admin install available from dialog) |
 | Autostart | `HKCU\...\Run\DockHub` = `"...\DockHub.exe" --startup`, enabled by default |
 | Upgrades | Closes the running dock with `--exit` before replacing files |
-| Uninstall | Runs `--exit` and `--restore-taskbar`, then removes the autostart entry and the File Explorer verbs |
+| Uninstall | Runs `--exit` and `--restore-taskbar`, then removes autostart and File Explorer verbs |
 | Languages | English, Turkish, German, Spanish |
+
+---
+
+### macOS (Swift 6 & SPM)
+
+#### Prerequisites
+
+- macOS 15.0 Sequoia or newer
+- Xcode 16.0+ or Command Line Tools with Swift 6.0+
+
+#### Build and run
+
+```bash
+cd macos
+swift build -c release
+.build/release/DockHub
+```
+
+#### Running tests
+
+```bash
+cd macos
+swift test
+```
+
+The macOS test suite (`macos/Tests/DockHubCoreTests`) runs 88 tests covering cross-platform `config.json` serialization, widget data models, SDK 1.0 bridge validation, and dock editing commands with full Swift 6 strict concurrency checks.
+
+#### DMG package creation
+
+```bash
+cd macos
+./Scripts/package-dmg.sh release
+```
+
+This compiles the release binary, creates the standalone `DockHub.app` bundle, sets up the volume styling and `/Applications` symlink, and generates `DockHub-1.0.0.dmg`.
+
 
 ## Command line
 
@@ -443,56 +497,66 @@ An app item's `path` can be an `.exe`, an `.lnk` shortcut, any file, or a Store 
 ## Project structure
 
 ```text
-CustomDock.sln
+CustomDock.sln                   Visual Studio solution for Windows .NET 10 build
 installer/
-├── DockHub.iss              Inno Setup script (per-user install, autostart, clean uninstall)
-└── build.ps1                Publishes the app and compiles the installer
-src/CustomDock/              Produces DockHub.exe
-├── App.xaml(.cs)            Entry point: single instance, --exit / --restore-taskbar, crash safety, shell and dock setup
-├── app.manifest             PerMonitorV2 DPI, asInvoker
-├── Assets/DockHub.ico       App and tray icon (generated by tools/generate-icon.ps1)
-├── Core/                    AppConfig (v2 item model), ConfigService (v1 to v2 migration), JSON storage, theme, log
-├── Native/                  P/Invoke, DWM and glass effects, monitors, high resolution shell icons
-├── Shell/                   ManagedShell integration
-│   ├── ShellHost.cs           Tasks, tray, Start, search and notification center commands
-│   ├── TaskbarController.cs   Hiding and restoring the Windows taskbar, crash recovery
-│   ├── StartMenuLauncher.cs   Start menu through IImmersiveLauncher
-│   ├── RunningAppsService.cs  Grouping windows by app
-│   ├── JumpListService.cs     Reads an app's Jump List (recent/pinned tasks) for the right-click menu
+├── DockHub.iss                  Inno Setup script (per-user install, autostart, clean uninstall)
+└── build.ps1                    Publishes the app and compiles the installer
+macos/                           Native macOS 15 Sequoia AppKit & SwiftUI implementation (Swift 6)
+├── Package.swift                Swift Package Manager definition (DockHubCore, DockHubApp, tests)
+├── Sources/
+│   ├── DockHub/                 Application entry point (main.swift, AppDelegate, AppState, DockConcealer)
+│   └── DockHubCore/             Business logic, Config, Native bridge, Services, Widgets, Web host
+├── Tests/
+│   ├── DockHubCoreTests/        Unit & integration test suites (88 tests covering config, widgets, SDK)
+│   └── DockHubAppTests/         App lifecycle tests
+└── Scripts/
+    └── package-dmg.sh           DMG packaging automation script
+src/CustomDock/                  Produces DockHub.exe (Windows WPF / Win32)
+├── App.xaml(.cs)                Entry point: single instance, --exit / --restore-taskbar, crash safety, shell and dock setup
+├── app.manifest                 PerMonitorV2 DPI, asInvoker
+├── Assets/DockHub.ico           App and tray icon (generated by tools/generate-icon.ps1)
+├── Core/                        AppConfig (v2 item model), ConfigService (v1 to v2 migration), JSON storage, theme, log
+├── Native/                      P/Invoke, DWM and glass effects, monitors, high resolution shell icons
+├── Shell/                       ManagedShell integration
+│   ├── ShellHost.cs             Tasks, tray, Start, search and notification center commands
+│   ├── TaskbarController.cs     Hiding and restoring the Windows taskbar, crash recovery
+│   ├── StartMenuLauncher.cs     Start menu through IImmersiveLauncher
+│   ├── RunningAppsService.cs    Grouping windows by app
+│   ├── JumpListService.cs       Reads an app's Jump List (recent/pinned tasks) for the right-click menu
 │   └── AppKeys.cs, TrayPreferences.cs, DefaultItems.cs
-├── Services/                Clock, system, GPU and network monitors, media (SMTC), weather (with WeatherHub cache),
-│                            notifications, reminders, hydration, app launcher, keyboard layouts, microphone,
-│                            notification center, virtual desktops, brightness, radios, AI usage, Todoist,
-│                            Battery/ (device batteries: Bluetooth, HID protocols, device catalog)
-├── Dock/                    DockWindow (zones, scrolling, drag and drop, position, auto-hide), AppButton,
-│                            WidgetItemView (card, vertical tile and panel), GroupItemView (folders),
-│                            WindowPreviewWindow (live thumbnails), GenieEffectHelper, PopupAnimationHelper,
-│                            TrayIconView, SpaceReserver, EdgeTriggerWindow, TrayIconManager, LauncherWindow
-│                            (quick launcher), keyboard language, microphone and virtual desktop indicators
-├── Controls/                WidgetCard, DockZonesPanel, RingGauge, AnalogClock, WeatherIcon, TickBar, Sparkline,
-│                            Glyphs, SettingRow
-├── Settings/                Settings window (Mica), widget gallery, app picker, widget settings templates
-├── Themes/                  Dark.xaml, Light.xaml (colors), Controls.xaml (styles)
-└── Widgets/                 WidgetBase, WidgetRegistry, CompactTile and one folder per widget
+├── Services/                    Clock, system, GPU and network monitors, media (SMTC), weather (with WeatherHub cache),
+│                                notifications, reminders, hydration, app launcher, keyboard layouts, microphone,
+│                                notification center, virtual desktops, brightness, radios, AI usage, Todoist,
+│                                Battery/ (device batteries: Bluetooth, HID protocols, device catalog)
+├── Dock/                        DockWindow (zones, scrolling, drag and drop, position, auto-hide), AppButton,
+│                                WidgetItemView (card, vertical tile and panel), GroupItemView (folders),
+│                                WindowPreviewWindow (live thumbnails), GenieEffectHelper, PopupAnimationHelper,
+│                                TrayIconView, SpaceReserver, EdgeTriggerWindow, TrayIconManager, LauncherWindow
+│                                (quick launcher), keyboard language, microphone and virtual desktop indicators
+├── Controls/                    WidgetCard, DockZonesPanel, RingGauge, AnalogClock, WeatherIcon, TickBar, Sparkline,
+│                                Glyphs, SettingRow
+├── Settings/                    Settings window (Mica), widget gallery, app picker, widget settings templates
+├── Themes/                      Dark.xaml, Light.xaml (colors), Controls.xaml (styles)
+└── Widgets/                     WidgetBase, WidgetRegistry, CompactTile and one folder per widget
     ├── Clock/  WorldClock/  Timers/ (stopwatch, focus, countdown, alarm)  TimeProgress/
     ├── Hydration/  Reminders/  Notes/  Media/  Audio/
     ├── System/ (CPU and memory, network, status)  Gpu/  Display/ (brightness)  Radios/  RecycleBin/  BatteryDevices/
     ├── Calendar/  Clipboard/  Stack/  Currency/  Todo/  Screenshot/
     └── AI/ (AI usage)  Weather/  Web/ (HTML/JavaScript widgets, link installs)
-packaging/winget/            winget manifest templates (submitted by .github/workflows/winget.yml)
-packaging/signing/           Optional code signing of releases (Azure Artifact Signing) and how to set it up
-samples/widgets/             Web widget examples (hello-world, github-stars, github-pulls, github-actions, home-assistant)
-                             and index.json, the community list shown in the gallery
-sdk/                         Widget SDK: TypeScript types (types/dockhub.d.ts) and the samples' type check
-tools/dockhub-widget/        Widget developer tool: create, validate and pack (Node.js, no dependencies)
-tools/generate-icon.ps1      Renders Assets/DockHub.ico
-tools/measure-idle.ps1       Idle CPU, memory and start-up measurement
-docs/                        Widget SDK and supported battery devices; images/ holds the README artwork
+packaging/winget/                winget manifest templates (submitted by .github/workflows/winget.yml)
+packaging/signing/               Optional code signing of releases (Azure Artifact Signing) and how to set it up
+samples/widgets/                 Web widget examples (hello-world, github-stars, github-pulls, github-actions, home-assistant)
+                                 and index.json, the community list shown in the gallery
+sdk/                             Widget SDK: TypeScript types (types/dockhub.d.ts) and the samples' type check
+tools/dockhub-widget/            Widget developer tool: create, validate and pack (Node.js, no dependencies)
+tools/generate-icon.ps1          Renders Assets/DockHub.ico
+tools/measure-idle.ps1           Idle CPU, memory and start-up measurement
+docs/                            Widget SDK and supported battery devices; images/ holds the README artwork
 ```
 
 ## Web widgets (HTML and JavaScript)
 
-Anyone can build a widget with HTML, CSS and JavaScript, no C# needed. Web widgets run in Microsoft Edge WebView2, follow the dock theme and use a small `window.dockhub` API for settings, storage, notifications and their right-click menu. Each widget only reaches the internet hosts its manifest lists, and users see those permissions before installing a `.dockwidget` package (open the file, or use *Settings › Widget gallery › Install widget…*) or a link (a `manifest.json`, a `.dockwidget` file or a GitHub folder) with *Install from link…*. The gallery also lists community widgets from a list kept in this repository (GitHub pull requests, GitHub Actions, Home Assistant and more) that install with one click; anyone can add one with a pull request.
+Anyone can build a widget with HTML, CSS and JavaScript, no C# or Swift needed. Web widgets run in Microsoft Edge WebView2 on Windows and WKWebView on macOS, follow the dock theme, and use a small `window.dockhub` API for settings, storage, notifications and their right-click menu. Each widget only reaches the internet hosts its manifest lists, and users see those permissions before installing a `.dockwidget` package (open the file, or use *Settings › Widget gallery › Install widget…*) or a link (a `manifest.json`, a `.dockwidget` file or a GitHub folder) with *Install from link…*. The gallery also lists community widgets from a list kept in this repository (GitHub pull requests, GitHub Actions, Home Assistant and more) that install with one click; anyone can add one with a pull request.
 
 With `"debugLogging": true`, a widget reloads by itself whenever you save one of its files. See the [widget SDK guide](docs/widget-sdk.md) and the examples in [`samples/widgets`](samples/widgets).
 
@@ -501,7 +565,7 @@ With `"debugLogging": true`, a widget reloads by itself whenever you save one of
 - **Developer tool:** [`tools/dockhub-widget`](tools/dockhub-widget/dockhub-widget.mjs) (Node.js, no dependencies) creates a widget from a template, checks it the way DockHub does and packs it into a `.dockwidget`.
 - **Updates:** widgets installed from a `manifest.json` or GitHub folder link are checked for a newer `version` once a day. DockHub shows a notification and an **Update** button in the gallery, keeps the widget's settings and data, and asks first when the new version wants more permissions.
 
-## Writing a widget
+## Writing a native widget
 
 1. Add `Widgets/Sample/SampleWidget.xaml`. The root element must be `w:WidgetBase`. Use elements named `Layout_<variant>` for different layouts:
 

@@ -254,6 +254,11 @@ public sealed class AppConfig : ObservableObject
     /// <summary>Cards (each widget on its own card, as before) or Seamless (no card; a thin line between widgets).</summary>
     public WidgetStyle WidgetStyle { get => _widgetStyle; set => Set(ref _widgetStyle, value); }
 
+    private TopBarSettings _topBar = new();
+
+    /// <summary>The top bar (off by default; settings from before it existed load as off).</summary>
+    public TopBarSettings TopBar { get => _topBar; set => Set(ref _topBar, value ?? new TopBarSettings()); }
+
     private double _textScale;
 
     /// <summary>Text size of settings, panels and menus. 0 follows Windows' "Text size" setting.</summary>
@@ -408,6 +413,18 @@ public sealed class DockItem : ObservableObject
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? Display { get => _display; set => Set(ref _display, value); }
+
+    /// <summary>The <see cref="Surface"/> of a widget on the top bar.</summary>
+    public const string BarSurface = "bar";
+
+    private string? _surface;
+
+    /// <summary>
+    /// Widgets only: <see cref="BarSurface"/> when the widget lives on the top bar. While the bar is off it shows on the
+    /// dock. Null: the dock.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Surface { get => _surface; set => Set(ref _surface, value); }
 
     private bool _collapseWhenIdle;
 

@@ -334,7 +334,7 @@ public sealed class WidgetItemView : WidgetCard
         {
             var current = WidgetDisplays.Current(displays, Item);
             menu.Items.Add(DockMenu.Submenu("Show on", "\uE7F4", displays.Select(choice =>
-                DockMenu.Check(choice.Label, ReferenceEquals(choice, current), () => WidgetDisplays.Move(Item, choice.Device)))));
+                DockMenu.Check(choice.Label, ReferenceEquals(choice, current), () => WidgetDisplays.Move(Item, choice)))));
         }
         menu.Items.Add(DockMenu.Check("Pin to right edge", Item.PinnedEnd, () =>
         {

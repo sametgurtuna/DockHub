@@ -20,6 +20,8 @@ public partial class App : Application
     private DockWindow? _dock;
     /// <summary>Docks on the other displays (when "Show on all displays" is on), keyed by device name.</summary>
     private readonly Dictionary<string, DockWindow> _secondaryDocks = new(StringComparer.OrdinalIgnoreCase);
+    private DockWindow? _topBar;
+    private TopBarSettings? _topBarSettings;
     private TrayIconManager? _tray;
     private SettingsWindow? _settings;
     private AppPickerWindow? _appPicker;
@@ -258,7 +260,63 @@ public partial class App : Application
         _dock.ContentRendered += OnFirstDockFrame;
         _dock.Start();
         SyncSecondaryDocks();
+        WatchTopBar();
+        SyncTopBar();
         SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
+    }
+
+    /// <summary>Follows the top bar's on/off switch (also when a profile brings other bar settings).</summary>
+    private void WatchTopBar()
+    {
+        if (_topBarSettings is not null) _topBarSettings.PropertyChanged -= OnTopBarChanged;
+        _topBarSettings = AppServices.Config.TopBar;
+        _topBarSettings.PropertyChanged += OnTopBarChanged;
+    }
+
+    private void OnTopBarChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(TopBarSettings.Enabled)) SyncTopBar();
+    }
+
+    /// <summary>Opens or closes the top bar's window; the docks then show or give back the bar's widgets.</summary>
+    private void SyncTopBar()
+    {
+        if (_shell is null || _dock is null || _cleanedUp) return;
+        var config = AppServices.Config;
+        bool wanted = config.TopBar.Enabled;
+        if (wanted == (_topBar is not null)) return;
+
+        if (wanted)
+        {
+            // The docks give up the bar's widgets first, so that no widget is live on two windows at once.
+            DockWindow.MarkBarFailed(false);
+            foreach (var dock in DockWindow.All.ToList()) dock.ApplySettings();
+            BarDockSurface? surface = null;
+            try
+            {
+                surface = new BarDockSurface(config);
+                _topBar = new DockWindow(config, surface, _shell);
+                _topBar.Start();
+                Log.Info("Top bar opened.");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to open the top bar");
+                // Its widgets go back to the main dock; turning the bar off and on tries again.
+                DockWindow.MarkBarFailed(true);
+                try { _topBar?.CloseDock(); } catch (Exception closeError) { Log.Error(closeError, "Failed to close the top bar"); }
+                if (_topBar is null) surface?.Dispose();
+                _topBar = null;
+            }
+        }
+        else
+        {
+            _topBar!.CloseDock();
+            _topBar = null;
+            Log.Info("Top bar closed.");
+        }
+        // The bar's widgets move between the bar and the dock.
+        foreach (var dock in DockWindow.All.ToList()) dock.ApplySettings();
     }
 
     private void OnFirstDockFrame(object? sender, EventArgs e)
@@ -455,6 +513,12 @@ public partial class App : Application
                 break;
             case nameof(AppConfig.PinnedTrayIcons):
                 break;
+            case nameof(AppConfig.TopBar):
+                // Replaced by a profile: follow the new switch and settings.
+                WatchTopBar();
+                SyncTopBar();
+                foreach (var dock in DockWindow.All.ToList()) dock.ApplySettings();
+                break;
             case nameof(AppConfig.ShowOnAllDisplays):
             case nameof(AppConfig.MonitorDevice):
                 // Close a secondary dock on the new main display before the main dock moves there.
@@ -626,6 +690,8 @@ public partial class App : Application
             SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
             foreach (var dock in _secondaryDocks.Values) dock.CloseDock();
             _secondaryDocks.Clear();
+            _topBar?.CloseDock();
+            _topBar = null;
             _dock?.CloseDock();
             AppServices.ConfigService.SaveNow();
             if (_shell?.Tray is { } shellTray && _trayIconsChangedHandler is not null)

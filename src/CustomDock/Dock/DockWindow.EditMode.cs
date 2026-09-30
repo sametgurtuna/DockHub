@@ -352,6 +352,8 @@ public partial class DockWindow : IEditableDock
 
     private FrameworkElement AddTile => _addTile ??= CreateAddTile();
 
+    private string AddLabel => IsBar ? L.T("Add to the top bar") : L.T("Add to the dock");
+
     private FrameworkElement CreateAddTile()
     {
         var outline = new Rectangle
@@ -372,10 +374,10 @@ public partial class DockWindow : IEditableDock
             Height = 40,
             Background = Brushes.Transparent,
             Cursor = Cursors.Hand,
-            ToolTip = L.T("Add to the dock"),
+            ToolTip = AddLabel,
             Children = { outline, glyph },
         };
-        AutomationProperties.SetName(tile, L.T("Add to the dock"));
+        AutomationProperties.SetName(tile, AddLabel);
         tile.MouseLeftButtonUp += (_, e) =>
         {
             e.Handled = true;
@@ -396,14 +398,17 @@ public partial class DockWindow : IEditableDock
         AddTile.BringIntoView();
         UpdateLayout();
 
-        var (popup, _, content) = WidgetUi.Flyout(FlyoutSize.Standard, L.T("Add to the dock"), "\uE710");
+        var (popup, _, content) = WidgetUi.Flyout(FlyoutSize.Standard, AddLabel, "\uE710");
         var list = new StackPanel();
-        list.Children.Add(PickerRow(Glyph(""), L.T("Separator"), () => AddFromEditMode(DockItem.Separator())));
-        list.Children.Add(PickerRow(Glyph(""), L.T("Pin application…"), () =>
+        if (!IsBar)
         {
-            CloseAddPicker();
-            App.Instance.ShowAppPicker();
-        }));
+            list.Children.Add(PickerRow(Glyph(""), L.T("Separator"), () => AddFromEditMode(DockItem.Separator())));
+            list.Children.Add(PickerRow(Glyph(""), L.T("Pin application…"), () =>
+            {
+                CloseAddPicker();
+                App.Instance.ShowAppPicker();
+            }));
+        }
         foreach (var category in WidgetCategories.Ordered)
         {
             var descriptors = WidgetRegistry.All.Where(d => d.Category == category).ToList();
@@ -471,8 +476,8 @@ public partial class DockWindow : IEditableDock
     private void AddFromEditMode(DockItem item)
     {
         CloseAddPicker();
-        // A widget added on another display's dock belongs to that display.
-        if (item.Kind == DockItemKind.Widget) item.Display = _secondaryDevice;
+        // A widget added on the bar or on another display's dock belongs there.
+        if (item.Kind == DockItemKind.Widget) PlaceHere(item);
         AppServices.ConfigService.AddItem(item);
     }
 

@@ -50,9 +50,17 @@ public partial class DockWindow
 
     private IReadOnlyCollection<string> _secondaryDisplays = Array.Empty<string>();
 
-    /// <summary>Whether this dock shows the widget (see <see cref="WidgetPlacement"/>); other items show everywhere.</summary>
+    /// <summary>The top bar's window failed to open; its widgets stay on the main dock.</summary>
+    private static bool s_barFailed;
+
+    public static void MarkBarFailed(bool failed) => s_barFailed = failed;
+
+    /// <summary>Whether the top bar's widgets are on the bar: it is on and its window didn't fail to open.</summary>
+    public static bool BarShown => AppServices.Config.TopBar.Enabled && !s_barFailed;
+
+    /// <summary>Whether this dock shows the item (see <see cref="WidgetPlacement"/>).</summary>
     private bool ShowsHere(DockItem item)
-        => item.Kind != DockItemKind.Widget || WidgetPlacement.ShowsOn(item.Display, _secondaryDevice, _secondaryDisplays);
+        => WidgetPlacement.ShowsOn(item.Kind, item.Surface, item.Display, _surface.Role, _secondaryDevice, _secondaryDisplays, _config.TopBar.Enabled && !s_barFailed);
 
     private void RebuildItems()
     {
@@ -75,6 +83,7 @@ public partial class DockWindow
         EndItemsPanel.Children.Clear();
         foreach (var item in items)
         {
+            if (!ShowsHere(item)) continue;
             if (!_itemViews.TryGetValue(item.Id, out var view))
             {
                 view = CreateView(item);
@@ -277,11 +286,11 @@ public partial class DockWindow
     }
 
     /// <summary>With docks on several displays each one only lists the apps whose windows are on its display.</summary>
-    private bool FilterRunningByDisplay => _config.ShowOnAllDisplays && _config.RunningAppsOnOwnDisplay && s_docks.Count > 1;
+    private bool FilterRunningByDisplay => _config.ShowOnAllDisplays && _config.RunningAppsOnOwnDisplay && s_docks.Count(d => !d.IsBar) > 1;
 
     private List<AppGroup> UnpinnedRunningGroups(HashSet<string> pinnedKeys)
     {
-        if (!_config.ShowRunningApps) return new List<AppGroup>();
+        if (!_config.ShowRunningApps || IsBar) return new List<AppGroup>();
         var groups = _shell.RunningApps.Groups.Where(g => !pinnedKeys.Contains(g.Key));
         if (FilterRunningByDisplay) groups = groups.Where(IsOnThisDisplay);
         return groups.OrderBy(g => g.Order).ToList();
@@ -419,14 +428,26 @@ public partial class DockWindow
     private DockItem? NewWidgetFrom(IDataObject data)
     {
         if (DockDragHelper.NewWidgetItem(data) is not { } item) return null;
-        item.Display = _secondaryDevice;
+        PlaceHere(item);
         return item;
     }
+
+    /// <summary>A widget added on this dock belongs to it: the top bar, or this display's dock.</summary>
+    private void PlaceHere(DockItem widget)
+    {
+        widget.Surface = IsBar ? DockItem.BarSurface : null;
+        widget.Display = IsBar ? null : _secondaryDevice;
+    }
+
+    /// <summary>The top bar takes widgets only (moved here, or new from the gallery).</summary>
+    private static bool IsWidgetData(IDataObject data) =>
+        data.GetDataPresent(DockDragHelper.NewWidgetFormat)
+        || (DockDragHelper.ReadString(data, DockDragHelper.ItemFormat) is { } id && AppServices.ConfigService.FindItem(id) is { Kind: DockItemKind.Widget });
 
     private void OnItemsDragOver(object sender, DragEventArgs e)
     {
         e.Handled = true;
-        if (!HasDockData(e.Data))
+        if (!HasDockData(e.Data) || (IsBar && !IsWidgetData(e.Data)))
         {
             e.Effects = DragDropEffects.None;
             return;
@@ -457,6 +478,7 @@ public partial class DockWindow
         e.Handled = true;
         DropCaret.Visibility = Visibility.Collapsed;
         StopEdgeScroll();
+        if (IsBar && !IsWidgetData(e.Data)) return; // apps and files belong on the dock
         var config = AppServices.ConfigService;
 
         // Check if dropped directly onto a group folder
@@ -505,14 +527,22 @@ public partial class DockWindow
 
         if (e.Data.GetData(DockDragHelper.ItemFormat) is string itemId)
         {
-            AdoptWidget(itemId);
+            var dragged = config.FindItem(itemId);
             // Dropping a right-pinned widget back into the scrollable list unpins it.
-            if (config.FindItem(itemId) is { PinnedEnd: true } draggedItem)
+            bool unpin = dragged is { PinnedEnd: true };
+            // A new place (this dock, the bar or this display) and unpinning are one undo step with the move.
+            using (dragged is not null && (unpin || Adopts(itemId)) ? config.History.Batch(_config, L.T("Moved {0}", ConfigService.Describe(dragged))) : null)
             {
-                draggedItem.PinnedEnd = false;
-                _config.NotifyItemsChanged();
+                bool changed = AdoptWidget(itemId);
+                if (unpin)
+                {
+                    dragged!.PinnedEnd = false;
+                    changed = true;
+                }
+                config.MoveItem(itemId, index);
+                // The move alone raises nothing when the position stays the same.
+                if (changed) _config.NotifyItemsChanged();
             }
-            config.MoveItem(itemId, index);
         }
         else if (e.Data.GetData(DockDragHelper.RunningAppFormat) is string key &&
                  _shell.RunningApps.Find(key) is { } group &&
@@ -558,10 +588,13 @@ public partial class DockWindow
         }
         if (e.Data.GetData(DockDragHelper.ItemFormat) is not string itemId) return;
         if (AppServices.ConfigService.FindItem(itemId) is not { Kind: DockItemKind.Widget } item) return;
-        bool adopted = AdoptWidget(itemId);
-        if (item.PinnedEnd && !adopted) return;
+        if (item.PinnedEnd && !Adopts(itemId)) return;
 
-        item.PinnedEnd = true;
+        using (AppServices.ConfigService.History.Batch(_config, L.T("Moved {0}", ConfigService.Describe(item))))
+        {
+            AdoptWidget(itemId);
+            item.PinnedEnd = true;
+        }
         _config.NotifyItemsChanged();
     }
 
@@ -571,11 +604,18 @@ public partial class DockWindow
     /// </summary>
     private bool AdoptWidget(string itemId)
     {
-        if (_itemViews.ContainsKey(itemId)) return false;
-        if (AppServices.ConfigService.FindItem(itemId) is not { Kind: DockItemKind.Widget } widget) return false;
-        if (string.Equals(widget.Display, _secondaryDevice, StringComparison.OrdinalIgnoreCase)) return false;
-        widget.Display = _secondaryDevice;
+        if (!Adopts(itemId)) return false;
+        PlaceHere(AppServices.ConfigService.FindItem(itemId)!);
         AppServices.ConfigService.ScheduleSave();
         return true;
+    }
+
+    /// <summary>Whether a widget dropped here comes from elsewhere: the bar, the dock, or another display's dock.</summary>
+    private bool Adopts(string itemId)
+    {
+        if (_itemViews.ContainsKey(itemId)) return false;
+        if (AppServices.ConfigService.FindItem(itemId) is not { Kind: DockItemKind.Widget } widget) return false;
+        bool onBar = WidgetDisplays.IsOnBar(widget);
+        return onBar != IsBar || (!IsBar && !string.Equals(widget.Display, _secondaryDevice, StringComparison.OrdinalIgnoreCase));
     }
 }

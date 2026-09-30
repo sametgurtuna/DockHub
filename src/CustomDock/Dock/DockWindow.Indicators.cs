@@ -14,10 +14,10 @@ public partial class DockWindow
         bool tray = HasTray;
         KeyboardLayoutIcon.Allowed = tray && _config.ShowKeyboardLayout;
         MicrophoneStatusIcon.Mode = tray ? _config.MicrophoneIcon : MicrophoneIconMode.Off;
-        VirtualDesktopIcon.Allowed = _config.ShowDesktopIndicator;
+        VirtualDesktopIcon.Allowed = !IsBar && _config.ShowDesktopIndicator;
         _shell.RunningApps.IncludeAllDesktops = _config.RunningAppsAllDesktops;
 
-        bool notifications = _config.ShowClock && _config.ShowNotificationIndicator && !_closing;
+        bool notifications = ClockShown && _config.ShowNotificationIndicator && !_closing;
         if (notifications && !_notificationSubscribed)
         {
             AppServices.NotificationCenter.EnsureStarted();

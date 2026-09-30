@@ -158,7 +158,10 @@ public partial class DockWindow : Window, IWidgetHost
     }
 
     /// <summary>The main dock hosts widgets, the system tray and the global shortcut; secondary docks mirror apps.</summary>
-    public bool IsMain => _secondaryDevice is null;
+    public bool IsMain => _surface.Role == DockRole.Main;
+
+    /// <summary>The top bar: widgets (and a clock) only, on the main display.</summary>
+    public bool IsBar => _surface.Role == DockRole.Bar;
 
     /// <summary>Device name of the display this dock is on.</summary>
     public string MonitorDevice => _monitor.DeviceName;
@@ -166,7 +169,7 @@ public partial class DockWindow : Window, IWidgetHost
     public static IReadOnlyList<DockWindow> All => s_docks;
 
     private MonitorInfo ResolveMonitor()
-        => IsMain ? MonitorHelper.GetPreferred(_config.MonitorDevice) : MonitorHelper.GetPreferred(_secondaryDevice);
+        => _secondaryDevice is null ? MonitorHelper.GetPreferred(_config.MonitorDevice) : MonitorHelper.GetPreferred(_secondaryDevice);
 
     // ------------------------------------------------------------------ IWidgetHost
 
@@ -386,7 +389,7 @@ public partial class DockWindow : Window, IWidgetHost
     {
         AppServices.Clock.SecondTick -= OnClockTick;
         AppServices.Clock.MinuteTick -= OnClockTick;
-        if (!_config.ShowClock) return;
+        if (!ClockShown) return;
         if (_config.ClockShowSeconds) AppServices.Clock.SecondTick += OnClockTick;
         else AppServices.Clock.MinuteTick += OnClockTick;
     }

@@ -189,10 +189,17 @@ public sealed class ProfileService
         StoreActive();
 
         var items = target.Items?.Deserialize<List<DockItem>>(JsonStore.Options) ?? new List<DockItem>();
-        if (target.Appearance is { } appearance) ConfigHistory.RestoreAppearance(Config, appearance, missingAsDefault: true);
-        Config.ActiveProfileId = target.Id;
-        target.Items = null;
+        // The items first (the setter is silent): a top bar the profile turns on opens with the profile's own widgets.
         Config.Items = items;
+        target.Items = null;
+        if (target.Appearance is { } appearance)
+        {
+            ConfigHistory.RestoreAppearance(Config, appearance, missingAsDefault: true);
+            // The top bar is part of a profile (layout presets and theme files leave it alone). A profile saved before
+            // the bar existed has none.
+            if (!appearance.ContainsKey(nameof(AppConfig.TopBar))) Config.TopBar = new TopBarSettings();
+        }
+        Config.ActiveProfileId = target.Id;
         Config.NotifyItemsChanged();
         Save();
         Log.Info($"Switched to profile {target.Name}");
@@ -262,6 +269,7 @@ public sealed class ProfileService
         if (Active is not { } active) return;
         active.Items = JsonSerializer.SerializeToNode(Config.Items, JsonStore.Options) as JsonArray;
         active.Appearance = ConfigHistory.CaptureAppearance(Config);
+        active.Appearance[nameof(AppConfig.TopBar)] = JsonSerializer.SerializeToNode(Config.TopBar, JsonStore.Options);
     }
 
     private void Save()

@@ -117,7 +117,7 @@ public sealed class ConfigHistory
                 text.Append('{').Append(item.Id).Append('\u001f').Append(item.Kind).Append('\u001f').Append(item.Path)
                     .Append('\u001f').Append(item.Arguments).Append('\u001f').Append(item.Name).Append('\u001f').Append(item.Widget)
                     .Append('\u001f').Append(item.Variant).Append('\u001f').Append(item.PinnedEnd).Append('\u001f').Append(item.Display)
-                    .Append('\u001f').Append(item.GroupName).Append('\u001f').Append(item.GroupAccent);
+                    .Append('\u001f').Append(item.GroupName).Append('\u001f').Append(item.GroupAccent).Append('\u001f').Append(item.Surface);
                 if (item.Children is { } children)
                 {
                     text.Append('[');
@@ -166,6 +166,7 @@ public sealed class ConfigHistory
         live.Variant = snapshot.Variant;
         live.PinnedEnd = snapshot.PinnedEnd;
         live.Display = snapshot.Display;
+        live.Surface = snapshot.Surface;
         live.GroupName = snapshot.GroupName;
         live.GroupAccent = snapshot.GroupAccent;
         live.Children = snapshot.Children?.Select(c => Reuse(c, existing)).ToList();

@@ -17,7 +17,7 @@ public partial class DockWindow
     /// the bar is always sized from this so the scaled content is never squeezed or clipped.
     /// </summary>
     /// <summary>The main dock uses the general size; docks on other displays may have their own.</summary>
-    private DockSize EffectiveSize => IsMain ? _surface.Size : _config.DisplaySizeOf(_monitor.DeviceName) ?? _surface.Size;
+    private DockSize EffectiveSize => _secondaryDevice is null ? _surface.Size : _config.DisplaySizeOf(_monitor.DeviceName) ?? _surface.Size;
 
     private double ContentDip => EffectiveSize switch
     {
@@ -76,10 +76,12 @@ public partial class DockWindow
 
     private void ApplyZoneVisibility()
     {
-        StartButton.Visibility = _config.ShowStartButton ? Visibility.Visible : Visibility.Collapsed;
-        SearchButton.Visibility = _config.ShowSearchButton ? Visibility.Visible : Visibility.Collapsed;
-        TaskViewButton.Visibility = _config.ShowTaskViewButton ? Visibility.Visible : Visibility.Collapsed;
-        StartSeparator.Visibility = _config.ShowStartButton || _config.ShowSearchButton || _config.ShowTaskViewButton
+        // The top bar has widgets and (optionally) the clock; Start, search and the rest stay on the dock.
+        bool bar = IsBar;
+        StartButton.Visibility = !bar && _config.ShowStartButton ? Visibility.Visible : Visibility.Collapsed;
+        SearchButton.Visibility = !bar && _config.ShowSearchButton ? Visibility.Visible : Visibility.Collapsed;
+        TaskViewButton.Visibility = !bar && _config.ShowTaskViewButton ? Visibility.Visible : Visibility.Collapsed;
+        StartSeparator.Visibility = !bar && (_config.ShowStartButton || _config.ShowSearchButton || _config.ShowTaskViewButton)
             ? Visibility.Visible : Visibility.Collapsed;
 
         bool tray = HasTray;
@@ -87,10 +89,13 @@ public partial class DockWindow
         NetworkStatusIcon.Visibility = tray && _config.ShowNetworkIcon ? Visibility.Visible : Visibility.Collapsed;
         VolumeStatusIcon.Visibility = tray && _config.ShowVolumeIcon ? Visibility.Visible : Visibility.Collapsed;
         BatteryStatusIcon.Visibility = tray && _config.ShowBatteryIcon && BatteryStatusIconView.HasBattery ? Visibility.Visible : Visibility.Collapsed;
-        ClockButton.Visibility = _config.ShowClock ? Visibility.Visible : Visibility.Collapsed;
-        ShowDesktopButton.Visibility = _config.ShowDesktopButton ? Visibility.Visible : Visibility.Collapsed;
+        ClockButton.Visibility = ClockShown ? Visibility.Visible : Visibility.Collapsed;
+        ShowDesktopButton.Visibility = !bar && _config.ShowDesktopButton ? Visibility.Visible : Visibility.Collapsed;
         UpdateTrayVisibility();
     }
+
+    /// <summary>The dock's clock setting; the top bar has its own.</summary>
+    private bool ClockShown => _surface is BarDockSurface bar ? bar.ShowClock : _config.ShowClock;
 
     /// <summary>Tray icons live on the main dock only (like the Windows taskbar on secondary displays).</summary>
     private bool HasTray => IsMain && _config.ShowTray && _shell.Tray is not null;
@@ -100,7 +105,7 @@ public partial class DockWindow
         bool tray = HasTray;
         bool hasHidden = tray && _shell.Tray!.UnpinnedIcons is { IsEmpty: false };
         TrayOverflowButton.Visibility = hasHidden ? Visibility.Visible : Visibility.Collapsed;
-        EndSeparator.Visibility = tray || _config.ShowClock ? Visibility.Visible : Visibility.Collapsed;
+        EndSeparator.Visibility = tray || ClockShown ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void ApplyBackdrop()
@@ -135,6 +140,24 @@ public partial class DockWindow
             view.HoverEnabled = _config.HoverEffect;
     }
 
+    /// <summary>The bands the other DockHub windows on this display keep free (the dock's, or the top bar's).</summary>
+    private IEnumerable<(DockEdge, RECT)> OtherReservedBands()
+    {
+        foreach (var other in s_docks)
+        {
+            if (ReferenceEquals(other, this) || other._closing || other._reserver is not { Handle: not 0 } reserver) continue;
+            if (!string.Equals(other._monitor.DeviceName, _monitor.DeviceName, StringComparison.OrdinalIgnoreCase)) continue;
+            yield return (other._surface.Edge, reserver.Rect);
+        }
+    }
+
+    /// <summary>A band was kept free or given back: the other windows on the display make room or take it again.</summary>
+    private void RepositionOthers()
+    {
+        foreach (var other in s_docks)
+            if (!ReferenceEquals(other, this)) other.QueueReposition();
+    }
+
     /// <summary>Band the reserver keeps free: the bar plus its floating margins, in DIP.</summary>
     private double ReservedThicknessDip => ThicknessDip + 2 * MarginDip;
 
@@ -156,6 +179,7 @@ public partial class DockWindow
             _reserver.CloseReserver();
             _reserver = null;
             _reserverKey = null;
+            RepositionOthers();
         }
 
         if (!needed) return;
@@ -174,6 +198,7 @@ public partial class DockWindow
             _reserver.RectChanged += QueueReposition;
             _reserver.Show();
             _reserverKey = key;
+            RepositionOthers();
         }
         catch (Exception ex)
         {
@@ -257,7 +282,7 @@ public partial class DockWindow
         if (_reserver is { Handle: not 0 } reserver && reserver.Rect.Width > 0 && reserver.Rect.Height > 0)
             area = reserver.Rect;
         else
-            area = _shell.IsReplacingTaskbar ? _monitor.Bounds : _monitor.WorkArea;
+            area = _shell.IsReplacingTaskbar ? DockArea.Beside(_monitor.Bounds, OtherReservedBands()) : _monitor.WorkArea;
 
         bool vertical = IsVertical;
         int maxLength = (vertical ? area.Height : area.Width) - 2 * marginPx;
@@ -305,6 +330,13 @@ public partial class DockWindow
     /// <summary>Start menu, quick settings, and notifications position relative to this rectangle.</summary>
     private void UpdateTrayHost()
     {
+        // The bar shares the main dock's display, and Windows' flyouts belong with the dock's tray (and the Windows
+        // key's Start menu with the dock): the bar's clock opens them there.
+        if (IsBar)
+        {
+            s_docks.FirstOrDefault(d => d.IsMain)?.UpdateTrayHost();
+            return;
+        }
         if (_hwnd == IntPtr.Zero || _shownRect.Width <= 0) return;
         s_trayHostOwner = this;
         _shell.SetTrayHost(_shownRect, _surface.Edge);

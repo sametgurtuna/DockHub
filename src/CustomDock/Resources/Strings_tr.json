@@ -1172,5 +1172,23 @@
   "Your dock at a glance, the settings you change most, and a few shortcuts.": "Dock'unuza bir bakış, en çok değiştirdiğiniz ayarlar ve birkaç kısayol.",
   "Shortcuts": "Kısayollar",
   "Version": "Sürüm",
-  "Automatic backup": "Otomatik yedek"
+  "Automatic backup": "Otomatik yedek",
+
+  // ---------------------------------------------------------------- Top bar
+  "Edit top bar": "Üst barı düzenle",
+  "Top bar settings…": "Üst bar ayarları…",
+  "Turn off the top bar": "Üst barı kapat",
+  "Same as the dock": "Dock ile aynı",
+  "Top bar": "Üst bar",
+  "A second, thin bar on the main display for widgets and a clock, like the menu bar on a Mac. Start, search, the tray and your apps stay on the dock. Move a widget there from its right-click menu (Show on) or in Dock items.": "Ana ekranda widget'lar ve saat için ikinci, ince bir bar; Mac'teki menü çubuğu gibi. Başlat, arama, tepsi ve uygulamalarınız dock'ta kalır. Bir widget'ı sağ tık menüsünden (Şurada göster) ya da Dock öğeleri'nden oraya taşıyın.",
+  "Bar edge": "Bar kenarı",
+  "The bar never shares the dock's edge; it moves to the opposite one.": "Bar, dock ile aynı kenarı paylaşmaz; karşı kenara geçer.",
+  "Bar size": "Bar boyutu",
+  "Bar shape": "Bar şekli",
+  "Bar backdrop": "Bar arka planı",
+  "Hide the bar automatically": "Barı otomatik gizle",
+  "The bar slides off its edge and comes back when the pointer reaches it.": "Bar kenardan kayıp gider ve imleç oraya ulaşınca geri gelir.",
+  "Clock on the bar": "Barda saat",
+  "Add to the top bar": "Üst bara ekle",
+  "Add to the top bar…": "Üst bara ekle…"
 }

@@ -210,6 +210,9 @@
                             </StackPanel>
                         </Border>
                     </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE8A1;" Header="Top bar">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding TopBar.Enabled}" />
+                    </ctl:SettingRow>
                     <ctl:SettingRow Glyph="&#xE80A;" Header="Widget style">
                         <Border Style="{StaticResource SegmentedHost}">
                             <StackPanel Orientation="Horizontal">
@@ -670,6 +673,58 @@
                                     Description="With auto-hide on, the dock stays visible over the desktop and small windows, and slides away only while the active window covers its area.">
                         <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding SmartAutoHide}" IsEnabled="{Binding AutoHide}" />
                     </ctl:SettingRow>
+                    <TextBlock Text="Top bar" Style="{StaticResource SectionHeader}" />
+                    <ctl:SettingRow Glyph="&#xE8A1;" Header="Top bar"
+                                    Description="A second, thin bar on the main display for widgets and a clock, like the menu bar on a Mac. Start, search, the tray and your apps stay on the dock. Move a widget there from its right-click menu (Show on) or in Dock items.">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding TopBar.Enabled}" />
+                    </ctl:SettingRow>
+                    <StackPanel IsEnabled="{Binding TopBar.Enabled}">
+                        <ctl:SettingRow Glyph="&#xE8A0;" Header="Bar edge" Description="The bar never shares the dock's edge; it moves to the opposite one.">
+                            <Border Style="{StaticResource SegmentedHost}">
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton Style="{StaticResource SegmentedItem}" GroupName="TopBarEdge" Content="Top"
+                                                 IsChecked="{Binding TopBar.Edge, Converter={StaticResource EnumEq}, ConverterParameter=Top}" />
+                                    <RadioButton Style="{StaticResource SegmentedItem}" GroupName="TopBarEdge" Content="Bottom"
+                                                 IsChecked="{Binding TopBar.Edge, Converter={StaticResource EnumEq}, ConverterParameter=Bottom}" />
+                                    <RadioButton Style="{StaticResource SegmentedItem}" GroupName="TopBarEdge" Content="Left"
+                                                 IsChecked="{Binding TopBar.Edge, Converter={StaticResource EnumEq}, ConverterParameter=Left}" />
+                                    <RadioButton Style="{StaticResource SegmentedItem}" GroupName="TopBarEdge" Content="Right"
+                                                 IsChecked="{Binding TopBar.Edge, Converter={StaticResource EnumEq}, ConverterParameter=Right}" />
+                                </StackPanel>
+                            </Border>
+                        </ctl:SettingRow>
+                        <ctl:SettingRow Glyph="&#xE740;" Header="Bar size">
+                            <Border Style="{StaticResource SegmentedHost}">
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton Style="{StaticResource SegmentedItem}" GroupName="TopBarSize" Content="Small"
+                                                 IsChecked="{Binding TopBar.Size, Converter={StaticResource EnumEq}, ConverterParameter=Small}" />
+                                    <RadioButton Style="{StaticResource SegmentedItem}" GroupName="TopBarSize" Content="Medium"
+                                                 IsChecked="{Binding TopBar.Size, Converter={StaticResource EnumEq}, ConverterParameter=Medium}" />
+                                    <RadioButton Style="{StaticResource SegmentedItem}" GroupName="TopBarSize" Content="Large"
+                                                 IsChecked="{Binding TopBar.Size, Converter={StaticResource EnumEq}, ConverterParameter=Large}" />
+                                </StackPanel>
+                            </Border>
+                        </ctl:SettingRow>
+                        <ctl:SettingRow Glyph="&#xE8A9;" Header="Bar shape">
+                            <Border Style="{StaticResource SegmentedHost}">
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton Style="{StaticResource SegmentedItem}" GroupName="TopBarLayout" Content="Floating"
+                                                 IsChecked="{Binding TopBar.Layout, Converter={StaticResource EnumEq}, ConverterParameter=Floating}" />
+                                    <RadioButton Style="{StaticResource SegmentedItem}" GroupName="TopBarLayout" Content="Attached"
+                                                 IsChecked="{Binding TopBar.Layout, Converter={StaticResource EnumEq}, ConverterParameter=Attached}" />
+                                </StackPanel>
+                            </Border>
+                        </ctl:SettingRow>
+                        <ctl:SettingRow Glyph="&#xF570;" Header="Bar backdrop">
+                            <ComboBox x:Name="TopBarBackdropCombo" Width="200" SelectionChanged="OnTopBarBackdropChanged" />
+                        </ctl:SettingRow>
+                        <ctl:SettingRow Glyph="&#xE7E7;" Header="Hide the bar automatically" Description="The bar slides off its edge and comes back when the pointer reaches it.">
+                            <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding TopBar.AutoHide}" />
+                        </ctl:SettingRow>
+                        <ctl:SettingRow Glyph="&#xE917;" Header="Clock on the bar">
+                            <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding TopBar.ShowClock}" />
+                        </ctl:SettingRow>
+                    </StackPanel>
                 </StackPanel>
 
                 <!-- ============ Dock items ============ -->

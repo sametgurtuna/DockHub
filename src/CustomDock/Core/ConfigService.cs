@@ -43,11 +43,29 @@ public sealed class ConfigService
         // Widgets unknown to this version (e.g. after a downgrade) stay in the config; the dock just skips them.
         RepairAppPaths(Config.Items);
         Config.Version = AppConfig.CurrentVersion;
-        Config.PropertyChanged += (_, _) => ScheduleSave();
+        Config.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(AppConfig.TopBar)) WatchTopBar();
+            ScheduleSave();
+        };
         Config.ItemsChanged += (_, _) => ScheduleSave();
+        WatchTopBar();
         IsLoaded = true;
         SaveNow();
     }
+
+    private TopBarSettings? _watchedTopBar;
+
+    /// <summary>The top bar's settings are an object of their own: a change inside it is saved like any other.</summary>
+    private void WatchTopBar()
+    {
+        if (ReferenceEquals(_watchedTopBar, Config.TopBar)) return;
+        if (_watchedTopBar is not null) _watchedTopBar.PropertyChanged -= OnTopBarChanged;
+        _watchedTopBar = Config.TopBar;
+        _watchedTopBar.PropertyChanged += OnTopBarChanged;
+    }
+
+    private void OnTopBarChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e) => ScheduleSave();
 
     /// <summary>
     /// Pins made from running apps used to store versioned install folders (Squirrel <c>app-1.2.3</c>, MSIX

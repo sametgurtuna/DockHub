@@ -114,13 +114,18 @@ public partial class DockWindow
         if (_editing)
         {
             menu.Items.Add(DockMenu.Item("Done", "\uE73E", () => DockEditMode.Exit()));
-            menu.Items.Add(DockMenu.Item("Add to the dock…", "\uE710", ToggleAddPicker));
+            menu.Items.Add(DockMenu.Item(IsBar ? "Add to the top bar…" : "Add to the dock…", "\uE710", ToggleAddPicker));
             return;
         }
         if (AppServices.ConfigService.History.CanUndo && AppServices.ConfigService.History.Latest is { } last)
         {
             menu.Items.Add(DockMenu.Item(L.T("Undo: {0}", last.Description), "\uE7A7", () => AppServices.ConfigService.Undo()));
             menu.Items.Add(DockMenu.Separator());
+        }
+        if (IsBar)
+        {
+            AddBarMenuItems(menu);
+            return;
         }
         menu.Items.Add(DockMenu.Item("Edit dock", "\uE70F", () => EnterEditMode()));
         menu.Items.Add(DockMenu.Item("Add widget…", "\uE710", () => App.Instance.ShowSettings("gallery")));
@@ -147,5 +152,30 @@ public partial class DockWindow
         menu.Items.Add(DockMenu.Separator());
         menu.Items.Add(DockMenu.Item("DockHub settings…", "\uE713", () => App.Instance.ShowSettings()));
         menu.Items.Add(DockMenu.Item("Exit", "\uE7E8", () => App.Instance.ExitApplication()));
+    }
+
+    /// <summary>The top bar's menu: its widgets, its own hiding, clock and edge, and turning it off.</summary>
+    private void AddBarMenuItems(ContextMenu menu)
+    {
+        var bar = _config.TopBar;
+        menu.Items.Add(DockMenu.Item("Edit top bar", "\uE70F", () => EnterEditMode()));
+        // The edit mode's picker, which adds to the bar (the gallery adds to the dock).
+        menu.Items.Add(DockMenu.Item("Add widget…", "\uE710", () =>
+        {
+            EnterEditMode();
+            if (_editing) Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.ContextIdle, ToggleAddPicker);
+        }));
+        menu.Items.Add(DockMenu.Separator());
+        menu.Items.Add(DockMenu.Check("Auto-hide", _surface.AutoHide, () => _surface.AutoHide = !_surface.AutoHide));
+        menu.Items.Add(DockMenu.Check("Show clock", bar.ShowClock, () => bar.ShowClock = !bar.ShowClock));
+        // The dock's edge isn't offered: the bar can't share it.
+        var edges = new[] { (DockEdge.Top, "Top"), (DockEdge.Bottom, "Bottom"), (DockEdge.Left, "Left"), (DockEdge.Right, "Right") }
+            .Where(e => e.Item1 != _config.Edge)
+            .Select(e => DockMenu.Check(e.Item2, _surface.Edge == e.Item1, () => _surface.Edge = e.Item1))
+            .ToArray();
+        menu.Items.Add(DockMenu.Submenu("Position", "\uE8A0", edges));
+        menu.Items.Add(DockMenu.Separator());
+        menu.Items.Add(DockMenu.Item("Top bar settings…", "\uE713", () => App.Instance.ShowSettings("appearance")));
+        menu.Items.Add(DockMenu.Item("Turn off the top bar", "\uE711", () => bar.Enabled = false));
     }
 }

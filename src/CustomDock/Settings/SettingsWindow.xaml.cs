@@ -66,6 +66,7 @@ public partial class SettingsWindow : Window
         LoadProfiles();
         LoadUpdates();
         LoadTextScale();
+        LoadTopBar();
         LoadLanguages();
         LoadCrashInfo();
         DockPreview.Bind(_config);
@@ -162,6 +163,7 @@ public partial class SettingsWindow : Window
         QueueGalleryPreviews();
         if (tag == SettingsPages.Overview) LoadOverview();
         if (tag == "taskbar") LoadTray();
+        if (tag == "appearance") LoadTopBar();
         if (tag is "about" or "backup") LoadCrashInfo();
     }
 

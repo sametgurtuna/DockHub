@@ -244,7 +244,7 @@ public partial class SettingsWindow
     private void OnWidgetDisplayChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_suppressVariant || ItemList.SelectedItem is not ItemRow row || WidgetDisplayCombo.SelectedItem is not WidgetDisplays.Choice choice) return;
-        WidgetDisplays.Move(row.Item, choice.Device);
+        WidgetDisplays.Move(row.Item, choice);
     }
 
     private void OnAppNameChanged(object sender, RoutedEventArgs e)

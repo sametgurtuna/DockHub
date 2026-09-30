@@ -170,11 +170,13 @@ struct WebWidgetRepresentable: NSViewRepresentable {
                 object: nil,
                 queue: .main
             ) { [weak self] note in
+                let targetItemId = note.userInfo?["itemId"] as? String
+                let actionId = note.userInfo?["actionId"] as? String
                 MainActor.assumeIsolated {
                     guard let self,
-                          let targetItemId = note.userInfo?["itemId"] as? String,
+                          let targetItemId,
                           targetItemId == self.parent.item.id,
-                          let actionId = note.userInfo?["actionId"] as? String else { return }
+                          let actionId else { return }
                     self.post(event: "menu", data: actionId)
                 }
             }
@@ -185,9 +187,10 @@ struct WebWidgetRepresentable: NSViewRepresentable {
                 object: nil,
                 queue: .main
             ) { [weak self] note in
+                let targetItemId = note.userInfo?["itemId"] as? String
                 MainActor.assumeIsolated {
                     guard let self,
-                          let targetItemId = note.userInfo?["itemId"] as? String,
+                          let targetItemId,
                           targetItemId == self.parent.item.id else { return }
                     self.webView?.reload()
                 }

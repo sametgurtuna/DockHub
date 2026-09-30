@@ -143,6 +143,7 @@ winget install SametGurtuna.DockHub
   - Right-click shows the window list, the app's Jump List (recent files and tasks, when the app provides one), plus *Run as administrator*, *Open file location*, *Pin/Unpin* and *Close all windows*.
   - Clicking brings a window to the front, minimizes it, or cycles through the app's windows. Shift+click or middle-click opens a new window.
   - Pin a running app by dragging it into the dock or with the *Pin to DockHub* command.
+  - **One button per window:** set *Settings › Taskbar › Combine app buttons* to *Never*, like Windows' "Combine taskbar buttons: Never". Every window then gets a button of its own with its icon and title (just the icon on a side dock), and an app's windows stay side by side: a pinned app's button becomes its first window's, and its other windows follow right after it. Clicking a window's button brings that window forward or minimizes it, middle-click closes it, and its preview shows that window only. The icons don't grow under the pointer in this mode.
   - **Pin from File Explorer:** right-click an `.exe` or shortcut and choose *Pin to DockHub*. On Windows 11 the command appears under *Show more options* (or Shift+right-click), because the new compact menu only lists commands from packaged apps.
   - **Groups (folders):** drag an app or widget onto another to create a folder. Folders can be renamed, given a custom accent color, and open with a staggered fan animation.
 - **System tray.** App icons live in the dock and receive clicks, right-clicks and hover. Hidden icons sit in the overflow menu, and you choose which icons are always visible. Your Windows tray preferences are imported on first launch.
@@ -150,7 +151,7 @@ winget install SametGurtuna.DockHub
 - **Input language.** With more than one keyboard language installed, a short code (TUR, ENG...) sits next to the tray. Click or scroll it to switch, right-click for the list and language settings.
 - **Microphone.** A microphone icon appears while an app records (like Windows), or always if you prefer; click it to mute or unmute, and give it a global shortcut. It lists which apps use the microphone.
 - **Notifications and Do Not Disturb.** The clock shows how many notifications wait in the notification center, and a moon while Do Not Disturb or Focus is on.
-- **Win+1…9 and Win+0** open, switch to or minimize the dock's first ten apps. Add Shift for a new window, Ctrl+Shift to run as administrator, Alt for the jump list. Hold Win to see the numbers on the dock.
+- **Win+1…9 and Win+0** open, switch to or minimize the dock's first ten apps. Add Shift for a new window, Ctrl+Shift to run as administrator, Alt for the jump list. Hold Win to see the numbers on the dock. With one button per window, the numbers follow the buttons, so each window has its own number.
 
   <img src="docs/images/tray-overflow.jpg" alt="Tray overflow flyout above the dock showing hidden tray icons" width="46%">
 - **Clock.** Clicking it opens the notification center. Its context menu offers quick settings, date and time settings, and seconds and date options. A thin strip at the far end shows the desktop.

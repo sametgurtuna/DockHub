@@ -45,6 +45,13 @@ public static class AppLauncher
         windows[(index + 1) % windows.Count].BringToFront();
     }
 
+    /// <summary>A window's own button (buttons not combined): brings the window forward, or minimizes it when it is in front.</summary>
+    public static void ActivateWindow(ApplicationWindow window)
+    {
+        if (window.State == ApplicationWindow.WindowState.Active && !window.IsMinimized) window.Minimize();
+        else window.BringToFront();
+    }
+
     public static void Launch(DockItem item, bool newInstance = false)
     {
         if (string.IsNullOrWhiteSpace(item.Path)) return;

@@ -42,6 +42,8 @@ public sealed partial class WindowPreviewWindow : Window
     private IntPtr _hwnd;
     private AppButton? _currentButton;
     private AppGroup? _currentGroup;
+    /// <summary>The one window shown (a window's own button); null: all of the app's.</summary>
+    private ApplicationWindow? _currentWindow;
     private DockEdge _currentEdge = DockEdge.Bottom;
     private bool _isClosing;
 
@@ -148,7 +150,8 @@ public sealed partial class WindowPreviewWindow : Window
         ManagedShell.Common.Helpers.WindowHelper.ExcludeWindowFromPeek(_hwnd);
     }
 
-    public void ShowFor(AppButton button, AppGroup group, DockEdge edge)
+    /// <param name="only">A window's own button (buttons not combined) previews just that window.</param>
+    public void ShowFor(AppButton button, AppGroup group, DockEdge edge, ApplicationWindow? only = null)
     {
         if (_isClosing) return;
         _hideTimer.Stop();
@@ -159,7 +162,9 @@ public sealed partial class WindowPreviewWindow : Window
         foreach (var handle in _closingWindows.Where(p => now - p.Value > ClosingGrace).Select(p => p.Key).ToList())
             _closingWindows.Remove(handle);
 
-        var windows = group.Windows.Where(w => w.ShowInTaskbar && !_closingWindows.ContainsKey(w.Handle)).ToList();
+        var windows = group.Windows
+            .Where(w => w.ShowInTaskbar && !_closingWindows.ContainsKey(w.Handle) && (only is null || ReferenceEquals(w, only)))
+            .ToList();
         if (windows.Count == 0)
         {
             HidePreview();
@@ -174,6 +179,7 @@ public sealed partial class WindowPreviewWindow : Window
             group.PropertyChanged += OnGroupPropertyChanged;
         }
         _currentGroup = group;
+        _currentWindow = only;
 
         RebuildCards(windows);
 
@@ -206,6 +212,7 @@ public sealed partial class WindowPreviewWindow : Window
         if (_currentGroup is not null) _currentGroup.PropertyChanged -= OnGroupPropertyChanged;
         _currentButton = null;
         _currentGroup = null;
+        _currentWindow = null;
         _previewItems.Clear();
         _cardsPanel.Children.Clear();
         Hide();
@@ -218,7 +225,7 @@ public sealed partial class WindowPreviewWindow : Window
         Dispatcher.BeginInvoke(DispatcherPriority.Background, () =>
         {
             if (IsVisible && ReferenceEquals(sender, _currentGroup) && _currentButton is not null && _currentGroup is not null)
-                ShowFor(_currentButton, _currentGroup, _currentEdge);
+                ShowFor(_currentButton, _currentGroup, _currentEdge, _currentWindow);
         });
     }
 
@@ -228,7 +235,7 @@ public sealed partial class WindowPreviewWindow : Window
         _closingWindows[window.Handle] = DateTime.UtcNow;
         window.Close();
         if (_currentButton is not null && _currentGroup is not null)
-            ShowFor(_currentButton, _currentGroup, _currentEdge);
+            ShowFor(_currentButton, _currentGroup, _currentEdge, _currentWindow);
         else
             HidePreview();
     }

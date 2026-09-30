@@ -73,7 +73,7 @@ public partial class DockWindow : IEditableDock
         _resizeMemory.Clear();
         Reveal();
         BeginInteraction();
-        if (_magnifier is not null) _magnifier.Enabled = false;
+        UpdateMagnifier();
         DimSystemItems(true);
         RebuildItems(); // adds the "+" tile and the decorations
         ShowEditBar();
@@ -112,7 +112,7 @@ public partial class DockWindow : IEditableDock
         HideFocusRing();
         foreach (var view in _itemViews.Values.OfType<WidgetItemView>()) view.SetEditing(false);
         DimSystemItems(false);
-        if (_magnifier is not null) _magnifier.Enabled = true;
+        UpdateMagnifier();
         if (_closing) ClearEditDecorations(); // stops the endless wiggle animations
         else RebuildItems(); // removes the tile and the decorations
         AppServices.ConfigService.ScheduleSave();

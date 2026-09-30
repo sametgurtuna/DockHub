@@ -21,7 +21,8 @@ public sealed partial class AppButton
         menu.Items.Add(DockMenu.Header(Title));
 
         var windows = _group?.Windows ?? new List<ApplicationWindow>();
-        if (windows.Count > 0)
+        // A window's own button (buttons not combined) is that window: no list of the app's windows.
+        if (windows.Count > 0 && _window is null)
         {
             menu.Items.Add(DockMenu.Separator());
             foreach (var window in windows.Take(12))
@@ -90,9 +91,9 @@ public sealed partial class AppButton
         }
 
         menu.Items.Add(DockMenu.Separator());
-        if (Item is not null)
+        if ((Item ?? PinnedBy) is { } pinned)
         {
-            menu.Items.Add(DockMenu.Item("Unpin from dock", "\uE77A", () => AppServices.ConfigService.RemoveItem(Item.Id)));
+            menu.Items.Add(DockMenu.Item("Unpin from dock", "\uE77A", () => AppServices.ConfigService.RemoveItem(pinned.Id)));
         }
         else if (_group is not null && AppLauncher.PinItem(_group) is { } pinItem)
         {
@@ -100,10 +101,18 @@ public sealed partial class AppButton
                 AppServices.ConfigService.AddItem(pinItem, DockItemsIndex.EndOfApps())));
         }
 
-        if (windows.Count > 0)
+        if (_window is { } own)
         {
             menu.Items.Add(DockMenu.Separator());
-            menu.Items.Add(DockMenu.Item(windows.Count > 1 ? $"Close all windows ({windows.Count})" : "Close window", "\uE711",
+            menu.Items.Add(DockMenu.Item("Close window", "\uE711", own.Close));
+            if (windows.Count > 1)
+                menu.Items.Add(DockMenu.Item(L.T("Close all windows ({0})", windows.Count), null, () => { foreach (var w in windows.ToList()) w.Close(); }));
+            menu.Items.Add(DockMenu.Item("End process", "\uE9CE", () => TerminateWindows(new[] { own })));
+        }
+        else if (windows.Count > 0)
+        {
+            menu.Items.Add(DockMenu.Separator());
+            menu.Items.Add(DockMenu.Item(windows.Count > 1 ? L.T("Close all windows ({0})", windows.Count) : "Close window", "\uE711",
                 () => { foreach (var w in windows.ToList()) w.Close(); }));
             menu.Items.Add(DockMenu.Item(windows.Count > 1 ? "End processes" : "End process", "\uE9CE",
                 () => TerminateWindows(windows.ToList())));

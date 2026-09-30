@@ -140,6 +140,7 @@ public partial class DockWindow : Window, IWidgetHost
         SystemEvents.PowerModeChanged += OnPowerModeChanged;
         _config.ItemsChanged += OnItemsChanged;
         _shell.RunningApps.GroupsChanged += RefreshRunningApps;
+        _shell.RunningApps.WindowsChanged += OnRunningWindowsChanged;
         _shell.Manager.FullScreenHelper.FullScreenApps.CollectionChanged += OnFullScreenAppsChanged;
         _shell.LauncherVisibilityChanged += OnLauncherVisibilityChanged;
         if (IsMain) TrayIconView.Interacting += UpdateTrayHost;
@@ -369,6 +370,7 @@ public partial class DockWindow : Window, IWidgetHost
         foreach (var view in _itemViews.Values.OfType<WidgetItemView>()) view.RefreshLook();
         UpdateClock(DateTime.Now);
         SubscribeClock();
+        UpdateMagnifier();
         UpdateReserver();
         UpdateSmartHide();
         ApplyIndicatorSettings();
@@ -381,6 +383,15 @@ public partial class DockWindow : Window, IWidgetHost
         UpdateVisibility(animate: false);
         UpdateTrigger();
         QueueReposition();
+    }
+
+    /// <summary>
+    /// Hover magnification: off while the dock is edited, and when every window has a button of its own (wide buttons
+    /// with titles).
+    /// </summary>
+    private void UpdateMagnifier()
+    {
+        if (_magnifier is not null) _magnifier.Enabled = !_editing && !SplitWindows;
     }
 
     // ------------------------------------------------------------------ Clock
@@ -440,6 +451,7 @@ public partial class DockWindow : Window, IWidgetHost
         DockVisibility.Report(this, false);
         _config.ItemsChanged -= OnItemsChanged;
         _shell.RunningApps.GroupsChanged -= RefreshRunningApps;
+        _shell.RunningApps.WindowsChanged -= OnRunningWindowsChanged;
         _shell.Manager.FullScreenHelper.FullScreenApps.CollectionChanged -= OnFullScreenAppsChanged;
         _shell.LauncherVisibilityChanged -= OnLauncherVisibilityChanged;
         TrayIconView.Interacting -= UpdateTrayHost;

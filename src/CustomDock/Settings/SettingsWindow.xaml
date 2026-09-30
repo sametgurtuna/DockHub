@@ -386,6 +386,17 @@
                                     Description="Running applications that are not pinned to the dock appear after a separator. Right-click to pin or drag and drop anywhere.">
                         <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ShowRunningApps}" />
                     </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE8A9;" Header="Combine app buttons"
+                                    Description="Always: one button for all of an app's windows. Never: each window has a button of its own with its title (only its icon on a side dock), and the icons don't grow under the pointer.">
+                        <Border Style="{StaticResource SegmentedHost}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="CombineButtons" Content="Always"
+                                             IsChecked="{Binding CombineButtons, Converter={StaticResource EnumEq}, ConverterParameter=Always}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="CombineButtons" Content="Never"
+                                             IsChecked="{Binding CombineButtons, Converter={StaticResource EnumEq}, ConverterParameter=Never}" />
+                            </StackPanel>
+                        </Border>
+                    </ctl:SettingRow>
                     <ctl:SettingRow Glyph="&#xE7F4;" Header="Apps from all desktops"
                                     Description="Lists open windows of every virtual desktop. Clicking one switches to its desktop.">
                         <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding RunningAppsAllDesktops}" />

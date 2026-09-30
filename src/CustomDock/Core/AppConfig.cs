@@ -36,6 +36,9 @@ public enum RunningIndicatorStyle { Line, Dots, Off }
 /// <summary>Widgets on the dock: each on its own card, or straight on the dock with a thin line between them.</summary>
 public enum WidgetStyle { Cards, Seamless }
 
+/// <summary>An app's windows on one button (Always), or each window on a button of its own with its title (Never).</summary>
+public enum CombineButtons { Always, Never }
+
 public enum DockLayout
 {
     /// <summary>Floating bar with margins and rounded corners.</summary>
@@ -127,6 +130,11 @@ public sealed class AppConfig : ObservableObject
 
     /// <summary>Shows unpinned running apps at the end of the dock.</summary>
     public bool ShowRunningApps { get => _showRunningApps; set => Set(ref _showRunningApps, value); }
+
+    private CombineButtons _combineButtons = CombineButtons.Always;
+
+    /// <summary>Like Windows' "Combine taskbar buttons": Always (one button per app, as before) or Never (one per window).</summary>
+    public CombineButtons CombineButtons { get => _combineButtons; set => Set(ref _combineButtons, value); }
 
     public bool ShowTray { get => _showTray; set => Set(ref _showTray, value); }
 

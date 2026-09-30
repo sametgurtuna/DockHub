@@ -8,6 +8,7 @@ using CustomDock.Native;
 using CustomDock.Services;
 using CustomDock.Shell;
 using CustomDock.Widgets;
+using ManagedShell.WindowsTasks;
 
 namespace CustomDock.Dock;
 
@@ -223,106 +224,174 @@ public partial class DockWindow
         return key;
     }
 
-    /// <summary>Binds window groups to pinned buttons; appends unpinned running apps to the end.</summary>
+    /// <summary>Whether every window has a button of its own (buttons not combined). The top bar has no apps.</summary>
+    private bool SplitWindows => _config.CombineButtons == CombineButtons.Never && !IsBar;
+
+    /// <summary>
+    /// The dock's app buttons (see <see cref="TaskbarButtons"/>): the pinned apps with their windows, then the running
+    /// apps that aren't pinned (with "Show unpinned running apps"; with docks on several displays, those on this one).
+    /// </summary>
+    private List<TaskbarButton<ApplicationWindow>> ButtonLayout()
+    {
+        var pins = _config.Items.Where(i => i.Kind == DockItemKind.App).Select(i => (i.Id, KeyFor(i))).ToList();
+        var folderKeys = _config.Items.Where(i => i.Kind == DockItemKind.Group)
+            .SelectMany(g => g.Children ?? new()).Where(c => c.Kind == DockItemKind.App).Select(KeyFor).ToHashSet();
+        var mode = SplitWindows ? CombineButtons.Never : CombineButtons.Always;
+        bool byDisplay = FilterRunningByDisplay;
+        // Not combined, each window has its button on the dock of its own display.
+        var apps = _shell.RunningApps.Groups.Select(g => new RunningApp<ApplicationWindow>(g.Key, g.Order,
+            mode == CombineButtons.Never && byDisplay ? g.Windows.Where(IsWindowOnThisDisplay).ToList() : g.Windows.ToList())).ToList();
+        bool tail = _config.ShowRunningApps && !IsBar;
+        return TaskbarButtons.Layout(pins, folderKeys, apps, mode)
+            .Where(b => b.Slot != TaskbarSlot.Running
+                        || (tail && (mode == CombineButtons.Never || !byDisplay || IsOnThisDisplay(_shell.RunningApps.Find(b.Key)))))
+            .ToList();
+    }
+
+    /// <summary>
+    /// Binds the running apps to the pinned buttons, puts a pinned app's other windows right after it (buttons not
+    /// combined) and the other running apps at the end.
+    /// </summary>
     private void RefreshRunningApps()
     {
         if (_closing) return;
-        var pinnedKeys = new HashSet<string>();
-        foreach (var item in _config.Items.Where(i => i.Kind == DockItemKind.App))
-        {
-            var key = KeyFor(item);
-            pinnedKeys.Add(key);
-            if (_itemViews.TryGetValue(item.Id, out var view) && view is AppButton button)
-                button.Group = _shell.RunningApps.Find(key);
-        }
+        var layout = ButtonLayout();
+
         // Apps inside folders count as pinned too; the folder shows that they are running.
         foreach (var folder in _config.Items.Where(i => i.Kind == DockItemKind.Group))
         {
-            bool running = false;
-            foreach (var child in (folder.Children ?? new()).Where(c => c.Kind == DockItemKind.App))
-            {
-                var key = KeyFor(child);
-                pinnedKeys.Add(key);
-                running |= _shell.RunningApps.Find(key) is { WindowCount: > 0 };
-            }
+            bool running = (folder.Children ?? new()).Where(c => c.Kind == DockItemKind.App)
+                .Any(child => _shell.RunningApps.Find(KeyFor(child)) is { WindowCount: > 0 });
             if (_itemViews.TryGetValue(folder.Id, out var view) && view is GroupItemView groupView)
                 groupView.SetRunning(running);
         }
 
-        var unpinned = UnpinnedRunningGroups(pinnedKeys);
-        _runningSignature = Signature(unpinned);
+        bool vertical = IsVertical;
+        foreach (var b in layout.Where(b => b.Slot == TaskbarSlot.Pinned))
+        {
+            if (!_itemViews.TryGetValue(b.PinId!, out var view) || view is not AppButton pinned) continue;
+            pinned.Group = _shell.RunningApps.Find(b.Key);
+            pinned.Window = b.Window;
+            pinned.TitleAllowed = !vertical;
+        }
 
-        foreach (var key in _runningViews.Keys.Except(unpinned.Select(g => g.Key)).ToList())
+        // A pinned app's other windows stay out of edit mode, which is about the dock's own items.
+        var extras = layout.Where(b => b.Slot == TaskbarSlot.PinnedWindow && !_editing).ToList();
+        var tail = layout.Where(b => b.Slot == TaskbarSlot.Running).ToList();
+        _runningSignature = Signature(layout);
+
+        var wanted = extras.Concat(tail).Select(ViewKey).ToHashSet();
+        foreach (var key in _runningViews.Keys.Where(k => !wanted.Contains(k)).ToList())
         {
             _runningViews[key].Detach();
             _runningViews.Remove(key);
         }
 
-        // Rebuild the tail section (separator + running apps); edit mode's "+" tile stays with the dock's items.
-        int itemCount = PinnedViewCount + (_addTile is not null && ItemsPanel.Children.Contains(_addTile) ? 1 : 0);
-        while (ItemsPanel.Children.Count > itemCount)
-            ItemsPanel.Children.RemoveAt(ItemsPanel.Children.Count - 1);
-
-        if (unpinned.Count == 0) return;
-        if (itemCount > 0) ItemsPanel.Children.Add(_runningSeparator);
-
-        bool vertical = IsVertical;
-        foreach (var group in unpinned)
+        // Everything but the dock's own items and edit mode's "+" tile is placed again.
+        var itemViews = _itemViews.Values.ToHashSet();
+        for (int i = ItemsPanel.Children.Count - 1; i >= 0; i--)
         {
-            bool isNew = false;
-            if (!_runningViews.TryGetValue(group.Key, out var button))
+            var child = ItemsPanel.Children[i];
+            if (!ReferenceEquals(child, _addTile) && !(child is FrameworkElement element && itemViews.Contains(element)))
+                ItemsPanel.Children.RemoveAt(i);
+        }
+
+        string? previousPin = null;
+        UIElement? previous = null;
+        foreach (var b in extras)
+        {
+            if (b.PinId != previousPin)
             {
-                var g = group;
-                button = new AppButton(null, group);
-                DockDragHelper.Attach(button, () => DockDragHelper.StringData(DockDragHelper.RunningAppFormat, g.Key));
-                _runningViews[group.Key] = button;
-                isNew = true;
+                previousPin = b.PinId;
+                previous = _itemViews.GetValueOrDefault(b.PinId!);
             }
-            button.Margin = vertical ? new Thickness(0, 1, 0, 1) : new Thickness(1, 0, 1, 0);
-            button.Refresh();
+            int at = previous is null ? -1 : ItemsPanel.Children.IndexOf(previous);
+            if (at < 0) continue;
+            var button = RunningView(b, vertical, out _);
+            ItemsPanel.Children.Insert(at + 1, button);
+            previous = button;
+        }
+
+        if (tail.Count == 0) return;
+        if (ItemsPanel.Children.Count > 0) ItemsPanel.Children.Add(_runningSeparator);
+        foreach (var b in tail)
+        {
+            var button = RunningView(b, vertical, out bool isNew);
             ItemsPanel.Children.Add(button);
             if (isNew && DateTime.UtcNow > _startedAt + TimeSpan.FromSeconds(5)) HintIfOutOfView(button);
         }
     }
 
+    /// <summary>The button of a running app, one of its windows, or one more window of a pinned app (kept while it lasts).</summary>
+    private AppButton RunningView(TaskbarButton<ApplicationWindow> model, bool vertical, out bool isNew)
+    {
+        string key = ViewKey(model);
+        var group = _shell.RunningApps.Find(model.Key);
+        isNew = !_runningViews.TryGetValue(key, out var button);
+        if (button is null)
+        {
+            button = new AppButton(null, group) { Window = model.Window };
+            if (model.Slot == TaskbarSlot.Running)
+            {
+                // Dragged onto the dock, a running app is pinned (a pinned app's window isn't: the app already is).
+                string appKey = model.Key;
+                DockDragHelper.Attach(button, () => DockDragHelper.StringData(DockDragHelper.RunningAppFormat, appKey));
+            }
+            else
+            {
+                button.PinnedBy = _config.Items.FirstOrDefault(i => i.Id == model.PinId);
+            }
+            _runningViews[key] = button;
+        }
+        button.Group = group;
+        button.TitleAllowed = !vertical;
+        button.Margin = vertical ? new Thickness(0, 1, 0, 1) : new Thickness(1, 0, 1, 0);
+        button.Refresh();
+        return button;
+    }
+
+    private static string ViewKey(TaskbarButton<ApplicationWindow> model) => model switch
+    {
+        { Slot: TaskbarSlot.PinnedWindow, Window: { } window } => $"pin:{model.PinId}#{window.Handle}",
+        { Window: { } window } => $"{model.Key}#{window.Handle}",
+        _ => model.Key,
+    };
+
     /// <summary>With docks on several displays each one only lists the apps whose windows are on its display.</summary>
     private bool FilterRunningByDisplay => _config.ShowOnAllDisplays && _config.RunningAppsOnOwnDisplay && s_docks.Count(d => !d.IsBar) > 1;
 
-    private List<AppGroup> UnpinnedRunningGroups(HashSet<string> pinnedKeys)
+    private bool IsOnThisDisplay(AppGroup? group)
     {
-        if (!_config.ShowRunningApps || IsBar) return new List<AppGroup>();
-        var groups = _shell.RunningApps.Groups.Where(g => !pinnedKeys.Contains(g.Key));
-        if (FilterRunningByDisplay) groups = groups.Where(IsOnThisDisplay);
-        return groups.OrderBy(g => g.Order).ToList();
-    }
-
-    private bool IsOnThisDisplay(AppGroup group)
-    {
+        if (group is null) return false;
         if (group.Windows.Count == 0) return IsMain;
-        foreach (var window in group.Windows)
-        {
-            // Minimized windows report the display they were restored on.
-            var monitor = NativeMethods.MonitorFromWindow(window.Handle, NativeMethods.MONITOR_DEFAULTTONEAREST);
-            if (monitor == _monitor.Handle) return true;
-            // A display handle may be stale after a display change; fall back to the device name.
-            if (monitor != IntPtr.Zero && MonitorHelper.TryGet(monitor) is { } info &&
-                string.Equals(info.DeviceName, _monitor.DeviceName, StringComparison.OrdinalIgnoreCase))
-                return true;
-        }
-        return false;
+        return group.Windows.Any(IsWindowOnThisDisplay);
     }
 
-    private static string Signature(List<AppGroup> groups) => string.Join("|", groups.Select(g => g.Key));
+    private bool IsWindowOnThisDisplay(ApplicationWindow window)
+    {
+        // Minimized windows report the display they were restored on.
+        var monitor = NativeMethods.MonitorFromWindow(window.Handle, NativeMethods.MONITOR_DEFAULTTONEAREST);
+        if (monitor == _monitor.Handle) return true;
+        // A display handle may be stale after a display change; fall back to the device name.
+        return monitor != IntPtr.Zero && MonitorHelper.TryGet(monitor) is { } info &&
+               string.Equals(info.DeviceName, _monitor.DeviceName, StringComparison.OrdinalIgnoreCase);
+    }
 
-    /// <summary>Rebuilds running apps when a window moved to or from this display.</summary>
+    private static string Signature(IEnumerable<TaskbarButton<ApplicationWindow>> layout)
+        => string.Join("|", layout.Select(b => b.Slot == TaskbarSlot.Pinned ? $"{b.PinId}={b.Window?.Handle}" : ViewKey(b)));
+
+    /// <summary>Rebuilds the app buttons when a window moved to or from this display.</summary>
     private void RefreshRunningAppsIfMoved()
     {
         if (_closing || !FilterRunningByDisplay) return;
-        var pinnedKeys = _config.Items.Where(i => i.Kind == DockItemKind.App)
-            .Concat(_config.Items.Where(i => i.Kind == DockItemKind.Group).SelectMany(g => g.Children ?? new()).Where(c => c.Kind == DockItemKind.App))
-            .Select(KeyFor).ToHashSet();
-        if (Signature(UnpinnedRunningGroups(pinnedKeys)) != _runningSignature)
+        if (Signature(ButtonLayout()) != _runningSignature)
             RefreshRunningApps();
+    }
+
+    /// <summary>A window opened or closed in a running app: only buttons that aren't combined change.</summary>
+    private void OnRunningWindowsChanged()
+    {
+        if (SplitWindows) RefreshRunningApps();
     }
 
     private bool _dividersQueued;
@@ -379,22 +448,29 @@ public partial class DockWindow
     /// </summary>
     private int DropIndexAt(Point panelPoint, out double caret)
     {
-        int count = PinnedViewCount;
         bool vertical = IsVertical;
         int index = 0;
         caret = 0;
         double lastEnd = 0;
+        var itemViews = _itemViews.Values.ToHashSet();
 
-        for (int i = 0; i < count; i++)
+        int position = 0;
+        foreach (FrameworkElement child in ItemsPanel.Children)
         {
-            var child = (FrameworkElement)ItemsPanel.Children[i];
+            // The dock's own items come first; edit mode's "+" tile and the running apps follow them.
+            if (ReferenceEquals(child, _addTile) || ReferenceEquals(child, _runningSeparator)) break;
+            bool isItem = itemViews.Contains(child);
+            // A pinned app's other windows (buttons not combined) go with it; running apps are no drop places.
+            if (!isItem && child is not AppButton { PinnedBy: not null }) continue;
+            int fallback = isItem ? position++ : position;
             if (child.Visibility != Visibility.Visible) continue;
             var topLeft = child.TranslatePoint(new Point(0, 0), ItemsPanel);
             double start = vertical ? topLeft.Y : topLeft.X;
             double length = vertical ? child.ActualHeight : child.ActualWidth;
             double pointer = vertical ? panelPoint.Y : panelPoint.X;
             lastEnd = start + length;
-            int configIndex = ConfigIndexOf(child, i);
+            if (!isItem) continue;
+            int configIndex = ConfigIndexOf(child, fallback);
 
             if (pointer < start + length / 2)
             {

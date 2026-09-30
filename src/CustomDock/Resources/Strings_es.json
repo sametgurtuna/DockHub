@@ -1190,5 +1190,11 @@
   "The bar slides off its edge and comes back when the pointer reaches it.": "La barra se desliza fuera del borde y vuelve cuando el puntero llega a él.",
   "Clock on the bar": "Reloj en la barra",
   "Add to the top bar": "Agregar a la barra superior",
-  "Add to the top bar…": "Agregar a la barra superior…"
+  "Add to the top bar…": "Agregar a la barra superior…",
+
+  // ---------------------------------------------------------------- Taskbar buttons
+  "Combine app buttons": "Combinar los botones de las aplicaciones",
+  "Always: one button for all of an app's windows. Never: each window has a button of its own with its title (only its icon on a side dock), and the icons don't grow under the pointer.": "Siempre: un botón para todas las ventanas de una aplicación. Nunca: cada ventana tiene su propio botón con su título (en un dock lateral, solo su icono) y los iconos no crecen bajo el puntero.",
+  "Never": "Nunca",
+  "Close all windows ({0})": "Cerrar todas las ventanas ({0})"
 }

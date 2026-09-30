@@ -10,6 +10,7 @@ using CustomDock.Core;
 using CustomDock.Native;
 using CustomDock.Services;
 using CustomDock.Shell;
+using ManagedShell.WindowsTasks;
 
 namespace CustomDock.Dock;
 
@@ -34,6 +35,12 @@ public sealed partial class AppButton : Grid
     private readonly DispatcherTimer _previewTimer;
     private readonly DispatcherTimer _dragActivateTimer;
     private AppGroup? _group;
+    private ApplicationWindow? _window;
+    private TextBlock? _label;
+    private bool _titleAllowed;
+
+    /// <summary>Width of a window's button with its title (buttons not combined).</summary>
+    public const double TitledWidth = 160;
 
     public AppButton(DockItem? item, AppGroup? group)
     {
@@ -170,14 +177,10 @@ public sealed partial class AppButton : Grid
         _dragActivateTimer.Tick += (_, _) =>
         {
             _dragActivateTimer.Stop();
-            if (_group is { WindowCount: > 0 })
+            if ((_window ?? _group?.PrimaryWindow ?? _group?.Windows.FirstOrDefault()) is { } win)
             {
-                var win = _group.PrimaryWindow ?? _group.Windows.FirstOrDefault();
-                if (win is not null)
-                {
-                    if (win.IsMinimized) win.Restore();
-                    win.BringToFront();
-                }
+                if (win.IsMinimized) win.Restore();
+                win.BringToFront();
             }
         };
 
@@ -207,10 +210,88 @@ public sealed partial class AppButton : Grid
         }
     }
 
+    /// <summary>
+    /// The one window this button stands for when buttons aren't combined (<see cref="CombineButtons.Never"/>); null for a
+    /// button of all the app's windows.
+    /// </summary>
+    public ApplicationWindow? Window
+    {
+        get => _window;
+        set
+        {
+            if (ReferenceEquals(_window, value)) return;
+            if (_window is not null) _window.PropertyChanged -= OnWindowChanged;
+            _window = value;
+            if (_window is not null) _window.PropertyChanged += OnWindowChanged;
+            ApplyTitleLayout();
+            Refresh();
+        }
+    }
+
+    /// <summary>Whether a window's button shows its title next to the icon (a horizontal dock).</summary>
+    public bool TitleAllowed
+    {
+        get => _titleAllowed;
+        set
+        {
+            if (_titleAllowed == value) return;
+            _titleAllowed = value;
+            ApplyTitleLayout();
+            Refresh();
+        }
+    }
+
+    private bool ShowsTitle => _titleAllowed && _window is not null;
+
+    /// <summary>The pinned item whose app this window belongs to, for one more window of a pinned app (after its pin).</summary>
+    public DockItem? PinnedBy { get; set; }
+
+    private static readonly HashSet<string> WindowProperties = new()
+    {
+        nameof(ApplicationWindow.Title), nameof(ApplicationWindow.State), nameof(ApplicationWindow.OverlayIcon),
+        nameof(ApplicationWindow.ProgressState), nameof(ApplicationWindow.ProgressValue),
+    };
+
+    private void OnWindowChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is null || WindowProperties.Contains(e.PropertyName)) Dispatcher.BeginInvoke(Refresh);
+    }
+
+    /// <summary>A window's button: the icon at the start and the title after it, within <see cref="TitledWidth"/>.</summary>
+    private void ApplyTitleLayout()
+    {
+        bool titled = ShowsTitle;
+        if (titled && _label is null)
+        {
+            _label = new TextBlock
+            {
+                FontSize = 12,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(42, 0, 8, 2),
+                TextTrimming = TextTrimming.CharacterEllipsis,
+                IsHitTestVisible = false,
+            };
+            _label.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimaryBrush");
+            Children.Insert(Children.IndexOf(_icon) + 1, _label);
+        }
+        if (_label is not null) _label.Visibility = titled ? Visibility.Visible : Visibility.Collapsed;
+
+        Width = titled ? TitledWidth : 44;
+        _icon.HorizontalAlignment = titled ? HorizontalAlignment.Left : HorizontalAlignment.Center;
+        _icon.Margin = titled ? new Thickness(7, 0, 0, 2) : new Thickness(0, 0, 0, 2);
+        _overlay.HorizontalAlignment = titled ? HorizontalAlignment.Left : HorizontalAlignment.Right;
+        _overlay.Margin = titled ? new Thickness(24, 0, 0, 7) : new Thickness(0, 0, 5, 7);
+        _badgeBorder.HorizontalAlignment = titled ? HorizontalAlignment.Left : HorizontalAlignment.Right;
+        _badgeBorder.Margin = titled ? new Thickness(26, 1, 0, 0) : new Thickness(0, 1, 1, 0);
+        _progressTrack.HorizontalAlignment = titled ? HorizontalAlignment.Left : HorizontalAlignment.Center;
+        _progressTrack.Margin = titled ? new Thickness(9, 0, 0, 8) : new Thickness(0, 0, 0, 8);
+    }
+
     public string Title
     {
         get
         {
+            if (_window is { } window && !string.IsNullOrWhiteSpace(window.Title)) return window.Title;
             if (!string.IsNullOrWhiteSpace(Item?.Name)) return Item!.Name!;
             if (_group is not null && !string.IsNullOrWhiteSpace(_group.Title)) return _group.Title;
             if (Item?.Path is { } path)
@@ -228,16 +309,24 @@ public sealed partial class AppButton : Grid
     public void Refresh()
     {
         var group = _group;
-        bool running = group is { WindowCount: > 0 };
+        var window = _window;
+        bool running = window is not null || group is { WindowCount: > 0 };
         if (_launching && (group?.WindowCount ?? 0) > _launchBaseline) EndLaunchFeedback();
+        // A window's button shows that window's state; otherwise the app's.
+        bool flashing = window is not null ? window.State == ApplicationWindow.WindowState.Flashing : group?.IsFlashing == true;
+        bool active = window is not null ? window.State == ApplicationWindow.WindowState.Active : group?.IsActive == true;
+        int windowCount = window is not null ? 1 : group?.WindowCount ?? 0;
+        var overlay = window is not null ? window.OverlayIcon : group?.OverlayIcon;
+        var progress = window is not null ? WindowProgress.Of(window) : WindowProgress.Of(group);
 
         if (Item is null || _icon.Source is null)
             _icon.Source = group?.Icon ?? _icon.Source;
         else if (_iconIsFallback && group?.Icon is { } groupIcon && !ReferenceEquals(groupIcon, ShellIcons.GetDefaultAppIcon()))
             _icon.Source = groupIcon; // Pinned icon unavailable: use the running window's icon meanwhile.
 
-        _overlay.Source = group?.OverlayIcon;
-        _overlay.Visibility = group?.OverlayIcon is null ? Visibility.Collapsed : Visibility.Visible;
+        _overlay.Source = overlay;
+        _overlay.Visibility = overlay is null ? Visibility.Collapsed : Visibility.Visible;
+        if (_label is not null) _label.Text = Title;
 
         var style = AppServices.Config.RunningIndicator;
         if (!running || style == RunningIndicatorStyle.Off)
@@ -247,7 +336,7 @@ public sealed partial class AppButton : Grid
         }
         else
         {
-            string brush = group!.IsFlashing ? "AccentOrangeBrush" : group.IsActive ? "ActiveIndicatorBrush" : "IndicatorBrush";
+            string brush = flashing ? "AccentOrangeBrush" : active ? "ActiveIndicatorBrush" : "IndicatorBrush";
             if (style == RunningIndicatorStyle.Dots)
             {
                 // One dot per window (up to three), macOS style.
@@ -257,7 +346,7 @@ public sealed partial class AppButton : Grid
                 for (int i = 0; i < _dots.Children.Count; i++)
                 {
                     var dot = (System.Windows.Shapes.Ellipse)_dots.Children[i];
-                    dot.Visibility = i < Math.Min(group.WindowCount, 3) ? Visibility.Visible : Visibility.Collapsed;
+                    dot.Visibility = i < Math.Min(windowCount, 3) ? Visibility.Visible : Visibility.Collapsed;
                     dot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, brush);
                 }
             }
@@ -266,7 +355,7 @@ public sealed partial class AppButton : Grid
                 if (_dots is not null) _dots.Visibility = Visibility.Collapsed;
                 _indicator.Visibility = Visibility.Visible;
                 _indicator.SetResourceReference(Border.BackgroundProperty, brush);
-                double width = group.IsActive || group.IsFlashing ? 14 : group.WindowCount > 1 ? 9 : 5;
+                double width = active || flashing ? 14 : windowCount > 1 ? 9 : 5;
                 _indicator.BeginAnimation(WidthProperty, new DoubleAnimation(width, TimeSpan.FromMilliseconds(220))
                 {
                     EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
@@ -274,40 +363,40 @@ public sealed partial class AppButton : Grid
             }
         }
 
-        bool progress = group is { HasProgress: true };
-        _progressTrack.Visibility = progress ? Visibility.Visible : Visibility.Collapsed;
-        if (progress)
+        _progressTrack.Visibility = progress is null ? Visibility.Collapsed : Visibility.Visible;
+        if (progress is { } p)
         {
-            _progressFill.Width = group!.ProgressIndeterminate ? 26 : 26 * group.Progress;
+            _progressFill.Width = p.Indeterminate ? 26 : 26 * p.Value;
             _progressFill.SetResourceReference(Border.BackgroundProperty,
-                group.ProgressError ? "AccentOrangeBrush" : group.ProgressIndeterminate ? "TextSecondaryBrush" : "AccentGreenBrush");
+                p.Error ? "AccentOrangeBrush" : p.Indeterminate ? "TextSecondaryBrush" : "AccentGreenBrush");
         }
 
-        UpdateBadge(group);
+        UpdateBadge(running ? (window is not null ? new[] { window.Title ?? "" } : group!.Windows.Select(w => w.Title)) : null, overlay);
 
         // Live thumbnail preview already shows open windows; clean tooltip
-        ToolTip = group is { WindowCount: > 0 } ? null : Title;
+        ToolTip = running ? null : Title;
         System.Windows.Automation.AutomationProperties.SetName(this, Title);
-        System.Windows.Automation.AutomationProperties.SetHelpText(this, group is not { WindowCount: > 0 } ? L.T("Not running")
-            : group.IsFlashing ? L.T("Needs attention")
-            : group.WindowCount == 1 ? L.T("Running") : L.T("Running, {0} windows", group.WindowCount));
+        System.Windows.Automation.AutomationProperties.SetHelpText(this, !running ? L.T("Not running")
+            : flashing ? L.T("Needs attention")
+            : windowCount == 1 ? L.T("Running") : L.T("Running, {0} windows", windowCount));
     }
 
     private void ShowThumbnailPreview()
     {
         if (_group is not { WindowCount: > 0 }) return;
-        WindowPreviewWindow.Instance.ShowFor(this, _group, DockWindow.EdgeAt(this));
+        WindowPreviewWindow.Instance.ShowFor(this, _group, DockWindow.EdgeAt(this), _window);
     }
 
-    private void UpdateBadge(AppGroup? group)
+    /// <param name="titles">The titles of the windows the button stands for (null: not running).</param>
+    private void UpdateBadge(IEnumerable<string>? titles, ImageSource? overlay)
     {
-        if (group is null || group.WindowCount == 0)
+        if (titles is null)
         {
             _badgeBorder.Visibility = Visibility.Collapsed;
             return;
         }
 
-        var (badgeText, hasDot) = AppButtonBadge.FromTitles(group.Windows.Select(w => w.Title));
+        var (badgeText, hasDot) = AppButtonBadge.FromTitles(titles);
 
         if (!string.IsNullOrEmpty(badgeText))
         {
@@ -319,7 +408,7 @@ public sealed partial class AppButton : Grid
             _badgeBorder.Padding = new Thickness(3.5, 0, 3.5, 0);
             _badgeBorder.Visibility = Visibility.Visible;
         }
-        else if (hasDot || (group.OverlayIcon is not null && _overlay.Source is null))
+        else if (hasDot || (overlay is not null && _overlay.Source is null))
         {
             _badgeText.Text = "";
             _badgeText.Visibility = Visibility.Collapsed;
@@ -363,6 +452,11 @@ public sealed partial class AppButton : Grid
         {
             BeginLaunchFeedback();
             AppLauncher.Launch(Item, newInstance: true);
+            return;
+        }
+        if (_window is { } window)
+        {
+            AppLauncher.ActivateWindow(window);
             return;
         }
         if (_group is not { WindowCount: > 0 } && Item is not null) BeginLaunchFeedback();
@@ -436,7 +530,9 @@ public sealed partial class AppButton : Grid
         e.Handled = true;
         _previewTimer.Stop();
         WindowPreviewWindow.Instance.HidePreview();
-        StartNewInstance();
+        // A window's button: middle click closes that window (as in a window preview).
+        if (_window is { } window) window.Close();
+        else StartNewInstance();
     }
 
     private void StartNewInstance()
@@ -459,6 +555,7 @@ public sealed partial class AppButton : Grid
         _dragActivateTimer.Stop();
         _iconRetryTimer?.Stop();
         if (_group is not null) _group.PropertyChanged -= OnGroupChanged;
+        if (_window is not null) _window.PropertyChanged -= OnWindowChanged;
     }
 }
 

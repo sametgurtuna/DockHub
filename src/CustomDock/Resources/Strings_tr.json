@@ -1190,5 +1190,11 @@
   "The bar slides off its edge and comes back when the pointer reaches it.": "Bar kenardan kayıp gider ve imleç oraya ulaşınca geri gelir.",
   "Clock on the bar": "Barda saat",
   "Add to the top bar": "Üst bara ekle",
-  "Add to the top bar…": "Üst bara ekle…"
+  "Add to the top bar…": "Üst bara ekle…",
+
+  // ---------------------------------------------------------------- Taskbar buttons
+  "Combine app buttons": "Uygulama düğmelerini birleştir",
+  "Always: one button for all of an app's windows. Never: each window has a button of its own with its title (only its icon on a side dock), and the icons don't grow under the pointer.": "Her zaman: bir uygulamanın tüm pencereleri için tek düğme. Asla: her pencerenin başlığıyla kendi düğmesi olur (yandaki dock'ta yalnızca simgesi) ve simgeler işaretçinin altında büyümez.",
+  "Never": "Asla",
+  "Close all windows ({0})": "Tüm pencereleri kapat ({0})"
 }

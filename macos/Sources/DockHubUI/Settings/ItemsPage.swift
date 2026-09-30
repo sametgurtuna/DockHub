@@ -29,6 +29,10 @@ struct ItemsPage: View {
                 } label: { Label(L.t("Import from Dock"), systemImage: "square.and.arrow.down") }
                     .help(L.t("Adds the apps pinned to the macOS Dock"))
                 Spacer()
+                Button { store.undo() } label: { Label(L.t("Undo"), systemImage: "arrow.uturn.backward") }
+                    .keyboardShortcut("z", modifiers: .command)
+                    .disabled(store.undoDescription == nil)
+                    .help(store.undoDescription.map { L.t("Undo: {0}", $0) } ?? L.t("Undo"))
             }
             if let note { Text(note).font(.caption).foregroundStyle(.secondary) }
 

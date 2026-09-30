@@ -31,9 +31,9 @@ açılabilmesi (ve Mac'in onu bozmadan geri yazması) 1.0'ın ön koşulu; bu y�
 |---|---|---|---|---|
 | Ayar şeması 0.7–1.0 alanları | `Core/AppConfig.cs` | `var` | P1 | mevcut (Faz 23) |
 | Bilinmeyen alanları koruyarak okuma/yazma | `JsonStore` | `var` | P1 | mevcut (Faz 23) |
-| Geri al (Undo) | `ConfigHistory`, `UndoToast` | `var` | P1 | eksik |
+| Geri al (Undo) | `ConfigHistory`, `UndoToast` | `var` | P1 | mevcut (Faz 23: ayarlar ve dock menüsü, ⌘Z) |
 | Yedekleme ve geri yükleme (.zip), günlük yedek | `BackupService` | `var` | P2 | eksik |
-| Profiller (elle, ekran sayısı, uygulama, saat kuralları) | `ProfileService` | `var` (uygulama kuralı `NSWorkspace` bildirimleriyle) | P1 | eksik |
+| Profiller (elle, ekran sayısı, uygulama, saat kuralları) | `ProfileService` | `var` (uygulama kuralı `NSWorkspace` bildirimleriyle) | P1 | mevcut (Faz 23) |
 | Ayar eşitleme (klasör) | `SyncService`, `SyncMerge` | `var` (iCloud Drive klasörü de olur) | P2 | eksik |
 | Güncelleme denetimi | `UpdateService` | `var` (DMG varlığı; Faz 25) | P1 | eksik |
 | Çökme sonrası yeniden başlatma ve bildirim | `CrashRecovery`, Windows Olay Günlüğü | `uyarla`: `launchd` KeepAlive ile yeniden başlatma; çökme kaydı `~/Library/Logs/DiagnosticReports` (izinsiz okunur) | P2 | eksik |
@@ -60,7 +60,7 @@ açılabilmesi (ve Mac'in onu bozmadan geri yazması) 1.0'ın ön koşulu; bu y�
 | Yetenek | Windows | Karar | Öncelik | Durum |
 |---|---|---|---|---|
 | Win+1…9 | `WinNumberHotkeys` | `uyarla`: Cmd+Opt+1…9 gibi kendi kısayolu (Carbon `RegisterEventHotKey`, izinsiz) | P2 | eksik |
-| Genel kısayollar | `HotkeyService` | `var` (Carbon hot key) | P1 | eksik |
+| Genel kısayollar | `HotkeyService` | `var` (Carbon hot key) | P1 | mevcut (Faz 23; Windows metin biçimi, Win = ⌘) |
 | Hızlı başlatıcı (uygulama, ayar, komut, hesap) | `LauncherWindow` | `uyarla`: Spotlight'ın yerini almaz, kendi paneli | P2 | eksik |
 | Başlatıcıda dosya arama | Windows Search (OLE DB) | `var`: `NSMetadataQuery` (Spotlight dizini) | P2 | eksik |
 | Birim, para birimi, emoji | `LauncherUnits`, `EmojiIndex` | `var` (aynı veri) | P2 | eksik |

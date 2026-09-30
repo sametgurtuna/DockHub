@@ -1389,5 +1389,16 @@
   "macOS Dock, display, language and maintenance.": "Dock de macOS, pantalla, idioma y mantenimiento.",
   "none": "ninguno",
   "{0} h {1} min": "{0} h {1} min",
-  "{0} min": "{0} min"
+  "{0} min": "{0} min",
+  "App name, for example Steam or Xcode. The profile stays while the app runs. Press Return to save.": "Nombre de la app, por ejemplo Steam o Xcode. El perfil sigue activo mientras la app se ejecuta. Pulsa Return para guardar.",
+  "Click a shortcut and press the new keys. It needs Command, Option or Control. Delete turns it off, Escape cancels.": "Haz clic en un atajo y pulsa las teclas nuevas. Necesita Comando, Opción o Control. Suprimir lo desactiva y Escape cancela.",
+  "Displays": "Pantallas",
+  "From": "Desde",
+  "To": "Hasta",
+  "Global shortcuts for DockHub actions.": "Atajos globales para las acciones de DockHub.",
+  "Imported apps from the macOS Dock": "Apps importadas del Dock de macOS",
+  "Saved dock setups and when they switch in by themselves.": "Configuraciones del dock guardadas y cuándo se activan solas.",
+  "Use the 24-hour form, for example 09:00.": "Usa el formato de 24 horas, por ejemplo 09:00.",
+  "{0} apps": "{0} apps",
+  "Show or hide the dock": "Mostrar u ocultar el dock"
 }

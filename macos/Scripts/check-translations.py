@@ -7,6 +7,7 @@ anahtarlarini toplar:
   - L.t("...") cagrilari,
   - WidgetRegistry'deki widget, kategori ve varyant adlari (displayName),
   - WidgetCatalog aciklamalari (Info(summary: "...")),
+  - kisayol eylemlerinin ad ve aciklamalari (HotkeyAction),
   - WeatherService'teki hava durumu metinleri (description).
 Her anahtarin uc dilde de bos olmayan bir cevirisi olmali.
 
@@ -24,6 +25,7 @@ CALLS = [
     re.compile(r'WidgetDefinition\(id: "[^"]*", name: ' + LITERAL + r', category: ' + LITERAL),
     re.compile(r'WidgetVariant\("[^"]*", ' + LITERAL + r'\)'),
     re.compile(r'Info\(summary: ' + LITERAL),
+    re.compile(r'HotkeyAction\(id: \w+, name: ' + LITERAL + r', description: ' + LITERAL),
 ]
 
 

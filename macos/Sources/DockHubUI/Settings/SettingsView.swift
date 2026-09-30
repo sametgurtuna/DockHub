@@ -6,7 +6,7 @@ import DockHubCore
 /// (Baslat, Arama, Gorev Gorunumu, tepsi, saat) yok: o dugmelerin hicbiri
 /// macOS dock'unda henuz uygulanmiyor, islevsiz anahtar gostermiyoruz.
 public enum SettingsPage: String, CaseIterable, Identifiable, Sendable {
-    case general, appearance, items, gallery, about
+    case general, appearance, items, gallery, profiles, keyboard, about
 
     public var id: String { rawValue }
 
@@ -16,6 +16,8 @@ public enum SettingsPage: String, CaseIterable, Identifiable, Sendable {
         case .appearance: L.t("Appearance")
         case .items: L.t("Dock items")
         case .gallery: L.t("Widget gallery")
+        case .profiles: L.t("Profiles")
+        case .keyboard: L.t("Keyboard shortcuts")
         case .about: L.t("About")
         }
     }
@@ -26,6 +28,8 @@ public enum SettingsPage: String, CaseIterable, Identifiable, Sendable {
         case .appearance: L.t("Style, size, shape and position of the dock.")
         case .items: L.t("Apps, widgets and separators, in the order they appear on the dock.")
         case .gallery: L.t("Pick a widget and a layout, then add it to the dock. Every copy keeps its own settings.")
+        case .profiles: L.t("Saved dock setups and when they switch in by themselves.")
+        case .keyboard: L.t("Global shortcuts for DockHub actions.")
         case .about: ""
         }
     }
@@ -36,6 +40,8 @@ public enum SettingsPage: String, CaseIterable, Identifiable, Sendable {
         case .appearance: "paintbrush"
         case .items: "square.grid.3x1.below.line.grid.1x2"
         case .gallery: "square.grid.2x2"
+        case .profiles: "person.2"
+        case .keyboard: "keyboard"
         case .about: "info.circle"
         }
     }
@@ -69,6 +75,8 @@ struct SettingsView: View {
         case .appearance: AppearancePage(store: store)
         case .items: ItemsPage(store: store) { nav.page = .gallery }
         case .gallery: GalleryPage(store: store)
+        case .profiles: ProfilesPage(store: store)
+        case .keyboard: KeyboardPage(store: store)
         case .about: AboutPage()
         }
     }

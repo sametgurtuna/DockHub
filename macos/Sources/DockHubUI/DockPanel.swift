@@ -23,6 +23,26 @@ public final class DockPanel {
         set { menuActions.openSettings = newValue }
     }
 
+    /// Menu acilirken "Geri al: ..." basligi (nil: gizli) ve eylemi.
+    public var undoTitle: (() -> String?)? {
+        get { menuActions.undoTitle }
+        set { menuActions.undoTitle = newValue }
+    }
+    public var onUndo: (() -> Void)? {
+        get { menuActions.undo }
+        set { menuActions.undo = newValue }
+    }
+
+    /// Menu acilirken profil listesi ve etkin profil; secilince gecis.
+    public var profiles: (() -> (list: [DockProfile], active: String?))? {
+        get { menuActions.profiles }
+        set { menuActions.profiles = newValue }
+    }
+    public var onSwitchProfile: ((String) -> Void)? {
+        get { menuActions.switchProfile }
+        set { menuActions.switchProfile = newValue }
+    }
+
     public init(config: AppConfig, items: [DockItem], service: ConfigService? = nil) {
         let screen = ScreenPlacement.screen(named: config.monitorDevice) ?? NSScreen.screens[0]
         // Dikey dock'ta "kalinlik" genisliktir; stil her zaman kalinliktan turer.
@@ -127,9 +147,23 @@ public final class DockPanel {
         // Dock menusu. Tam wf-dock-menu (sabitleme, ayirici, konum, otomatik
         // gizleme) ayri gorev; burada ayarlara giden yol ve cikis var.
         let menu = NSMenu()
+        menu.delegate = menuActions
+        let undo = NSMenuItem(title: L.t("Undo"), action: #selector(MenuActions.performUndo), keyEquivalent: "")
+        undo.target = menuActions
+        undo.isHidden = true
+        menu.addItem(undo)
+        menuActions.undoItem = undo
         let widget = NSMenuItem(title: L.t("Add widget…"), action: #selector(MenuActions.openGallery), keyEquivalent: "")
         widget.target = menuActions
         menu.addItem(widget)
+        // Profiller alt menusu (Windows: dock menusundeki profil listesi); en az iki profil varken gorunur.
+        let profiles = NSMenuItem(title: L.t("Profiles"), action: nil, keyEquivalent: "")
+        let profileMenu = NSMenu()
+        profileMenu.delegate = menuActions
+        profiles.submenu = profileMenu
+        profiles.isHidden = true
+        menu.addItem(profiles)
+        menuActions.profilesItem = profiles
         let settings = NSMenuItem(title: L.t("Settings…"), action: #selector(MenuActions.openGeneral), keyEquivalent: ",")
         settings.target = menuActions
         menu.addItem(settings)
@@ -190,9 +224,42 @@ public final class DockPanel {
 }
 
 /// NSMenuItem hedefi: DockPanel NSObject olmadigi icin menu eylemleri burada.
+/// Menu her acilista tazelenir (NSMenuDelegate): "Geri al" basligi ve profil listesi.
 @MainActor
-final class MenuActions: NSObject {
+final class MenuActions: NSObject, NSMenuDelegate {
     var openSettings: ((SettingsPage) -> Void)?
+    var undoTitle: (() -> String?)?
+    var undo: (() -> Void)?
+    var profiles: (() -> (list: [DockProfile], active: String?))?
+    var switchProfile: ((String) -> Void)?
+    weak var undoItem: NSMenuItem?
+    weak var profilesItem: NSMenuItem?
+
     @objc func openGeneral() { openSettings?(.general) }
     @objc func openGallery() { openSettings?(.gallery) }
+    @objc func performUndo() { undo?() }
+    @objc func pickProfile(_ sender: NSMenuItem) {
+        if let id = sender.representedObject as? String { switchProfile?(id) }
+    }
+
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        let state = profiles?() ?? (list: [], active: nil)
+        if let profilesItem, menu === profilesItem.submenu {
+            menu.removeAllItems()
+            for profile in state.list {
+                let item = NSMenuItem(title: profile.name, action: #selector(pickProfile(_:)), keyEquivalent: "")
+                item.target = self
+                item.representedObject = profile.id
+                item.state = profile.id == state.active ? .on : .off
+                menu.addItem(item)
+            }
+            return
+        }
+        if let undoItem {
+            let title = undoTitle?()
+            undoItem.isHidden = title == nil
+            undoItem.title = title.map { L.t("Undo: {0}", $0) } ?? L.t("Undo")
+        }
+        profilesItem?.isHidden = state.list.count < 2
+    }
 }

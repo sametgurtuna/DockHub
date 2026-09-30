@@ -67,9 +67,9 @@
       "id": "5d1e8a0c4f",
       "name": "Work",
       "appearance": {
-        "theme": "Light",
-        "size": "Medium",
-        "widgetStyle": "Cards"
+        "Theme": "Light",
+        "Size": "Medium",
+        "WidgetStyle": "Cards"
       },
       "widgets": [
         {
@@ -122,8 +122,18 @@
         }
       ],
       "appearance": {
-        "edge": "Bottom",
-        "size": "Small"
+        "Edge": "Bottom",
+        "Size": "Small",
+        "WidgetStyle": "Cards",
+        "TopBar": {
+          "enabled": false,
+          "edge": "Top",
+          "size": "Small",
+          "layout": "Attached",
+          "backdrop": null,
+          "autoHide": false,
+          "showClock": true
+        }
       },
       "autoDisplayCount": 2,
       "autoApp": "steam",

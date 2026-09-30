@@ -1389,5 +1389,16 @@
   "macOS Dock, display, language and maintenance.": "macOS Dock'u, ekran, dil ve bakım.",
   "none": "yok",
   "{0} h {1} min": "{0} sa {1} dk",
-  "{0} min": "{0} dk"
+  "{0} min": "{0} dk",
+  "App name, for example Steam or Xcode. The profile stays while the app runs. Press Return to save.": "Uygulama adı, örneğin Steam veya Xcode. Uygulama çalıştıkça profil etkin kalır. Kaydetmek için Return'e basın.",
+  "Click a shortcut and press the new keys. It needs Command, Option or Control. Delete turns it off, Escape cancels.": "Bir kısayola tıklayıp yeni tuşlara basın. Command, Option veya Control gerekir. Delete kapatır, Escape vazgeçer.",
+  "Displays": "Ekranlar",
+  "From": "Başlangıç",
+  "To": "Bitiş",
+  "Global shortcuts for DockHub actions.": "DockHub eylemleri için genel kısayollar.",
+  "Imported apps from the macOS Dock": "macOS Dock'undan uygulamalar alındı",
+  "Saved dock setups and when they switch in by themselves.": "Kayıtlı dock düzenleri ve ne zaman kendiliğinden geçildiği.",
+  "Use the 24-hour form, for example 09:00.": "24 saat biçimini kullanın, örneğin 09:00.",
+  "{0} apps": "{0} uygulama",
+  "Show or hide the dock": "Dock'u göster veya gizle"
 }

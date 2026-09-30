@@ -39,4 +39,17 @@ public final class ConfigService: @unchecked Sendable {
         config = c
         try JSONStore.save(c, to: url)
     }
+
+    /// Geri alma yigini (Windows: ConfigService.History). Ana is parcacigindan kullanilir.
+    public let history = ConfigHistory()
+
+    /// Son adimi geri alir ve kaydeder; geri alinacak bir sey yoksa nil.
+    @discardableResult
+    public func undo() throws -> HistoryEntry? {
+        var c = config
+        guard let entry = history.undo(&c) else { return nil }
+        config = c
+        try JSONStore.save(c, to: url)
+        return entry
+    }
 }

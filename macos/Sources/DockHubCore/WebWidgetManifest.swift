@@ -12,6 +12,23 @@ public struct WebWidgetVariant: Codable, Sendable, Equatable, Identifiable {
         self.name = name
         self.size = size
     }
+    private enum CodingKeys: String, CodingKey {
+        case id, name, size
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decodeIfPresent(String.self, forKey: .id) ?? "default"
+        self.name = try container.decodeIfPresent(String.self, forKey: .name) ?? "Default"
+        self.size = try container.decodeIfPresent(String.self, forKey: .size) ?? "standard"
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(name, forKey: .name)
+        try container.encode(size, forKey: .size)
+    }
 }
 
 /// Web widget'inin manifestinde bildirdigi ayar alani.
@@ -47,6 +64,34 @@ public struct WebWidgetSetting: Codable, Sendable, Equatable, Identifiable {
         self.max = max
         self.options = options
     }
+
+    private enum CodingKeys: String, CodingKey {
+        case key, type, label, description, `default`, min, max, options
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.key = try container.decode(String.self, forKey: .key)
+        self.type = try container.decodeIfPresent(String.self, forKey: .type) ?? "text"
+        self.label = try container.decodeIfPresent(String.self, forKey: .label) ?? ""
+        self.description = try container.decodeIfPresent(String.self, forKey: .description)
+        self.default = try container.decodeIfPresent(JSONValue.self, forKey: .default)
+        self.min = try container.decodeIfPresent(Double.self, forKey: .min)
+        self.max = try container.decodeIfPresent(Double.self, forKey: .max)
+        self.options = try container.decodeIfPresent([String].self, forKey: .options)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(key, forKey: .key)
+        try container.encode(type, forKey: .type)
+        try container.encode(label, forKey: .label)
+        try container.encodeIfPresent(description, forKey: .description)
+        try container.encodeIfPresent(`default`, forKey: .default)
+        try container.encodeIfPresent(min, forKey: .min)
+        try container.encodeIfPresent(max, forKey: .max)
+        try container.encodeIfPresent(options, forKey: .options)
+    }
 }
 
 /// Web widget'inin guvenlik izinleri.
@@ -62,6 +107,24 @@ public struct WebWidgetPermissions: Codable, Sendable, Equatable {
         self.network = network
         self.notifications = notifications
         self.networkFromSettings = networkFromSettings
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case network, notifications, networkFromSettings
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.network = try container.decodeIfPresent([String].self, forKey: .network) ?? []
+        self.notifications = try container.decodeIfPresent(Bool.self, forKey: .notifications) ?? false
+        self.networkFromSettings = try container.decodeIfPresent([String].self, forKey: .networkFromSettings) ?? []
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(network, forKey: .network)
+        try container.encode(notifications, forKey: .notifications)
+        try container.encode(networkFromSettings, forKey: .networkFromSettings)
     }
 }
 

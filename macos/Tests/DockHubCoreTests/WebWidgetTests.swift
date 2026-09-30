@@ -152,13 +152,22 @@ final class WebWidgetTests: XCTestCase {
         ]
         XCTAssertThrowsError(try WebWidgetHttp.parse(args: disallowedArgs, isHostAllowed: { _ in false }))
 
-        // Gecerli istek kabul edilir ve yasakli basliklar temizlenir
+        // Yasakli baslik (Cookie) hata firlatir
+        let forbiddenHeaderArgs: [String: JSONValue] = [
+            "url": .string("https://api.github.com/repos"),
+            "headers": .object([
+                "Cookie": .string("forbidden=1")
+            ])
+        ]
+        XCTAssertThrowsError(try WebWidgetHttp.parse(args: forbiddenHeaderArgs, isHostAllowed: { _ in true }))
+
+        // Gecerli istek kabul edilir
         let allowedArgs: [String: JSONValue] = [
             "url": .string("https://api.github.com/repos"),
             "method": .string("POST"),
             "headers": .object([
                 "Content-Type": .string("application/json"),
-                "Cookie": .string("forbidden=1")
+                "Accept": .string("application/vnd.github+json")
             ]),
             "body": .string("{\"test\": true}"),
             "timeout": .number(20)
@@ -167,7 +176,7 @@ final class WebWidgetTests: XCTestCase {
         XCTAssertEqual(req.url.absoluteString, "https://api.github.com/repos")
         XCTAssertEqual(req.method, "POST")
         XCTAssertTrue(req.headers.contains { $0.0 == "Content-Type" && $0.1 == "application/json" })
-        XCTAssertFalse(req.headers.contains { $0.0.caseInsensitiveCompare("Cookie") == .orderedSame })
+        XCTAssertTrue(req.headers.contains { $0.0 == "Accept" && $0.1 == "application/vnd.github+json" })
         XCTAssertEqual(req.body, "{\"test\": true}")
     }
 

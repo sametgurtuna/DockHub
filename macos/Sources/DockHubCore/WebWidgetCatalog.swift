@@ -88,7 +88,7 @@ public final class WebWidgetCatalog: @unchecked Sendable {
         do {
             manifest = try JSONDecoder().decode(WebWidgetManifest.self, from: data)
         } catch {
-            throw WebWidgetError(String(format: L.t("manifest.json is invalid: {0}"), error.localizedDescription))
+            throw WebWidgetError(L.t("manifest.json is invalid: {0}", error.localizedDescription))
         }
 
         let range = NSRange(manifest.id.startIndex..<manifest.id.endIndex, in: manifest.id)
@@ -102,10 +102,10 @@ public final class WebWidgetCatalog: @unchecked Sendable {
 
         for key in manifest.permissions.networkFromSettings {
             guard let setting = manifest.settings.first(where: { $0.key == key && $0.type == "text" }) else {
-                throw WebWidgetError(String(format: L.t("networkFromSettings names \"{0}\", which is not a text setting."), key))
+                throw WebWidgetError(L.t("networkFromSettings names \"{0}\", which is not a text setting.", key))
             }
             if let def = setting.default, def != .null {
-                throw WebWidgetError(String(format: L.t("The server setting \"{0}\" can't have a default value."), key))
+                throw WebWidgetError(L.t("The server setting \"{0}\" can't have a default value.", key))
             }
         }
 
@@ -126,12 +126,12 @@ public final class WebWidgetCatalog: @unchecked Sendable {
         let folderStandard = folder.standardizedFileURL
         guard entryFile.path.hasPrefix(folderStandard.path),
               FileManager.default.fileExists(atPath: entryFile.path) else {
-            throw WebWidgetError(String(format: L.t("The entry file {0} doesn't exist."), manifest.entry))
+            throw WebWidgetError(L.t("The entry file {0} doesn't exist.", manifest.entry))
         }
 
         if let minVersion = manifest.minDockHubVersion,
-           compareVersions(minVersion, "0.10.0") > 0 {
-            throw WebWidgetError(String(format: L.t("Needs DockHub {0} or newer."), minVersion))
+           compareVersions(minVersion, "1.0.0") > 0 {
+            throw WebWidgetError(L.t("Needs DockHub {0} or newer.", minVersion))
         }
 
         manifest.folder = folder
@@ -182,27 +182,27 @@ public final class WebWidgetCatalog: @unchecked Sendable {
     public static func checkPackage(url: URL) throws {
         guard let attrs = try? FileManager.default.attributesOfItem(atPath: url.path),
               let fileSize = attrs[.size] as? Int64 else {
-            throw WebWidgetError(String(format: L.t("The package can't be opened: {0}"), "File not found"))
+            throw WebWidgetError(L.t("The package can't be opened: {0}", "File not found"))
         }
 
         if fileSize > maxPackageBytes {
-            throw WebWidgetError(String(format: L.t("The package is larger than {0} MB."), "\(maxPackageBytes / (1024 * 1024))"))
+            throw WebWidgetError(L.t("The package is larger than {0} MB.", "\(maxPackageBytes / (1024 * 1024))"))
         }
 
         let entries = try inspectZipEntries(fileURL: url)
         if entries.count > maxPackageEntries {
-            throw WebWidgetError(String(format: L.t("The package has more than {0} files."), "\(maxPackageEntries)"))
+            throw WebWidgetError(L.t("The package has more than {0} files.", "\(maxPackageEntries)"))
         }
 
         let unpackedTotal = entries.reduce(0) { $0 + $1.uncompressedSize }
         if unpackedTotal > maxUnpackedBytes {
-            throw WebWidgetError(String(format: L.t("The package is larger than {0} MB."), "\(maxUnpackedBytes / (1024 * 1024))"))
+            throw WebWidgetError(L.t("The package is larger than {0} MB.", "\(maxUnpackedBytes / (1024 * 1024))"))
         }
 
         for entry in entries {
             let name = entry.name
             if name.hasPrefix("/") || name.hasPrefix("\\") || name.contains("../") || name.contains("..\\") || name == ".." {
-                throw WebWidgetError(String(format: L.t("The package can't be opened: {0}"), "Unsafe entry path: \(name)"))
+                throw WebWidgetError(L.t("The package can't be opened: {0}", "Unsafe entry path: \(name)"))
             }
         }
     }
@@ -219,13 +219,13 @@ public final class WebWidgetCatalog: @unchecked Sendable {
 
         let fileSize = try handle.seekToEnd()
         guard fileSize >= 22 else {
-            throw WebWidgetError(String(format: L.t("The package can't be opened: {0}"), "File too short"))
+            throw WebWidgetError(L.t("The package can't be opened: {0}", "File too short"))
         }
 
         let maxSearch = min(fileSize, 65557)
         try handle.seek(toOffset: fileSize - maxSearch)
         guard let tailData = try handle.readToEnd(), tailData.count >= 22 else {
-            throw WebWidgetError(String(format: L.t("The package can't be opened: {0}"), "Unable to read archive"))
+            throw WebWidgetError(L.t("The package can't be opened: {0}", "Unable to read archive"))
         }
 
         // EOCD imzasini ara: 0x06054b50 (PK\x05\x06)
@@ -239,7 +239,7 @@ public final class WebWidgetCatalog: @unchecked Sendable {
         }
 
         guard let eocdPos = eocdOffsetInTail else {
-            throw WebWidgetError(String(format: L.t("The package can't be opened: {0}"), "EOCD record not found"))
+            throw WebWidgetError(L.t("The package can't be opened: {0}", "EOCD record not found"))
         }
 
         let entryCount = Int(readUInt16(bytes, eocdPos + 10))
@@ -247,12 +247,12 @@ public final class WebWidgetCatalog: @unchecked Sendable {
         let cdOffset = UInt64(readUInt32(bytes, eocdPos + 16))
 
         guard cdOffset + UInt64(cdSize) <= fileSize else {
-            throw WebWidgetError(String(format: L.t("The package can't be opened: {0}"), "Invalid Central Directory offset"))
+            throw WebWidgetError(L.t("The package can't be opened: {0}", "Invalid Central Directory offset"))
         }
 
         try handle.seek(toOffset: cdOffset)
         guard let cdData = try handle.read(upToCount: cdSize), cdData.count == cdSize else {
-            throw WebWidgetError(String(format: L.t("The package can't be opened: {0}"), "Failed to read Central Directory"))
+            throw WebWidgetError(L.t("The package can't be opened: {0}", "Failed to read Central Directory"))
         }
 
         let cdBytes = [UInt8](cdData)
@@ -304,7 +304,7 @@ public final class WebWidgetCatalog: @unchecked Sendable {
         process.waitUntilExit()
 
         guard process.terminationStatus == 0 else {
-            throw WebWidgetError(String(format: L.t("The package can't be opened: {0}"), "Extraction failed"))
+            throw WebWidgetError(L.t("The package can't be opened: {0}", "Extraction failed"))
         }
 
         // manifest.json kokte mi yoksa tek bir alt klasor icinde mi?

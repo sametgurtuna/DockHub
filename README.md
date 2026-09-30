@@ -44,6 +44,8 @@ Zero administrator privileges required. 100% native architecture on both platfor
 > - **Modernized Windows Core:** Upgraded to .NET 10 LTS with robust crash isolation, automatic restart recovery, and taskbar self-healing.
 > - **Unified Configuration:** Shared `config.json` format across platforms, with full localization in English, Turkish, German, and Spanish.
 >
+> Special thanks to [@farukolmez22](https://github.com/farukolmez22) for contributions, testing, and support throughout native macOS development.
+>
 > **Get DockHub 1.0.0:** [Download for Windows (`.exe`)](https://github.com/sametgurtuna/DockHub/releases/latest) &nbsp;·&nbsp; [Download for macOS (`.dmg`)](https://github.com/sametgurtuna/DockHub/releases/latest) &nbsp;·&nbsp; [Read the Release Notes ›](https://github.com/sametgurtuna/DockHub/releases/tag/v1.0.0)
 
 <br>

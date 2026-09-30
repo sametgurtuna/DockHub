@@ -64,6 +64,8 @@ public static class AppServices
     private static readonly OnFirstUse<GpuMonitorService> s_gpu = new(() => new GpuMonitorService());
     private static readonly OnFirstUse<BrightnessService> s_brightness = new(() => new BrightnessService());
     private static readonly OnFirstUse<RadioService> s_radios = new(() => new RadioService());
+    private static readonly OnFirstUse<PingService> s_ping = new(() => new PingService());
+    private static readonly OnFirstUse<PowerModeService> s_powerMode = new(() => new PowerModeService());
 
     public static ClockService Clock => s_clock.Value;
 
@@ -113,6 +115,10 @@ public static class AppServices
 
     public static RadioService Radios => s_radios.Value;
 
+    public static PingService Ping => s_ping.Value;
+
+    public static PowerModeService PowerMode => s_powerMode.Value;
+
     /// <summary>Names of the services created so far (for diagnostics).</summary>
     public static IEnumerable<string> CreatedServices()
     {
@@ -126,7 +132,7 @@ public static class AppServices
             ("Updates", s_updates.IsCreated), ("Clipboard", s_clipboard.IsCreated), ("KeyboardLayouts", s_keyboardLayouts.IsCreated),
             ("Microphone", s_microphone.IsCreated), ("NotificationCenter", s_notificationCenter.IsCreated),
             ("VirtualDesktops", s_virtualDesktops.IsCreated), ("Gpu", s_gpu.IsCreated), ("Brightness", s_brightness.IsCreated),
-            ("Radios", s_radios.IsCreated),
+            ("Radios", s_radios.IsCreated), ("Ping", s_ping.IsCreated), ("PowerMode", s_powerMode.IsCreated),
         };
         return all.Where(s => s.Created).Select(s => s.Name);
     }

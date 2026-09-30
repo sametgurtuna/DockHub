@@ -269,6 +269,22 @@ public static class WidgetRegistry
             Variants = new[] { new WidgetVariant("single", "Single pair", WidgetWidth.Standard), new WidgetVariant("list", "Several pairs", WidgetWidth.Standard) },
             Factory = () => new CurrencyWidget(), SettingsType = typeof(CurrencySettings),
         },
+        new()
+        {
+            Id = "stocks", Name = "Stocks", Category = WidgetCategories.Productivity,
+            Description = "Stock and index prices with the change since the previous close and a month's trend. Delayed prices from Stooq, no API key needed.",
+            IconPath = StocksWidget.Icon, AccentKey = "AccentGreenBrush",
+            Variants = new[] { new WidgetVariant("single", "Single stock", WidgetWidth.Standard), new WidgetVariant("list", "Several stocks", WidgetWidth.Wide) },
+            Factory = () => new StocksWidget(), SettingsType = typeof(StockSettings),
+        },
+        new()
+        {
+            Id = "do-not-disturb", Name = "Do not disturb", Category = WidgetCategories.Productivity,
+            Description = "Shows whether Do Not Disturb or Focus is on and how many notifications wait. Click to open the notification center and switch it.",
+            IconPath = DoNotDisturbWidget.Icon, AccentKey = "AccentPurpleBrush",
+            Variants = new[] { new WidgetVariant("icon", "Icon only", WidgetWidth.Compact), new WidgetVariant("status", "Status", WidgetWidth.Standard) },
+            Factory = () => new DoNotDisturbWidget(),
+        },
 
         new()
         {
@@ -330,6 +346,22 @@ public static class WidgetRegistry
             IconPath = RadiosWidget.Icon, AccentKey = "AccentBlueBrush",
             Variants = new[] { new WidgetVariant("buttons", "Buttons", WidgetWidth.Compact), new WidgetVariant("icons", "Icon only", WidgetWidth.Compact) },
             Factory = () => new RadiosWidget(),
+        },
+        new()
+        {
+            Id = "ping", Name = "Ping", Category = WidgetCategories.System,
+            Description = "How long a reply from a server takes (1.1.1.1 or one you choose), every five seconds, with packet loss and a trend line.",
+            IconPath = PingWidget.Icon, AccentKey = "AccentGreenBrush",
+            Variants = new[] { new WidgetVariant("number", "Number", WidgetWidth.Compact), new WidgetVariant("chart", "Chart", WidgetWidth.Standard) },
+            Factory = () => new PingWidget(), SettingsType = typeof(PingSettings),
+        },
+        new()
+        {
+            Id = "power-mode", Name = "Power mode", Category = WidgetCategories.System,
+            Description = "Switch between best power efficiency, balanced and best performance in one click, and see when battery saver is on.",
+            IconPath = PowerModeWidget.Icon, AccentKey = "AccentOrangeBrush",
+            Variants = new[] { new WidgetVariant("icon", "Icon only", WidgetWidth.Compact), new WidgetVariant("buttons", "Buttons", WidgetWidth.Wide) },
+            Factory = () => new PowerModeWidget(),
         },
         new()
         {

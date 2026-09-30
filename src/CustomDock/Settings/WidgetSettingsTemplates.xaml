@@ -213,6 +213,24 @@
         </StackPanel>
     </DataTemplate>
 
+    <!-- Stocks -->
+    <DataTemplate DataType="{x:Type w:StockSettings}">
+        <StackPanel>
+            <ctl:SettingRow Header="Stock symbols" Description="Separated by commas. US stocks by their symbol (AAPL, MSFT), others with their market (SAP.DE, 7203.JP), indexes with ^ (^SPX).">
+                <TextBox Width="200" Text="{Binding Symbols, UpdateSourceTrigger=LostFocus}" />
+            </ctl:SettingRow>
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- Ping -->
+    <DataTemplate DataType="{x:Type w:PingSettings}">
+        <StackPanel>
+            <ctl:SettingRow Header="Server to ping" Description="A host name or address, for example 1.1.1.1, 8.8.8.8 or your game's server.">
+                <TextBox Width="200" Text="{Binding Target, UpdateSourceTrigger=LostFocus}" />
+            </ctl:SettingRow>
+        </StackPanel>
+    </DataTemplate>
+
     <!-- Device batteries -->
     <DataTemplate DataType="{x:Type w:BatteryDevicesSettings}">
         <StackPanel>

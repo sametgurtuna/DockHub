@@ -40,7 +40,12 @@ struct WidgetHost: View {
         case "todo":           TodoWidget(item: item, style: style, model: model)
         case "screenshot":     ScreenshotWidget(item: item, style: style, model: model)
         case "ping":           PingWidget(item: item, style: style, model: model)
-        default:       unknown
+        default:
+            if let w = item.widget, w.hasPrefix("web.") {
+                WebWidgetView(item: item, style: style, model: model)
+            } else {
+                unknown
+            }
         }
     }
 

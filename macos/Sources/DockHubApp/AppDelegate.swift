@@ -39,6 +39,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         L.load(service.config.language)
         Log.info("Arayuz dili: \(L.code)")
 
+        // Web widget'larini yukle (Windows: WebWidgetCatalog.LoadAll).
+        _ = WebWidgetCatalog.shared.loadAll()
+
         // Ilk calistirmada dock bos olmasin: var olan varsayilan uygulamalar eklenir.
         if service.config.items.isEmpty {
             let defaults = DefaultItems.build()

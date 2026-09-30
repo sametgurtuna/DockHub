@@ -30,4 +30,6 @@ public enum AppPaths {
     public static func widgetData(_ widget: String, _ itemId: String) -> URL {
         dataDir.appendingPathComponent("\(widget)-\(itemId).json")
     }
+    /// Web widget'lar klasoru (Windows: AppPaths.WidgetsDir).
+    public static var widgetsDir: URL { root.appendingPathComponent("widgets") }
 }

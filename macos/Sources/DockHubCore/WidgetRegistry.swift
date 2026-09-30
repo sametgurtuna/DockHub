@@ -134,7 +134,13 @@ public enum WidgetRegistry {
 
     public static func find(_ id: String?) -> WidgetDefinition? {
         guard let id else { return nil }
-        return all.first { $0.id == id }
+        if let def = all.first(where: { $0.id == id }) {
+            return def
+        }
+        if id.hasPrefix("web.") {
+            return WebWidgetCatalog.shared.find(id)
+        }
+        return nil
     }
 
     // ---------------- Eski macOS kimliklerinin tasinmasi

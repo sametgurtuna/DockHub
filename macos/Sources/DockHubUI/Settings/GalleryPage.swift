@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import DockHubCore
 
@@ -9,10 +10,19 @@ struct GalleryPage: View {
     @State private var chosen: [String: String] = [:]
     @State private var justAdded: String?
     @State private var query = ""
+    @State private var refreshTrigger = 0
+
+    private var allWidgets: [WidgetDefinition] {
+        var list = WidgetRegistry.all
+        _ = refreshTrigger
+        let webWidgets = WebWidgetCatalog.shared.installed.map { WebWidgetCatalog.definition(for: $0) }
+        list.append(contentsOf: webWidgets)
+        return list
+    }
 
     /// Arama: yerel ve Ingilizce ad, aciklama ve kategori (Windows: GalleryFilter).
     private var visible: [WidgetDefinition] {
-        WidgetRegistry.all.filter { def in
+        allWidgets.filter { def in
             GalleryFilter.matches(query, [def.displayName, def.name, def.displayCategory, def.category,
                                           WidgetCatalog.info(def.id).summary, WidgetCatalog.englishSummary(def.id)])
         }
@@ -28,9 +38,22 @@ struct GalleryPage: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
                 VStack(alignment: .leading, spacing: 6) {
-                    TextField(L.t("Search widgets"), text: $query)
-                        .textFieldStyle(.roundedBorder)
-                        .frame(maxWidth: 320)
+                    HStack(spacing: 8) {
+                        TextField(L.t("Search widgets"), text: $query)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(maxWidth: 320)
+                        Button {
+                            pickAndInstallWidget()
+                        } label: {
+                            Label(L.t("Install widget…"), systemImage: "plus.rectangle.on.folder")
+                        }
+                        .help(L.t("Install a .dockwidget package (HTML/JavaScript widget)"))
+                        Button {
+                            openWidgetsFolder()
+                        } label: {
+                            Label(L.t("Open widgets folder"), systemImage: "folder")
+                        }
+                    }
                     RowNote(L.t("Press + or drag a card onto the dock. To change a widget's layout later, edit the dock."))
                 }
                 if groups.isEmpty {
@@ -78,6 +101,16 @@ struct GalleryPage: View {
                         .fixedSize()
                     }
                     Spacer()
+                    if def.id.hasPrefix("web.") {
+                        Button(role: .destructive) {
+                            let manifestId = String(def.id.dropFirst(4))
+                            try? WebWidgetCatalog.shared.uninstall(id: manifestId)
+                            refreshTrigger += 1
+                        } label: {
+                            Image(systemName: "trash")
+                        }
+                        .help(L.t("Remove"))
+                    }
                     if justAdded == def.id {
                         Label(L.t("Added"), systemImage: "checkmark").font(.caption).foregroundStyle(.green)
                     }
@@ -103,5 +136,70 @@ struct GalleryPage: View {
                 .padding(8)
                 .background(RoundedRectangle(cornerRadius: 8).fill(.regularMaterial))
         }
+    }
+
+    private func pickAndInstallWidget() {
+        let panel = NSOpenPanel()
+        panel.title = L.t("Install a widget")
+        panel.allowedFileTypes = ["dockwidget", "zip"]
+        panel.allowsMultipleSelection = false
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        if panel.runModal() == .OK, let url = panel.url {
+            inspectAndPrompt(url: url)
+        }
+    }
+
+    private func inspectAndPrompt(url: URL) {
+        do {
+            let (manifest, tempDir) = try WebWidgetCatalog.inspect(packageURL: url)
+            defer { try? FileManager.default.removeItem(at: tempDir) }
+
+            let alert = NSAlert()
+            alert.messageText = String(format: L.t("Install “{0}”?"), manifest.name)
+
+            var info = "\(manifest.description)\n\n"
+            info += String(format: L.t("Version {0}"), manifest.version)
+            if let author = manifest.author {
+                info += " · \(author)"
+            }
+
+            var permissions: [String] = []
+            if !manifest.permissions.network.isEmpty {
+                permissions.append(String(format: L.t("Internet access to: {0}"), manifest.permissions.network.joined(separator: ", ")))
+            }
+            for key in manifest.permissions.networkFromSettings {
+                let label = manifest.settings.first(where: { $0.key == key })?.label ?? key
+                permissions.append(String(format: L.t("Internet access to the address you enter in “{0}” (also plain http, for servers on your network)"), label))
+            }
+            if manifest.permissions.notifications {
+                permissions.append(L.t("Show notifications"))
+            }
+            if permissions.isEmpty {
+                permissions.append(L.t("No internet access, no notifications"))
+            }
+
+            info += "\n\n" + L.t("This widget can use:") + "\n• " + permissions.joined(separator: "\n• ")
+
+            alert.informativeText = info
+            alert.addButton(withTitle: L.t("Install"))
+            alert.addButton(withTitle: L.t("Cancel"))
+
+            if alert.runModal() == .alertFirstButtonReturn {
+                try WebWidgetCatalog.shared.install(manifest: manifest)
+                refreshTrigger += 1
+            }
+        } catch {
+            let errAlert = NSAlert()
+            errAlert.messageText = L.t("Can't install this widget")
+            errAlert.informativeText = error.localizedDescription
+            errAlert.runModal()
+        }
+    }
+
+    private func openWidgetsFolder() {
+        let dir = AppPaths.widgetsDir
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        NSWorkspace.shared.open(dir)
     }
 }

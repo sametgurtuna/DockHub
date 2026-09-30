@@ -16,16 +16,30 @@ enum WidgetCatalog {
 
     /// Windows'taki kategori sirasi; macOS'a ozgu ekler en sonda.
     static let categoryOrder = ["Clocks", "Reminders", "Productivity", "Sticky notes", "Media",
-                                "System", "Weather", "AI", "Extras"]
+                                "System", "Weather", "AI", "Extras", "Web widgets"]
 
     /// Aciklama arayuz dilinde (tablodaki Ingilizce metin ceviri anahtari).
     static func info(_ id: String) -> Info {
+        if id.hasPrefix("web.") {
+            let manifestId = String(id.dropFirst(4))
+            if let manifest = WebWidgetCatalog.shared.findManifest(manifestId) {
+                return Info(summary: manifest.description, symbol: "globe")
+            }
+        }
         guard let info = table[id] else { return Info(summary: "", symbol: "square.dashed") }
         return Info(summary: L.t(info.summary), symbol: info.symbol)
     }
 
     /// Aciklamanin Ingilizcesi (arama iki dilde de bulsun).
-    static func englishSummary(_ id: String) -> String { table[id]?.summary ?? "" }
+    static func englishSummary(_ id: String) -> String {
+        if id.hasPrefix("web.") {
+            let manifestId = String(id.dropFirst(4))
+            if let manifest = WebWidgetCatalog.shared.findManifest(manifestId) {
+                return manifest.description
+            }
+        }
+        return table[id]?.summary ?? ""
+    }
 
     private static let table: [String: Info] = [
         "clock": Info(summary: "Clock and date. Analog or digital view.", symbol: "clock"),

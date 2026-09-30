@@ -86,8 +86,8 @@ açılabilmesi (ve Mac'in onu bozmadan geri yazması) 1.0'ın ön koşulu; bu y�
 | Ping | `var` (ICMP yerine `NWConnection`/sistem `ping`) | P1 | mevcut (Faz 23) |
 | Rahatsız etmeyin / Odak | `yok`: Odak durumu genel API'de yok (yalnız kendi uygulamasına `INFocusStatusCenter`) | — | — |
 | Güç modu | `uyarla`: Düşük Güç Modu durumu `ProcessInfo.isLowPowerModeEnabled` (okunur), değiştirmek genel API'de yok | P2 | eksik |
-| Web widget'ları (aynı `.dockwidget`) | `var` (`WKWebView`; Faz 24) | P1 | eksik |
-| Widget SDK 1.0 güncellemeleri | `var` | P1 | eksik |
+| Web widget'ları (aynı `.dockwidget`) | `var` (`WKWebView`; Faz 24) | P1 | mevcut (Faz 24) |
+| Widget SDK 1.0 güncellemeleri | `var` | P1 | mevcut (Faz 24) |
 
 ## 5. 1.0 kapsamı (P1, Faz 23–25)
 

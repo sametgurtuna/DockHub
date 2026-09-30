@@ -10,7 +10,35 @@ using CustomDock.Core;
 namespace CustomDock.Services;
 
 /// <summary>A published DockHub release.</summary>
-public sealed record ReleaseInfo(Version Version, string Tag, string Name, string Notes, string PageUrl, string? InstallerUrl, long InstallerSize, string? ChecksumsUrl, string? InstallerSha256 = null);
+public sealed record ReleaseInfo(Version Version, string Tag, string Name, string Notes, string PageUrl, string? InstallerUrl, long InstallerSize, string? ChecksumsUrl, string? InstallerSha256 = null)
+{
+    /// <summary>The installer's file name ("DockHub-Setup-1.0.0-arm64.exe").</summary>
+    public string InstallerFileName => InstallerUrl is { } url ? Path.GetFileName(new Uri(url).LocalPath) : $"DockHub-Setup-{Version}.exe";
+}
+
+/// <summary>Which installer of a release fits this PC.</summary>
+public static class InstallerAsset
+{
+    /// <summary>The installer suffix for a processor ("-x64.exe", "-arm64.exe"); null where DockHub has none.</summary>
+    public static string? SuffixFor(System.Runtime.InteropServices.Architecture architecture) => architecture switch
+    {
+        System.Runtime.InteropServices.Architecture.X64 => "-x64.exe",
+        System.Runtime.InteropServices.Architecture.Arm64 => "-arm64.exe",
+        _ => null,
+    };
+
+    /// <summary>
+    /// The installer for <paramref name="architecture"/> among a release's files. An ARM64 PC takes the x64 installer
+    /// when the release has no ARM64 one (Windows 11 on ARM runs it emulated), so releases from before 1.0 still update.
+    /// </summary>
+    public static T? Pick<T>(IEnumerable<T> assets, Func<T, string> name, System.Runtime.InteropServices.Architecture architecture) where T : class
+    {
+        var list = assets.ToList();
+        T? Find(string? suffix) => suffix is null ? null : list.FirstOrDefault(a => name(a).EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
+        return Find(SuffixFor(architecture))
+               ?? (architecture == System.Runtime.InteropServices.Architecture.Arm64 ? Find(SuffixFor(System.Runtime.InteropServices.Architecture.X64)) : null);
+    }
+}
 
 /// <summary>
 /// Checks GitHub Releases once a day (when enabled) and can download and run the installer silently.
@@ -97,7 +125,7 @@ public sealed class UpdateService
     public async Task DownloadAndInstallAsync(ReleaseInfo release, IProgress<double>? progress, CancellationToken cancellation = default)
     {
         if (release.InstallerUrl is null) throw new InvalidOperationException("This release has no installer.");
-        string target = Path.Combine(Path.GetTempPath(), $"DockHub-Setup-{release.Version}-x64.exe");
+        string target = Path.Combine(Path.GetTempPath(), release.InstallerFileName);
 
         using (var response = await Http.GetAsync(release.InstallerUrl, HttpCompletionOption.ResponseHeadersRead, cancellation).ConfigureAwait(true))
         {
@@ -145,7 +173,8 @@ public sealed class UpdateService
     private static ReleaseInfo? ToInfo(GitHubRelease release)
     {
         if (!Version.TryParse(release.TagName.TrimStart('v', 'V').Split('-')[0], out var version)) return null;
-        var installer = release.Assets.FirstOrDefault(a => a.Name.EndsWith("-x64.exe", StringComparison.OrdinalIgnoreCase));
+        // The Windows the PC runs, not this process: an x64 DockHub on an ARM64 PC moves to the ARM64 build.
+        var installer = InstallerAsset.Pick(release.Assets, a => a.Name, System.Runtime.InteropServices.RuntimeInformation.OSArchitecture);
         var sums = release.Assets.FirstOrDefault(a => a.Name.Equals("SHA256SUMS.txt", StringComparison.OrdinalIgnoreCase));
         return new ReleaseInfo(version, release.TagName, release.Name ?? release.TagName, release.Body ?? "", release.HtmlUrl,
             installer?.BrowserDownloadUrl, installer?.Size ?? 0, sums?.BrowserDownloadUrl,

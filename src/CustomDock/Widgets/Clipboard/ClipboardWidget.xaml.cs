@@ -90,13 +90,7 @@ public partial class ClipboardWidget : WidgetBase
         EntryList.Children.Clear();
         if (History.Entries.Count == 0)
         {
-            EntryList.Children.Add(new TextBlock
-            {
-                Text = L.T("Copy some text or an image and it shows up here."),
-                Margin = new Thickness(6, 10, 6, 10),
-                TextWrapping = TextWrapping.Wrap,
-                Foreground = (Brush)FindResource("TextSecondaryBrush"),
-            });
+            EntryList.Children.Add(WidgetUi.EmptyState("\uE77F", L.T("Nothing copied yet"), L.T("Copy some text or an image and it shows up here.")));
             return;
         }
 

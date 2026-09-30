@@ -38,6 +38,52 @@
                 <Setter Property="TextWrapping" Value="Wrap" />
                 <Setter Property="Margin" Value="2,0,0,10" />
             </Style>
+            <!-- Heading of a group in the menu (not selectable) -->
+            <Style x:Key="NavGroupHeader" TargetType="ListBoxItem">
+                <Setter Property="Focusable" Value="False" />
+                <Setter Property="IsHitTestVisible" Value="False" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ListBoxItem">
+                            <TextBlock Text="{TemplateBinding Content}" Margin="10,14,0,4" FontSize="11.5" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextTertiaryBrush}" />
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <!-- Category filter of the widget gallery -->
+            <Style x:Key="GalleryChip" TargetType="RadioButton">
+                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+                <Setter Property="FontSize" Value="12.5" />
+                <Setter Property="Padding" Value="12,4" />
+                <Setter Property="Margin" Value="0,0,6,6" />
+                <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="RadioButton">
+                            <Border x:Name="Bd" Background="{DynamicResource SubtleFillBrush}" BorderBrush="{DynamicResource ControlBorderBrush}"
+                                    BorderThickness="1" CornerRadius="14" Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                    <Setter TargetName="Bd" Property="BorderThickness" Value="2" />
+                                </Trigger>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentBrush}" />
+                                    <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource OnAccentBrush}" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
             <Style x:Key="Page" TargetType="FrameworkElement">
                 <Setter Property="Visibility" Value="Collapsed" />
                 <Setter Property="MaxWidth" Value="980" />
@@ -93,60 +139,7 @@
 
                 <ListBox x:Name="NavList" Style="{StaticResource PlainListBox}" ItemContainerStyle="{StaticResource NavItem}"
                          SelectionChanged="OnNavigationChanged">
-                    <ListBoxItem Tag="general">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE713;" Style="{StaticResource NavGlyph}" />
-                            <TextBlock Text="General" Margin="14,0,0,0" />
-                        </StackPanel>
-                    </ListBoxItem>
-                    <ListBoxItem Tag="taskbar">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE75B;" Style="{StaticResource NavGlyph}" />
-                            <TextBlock Text="Taskbar" Margin="14,0,0,0" />
-                        </StackPanel>
-                    </ListBoxItem>
-                    <ListBoxItem Tag="appearance">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE790;" Style="{StaticResource NavGlyph}" />
-                            <TextBlock Text="Appearance" Margin="14,0,0,0" />
-                        </StackPanel>
-                    </ListBoxItem>
-                    <ListBoxItem Tag="items">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE8FD;" Style="{StaticResource NavGlyph}" />
-                            <TextBlock Text="Dock items" Margin="14,0,0,0" />
-                        </StackPanel>
-                    </ListBoxItem>
-                    <ListBoxItem Tag="gallery">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xECA5;" Style="{StaticResource NavGlyph}" />
-                            <TextBlock Text="Widget gallery" Margin="14,0,0,0" />
-                        </StackPanel>
-                    </ListBoxItem>
-                    <ListBoxItem Tag="profiles">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE77B;" Style="{StaticResource NavGlyph}" />
-                            <TextBlock Text="Profiles" Margin="14,0,0,0" />
-                        </StackPanel>
-                    </ListBoxItem>
-                    <ListBoxItem Tag="keyboard">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE765;" Style="{StaticResource NavGlyph}" />
-                            <TextBlock Text="Keyboard shortcuts" Margin="14,0,0,0" />
-                        </StackPanel>
-                    </ListBoxItem>
-                    <ListBoxItem Tag="backup">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE90F;" Style="{StaticResource NavGlyph}" />
-                            <TextBlock Text="Backup and troubleshooting" Margin="14,0,0,0" />
-                        </StackPanel>
-                    </ListBoxItem>
-                    <ListBoxItem Tag="about">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE946;" Style="{StaticResource NavGlyph}" />
-                            <TextBlock Text="About" Margin="14,0,0,0" />
-                        </StackPanel>
-                    </ListBoxItem>
+                    <!-- Built from SettingsPages (grouped: Dock, Widgets, System, About) -->
                 </ListBox>
             </DockPanel>
         </Border>
@@ -154,6 +147,95 @@
         <!-- ===================== Pages ===================== -->
         <ScrollViewer x:Name="PageScroller" Grid.Column="1" Margin="0,44,0,0" Padding="32,4,36,28" VerticalScrollBarVisibility="Auto">
             <Grid>
+                <!-- ============ Overview ============ -->
+                <StackPanel x:Name="OverviewPage" Style="{StaticResource Page}">
+                    <TextBlock Text="Overview" Style="{StaticResource PageTitle}" />
+                    <TextBlock Text="Your dock at a glance, the settings you change most, and a few shortcuts." Style="{StaticResource PageSubtitle}" />
+
+                    <ctl:MiniDockPreview x:Name="OverviewPreview" Margin="0,4,0,6" />
+
+                    <TextBlock Text="Shortcuts" Style="{StaticResource SectionHeader}" />
+                    <WrapPanel x:Name="OverviewActions" Margin="0,0,0,4" />
+
+                    <TextBlock Text="Quick settings" Style="{StaticResource SectionHeader}" />
+                    <ctl:SettingRow Glyph="&#xE790;" Header="Theme">
+                        <Border Style="{StaticResource SegmentedHost}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewTheme" Content="Dark"
+                                             IsChecked="{Binding Theme, Converter={StaticResource EnumEq}, ConverterParameter=Dark}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewTheme" Content="Light"
+                                             IsChecked="{Binding Theme, Converter={StaticResource EnumEq}, ConverterParameter=Light}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewTheme" Content="System"
+                                             IsChecked="{Binding Theme, Converter={StaticResource EnumEq}, ConverterParameter=System}" />
+                            </StackPanel>
+                        </Border>
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xF570;" Header="Backdrop">
+                        <Border Style="{StaticResource SegmentedHost}">
+                            <WrapPanel>
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewBackdrop" Content="Blur"
+                                             IsChecked="{Binding Backdrop, Converter={StaticResource EnumEq}, ConverterParameter=Blur}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewBackdrop" Content="Acrylic"
+                                             IsChecked="{Binding Backdrop, Converter={StaticResource EnumEq}, ConverterParameter=Acrylic}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewBackdrop" Content="Transparent"
+                                             IsChecked="{Binding Backdrop, Converter={StaticResource EnumEq}, ConverterParameter=Transparent}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewBackdrop" Content="Solid"
+                                             IsChecked="{Binding Backdrop, Converter={StaticResource EnumEq}, ConverterParameter=Solid}" />
+                            </WrapPanel>
+                        </Border>
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE740;" Header="Size">
+                        <Border Style="{StaticResource SegmentedHost}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewSize" Content="Small"
+                                             IsChecked="{Binding Size, Converter={StaticResource EnumEq}, ConverterParameter=Small}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewSize" Content="Medium"
+                                             IsChecked="{Binding Size, Converter={StaticResource EnumEq}, ConverterParameter=Medium}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewSize" Content="Large"
+                                             IsChecked="{Binding Size, Converter={StaticResource EnumEq}, ConverterParameter=Large}" />
+                            </StackPanel>
+                        </Border>
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE8A0;" Header="Screen edge">
+                        <Border Style="{StaticResource SegmentedHost}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewEdge" Content="Bottom"
+                                             IsChecked="{Binding Edge, Converter={StaticResource EnumEq}, ConverterParameter=Bottom}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewEdge" Content="Top"
+                                             IsChecked="{Binding Edge, Converter={StaticResource EnumEq}, ConverterParameter=Top}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewEdge" Content="Left"
+                                             IsChecked="{Binding Edge, Converter={StaticResource EnumEq}, ConverterParameter=Left}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewEdge" Content="Right"
+                                             IsChecked="{Binding Edge, Converter={StaticResource EnumEq}, ConverterParameter=Right}" />
+                            </StackPanel>
+                        </Border>
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE8A1;" Header="Top bar">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding TopBar.Enabled}" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE80A;" Header="Widget style">
+                        <Border Style="{StaticResource SegmentedHost}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewWidgetStyle" Content="Cards"
+                                             IsChecked="{Binding WidgetStyle, Converter={StaticResource EnumEq}, ConverterParameter=Cards}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="OverviewWidgetStyle" Content="Seamless"
+                                             IsChecked="{Binding WidgetStyle, Converter={StaticResource EnumEq}, ConverterParameter=Seamless}" />
+                            </StackPanel>
+                        </Border>
+                    </ctl:SettingRow>
+
+                    <TextBlock Text="Status" Style="{StaticResource SectionHeader}" />
+                    <ctl:SettingRow x:Name="OverviewVersionRow" Glyph="&#xE895;" Header="Version">
+                        <Button x:Name="OverviewUpdateButton" Content="Updates" Click="OnOverviewUpdatesClick" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow x:Name="OverviewBackupRow" Glyph="&#xE90F;" Header="Automatic backup">
+                        <Button Content="Backup and troubleshooting" Click="OnOverviewBackupClick" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow x:Name="OverviewProfileRow" Glyph="&#xE77B;" Header="Profile">
+                        <Button Content="Profiles" Click="OnOverviewProfilesClick" />
+                    </ctl:SettingRow>
+                </StackPanel>
+
                 <!-- ============ General ============ -->
                 <StackPanel x:Name="GeneralPage" Style="{StaticResource Page}">
                     <TextBlock Text="General" Style="{StaticResource PageTitle}" />
@@ -247,10 +329,25 @@
                         <Button Content="Open folder" Click="OnOpenBackupsClick" />
                     </ctl:SettingRow>
 
+                    <TextBlock Text="Sync between PCs" Style="{StaticResource SectionHeader}" />
+                    <ctl:SettingRow Glyph="&#xE895;" Header="Sync folder" x:Name="SyncRow"
+                                    Description="Choose a folder that syncs between your PCs, such as OneDrive. DockHub shares your look, dock items, widget settings, profiles and shortcuts there, and takes changes made on your other PCs. Displays, the tray, the language and saved tokens stay on each PC.">
+                        <StackPanel Orientation="Horizontal">
+                            <Button x:Name="SyncStopButton" Content="Stop syncing" Click="OnStopSyncClick" Margin="0,0,8,0" Visibility="Collapsed" />
+                            <Button x:Name="SyncChooseButton" Content="Choose folder…" Click="OnChooseSyncFolderClick" />
+                        </StackPanel>
+                    </ctl:SettingRow>
+                    <TextBlock x:Name="SyncStatusText" Margin="16,0,16,8" TextWrapping="Wrap" FontSize="12"
+                               Foreground="{DynamicResource TextSecondaryBrush}" />
+
                     <TextBlock Text="Maintenance" Style="{StaticResource SectionHeader}" />
                     <ctl:SettingRow Glyph="&#xE777;" Header="Restore Windows taskbar"
                                     Description="If the taskbar remains hidden due to an issue. (Command line: DockHub.exe --restore-taskbar)">
                         <Button Content="Restore" Click="OnRestoreTaskbarClick" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow x:Name="AutoRestartRow" Glyph="&#xE7BA;" Header="Restart after a crash is off" Visibility="Collapsed"
+                                    Description="DockHub closed several times in a row, so Windows no longer starts it again after a crash.">
+                        <Button Content="Turn back on" Click="OnEnableAutoRestartClick" />
                     </ctl:SettingRow>
                     <ctl:SettingRow Glyph="&#xE72C;" Header="Restart DockHub">
                         <Button Content="Restart" Click="OnRestartClick" />
@@ -287,6 +384,10 @@
                             </StackPanel>
                         </Border>
                     </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE8A5;" Header="Files in the quick launcher"
+                                    Description="Finds files and folders in your user folder by name and content as you type, from the Windows Search index (AppData is left out). Nothing is found while Windows Search is turned off.">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding LauncherFileSearch}" />
+                    </ctl:SettingRow>
                     <ctl:SettingRow Glyph="&#xE7C4;" Header="Task view">
                         <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ShowTaskViewButton}" />
                     </ctl:SettingRow>
@@ -299,6 +400,17 @@
                     <ctl:SettingRow Glyph="&#xE8A9;" Header="Show unpinned running apps"
                                     Description="Running applications that are not pinned to the dock appear after a separator. Right-click to pin or drag and drop anywhere.">
                         <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding ShowRunningApps}" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE8A9;" Header="Combine app buttons"
+                                    Description="Always: one button for all of an app's windows. Never: each window has a button of its own with its title (only its icon on a side dock), and the icons don't grow under the pointer.">
+                        <Border Style="{StaticResource SegmentedHost}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="CombineButtons" Content="Always"
+                                             IsChecked="{Binding CombineButtons, Converter={StaticResource EnumEq}, ConverterParameter=Always}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="CombineButtons" Content="Never"
+                                             IsChecked="{Binding CombineButtons, Converter={StaticResource EnumEq}, ConverterParameter=Never}" />
+                            </StackPanel>
+                        </Border>
                     </ctl:SettingRow>
                     <ctl:SettingRow Glyph="&#xE7F4;" Header="Apps from all desktops"
                                     Description="Lists open windows of every virtual desktop. Clicking one switches to its desktop.">
@@ -418,7 +530,7 @@
                     <ctl:SettingRow Glyph="&#xF570;" Header="Backdrop"
                                     Description="Blur: blurs content behind the dock. Acrylic: adds Windows translucent texture. Transparent: no blur, the desktop shows through. Solid: opaque. If Blur or Acrylic looks black on your PC (a graphics driver problem), pick Transparent.">
                         <Border Style="{StaticResource SegmentedHost}">
-                            <StackPanel Orientation="Horizontal">
+                            <WrapPanel>
                                 <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Backdrop" Content="Blur"
                                              IsChecked="{Binding Backdrop, Converter={StaticResource EnumEq}, ConverterParameter=Blur}" />
                                 <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Backdrop" Content="Acrylic"
@@ -427,7 +539,7 @@
                                              IsChecked="{Binding Backdrop, Converter={StaticResource EnumEq}, ConverterParameter=Transparent}" />
                                 <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Backdrop" Content="Solid"
                                              IsChecked="{Binding Backdrop, Converter={StaticResource EnumEq}, ConverterParameter=Solid}" />
-                            </StackPanel>
+                            </WrapPanel>
                         </Border>
                     </ctl:SettingRow>
                     <ctl:SettingRow Glyph="&#xE706;" Header="Tint opacity" Description="Color layer overlay on glass.">
@@ -462,6 +574,17 @@
                                              IsChecked="{Binding RunningIndicator, Converter={StaticResource EnumEq}, ConverterParameter=Dots}" />
                                 <RadioButton Style="{StaticResource SegmentedItem}" GroupName="Indicator" Content="Off"
                                              IsChecked="{Binding RunningIndicator, Converter={StaticResource EnumEq}, ConverterParameter=Off}" />
+                            </StackPanel>
+                        </Border>
+                    </ctl:SettingRow>
+                    <ctl:SettingRow Glyph="&#xE80A;" Header="Widget style"
+                                    Description="Cards puts every widget on a card of its own. Seamless sets them right on the dock, with a thin line between two widgets.">
+                        <Border Style="{StaticResource SegmentedHost}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="WidgetStyle" Content="Cards"
+                                             IsChecked="{Binding WidgetStyle, Converter={StaticResource EnumEq}, ConverterParameter=Cards}" />
+                                <RadioButton Style="{StaticResource SegmentedItem}" GroupName="WidgetStyle" Content="Seamless"
+                                             IsChecked="{Binding WidgetStyle, Converter={StaticResource EnumEq}, ConverterParameter=Seamless}" />
                             </StackPanel>
                         </Border>
                     </ctl:SettingRow>
@@ -576,6 +699,58 @@
                                     Description="With auto-hide on, the dock stays visible over the desktop and small windows, and slides away only while the active window covers its area.">
                         <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding SmartAutoHide}" IsEnabled="{Binding AutoHide}" />
                     </ctl:SettingRow>
+                    <TextBlock Text="Top bar" Style="{StaticResource SectionHeader}" />
+                    <ctl:SettingRow Glyph="&#xE8A1;" Header="Top bar"
+                                    Description="A second, thin bar on the main display for widgets and a clock, like the menu bar on a Mac. Start, search, the tray and your apps stay on the dock. Move a widget there from its right-click menu (Show on) or in Dock items.">
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding TopBar.Enabled}" />
+                    </ctl:SettingRow>
+                    <StackPanel IsEnabled="{Binding TopBar.Enabled}">
+                        <ctl:SettingRow Glyph="&#xE8A0;" Header="Bar edge" Description="The bar never shares the dock's edge; it moves to the opposite one.">
+                            <Border Style="{StaticResource SegmentedHost}">
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton Style="{StaticResource SegmentedItem}" GroupName="TopBarEdge" Content="Top"
+                                                 IsChecked="{Binding TopBar.Edge, Converter={StaticResource EnumEq}, ConverterParameter=Top}" />
+                                    <RadioButton Style="{StaticResource SegmentedItem}" GroupName="TopBarEdge" Content="Bottom"
+                                                 IsChecked="{Binding TopBar.Edge, Converter={StaticResource EnumEq}, ConverterParameter=Bottom}" />
+                                    <RadioButton Style="{StaticResource SegmentedItem}" GroupName="TopBarEdge" Content="Left"
+                                                 IsChecked="{Binding TopBar.Edge, Converter={StaticResource EnumEq}, ConverterParameter=Left}" />
+                                    <RadioButton Style="{StaticResource SegmentedItem}" GroupName="TopBarEdge" Content="Right"
+                                                 IsChecked="{Binding TopBar.Edge, Converter={StaticResource EnumEq}, ConverterParameter=Right}" />
+                                </StackPanel>
+                            </Border>
+                        </ctl:SettingRow>
+                        <ctl:SettingRow Glyph="&#xE740;" Header="Bar size">
+                            <Border Style="{StaticResource SegmentedHost}">
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton Style="{StaticResource SegmentedItem}" GroupName="TopBarSize" Content="Small"
+                                                 IsChecked="{Binding TopBar.Size, Converter={StaticResource EnumEq}, ConverterParameter=Small}" />
+                                    <RadioButton Style="{StaticResource SegmentedItem}" GroupName="TopBarSize" Content="Medium"
+                                                 IsChecked="{Binding TopBar.Size, Converter={StaticResource EnumEq}, ConverterParameter=Medium}" />
+                                    <RadioButton Style="{StaticResource SegmentedItem}" GroupName="TopBarSize" Content="Large"
+                                                 IsChecked="{Binding TopBar.Size, Converter={StaticResource EnumEq}, ConverterParameter=Large}" />
+                                </StackPanel>
+                            </Border>
+                        </ctl:SettingRow>
+                        <ctl:SettingRow Glyph="&#xE8A9;" Header="Bar shape">
+                            <Border Style="{StaticResource SegmentedHost}">
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton Style="{StaticResource SegmentedItem}" GroupName="TopBarLayout" Content="Floating"
+                                                 IsChecked="{Binding TopBar.Layout, Converter={StaticResource EnumEq}, ConverterParameter=Floating}" />
+                                    <RadioButton Style="{StaticResource SegmentedItem}" GroupName="TopBarLayout" Content="Attached"
+                                                 IsChecked="{Binding TopBar.Layout, Converter={StaticResource EnumEq}, ConverterParameter=Attached}" />
+                                </StackPanel>
+                            </Border>
+                        </ctl:SettingRow>
+                        <ctl:SettingRow Glyph="&#xF570;" Header="Bar backdrop">
+                            <ComboBox x:Name="TopBarBackdropCombo" Width="200" SelectionChanged="OnTopBarBackdropChanged" />
+                        </ctl:SettingRow>
+                        <ctl:SettingRow Glyph="&#xE7E7;" Header="Hide the bar automatically" Description="The bar slides off its edge and comes back when the pointer reaches it.">
+                            <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding TopBar.AutoHide}" />
+                        </ctl:SettingRow>
+                        <ctl:SettingRow Glyph="&#xE917;" Header="Clock on the bar">
+                            <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding TopBar.ShowClock}" />
+                        </ctl:SettingRow>
+                    </StackPanel>
                 </StackPanel>
 
                 <!-- ============ Dock items ============ -->
@@ -613,6 +788,12 @@
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="&#xE76F;" Style="{StaticResource IconText}" FontSize="12" />
                                 <TextBlock Text="Add separator" Margin="8,0,0,0" />
+                            </StackPanel>
+                        </Button>
+                        <Button Margin="0,0,8,0" Click="OnEditOnDockClick" ToolTip="Move, remove and resize items right on the dock">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE70F;" Style="{StaticResource IconText}" FontSize="12" />
+                                <TextBlock Text="Edit on the dock" Margin="8,0,0,0" />
                             </StackPanel>
                         </Button>
                         <Button Click="OnImportPinsClick" ToolTip="Adds applications pinned to the Windows taskbar">
@@ -742,22 +923,30 @@
                 <!-- ============ Widget gallery ============ -->
                 <StackPanel x:Name="GalleryPage" Style="{StaticResource Page}">
                     <TextBlock Text="Widget gallery" Style="{StaticResource PageTitle}" />
-                    <TextBlock Text="Click the + button next to a widget to add it to the dock. Right-click added widgets on the dock to change their variant or open their settings."
+                    <TextBlock Text="Press Add, or drag a widget's card onto the dock. Right-click a widget on the dock to change its layout or open its settings."
                                Style="{StaticResource PageSubtitle}" />
                     <WrapPanel Margin="0,0,0,12">
-                        <Button Margin="0,0,8,0" Click="OnInstallWebWidgetClick" ToolTip="Install a .dockwidget package (HTML/JavaScript widget)">
+                        <Grid Width="260" Margin="0,0,12,6">
+                            <TextBox x:Name="GallerySearchBox" MinHeight="32" VerticalContentAlignment="Center" Padding="30,0,8,0"
+                                     TextChanged="OnGallerySearchChanged" PreviewKeyDown="OnGallerySearchKeyDown" />
+                            <TextBlock Text="&#xE721;" Style="{StaticResource IconText}" FontSize="12" Margin="11,0,0,0" IsHitTestVisible="False"
+                                       VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="{DynamicResource TextTertiaryBrush}" />
+                            <TextBlock x:Name="GallerySearchHint" Text="Search widgets" Margin="30,0,0,0" IsHitTestVisible="False"
+                                       VerticalAlignment="Center" Foreground="{DynamicResource TextTertiaryBrush}" />
+                        </Grid>
+                        <Button Margin="0,0,8,6" Click="OnInstallWebWidgetClick" ToolTip="Install a .dockwidget package (HTML/JavaScript widget)">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="&#xE896;" Style="{StaticResource IconText}" FontSize="12" />
                                 <TextBlock Text="Install widget…" Margin="8,0,0,0" />
                             </StackPanel>
                         </Button>
-                        <Button Margin="0,0,8,0" Click="OnInstallFromLinkClick" ToolTip="Install a web widget from a manifest.json, .dockwidget or GitHub folder link">
+                        <Button Margin="0,0,8,6" Click="OnInstallFromLinkClick" ToolTip="Install a web widget from a manifest.json, .dockwidget or GitHub folder link">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="&#xE71B;" Style="{StaticResource IconText}" FontSize="12" />
                                 <TextBlock Text="Install from link…" Margin="8,0,0,0" />
                             </StackPanel>
                         </Button>
-                        <Button Click="OnOpenWidgetsFolderClick">
+                        <Button Margin="0,0,0,6" Click="OnOpenWidgetsFolderClick">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="&#xE838;" Style="{StaticResource IconText}" FontSize="12" />
                                 <TextBlock Text="Open widgets folder" Margin="8,0,0,0" />
@@ -777,10 +966,16 @@
                             <TextBlock x:Name="WidgetLinkStatus" Style="{StaticResource SettingDescription}" Margin="0,6,0,0" Visibility="Collapsed" />
                         </StackPanel>
                     </Border>
-                    <TextBlock Text="Community web widgets" FontFamily="{DynamicResource DisplayFont}" FontSize="17" FontWeight="SemiBold" Margin="2,6,0,2" />
-                    <TextBlock Text="From DockHub's widget list on GitHub, updated daily. Anyone can add a widget to it with a pull request."
-                               Style="{StaticResource SettingDescription}" TextWrapping="Wrap" Margin="2,0,0,10" />
-                    <StackPanel x:Name="FeaturedWidgetsPanel" />
+                    <Border x:Name="WidgetUpdatesCard" Style="{StaticResource SettingCard}" Visibility="Collapsed" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="Widget updates" Style="{StaticResource SettingTitle}" />
+                            <TextBlock Text="Newer versions of web widgets you installed from a link. Their settings and data stay; you see new permissions before anything changes."
+                                       Style="{StaticResource SettingDescription}" />
+                            <StackPanel x:Name="WidgetUpdatesList" Margin="0,8,0,0" />
+                        </StackPanel>
+                    </Border>
+                    <WrapPanel x:Name="GalleryChips" Margin="0,0,0,4" />
+                    <TextBlock x:Name="GalleryEmpty" Style="{StaticResource SettingDescription}" Margin="2,14,0,0" Visibility="Collapsed" />
                     <StackPanel x:Name="GalleryPanel" />
                 </StackPanel>
 
@@ -841,6 +1036,9 @@
                     <ctl:SettingRow x:Name="ReportProblemRow" Glyph="&#xE939;" Header="Report a problem"
                                     Description="Opens a bug report on GitHub with your DockHub and Windows versions, language and widgets filled in, and copies the diagnostics report.">
                         <Button Content="Report…" Click="OnReportProblemClick" />
+                    </ctl:SettingRow>
+                    <ctl:SettingRow x:Name="LastCrashRow" Glyph="&#xE7BA;" Header="Last crash" Visibility="Collapsed">
+                        <Button x:Name="CopyCrashButton" Content="Copy details" Click="OnCopyCrashClick" />
                     </ctl:SettingRow>
                     <TextBlock Text="Tips" Style="{StaticResource SectionHeader}" />
                     <ctl:SettingRow Glyph="&#xE962;" Header="Right-click the dock" Description="Add widgets, pin apps, change position, and toggle auto-hide." />

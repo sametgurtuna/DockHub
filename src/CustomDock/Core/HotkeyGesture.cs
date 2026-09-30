@@ -81,6 +81,7 @@ public static class HotkeyActions
     public const string ClipboardHistory = "clipboard-history";
     public const string ToggleMicrophone = "toggle-microphone";
     public const string OpenLauncher = "open-launcher";
+    public const string EditDock = "edit-dock";
 
     public static IReadOnlyList<HotkeyAction> All { get; } = new[]
     {
@@ -96,6 +97,7 @@ public static class HotkeyActions
         new HotkeyAction(VolumeDown, "Volume down", "", null),
         new HotkeyAction(NextProfile, "Switch to the next profile", "", null),
         new HotkeyAction(ClipboardHistory, "Clipboard history", "Opens the first Clipboard widget on the dock.", null),
+        new HotkeyAction(EditDock, "Edit the dock", "Move, remove and resize dock items in place; press it again to finish.", null),
     };
 
     public static HotkeyAction? Find(string id) => All.FirstOrDefault(a => a.Id == id);

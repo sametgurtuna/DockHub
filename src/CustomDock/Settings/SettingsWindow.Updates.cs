@@ -13,8 +13,8 @@ public partial class SettingsWindow
     {
         ShowUpdate(AppServices.Updates.Available);
         UpdateStatusRow.Description = AppServices.Updates.LastChecked is { } last
-            ? $"You have {UpdateService.CurrentVersion}. Last checked {last:g}."
-            : $"You have {UpdateService.CurrentVersion}.";
+            ? L.T("You have {0}. Last checked {1}.", UpdateService.CurrentVersion, last.ToString("g", System.Globalization.CultureInfo.CurrentCulture))
+            : L.T("You have {0}.", UpdateService.CurrentVersion);
     }
 
     private void ShowUpdate(ReleaseInfo? release)
@@ -36,8 +36,8 @@ public partial class SettingsWindow
             var release = await AppServices.Updates.CheckAsync(userInitiated: true);
             ShowUpdate(release);
             UpdateStatusRow.Description = release is null
-                ? $"DockHub {UpdateService.CurrentVersion} is the latest version."
-                : $"You have {UpdateService.CurrentVersion}.";
+                ? L.T("DockHub {0} is the latest version.", UpdateService.CurrentVersion)
+                : L.T("You have {0}.", UpdateService.CurrentVersion);
         }
         catch (Exception ex)
         {
@@ -53,11 +53,11 @@ public partial class SettingsWindow
     private async void OnInstallUpdateClick(object sender, RoutedEventArgs e)
     {
         if (AppServices.Updates.Available is not { } release) return;
-        if (ConfirmDialog.Show($"Install DockHub {release.Version}?",
-                "DockHub closes (your Windows taskbar comes back briefly), updates and starts again. Your settings are kept.",
+        if (ConfirmDialog.Show(L.T("Install DockHub {0}?", release.Version),
+                L.T("DockHub closes (your Windows taskbar comes back briefly), updates and starts again. Your settings are kept."),
                 "", this,
-                new DialogButton("cancel", "Cancel", IsCancel: true),
-                new DialogButton("install", "Install", DialogButtonKind.Primary)) != "install")
+                new DialogButton("cancel", L.T("Cancel"), IsCancel: true),
+                new DialogButton("install", L.T("Install"), DialogButtonKind.Primary)) != "install")
             return;
 
         InstallUpdateButton.IsEnabled = false;
@@ -72,7 +72,7 @@ public partial class SettingsWindow
             Log.Error(ex, "Update failed");
             UpdateProgress.Text = "";
             InstallUpdateButton.IsEnabled = true;
-            ConfirmDialog.Show("Update failed", ex.Message, "", this, new DialogButton("ok", "OK", DialogButtonKind.Primary));
+            ConfirmDialog.Show(L.T("Update failed"), ex.Message, "", this, new DialogButton("ok", "OK", DialogButtonKind.Primary));
         }
     }
 

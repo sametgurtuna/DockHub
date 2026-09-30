@@ -12,6 +12,8 @@ public static class DockDragHelper
 {
     public const string ItemFormat = "DockHub.ItemId";
     public const string RunningAppFormat = "DockHub.AppKey";
+    /// <summary>A widget dragged from the gallery: its type and layout (see <see cref="NewWidgetDrag"/>).</summary>
+    public const string NewWidgetFormat = "DockHub.NewWidget";
 
     private static FrameworkElement? _source;
     private static Point _start;
@@ -20,6 +22,25 @@ public static class DockDragHelper
     public static bool JustDragged { get; private set; }
 
     public static event Action<bool>? DraggingChanged;
+
+    /// <summary>
+    /// Drag data carrying only a string (an item id or app key). Other objects would have to be serialized when a
+    /// drag leaves the process, and .NET no longer has the BinaryFormatter that did it.
+    /// </summary>
+    public static DataObject StringData(string format, string value) => new(format, value);
+
+    /// <summary>A new dock item for a widget dragged from the gallery (<see cref="NewWidgetFormat"/>), or null.</summary>
+    public static Core.DockItem? NewWidgetItem(IDataObject data)
+    {
+        if (NewWidgetDrag.Decode(ReadString(data, NewWidgetFormat)) is not { } widget
+            || Widgets.WidgetRegistry.Find(widget.WidgetId) is not { } descriptor)
+            return null;
+        return Core.DockItem.ForWidget(descriptor.Id, descriptor.Variants.Any(v => v.Id == widget.Variant) ? widget.Variant : null);
+    }
+
+    /// <summary>The string <see cref="StringData"/> put in <paramref name="data"/>, or null.</summary>
+    public static string? ReadString(IDataObject data, string format) =>
+        data.GetDataPresent(format) ? data.GetData(format) as string : null;
 
     public static void Attach(FrameworkElement element, Func<DataObject?> dataFactory)
     {

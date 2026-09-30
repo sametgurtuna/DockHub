@@ -3,7 +3,7 @@ using Microsoft.Win32.SafeHandles;
 
 namespace CustomDock.Native;
 
-/// <summary>Keyboard layouts, registry change notifications and the Windows Notification Facility.</summary>
+/// <summary>Keyboard layouts, registry change notifications, the Windows Notification Facility and restart after a crash.</summary>
 internal static partial class NativeMethods
 {
     // --- Keyboard layouts ---
@@ -59,4 +59,16 @@ internal static partial class NativeMethods
     public const int DWMWA_CLOAKED_ATTRIBUTE = 14;
     public const int DWM_CLOAKED_SHELL = 0x2;
     public const uint EVENT_SYSTEM_FOREGROUND_EVENT = 0x0003;
+
+    // --- Restart after a crash (Windows Error Reporting) ---
+    /// <summary>Not after a restart for an update installed by Windows Update or the Restart Manager.</summary>
+    public const int RESTART_NO_PATCH = 4;
+    /// <summary>Not after the PC restarts for an update.</summary>
+    public const int RESTART_NO_REBOOT = 8;
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+    public static extern int RegisterApplicationRestart(string? commandLine, int flags);
+
+    [DllImport("kernel32.dll")]
+    public static extern int UnregisterApplicationRestart();
 }

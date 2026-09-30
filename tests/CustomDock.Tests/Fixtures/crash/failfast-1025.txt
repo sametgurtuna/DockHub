@@ -1,0 +1,9 @@
+Application: DockHub.exe
+CoreCLR Version: 10.0.1225.60609
+.NET Version: 10.0.12
+Description: The application requested process termination through System.Environment.FailFast.
+Message: DockHub crash test (--crash-test) for samet
+Stack:
+   at System.Environment.FailFast(System.Runtime.CompilerServices.StackCrawlMarkHandle, System.String, System.Runtime.CompilerServices.ObjectHandleOnStack, System.String)
+   at System.Environment.FailFast(System.String)
+   at CustomDock.Services.CrashRecovery+<>c__DisplayClass20_0.<StartCrashTest>b__0(System.Object, System.EventArgs)

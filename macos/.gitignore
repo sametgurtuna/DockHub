@@ -1,0 +1,13 @@
+# Swift Package Manager derleme cikisi
+.build/
+.swiftpm/
+Package.resolved
+
+# Uretilen uygulama paketi
+*.app/
+
+# Xcode
+*.xcodeproj/
+*.xcworkspace/
+DerivedData/
+xcuserdata/

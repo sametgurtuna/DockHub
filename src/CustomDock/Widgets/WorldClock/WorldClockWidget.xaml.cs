@@ -206,11 +206,6 @@ public partial class WorldClockWidget : WidgetBase
         PopupClockZone.Text = $"{cityName} · {gmt}";
     }
 
-    private void OnPopupCloseClick(object sender, RoutedEventArgs e)
-    {
-        ClosePopup(ClockPopup);
-    }
-
     private static string GetLocalCityName()
     {
         var local = TimeZoneInfo.Local;

@@ -33,6 +33,12 @@ public enum MotionPreference { System, Full, Reduced, Off }
 
 public enum RunningIndicatorStyle { Line, Dots, Off }
 
+/// <summary>Widgets on the dock: each on its own card, or straight on the dock with a thin line between them.</summary>
+public enum WidgetStyle { Cards, Seamless }
+
+/// <summary>An app's windows on one button (Always), or each window on a button of its own with its title (Never).</summary>
+public enum CombineButtons { Always, Never }
+
 public enum DockLayout
 {
     /// <summary>Floating bar with margins and rounded corners.</summary>
@@ -125,6 +131,11 @@ public sealed class AppConfig : ObservableObject
     /// <summary>Shows unpinned running apps at the end of the dock.</summary>
     public bool ShowRunningApps { get => _showRunningApps; set => Set(ref _showRunningApps, value); }
 
+    private CombineButtons _combineButtons = CombineButtons.Always;
+
+    /// <summary>Like Windows' "Combine taskbar buttons": Always (one button per app, as before) or Never (one per window).</summary>
+    public CombineButtons CombineButtons { get => _combineButtons; set => Set(ref _combineButtons, value); }
+
     public bool ShowTray { get => _showTray; set => Set(ref _showTray, value); }
 
     public bool ShowClock { get => _showClock; set => Set(ref _showClock, value); }
@@ -174,6 +185,11 @@ public sealed class AppConfig : ObservableObject
     public bool PreviewPeek { get => _previewPeek; set => Set(ref _previewPeek, value); }
 
     public SearchButtonAction SearchButtonAction { get => _searchButtonAction; set => Set(ref _searchButtonAction, value); }
+
+    private bool _launcherFileSearch = true;
+
+    /// <summary>The quick launcher also finds files and folders in the user's folder (Windows Search index).</summary>
+    public bool LauncherFileSearch { get => _launcherFileSearch; set => Set(ref _launcherFileSearch, value); }
 
     /// <summary>IDs of tray icons that are always shown in the dock (null = import from Windows settings).</summary>
     public List<string>? PinnedTrayIcons { get; set; }
@@ -246,6 +262,16 @@ public sealed class AppConfig : ObservableObject
     /// <summary>Widget cards snap their width to a grid of half the dock height, so the dock keeps an even rhythm.</summary>
     public bool AlignWidgetWidths { get => _alignWidgetWidths; set => Set(ref _alignWidgetWidths, value); }
 
+    private WidgetStyle _widgetStyle = WidgetStyle.Cards;
+
+    /// <summary>Cards (each widget on its own card, as before) or Seamless (no card; a thin line between widgets).</summary>
+    public WidgetStyle WidgetStyle { get => _widgetStyle; set => Set(ref _widgetStyle, value); }
+
+    private TopBarSettings _topBar = new();
+
+    /// <summary>The top bar (off by default; settings from before it existed load as off).</summary>
+    public TopBarSettings TopBar { get => _topBar; set => Set(ref _topBar, value ?? new TopBarSettings()); }
+
     private double _textScale;
 
     /// <summary>Text size of settings, panels and menus. 0 follows Windows' "Text size" setting.</summary>
@@ -310,6 +336,24 @@ public sealed class AppConfig : ObservableObject
         Hotkeys[actionId] = gesture?.ToString() ?? "";
         OnPropertyChanged(nameof(Hotkeys));
     }
+
+    /// <summary>All shortcuts at once (settings from another PC).</summary>
+    public void ReplaceHotkeys(Dictionary<string, string> hotkeys)
+    {
+        Hotkeys = new Dictionary<string, string>(hotkeys);
+        OnPropertyChanged(nameof(Hotkeys));
+    }
+
+    private string? _syncFolder;
+
+    /// <summary>Folder the settings are shared through with other PCs (OneDrive...); null: settings sync is off.</summary>
+    public string? SyncFolder { get => _syncFolder; set => Set(ref _syncFolder, string.IsNullOrWhiteSpace(value) ? null : value); }
+
+    /// <summary>This PC in the sync folder (so it never takes back what it wrote itself).</summary>
+    public string? SyncDeviceId { get; set; }
+
+    /// <summary>When the settings this PC last wrote to, or took from, the sync folder were written (UTC).</summary>
+    public DateTime? SyncAppliedAt { get; set; }
 
     /// <summary>The first-run welcome screen was completed or closed.</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
@@ -400,6 +444,18 @@ public sealed class DockItem : ObservableObject
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? Display { get => _display; set => Set(ref _display, value); }
+
+    /// <summary>The <see cref="Surface"/> of a widget on the top bar.</summary>
+    public const string BarSurface = "bar";
+
+    private string? _surface;
+
+    /// <summary>
+    /// Widgets only: <see cref="BarSurface"/> when the widget lives on the top bar. While the bar is off it shows on the
+    /// dock. Null: the dock.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Surface { get => _surface; set => Set(ref _surface, value); }
 
     private bool _collapseWhenIdle;
 

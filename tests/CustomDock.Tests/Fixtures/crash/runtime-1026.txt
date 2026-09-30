@@ -1,0 +1,12 @@
+Application: DockHub.exe
+CoreCLR Version: 8.0.3126.42015
+.NET Version: 8.0.31
+Description: The process was terminated due to an unhandled exception.
+Exception Info: System.IO.IOException: The process cannot access the file 'C:\Users\samet\AppData\Roaming\DockHub\notes.json' because it is being used by another process.
+   at Microsoft.Win32.SafeHandles.SafeFileHandle.CreateFile(System.String, System.IO.FileMode, System.IO.FileAccess, System.IO.FileShare, System.IO.FileOptions)
+   at System.IO.File.WriteAllText(System.String, System.String) in C:\Users\samet\source\runtime\File.cs:line 42
+   at CustomDock.Widgets.NotesWidget.Save()
+   at CustomDock.Widgets.NotesWidget.<OnTextChanged>b__14_0(System.Object, System.EventArgs)
+   at System.Windows.Threading.DispatcherTimer.FireTick()
+   at System.Windows.Threading.ExceptionWrapper.InternalRealCall(System.Delegate, System.Object, Int32)
+   at MS.Internal.Threading.ExceptionFilterHelper.TryCatchWhen(System.Object, System.Delegate, System.Object, Int32, System.Delegate)

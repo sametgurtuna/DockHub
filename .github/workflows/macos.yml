@@ -1,0 +1,50 @@
+name: macOS
+
+on:
+  push:
+    branches: [master, 'claude/**']
+    paths:
+      - 'macos/**'
+      - 'src/CustomDock/Core/AppConfig.cs'
+      - 'src/CustomDock/Resources/Strings_*.json'
+      - 'tests/fixtures/config-windows.json'
+      - '.github/workflows/macos.yml'
+  pull_request:
+    paths:
+      - 'macos/**'
+      - 'src/CustomDock/Core/AppConfig.cs'
+      - 'src/CustomDock/Resources/Strings_*.json'
+      - 'tests/fixtures/config-windows.json'
+      - '.github/workflows/macos.yml'
+
+jobs:
+  build:
+    # The macOS version DockHub for Mac supports at least (Package.swift: .macOS(.v15)).
+    runs-on: macos-15
+    defaults:
+      run:
+        working-directory: macos
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: |
+          sw_vers
+          swift --version
+
+      - name: Build
+        run: swift build
+
+      - name: Test
+        run: swift test
+
+      # Every text of the Mac interface has a translation in the shared Strings_tr/de/es.json.
+      - name: Translations
+        run: python3 Scripts/check-translations.py
+
+      # The settings file must stay readable by both DockHubs: the keys the Mac writes against Windows' AppConfig.
+      # (WindowsConfigTests above also reads and rewrites tests/fixtures/config-windows.json, a file Windows wrote.)
+      - name: Config schema
+        run: |
+          DOCKHUB_SCHEMA_OUT="$RUNNER_TEMP/config.json" swift test --filter ConfigSchemaDumpTests
+          python3 Scripts/compare-config-schema.py "$RUNNER_TEMP/config.json"

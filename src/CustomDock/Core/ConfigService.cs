@@ -43,11 +43,29 @@ public sealed class ConfigService
         // Widgets unknown to this version (e.g. after a downgrade) stay in the config; the dock just skips them.
         RepairAppPaths(Config.Items);
         Config.Version = AppConfig.CurrentVersion;
-        Config.PropertyChanged += (_, _) => ScheduleSave();
+        Config.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(AppConfig.TopBar)) WatchTopBar();
+            ScheduleSave();
+        };
         Config.ItemsChanged += (_, _) => ScheduleSave();
+        WatchTopBar();
         IsLoaded = true;
         SaveNow();
     }
+
+    private TopBarSettings? _watchedTopBar;
+
+    /// <summary>The top bar's settings are an object of their own: a change inside it is saved like any other.</summary>
+    private void WatchTopBar()
+    {
+        if (ReferenceEquals(_watchedTopBar, Config.TopBar)) return;
+        if (_watchedTopBar is not null) _watchedTopBar.PropertyChanged -= OnTopBarChanged;
+        _watchedTopBar = Config.TopBar;
+        _watchedTopBar.PropertyChanged += OnTopBarChanged;
+    }
+
+    private void OnTopBarChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e) => ScheduleSave();
 
     /// <summary>
     /// Pins made from running apps used to store versioned install folders (Squirrel <c>app-1.2.3</c>, MSIX
@@ -441,6 +459,84 @@ public sealed class ConfigService
         if (!IsLoaded) return;
         JsonStore.Save(AppPaths.ConfigFile, Config);
         BackupService.DailyBackup();
+        Saved?.Invoke();
+    }
+
+    /// <summary>Raised after the settings were written (settings sync shares them then).</summary>
+    public event Action? Saved;
+
+    /// <summary>The settings as config.json has them.</summary>
+    public JsonObject ConfigJson() => JsonSerializer.SerializeToNode(Config, JsonStore.Options) as JsonObject ?? new JsonObject();
+
+    /// <summary>
+    /// Takes the settings another PC shared (settings sync, see <see cref="SyncMerge"/>) as one step that Undo reverts:
+    /// the dock's items keep their live widgets, whose settings change in place, and every other shared setting is set
+    /// as if changed in Settings.
+    /// </summary>
+    public void ApplyShared(JsonObject shared, string description)
+    {
+        var merged = SyncMerge.Merge(ConfigJson(), shared);
+        AppConfig incoming;
+        try
+        {
+            incoming = merged.Deserialize<AppConfig>(JsonStore.Options) ?? throw new JsonException("Empty settings");
+        }
+        catch (Exception ex) when (ex is JsonException or NotSupportedException)
+        {
+            Log.Error(ex, "Shared settings can't be read");
+            return;
+        }
+
+        History.Push(Config, description, destructive: true, includeAppearance: true);
+        foreach (var property in typeof(AppConfig).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
+        {
+            string name = JsonNamingPolicy.CamelCase.ConvertName(property.Name);
+            if (!shared.ContainsKey(name) || SyncMerge.LocalOnly.Contains(name) || !property.CanWrite || property.GetIndexParameters().Length > 0) continue;
+            if (property.IsDefined(typeof(System.Text.Json.Serialization.JsonIgnoreAttribute), inherit: true)) continue;
+            switch (property.Name)
+            {
+                case nameof(AppConfig.Items):
+                    continue;
+                case nameof(AppConfig.Hotkeys):
+                    Config.ReplaceHotkeys(incoming.Hotkeys);
+                    continue;
+                default:
+                    property.SetValue(Config, property.GetValue(incoming));
+                    continue;
+            }
+        }
+
+        if (shared.ContainsKey("items"))
+        {
+            var settings = ItemDataStore.Flatten(incoming.Items).GroupBy(i => i.Id).ToDictionary(g => g.Key, g => g.First().Settings);
+            var existing = ItemDataStore.Flatten(Config.Items).GroupBy(i => i.Id).ToDictionary(g => g.Key, g => g.First());
+            Config.Items = incoming.Items.Select(item => ConfigHistory.Reuse(item, existing)).ToList();
+            foreach (var item in ItemDataStore.Flatten(Config.Items))
+                if (settings.TryGetValue(item.Id, out var itemSettings)) UpdateItemSettings(item, itemSettings);
+            foreach (var id in _itemSettings.Keys.ToList())
+                if (FindItem(id) is null) _itemSettings.Remove(id);
+            Config.NotifyItemsChanged();
+        }
+        ScheduleSave();
+    }
+
+    /// <summary>New settings for a live widget: its settings object takes them, so the widget follows as it does in Settings.</summary>
+    private void UpdateItemSettings(DockItem item, JsonObject? settings)
+    {
+        if (JsonNode.DeepEquals(item.Settings, settings)) return;
+        item.Settings = settings?.DeepClone() as JsonObject;
+        if (settings is null || !_itemSettings.TryGetValue(item.Id, out var cached)) return;
+        try
+        {
+            if (settings.Deserialize(cached.GetType(), JsonStore.Options) is not { } fresh) return;
+            foreach (var property in cached.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
+                if (property.CanRead && property.CanWrite && property.GetIndexParameters().Length == 0)
+                    property.SetValue(cached, property.GetValue(fresh));
+        }
+        catch (Exception ex) when (ex is JsonException or NotSupportedException or System.Reflection.TargetInvocationException)
+        {
+            Log.Error(ex, $"Shared settings of {item.Widget} can't be applied");
+        }
     }
 
     private sealed class LegacyPinnedStore

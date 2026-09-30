@@ -16,7 +16,7 @@ public sealed partial class GroupItemView
     private void OnLeftUp(object sender, MouseButtonEventArgs e)
     {
         AnimatePress(IsMouseOver ? 1.08 : 1);
-        if (DockDragHelper.JustDragged) return;
+        if (DockDragHelper.JustDragged || DockWindow.IsEditingAt(this)) return;
         e.Handled = true;
 
         if (_fanPopup?.IsOpen == true || (_fanPopup is not null && PopupAnimationHelper.IsClosing(_fanPopup)))

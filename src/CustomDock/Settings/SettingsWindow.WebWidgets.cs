@@ -39,6 +39,8 @@ public partial class SettingsWindow
     /// <summary>Shows what the widget will be able to reach, then installs it. True when installed.</summary>
     private bool ConfirmAndInstall(WebWidgetManifest manifest)
     {
+        if (WebWidgetCatalog.Installed.FirstOrDefault(m => m.Id == manifest.Id) is { } installed)
+            return ConfirmAndUpdate(installed, manifest);
         var permissions = new List<string>();
         if (manifest.Permissions.Network.Count > 0)
             permissions.Add(L.T("Internet access to: {0}", string.Join(", ", manifest.Permissions.Network)));
@@ -71,6 +73,73 @@ public partial class SettingsWindow
             return false;
         }
     }
+
+    /// <summary>
+    /// A new version of an installed widget: what it may reach beyond the installed one (nothing new: a plain question),
+    /// then the update, which keeps each copy's settings and storage.
+    /// </summary>
+    private bool ConfirmAndUpdate(WebWidgetManifest installed, WebWidgetManifest update)
+    {
+        var change = PermissionChange.Between(installed, update);
+        var added = new List<string>();
+        if (change.Hosts.Count > 0) added.Add(L.T("Internet access to: {0}", string.Join(", ", change.Hosts)));
+        foreach (string label in change.ServerSettings)
+            added.Add(L.T("Internet access to the address you enter in “{0}” (also plain http, for servers on your network)", label));
+        if (change.Notifications) added.Add(L.T("Show notifications"));
+
+        string message = L.T("Version {0} replaces version {1}. Settings and data of the widget stay.", update.Version, installed.Version);
+        if (added.Count > 0) message += $"\n\n{L.T("The new version also asks for:")}\n• " + string.Join("\n• ", added);
+        if (ConfirmDialog.Show(L.T("Update “{0}”?", update.Name), message, "", this,
+                new DialogButton("cancel", L.T("Cancel"), IsCancel: true),
+                new DialogButton("update", L.T("Update"), DialogButtonKind.Primary)) != "update")
+            return false;
+
+        try
+        {
+            WebWidgetCatalog.Install(update);
+            RebuildGallery();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Widget update failed");
+            ConfirmDialog.Show(L.T("Can't update this widget"), ex.Message, "", this, new DialogButton("ok", "OK", DialogButtonKind.Primary));
+            return false;
+        }
+    }
+
+    // ------------------------------------------------------------------ Updates
+
+    private bool _updateCheckStarted;
+
+    /// <summary>The updates found so far, then a fresh check (at most daily) when the gallery opens.</summary>
+    private void ShowWidgetUpdates()
+    {
+        var updates = WebWidgetUpdates.Available();
+        WidgetUpdatesList.Children.Clear();
+        foreach (var update in updates)
+        {
+            var button = new Button { Content = L.T("Update"), Padding = new Thickness(14, 3, 14, 3), Margin = new Thickness(12, 0, 0, 0) };
+            button.SetResourceReference(StyleProperty, "AccentButton");
+            var link = update.Link;
+            button.Click += async (_, _) => await DownloadAndInstallAsync(new[] { link }, button, null);
+            var text = new TextBlock { Text = $"{update.Name}: {update.InstalledVersion} → {update.Version}", VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
+            var row = new DockPanel { Margin = new Thickness(0, 3, 0, 3) };
+            DockPanel.SetDock(button, System.Windows.Controls.Dock.Right);
+            row.Children.Add(button);
+            row.Children.Add(text);
+            WidgetUpdatesList.Children.Add(row);
+        }
+        WidgetUpdatesCard.Visibility = updates.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+
+        if (_updateCheckStarted) return;
+        _updateCheckStarted = true;
+        WebWidgetUpdates.Changed += OnWidgetUpdatesChanged;
+        Closed += (_, _) => WebWidgetUpdates.Changed -= OnWidgetUpdatesChanged;
+        _ = WebWidgetUpdates.CheckAsync(WebWidgetDownloader.Client);
+    }
+
+    private void OnWidgetUpdatesChanged() => Dispatcher.BeginInvoke(ShowWidgetUpdates);
 
     // ------------------------------------------------------------------ Install from link
 
@@ -144,6 +213,7 @@ public partial class SettingsWindow
     /// <summary>The community list: the kept copy at once, then the fresh one when it arrives (at most daily).</summary>
     private void BuildFeaturedWidgets()
     {
+        ShowWidgetUpdates();
         ShowWidgetIndex(WebWidgetIndex.Current());
         if (_indexRefreshStarted) return;
         _indexRefreshStarted = true;
@@ -155,40 +225,7 @@ public partial class SettingsWindow
         if (await WebWidgetIndex.RefreshAsync(WebWidgetDownloader.Client) is { } fresh) ShowWidgetIndex(fresh);
     }
 
-    private void ShowWidgetIndex(IReadOnlyList<WidgetIndexEntry> entries)
-    {
-        FeaturedWidgetsPanel.Children.Clear();
-        foreach (var featured in entries)
-        {
-            var installed = WebWidgetCatalog.Installed.FirstOrDefault(m => m.Id == featured.Id);
-            var button = new Button
-            {
-                Content = installed is null ? L.T("Install") : L.T("Installed"),
-                IsEnabled = installed is null,
-                Padding = new Thickness(14, 4, 14, 4),
-                MinWidth = 90,
-                VerticalAlignment = VerticalAlignment.Center,
-            };
-            if (installed is null) button.SetResourceReference(StyleProperty, "AccentButton");
-            button.Click += async (_, _) => await DownloadAndInstallAsync(featured.Links, button, null);
-
-            var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 12, 0) };
-            var title = new TextBlock { Text = featured.Author is { Length: > 0 } author && author != "DockHub" ? $"{featured.Name} · {author}" : featured.Name };
-            title.SetResourceReference(StyleProperty, "SettingTitle");
-            var description = new TextBlock { Text = featured.Description };
-            description.SetResourceReference(StyleProperty, "SettingDescription");
-            text.Children.Add(title);
-            text.Children.Add(description);
-
-            var row = new DockPanel();
-            DockPanel.SetDock(button, System.Windows.Controls.Dock.Right);
-            row.Children.Add(button);
-            row.Children.Add(text);
-            var card = new Border { Child = row, Margin = new Thickness(0, 0, 0, 6) };
-            card.SetResourceReference(StyleProperty, "SettingCard");
-            FeaturedWidgetsPanel.Children.Add(card);
-        }
-    }
+    private void ShowWidgetIndex(IReadOnlyList<WidgetIndexEntry> entries) => ShowCommunityCards(entries);
 
     private void OnOpenWidgetsFolderClick(object sender, RoutedEventArgs e)
     {
@@ -198,9 +235,6 @@ public partial class SettingsWindow
 
     private void RebuildGallery()
     {
-        foreach (var preview in _previews) preview.Detach();
-        _previews.Clear();
-        GalleryPanel.Children.Clear();
         BuildGallery();
         BuildFeaturedWidgets();
     }

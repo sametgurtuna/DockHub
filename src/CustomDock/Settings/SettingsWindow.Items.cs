@@ -86,7 +86,11 @@ public sealed class ItemRow
 
 public partial class SettingsWindow
 {
-    private void OnConfigItemsChanged(object? sender, EventArgs e) => LoadItems();
+    private void OnConfigItemsChanged(object? sender, EventArgs e)
+    {
+        LoadItems();
+        RefreshGalleryBadges();
+    }
 
     private void LoadItems()
     {
@@ -240,7 +244,7 @@ public partial class SettingsWindow
     private void OnWidgetDisplayChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_suppressVariant || ItemList.SelectedItem is not ItemRow row || WidgetDisplayCombo.SelectedItem is not WidgetDisplays.Choice choice) return;
-        WidgetDisplays.Move(row.Item, choice.Device);
+        WidgetDisplays.Move(row.Item, choice);
     }
 
     private void OnAppNameChanged(object sender, RoutedEventArgs e)
@@ -305,19 +309,22 @@ public partial class SettingsWindow
     private void OnAddSeparatorClick(object sender, RoutedEventArgs e)
         => AppServices.ConfigService.AddItem(DockItem.Separator(), DockItemsIndex.EndOfApps());
 
+    /// <summary>Puts the main dock into edit mode; the dock sits above this window, so it can be edited right away.</summary>
+    private void OnEditOnDockClick(object sender, RoutedEventArgs e) => DockWindow.EditMainDock();
+
     private void OnImportPinsClick(object sender, RoutedEventArgs e)
     {
         var existing = _config.Items.Where(i => i.Kind == DockItemKind.App).Select(i => i.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var newPins = DefaultItems.ImportTaskbarPins().Where(i => !existing.Contains(i.Path)).ToList();
         if (newPins.Count > 0)
         {
-            AppServices.ConfigService.History.Push(_config, "Imported taskbar pins");
+            AppServices.ConfigService.History.Push(_config, L.T("Imported taskbar pins"));
             int index = DockItemsIndex.EndOfApps();
             foreach (var item in newPins) _config.Items.Insert(index++, item);
             _config.NotifyItemsChanged();
         }
-        ConfirmDialog.Show("Import taskbar pins",
-            newPins.Count switch { 0 => "No new pins found to import.", 1 => "1 application added.", _ => $"{newPins.Count} applications added." },
+        ConfirmDialog.Show(L.T("Import taskbar pins"),
+            newPins.Count switch { 0 => L.T("No new pins found to import."), 1 => L.T("1 application added."), _ => L.T("{0} applications added.", newPins.Count) },
             "", this, new DialogButton("ok", "OK", DialogButtonKind.Primary));
     }
 
@@ -342,7 +349,7 @@ public partial class SettingsWindow
         int from = _config.Items.IndexOf(row.Item);
         int to = Math.Clamp(from + delta, 0, _config.Items.Count - 1);
         if (from < 0 || from == to) return;
-        AppServices.ConfigService.History.Push(_config, $"Moved {ConfigService.Describe(row.Item)}");
+        AppServices.ConfigService.History.Push(_config, L.T("Moved {0}", ConfigService.Describe(row.Item)));
         _config.Items.RemoveAt(from);
         _config.Items.Insert(to, row.Item);
         _config.NotifyItemsChanged();
@@ -365,7 +372,7 @@ public partial class SettingsWindow
         if (Math.Abs((e.GetPosition(ItemList) - _dragStart).Y) < SystemParameters.MinimumVerticalDragDistance) return;
         var row = _dragCandidate;
         _dragCandidate = null;
-        DragDrop.DoDragDrop(ItemList, new DataObject(DragFormat, row), DragDropEffects.Move);
+        DragDrop.DoDragDrop(ItemList, DockDragHelper.StringData(DragFormat, row.Item.Id), DragDropEffects.Move);
     }
 
     private void OnItemListDragOver(object sender, DragEventArgs e)
@@ -376,7 +383,9 @@ public partial class SettingsWindow
 
     private void OnItemListDrop(object sender, DragEventArgs e)
     {
-        if (e.Data.GetData(DragFormat) is not ItemRow dragged) return;
+        string? draggedId = DockDragHelper.ReadString(e.Data, DragFormat);
+        var dragged = _rows.FirstOrDefault(r => r.Item.Id == draggedId);
+        if (dragged is null) return;
         var hit = VisualTreeHelper.HitTest(ItemList, e.GetPosition(ItemList))?.VisualHit;
         while (hit is not null and not ListBoxItem) hit = VisualTreeHelper.GetParent(hit);
         var target = (hit as ListBoxItem)?.DataContext as ItemRow;

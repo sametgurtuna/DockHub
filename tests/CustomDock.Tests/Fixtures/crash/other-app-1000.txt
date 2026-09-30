@@ -1,0 +1,8 @@
+Faulting application name: explorer.exe, version: 10.0.26100.4061, time stamp: 0x2b5f1e33
+Faulting module name: ntdll.dll, version: 10.0.26100.4061, time stamp: 0x9a3f1b22
+Exception code: 0xc0000409
+Fault offset: 0x00000000000a1b2c
+Faulting process id: 0x0x1A2C
+Faulting application path: C:\Windows\explorer.exe
+Faulting module path: C:\Windows\SYSTEM32\ntdll.dll
+Report Id: 5a1b2c3d-0000-4e0a-8f5d-1b2c3d4e5f60

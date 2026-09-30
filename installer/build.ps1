@@ -1,5 +1,5 @@
-# Publishes DockHub (self-contained, win-x64) and compiles the Inno Setup installer.
-# Usage: pwsh installer/build.ps1
+# Publishes DockHub (self-contained, win-x64 or win-arm64) and compiles the Inno Setup installer.
+# Usage: pwsh installer/build.ps1 [-Runtime win-arm64]
 # The release workflow runs it in two stages (-Stage Publish, then -Stage Installer) to sign DockHub.exe in between.
 param(
     [string]$Configuration = 'Release',
@@ -9,6 +9,11 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+$arch = switch ($Runtime) {
+    'win-x64' { 'x64' }
+    'win-arm64' { 'arm64' }
+    default { throw "Unsupported runtime $Runtime (use win-x64 or win-arm64)" }
+}
 $root = Split-Path $PSScriptRoot -Parent
 $project = Join-Path $root 'src\CustomDock\CustomDock.csproj'
 
@@ -36,7 +41,7 @@ $iscc = @(
 ) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
 if (-not $iscc) { throw 'Inno Setup 6 was not found. Install it with: winget install JRSoftware.InnoSetup' }
 
-& $iscc "/DMyAppVersion=$version" "/DSourceDir=$publish" (Join-Path $PSScriptRoot 'DockHub.iss')
+& $iscc "/DMyAppVersion=$version" "/DMyArch=$arch" "/DSourceDir=$publish" (Join-Path $PSScriptRoot 'DockHub.iss')
 if ($LASTEXITCODE) { throw 'ISCC failed' }
 
-Write-Host "Installer: $(Join-Path $PSScriptRoot "Output\DockHub-Setup-$version-x64.exe")"
+Write-Host "Installer: $(Join-Path $PSScriptRoot "Output\DockHub-Setup-$version-$arch.exe")"

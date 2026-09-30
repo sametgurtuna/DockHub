@@ -1,8 +1,10 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using CustomDock.Core;
 using CustomDock.Shell;
+using CustomDock.Widgets;
 using static CustomDock.Native.NativeMethods;
 
 namespace CustomDock.Dock;
@@ -19,6 +21,15 @@ public partial class DockWindow
 
     public bool IsKeyboardMode => _keyboardIndex >= 0;
 
+    bool IWidgetHost.IsKeyboardNavigating => IsKeyboardMode;
+
+    /// <summary>
+    /// Keys typed in a widget's panel pass through the dock's window first (the panel is a logical child); they belong
+    /// to the panel, not to the dock's keyboard or edit mode.
+    /// </summary>
+    private bool IsFromOwnWindow(KeyEventArgs e) =>
+        e.OriginalSource is not Visual source || ReferenceEquals(source, this) || IsAncestorOf(source);
+
     /// <summary>Global shortcut target: puts the main dock into keyboard mode.</summary>
     public static void FocusMainDock()
     {
@@ -34,7 +45,8 @@ public partial class DockWindow
 
     public void EnterKeyboardMode()
     {
-        if (_closing || _hwnd == IntPtr.Zero) return;
+        // Edit mode has its own keys (see DockWindow.EditMode.cs).
+        if (_closing || _hwnd == IntPtr.Zero || _editing) return;
         _windowBeforeKeyboard = GetForegroundWindow();
         Reveal();
         ActivateForInput();
@@ -53,7 +65,7 @@ public partial class DockWindow
         _keyboardIndex = -1;
         PreviewKeyDown -= OnKeyboardModeKey;
         Deactivated -= OnKeyboardModeDeactivated;
-        if (_focusRing is not null) _focusRing.Visibility = Visibility.Collapsed;
+        HideFocusRing();
         if (restoreWindow && _windowBeforeKeyboard != IntPtr.Zero && IsWindow(_windowBeforeKeyboard))
             SetForegroundWindow(_windowBeforeKeyboard);
     }
@@ -66,6 +78,7 @@ public partial class DockWindow
 
     private void OnKeyboardModeKey(object sender, KeyEventArgs e)
     {
+        if (!IsFromOwnWindow(e)) return;
         var items = KeyboardItems();
         if (items.Count == 0) { ExitKeyboardMode(true); return; }
         var key = e.Key == Key.System ? e.SystemKey : e.Key;
@@ -87,7 +100,17 @@ public partial class DockWindow
         var items = KeyboardItems();
         if (items.Count == 0) return;
         _keyboardIndex = Math.Clamp(index, 0, items.Count - 1);
-        var item = items[_keyboardIndex];
+        PlaceFocusRing(items[_keyboardIndex], () => IsKeyboardMode);
+    }
+
+    private void HideFocusRing()
+    {
+        if (_focusRing is not null) _focusRing.Visibility = Visibility.Collapsed;
+    }
+
+    /// <summary>Draws the focus ring around <paramref name="item"/> once layout has settled, if still wanted then.</summary>
+    private void PlaceFocusRing(FrameworkElement item, Func<bool> stillWanted)
+    {
         item.BringIntoView();
 
         if (_focusRing is null)
@@ -104,7 +127,7 @@ public partial class DockWindow
 
         Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, () =>
         {
-            if (_focusRing is null || !IsKeyboardMode) return;
+            if (_focusRing is null || !stillWanted()) return;
             var host = EndItemsPanel.IsAncestorOf(item) ? null : CenterZone;
             if (host is null || !host.IsAncestorOf(item))
             {

@@ -17,6 +17,7 @@ public static class ThemeFile
         nameof(AppConfig.Theme), nameof(AppConfig.Backdrop), nameof(AppConfig.TintOpacity), nameof(AppConfig.Size),
         nameof(AppConfig.Layout), nameof(AppConfig.WidthMode), nameof(AppConfig.Alignment), nameof(AppConfig.EdgeMargin),
         nameof(AppConfig.HoverEffect), nameof(AppConfig.RunningIndicator), nameof(AppConfig.AlignWidgetWidths),
+        nameof(AppConfig.WidgetStyle),
     };
 
     public static void Export(AppConfig config, string path)
@@ -60,6 +61,8 @@ public static class ThemeFile
         foreach (var property in Properties)
             if (appearance[property] is { } value) filtered[property] = value.DeepClone();
 
+        // The theme is a step of its own, not part of an edit of the dock.
+        Dock.DockEditMode.Exit();
         service.History.Push(service.Config, L.T("Applied the {0} theme", name), includeAppearance: true);
         ConfigHistory.RestoreAppearance(service.Config, filtered);
         Log.Info($"Theme imported: {name}");

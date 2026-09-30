@@ -26,6 +26,9 @@ public interface IWidgetHost
 
     /// <summary>Activates the dock window for text input.</summary>
     void ActivateForInput();
+
+    /// <summary>The dock is used with the keyboard (keyboard mode): panels take the focus when they open.</summary>
+    bool IsKeyboardNavigating => false;
 }
 
 /// <summary>
@@ -163,6 +166,33 @@ public abstract class WidgetBase : UserControl
     {
     }
 
+    /// <summary>True while the dock is in edit mode; the widget's own controls don't take clicks then.</summary>
+    public bool IsEditing { get; private set; }
+
+    /// <summary>Enters or leaves the dock's edit mode.</summary>
+    internal void SetEditing(bool editing)
+    {
+        if (IsEditing == editing) return;
+        IsEditing = editing;
+        IsHitTestVisible = !editing;
+        try
+        {
+            OnEditingChanged(editing);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, $"Widget failed to switch edit mode: {Descriptor.Id}");
+        }
+    }
+
+    /// <summary>
+    /// Edit mode started or ended. Widgets that host a window of their own (web widgets) swap it for a picture, since
+    /// nothing WPF draws can cover a hosted window.
+    /// </summary>
+    protected virtual void OnEditingChanged(bool editing)
+    {
+    }
+
     // ------------------------------------------------------------------ Vertical dock (compact tile)
 
     /// <summary>Summary tile shown in vertical dock (created on first access).</summary>
@@ -268,19 +298,7 @@ public abstract class WidgetBase : UserControl
             target = CompactAnchor;
         }
         var anchor = target as FrameworkElement ?? this;
-        var edge = Host.Edge;
-        Dock.PopupPlacement.PlacePopup(popup, anchor, edge, IsPreview ? 6 : 8);
-
-        Host.BeginInteraction();
-        void OnClosed(object? sender, EventArgs e)
-        {
-            popup.Closed -= OnClosed;
-            _lastPopupClosedAt = DateTime.UtcNow;
-            Host.EndInteraction();
-        }
-        popup.Closed += OnClosed;
-        Dock.GlobalPopupDismissHook.RegisterPopup(popup);
-        Dock.PopupAnimationHelper.AnimateOpen(popup, edge, anchor);
+        WidgetFlyoutHost.Open(popup, anchor, Host, IsPreview ? 6 : 8, () => ClosePopup(popup), () => _lastPopupClosedAt = DateTime.UtcNow);
     }
 
     /// <summary>Shows notification (suppressed in preview mode).</summary>

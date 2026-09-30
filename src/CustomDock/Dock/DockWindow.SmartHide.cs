@@ -22,7 +22,7 @@ public partial class DockWindow
     private readonly List<IntPtr> _smartHideHooks = new();
     private DispatcherTimer? _smartHideDebounce;
 
-    private bool SmartHideActive => _config.AutoHide && _config.SmartAutoHide;
+    private bool SmartHideActive => _surface.AutoHide && _surface.SmartAutoHide;
 
     /// <summary>Starts or stops listening for window changes when the setting changes (called from ApplySettings).</summary>
     private void UpdateSmartHide()

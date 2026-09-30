@@ -16,4 +16,23 @@ public static class WidgetPlacement
             ? !onSecondary
             : onSecondary && string.Equals(itemDisplay, dockDevice, StringComparison.OrdinalIgnoreCase);
     }
+
+    /// <summary>
+    /// Whether a dock shows an item. The top bar shows only the widgets placed on it; while the bar is off they show on
+    /// the dock (on the main display). Other items and widgets follow the display rule above; items other than widgets
+    /// show on every dock but the bar.
+    /// </summary>
+    /// <param name="barOn">Whether the top bar is on.</param>
+    public static bool ShowsOn(Core.DockItemKind kind, string? itemSurface, string? itemDisplay, DockRole role, string? dockDevice,
+        IEnumerable<string> secondaryDocks, bool barOn)
+    {
+        bool onBar = barOn && kind == Core.DockItemKind.Widget
+            && string.Equals(itemSurface, Core.DockItem.BarSurface, StringComparison.OrdinalIgnoreCase);
+        if (role == DockRole.Bar) return onBar;
+        if (onBar) return false;
+        if (kind != Core.DockItemKind.Widget) return true;
+        // A bar widget while the bar is off: on the main dock, whatever display it had.
+        if (string.Equals(itemSurface, Core.DockItem.BarSurface, StringComparison.OrdinalIgnoreCase)) return dockDevice is null;
+        return ShowsOn(itemDisplay, dockDevice, secondaryDocks);
+    }
 }

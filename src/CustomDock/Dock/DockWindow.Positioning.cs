@@ -17,7 +17,7 @@ public partial class DockWindow
     /// the bar is always sized from this so the scaled content is never squeezed or clipped.
     /// </summary>
     /// <summary>The main dock uses the general size; docks on other displays may have their own.</summary>
-    private DockSize EffectiveSize => IsMain ? _config.Size : _config.DisplaySizeOf(_monitor.DeviceName) ?? _config.Size;
+    private DockSize EffectiveSize => _secondaryDevice is null ? _surface.Size : _config.DisplaySizeOf(_monitor.DeviceName) ?? _surface.Size;
 
     private double ContentDip => EffectiveSize switch
     {
@@ -31,7 +31,7 @@ public partial class DockWindow
     /// <summary>Bar thickness: scaled content plus the unscaled zone margins.</summary>
     private double ThicknessDip => ContentDip + ZonesMargin * 2;
 
-    private double MarginDip => _config.Layout == DockLayout.Floating ? _config.EdgeMargin : 0;
+    private double MarginDip => _surface.Layout == DockLayout.Floating ? _surface.EdgeMargin : 0;
 
     private void ApplyOrientation()
     {
@@ -47,12 +47,11 @@ public partial class DockWindow
         StartSeparator.SetOrientation(vertical);
         EndSeparator.SetOrientation(vertical);
         _runningSeparator.SetOrientation(vertical);
-        ScrollBackButton.Content = vertical ? "\uE70E" : "\uE76B";
-        ScrollForwardButton.Content = vertical ? "\uE70D" : "\uE76C";
-        ScrollBackButton.Width = ScrollForwardButton.Width = vertical ? 44 : 26;
-        ScrollBackButton.Height = ScrollForwardButton.Height = vertical ? 26 : 46;
+        NewAppHint.HorizontalAlignment = HorizontalAlignment.Right;
+        NewAppHint.VerticalAlignment = vertical ? VerticalAlignment.Bottom : VerticalAlignment.Top;
+        NewAppHint.Margin = vertical ? new Thickness(0, 0, 4, 2) : new Thickness(0, 4, 2, 0);
 
-        bool center = _config.Alignment == DockAlignment.Center;
+        bool center = _surface.Alignment == DockAlignment.Center;
         ItemsPanel.HorizontalAlignment = vertical ? HorizontalAlignment.Center : center ? HorizontalAlignment.Center : HorizontalAlignment.Left;
         ItemsPanel.VerticalAlignment = !vertical ? VerticalAlignment.Center : center ? VerticalAlignment.Center : VerticalAlignment.Top;
 
@@ -66,7 +65,7 @@ public partial class DockWindow
         showDesktop.Height = vertical ? 12 : 46;
         showDesktop.LayoutTransform = vertical ? new RotateTransform(90) : Transform.Identity;
 
-        EdgeHighlight.BorderThickness = _config.Edge switch
+        EdgeHighlight.BorderThickness = _surface.Edge switch
         {
             DockEdge.Top => new Thickness(0, 0, 0, 1),
             DockEdge.Left => new Thickness(0, 0, 1, 0),
@@ -77,10 +76,12 @@ public partial class DockWindow
 
     private void ApplyZoneVisibility()
     {
-        StartButton.Visibility = _config.ShowStartButton ? Visibility.Visible : Visibility.Collapsed;
-        SearchButton.Visibility = _config.ShowSearchButton ? Visibility.Visible : Visibility.Collapsed;
-        TaskViewButton.Visibility = _config.ShowTaskViewButton ? Visibility.Visible : Visibility.Collapsed;
-        StartSeparator.Visibility = _config.ShowStartButton || _config.ShowSearchButton || _config.ShowTaskViewButton
+        // The top bar has widgets and (optionally) the clock; Start, search and the rest stay on the dock.
+        bool bar = IsBar;
+        StartButton.Visibility = !bar && _config.ShowStartButton ? Visibility.Visible : Visibility.Collapsed;
+        SearchButton.Visibility = !bar && _config.ShowSearchButton ? Visibility.Visible : Visibility.Collapsed;
+        TaskViewButton.Visibility = !bar && _config.ShowTaskViewButton ? Visibility.Visible : Visibility.Collapsed;
+        StartSeparator.Visibility = !bar && (_config.ShowStartButton || _config.ShowSearchButton || _config.ShowTaskViewButton)
             ? Visibility.Visible : Visibility.Collapsed;
 
         bool tray = HasTray;
@@ -88,10 +89,13 @@ public partial class DockWindow
         NetworkStatusIcon.Visibility = tray && _config.ShowNetworkIcon ? Visibility.Visible : Visibility.Collapsed;
         VolumeStatusIcon.Visibility = tray && _config.ShowVolumeIcon ? Visibility.Visible : Visibility.Collapsed;
         BatteryStatusIcon.Visibility = tray && _config.ShowBatteryIcon && BatteryStatusIconView.HasBattery ? Visibility.Visible : Visibility.Collapsed;
-        ClockButton.Visibility = _config.ShowClock ? Visibility.Visible : Visibility.Collapsed;
-        ShowDesktopButton.Visibility = _config.ShowDesktopButton ? Visibility.Visible : Visibility.Collapsed;
+        ClockButton.Visibility = ClockShown ? Visibility.Visible : Visibility.Collapsed;
+        ShowDesktopButton.Visibility = !bar && _config.ShowDesktopButton ? Visibility.Visible : Visibility.Collapsed;
         UpdateTrayVisibility();
     }
+
+    /// <summary>The dock's clock setting; the top bar has its own.</summary>
+    private bool ClockShown => _surface is BarDockSurface bar ? bar.ShowClock : _config.ShowClock;
 
     /// <summary>Tray icons live on the main dock only (like the Windows taskbar on secondary displays).</summary>
     private bool HasTray => IsMain && _config.ShowTray && _shell.Tray is not null;
@@ -101,18 +105,17 @@ public partial class DockWindow
         bool tray = HasTray;
         bool hasHidden = tray && _shell.Tray!.UnpinnedIcons is { IsEmpty: false };
         TrayOverflowButton.Visibility = hasHidden ? Visibility.Visible : Visibility.Collapsed;
-        EndSeparator.Visibility = tray || _config.ShowClock || ScrollBackButton.Visibility == Visibility.Visible
-            ? Visibility.Visible : Visibility.Collapsed;
+        EndSeparator.Visibility = tray || ClockShown ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void ApplyBackdrop()
     {
         if (_hwnd == IntPtr.Zero) return;
-        bool floating = _config.Layout == DockLayout.Floating;
+        bool floating = _surface.Layout == DockLayout.Floating;
         var tint = (TryFindResource("DockTintBrush") as SolidColorBrush)?.Color ?? Colors.Black;
 
         // Contrast themes need an opaque background behind the system text colors.
-        if (_config.Backdrop == BackdropKind.Solid || ThemeManager.IsHighContrast)
+        if (_surface.Backdrop == BackdropKind.Solid || ThemeManager.IsHighContrast)
         {
             TintLayer.SetResourceReference(Border.BackgroundProperty, "DockSolidBrush");
             TintLayer.Opacity = 1;
@@ -120,10 +123,10 @@ public partial class DockWindow
         else
         {
             TintLayer.SetResourceReference(Border.BackgroundProperty, "DockTintBrush");
-            TintLayer.Opacity = _config.TintOpacity;
+            TintLayer.Opacity = _surface.TintOpacity;
         }
 
-        WindowEffects.ApplyDockBackdrop(_hwnd, _config.Backdrop, Color.FromArgb((byte)(_config.TintOpacity * 255), tint.R, tint.G, tint.B));
+        WindowEffects.ApplyDockBackdrop(_hwnd, _surface.Backdrop, Color.FromArgb((byte)(_surface.TintOpacity * 255), tint.R, tint.G, tint.B));
         WindowEffects.SetDarkMode(_hwnd, ThemeManager.IsDark);
         WindowEffects.SetCornerPreference(_hwnd, floating ? 2 : 1);
         WindowEffects.SetBorderColor(_hwnd, floating ? (TryFindResource("DockBorderColor") as Color?) : null);
@@ -137,14 +140,32 @@ public partial class DockWindow
             view.HoverEnabled = _config.HoverEffect;
     }
 
+    /// <summary>The bands the other DockHub windows on this display keep free (the dock's, or the top bar's).</summary>
+    private IEnumerable<(DockEdge, RECT)> OtherReservedBands()
+    {
+        foreach (var other in s_docks)
+        {
+            if (ReferenceEquals(other, this) || other._closing || other._reserver is not { Handle: not 0 } reserver) continue;
+            if (!string.Equals(other._monitor.DeviceName, _monitor.DeviceName, StringComparison.OrdinalIgnoreCase)) continue;
+            yield return (other._surface.Edge, reserver.Rect);
+        }
+    }
+
+    /// <summary>A band was kept free or given back: the other windows on the display make room or take it again.</summary>
+    private void RepositionOthers()
+    {
+        foreach (var other in s_docks)
+            if (!ReferenceEquals(other, this)) other.QueueReposition();
+    }
+
     /// <summary>Band the reserver keeps free: the bar plus its floating margins, in DIP.</summary>
     private double ReservedThicknessDip => ThicknessDip + 2 * MarginDip;
 
     private void UpdateReserver()
     {
-        bool needed = !_config.AutoHide && !_closing;
+        bool needed = !_surface.AutoHide && !_closing;
         // A new display or edge needs a new AppBar; size and DPI changes only move the existing one.
-        var key = (_monitor.DeviceName, _config.Edge, _monitor.Bounds);
+        var key = (_monitor.DeviceName, _surface.Edge, _monitor.Bounds);
 
         if (needed && _reserver is not null && _reserverKey == key)
         {
@@ -158,11 +179,12 @@ public partial class DockWindow
             _reserver.CloseReserver();
             _reserver = null;
             _reserverKey = null;
+            RepositionOthers();
         }
 
         if (!needed) return;
 
-        var edge = _config.Edge switch
+        var edge = _surface.Edge switch
         {
             DockEdge.Top => AppBarEdge.Top,
             DockEdge.Left => AppBarEdge.Left,
@@ -176,6 +198,7 @@ public partial class DockWindow
             _reserver.RectChanged += QueueReposition;
             _reserver.Show();
             _reserverKey = key;
+            RepositionOthers();
         }
         catch (Exception ex)
         {
@@ -259,15 +282,15 @@ public partial class DockWindow
         if (_reserver is { Handle: not 0 } reserver && reserver.Rect.Width > 0 && reserver.Rect.Height > 0)
             area = reserver.Rect;
         else
-            area = _shell.IsReplacingTaskbar ? _monitor.Bounds : _monitor.WorkArea;
+            area = _shell.IsReplacingTaskbar ? DockArea.Beside(_monitor.Bounds, OtherReservedBands()) : _monitor.WorkArea;
 
         bool vertical = IsVertical;
         int maxLength = (vertical ? area.Height : area.Width) - 2 * marginPx;
-        int length = _config.WidthMode == DockWidthMode.Full
+        int length = _surface.WidthMode == DockWidthMode.Full
             ? maxLength
             : (int)Math.Min(maxLength, DesiredLengthPx(dpi));
 
-        _shownRect = _config.Edge switch
+        _shownRect = _surface.Edge switch
         {
             DockEdge.Top => Rect(area.Left + (area.Width - length) / 2, area.Top + marginPx, length, barPx),
             DockEdge.Left => Rect(area.Left + marginPx, area.Top + (area.Height - length) / 2, barPx, length),
@@ -295,7 +318,7 @@ public partial class DockWindow
     {
         var b = _monitor.Bounds;
         var r = _shownRect;
-        return _config.Edge switch
+        return _surface.Edge switch
         {
             DockEdge.Top => new RECT(r.Left, b.Top - r.Height - 2, r.Right, b.Top - 2),
             DockEdge.Left => new RECT(b.Left - r.Width - 2, r.Top, b.Left - 2, r.Bottom),
@@ -307,9 +330,16 @@ public partial class DockWindow
     /// <summary>Start menu, quick settings, and notifications position relative to this rectangle.</summary>
     private void UpdateTrayHost()
     {
+        // The bar shares the main dock's display, and Windows' flyouts belong with the dock's tray (and the Windows
+        // key's Start menu with the dock): the bar's clock opens them there.
+        if (IsBar)
+        {
+            s_docks.FirstOrDefault(d => d.IsMain)?.UpdateTrayHost();
+            return;
+        }
         if (_hwnd == IntPtr.Zero || _shownRect.Width <= 0) return;
         s_trayHostOwner = this;
-        _shell.SetTrayHost(_shownRect, _config.Edge);
+        _shell.SetTrayHost(_shownRect, _surface.Edge);
     }
 
     private void OnDisplaySettingsChanged(object? sender, EventArgs e)

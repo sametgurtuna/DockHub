@@ -164,7 +164,13 @@ public partial class CalendarWidget : WidgetBase
         var groups = _events.Where(e => e.Start.Date <= DateTime.Today.AddDays(1)).GroupBy(e => e.Start.Date).ToList();
         if (groups.Count == 0)
         {
-            AgendaList.Children.Add(new TextBlock { Text = _error ?? L.T("No events today or tomorrow."), TextWrapping = TextWrapping.Wrap, Foreground = (Brush)FindResource("TextSecondaryBrush"), Margin = new Thickness(4) });
+            AgendaList.Children.Add(_error is { } error
+                ? WidgetUi.EmptyState("\uE787", error, null, L.T("Widget settings…"), () =>
+                {
+                    ClosePopup(AgendaPopup);
+                    Dock.WidgetItemView.RequestSettings(Item);
+                })
+                : WidgetUi.EmptyState("\uE787", L.T("No events today or tomorrow.")));
             return;
         }
         foreach (var group in groups)

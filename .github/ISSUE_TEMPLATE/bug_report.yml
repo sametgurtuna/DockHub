@@ -50,6 +50,15 @@ body:
       render: text
 
   - type: textarea
+    id: crash
+    attributes:
+      label: Crash (optional)
+      description: |
+        Filled in when DockHub closed unexpectedly: where it crashed, as recorded in the Windows event log (module,
+        exception code, exception type and the first stack frames). Nothing personal.
+      render: text
+
+  - type: textarea
     id: diagnostics
     attributes:
       label: Diagnostics (optional)

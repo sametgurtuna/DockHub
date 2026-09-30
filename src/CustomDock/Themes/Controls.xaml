@@ -8,6 +8,18 @@
 
     <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
 
+    <!-- Keyboard focus ring (Windows shows focus visuals only while the keyboard is used) -->
+    <Style x:Key="KeyboardFocusVisual">
+        <Setter Property="Control.Template">
+            <Setter.Value>
+                <ControlTemplate>
+                    <Rectangle Margin="-2" RadiusX="6" RadiusY="6" StrokeThickness="2" SnapsToDevicePixels="True"
+                               Stroke="{DynamicResource AccentBrush}" />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- ================= Metin ================= -->
     <Style x:Key="ValueText" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{StaticResource DisplayFont}" />
@@ -74,11 +86,22 @@
                                 BorderThickness="1" CornerRadius="{TemplateBinding CornerRadius}" />
                         <Border x:Name="Hover" Background="{DynamicResource HoverOverlayBrush}" Opacity="0"
                                 CornerRadius="{TemplateBinding CornerRadius}" />
+                        <!-- Seamless widget style: a thin line centered in the gap before the card (item margins 3 across, 2 down). -->
+                        <Border x:Name="DividerLeft" Width="1" HorizontalAlignment="Left" Margin="-3.5,11,0,11" IsHitTestVisible="False"
+                                Background="{DynamicResource SeparatorBrush}" Visibility="Collapsed" />
+                        <Border x:Name="DividerTop" Height="1" VerticalAlignment="Top" Margin="9,-2.5,9,0" IsHitTestVisible="False"
+                                Background="{DynamicResource SeparatorBrush}" Visibility="Collapsed" />
                         <ContentPresenter Margin="{TemplateBinding Padding}"
                                           HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                           VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
                     </Grid>
                     <ControlTemplate.Triggers>
+                        <Trigger Property="Divider" Value="Left">
+                            <Setter TargetName="DividerLeft" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                        <Trigger Property="Divider" Value="Top">
+                            <Setter TargetName="DividerTop" Property="Visibility" Value="Visible" />
+                        </Trigger>
                         <MultiTrigger>
                             <MultiTrigger.Conditions>
                                 <!-- IsHighlighted = the mouse is over the card, or over content that keeps the mouse (a web view). -->
@@ -230,6 +253,65 @@
         </Setter>
     </Style>
 
+    <!-- ================= Widget panel (every widget's flyout) ================= -->
+    <Style TargetType="ctl:WidgetFlyout">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Margin" Value="8" />
+        <Setter Property="Padding" Value="14,12" />
+        <Setter Property="Background" Value="{DynamicResource PopupBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource PopupBorderBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="KeyboardNavigation.TabNavigation" Value="Cycle" />
+        <Setter Property="KeyboardNavigation.DirectionalNavigation" Value="Contained" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ctl:WidgetFlyout">
+                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"
+                            CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="20" ShadowDepth="4" Opacity="0.4" Direction="270" />
+                        </Border.Effect>
+                        <DockPanel>
+                            <DockPanel x:Name="Header" DockPanel.Dock="Top" Margin="2,0,0,10" LastChildFill="True">
+                                <Button x:Name="PART_Close" DockPanel.Dock="Right" Style="{StaticResource CardIconButton}" Width="24" Height="24"
+                                        Margin="4,0,0,0" Content="&#xE8BB;" FontSize="10" Visibility="Collapsed" Focusable="True"
+                                        FocusVisualStyle="{StaticResource KeyboardFocusVisual}" Foreground="{DynamicResource TextSecondaryBrush}" />
+                                <ContentPresenter DockPanel.Dock="Right" Content="{TemplateBinding HeaderActions}" VerticalAlignment="Center" />
+                                <TextBlock x:Name="IconText" DockPanel.Dock="Left" Text="{TemplateBinding Icon}" FontFamily="{StaticResource IconFont}"
+                                           FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" />
+                                <TextBlock Text="{TemplateBinding Title}" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis" Foreground="{TemplateBinding Foreground}" />
+                            </DockPanel>
+                            <ContentPresenter x:Name="FooterHost" DockPanel.Dock="Bottom" Content="{TemplateBinding Footer}" Margin="0,10,0,0" />
+                            <ContentPresenter />
+                        </DockPanel>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="ShowCloseButton" Value="True">
+                            <Setter TargetName="PART_Close" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                        <Trigger Property="Icon" Value="{x:Null}">
+                            <Setter TargetName="IconText" Property="Visibility" Value="Collapsed" />
+                        </Trigger>
+                        <Trigger Property="Footer" Value="{x:Null}">
+                            <Setter TargetName="FooterHost" Property="Visibility" Value="Collapsed" />
+                        </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="Title" Value="{x:Null}" />
+                                <Condition Property="HeaderActions" Value="{x:Null}" />
+                                <Condition Property="ShowCloseButton" Value="False" />
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="Header" Property="Visibility" Value="Collapsed" />
+                        </MultiTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- ================= Butonlar ================= -->
     <ControlTemplate x:Key="OverlayButtonTemplate" TargetType="ButtonBase">
         <Grid>
@@ -268,7 +350,7 @@
         <Setter Property="Padding" Value="14,6" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
-        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
         <Setter Property="Template" Value="{StaticResource OverlayButtonTemplate}" />
     </Style>
 

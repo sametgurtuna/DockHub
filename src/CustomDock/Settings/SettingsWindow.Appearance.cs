@@ -95,4 +95,36 @@ public partial class SettingsWindow
         NewPresetName.Clear();
         LoadPresets();
     }
+
+    // ------------------------------------------------------------------ Top bar
+
+    private sealed record BackdropChoice(BackdropKind? Kind, string Label)
+    {
+        public override string ToString() => Label;
+    }
+
+    private bool _loadingTopBar;
+
+    /// <summary>The bar's backdrop: the dock's, or one of its own.</summary>
+    private void LoadTopBar()
+    {
+        _loadingTopBar = true;
+        var choices = new List<BackdropChoice>
+        {
+            new(null, L.T("Same as the dock")),
+            new(BackdropKind.Blur, L.T("Blur")),
+            new(BackdropKind.Acrylic, L.T("Acrylic")),
+            new(BackdropKind.Transparent, L.T("Transparent")),
+            new(BackdropKind.Solid, L.T("Solid")),
+        };
+        TopBarBackdropCombo.ItemsSource = choices;
+        TopBarBackdropCombo.SelectedItem = choices.FirstOrDefault(c => c.Kind == _config.TopBar.Backdrop) ?? choices[0];
+        _loadingTopBar = false;
+    }
+
+    private void OnTopBarBackdropChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loadingTopBar || TopBarBackdropCombo.SelectedItem is not BackdropChoice choice) return;
+        _config.TopBar.Backdrop = choice.Kind;
+    }
 }

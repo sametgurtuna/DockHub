@@ -152,7 +152,7 @@ public partial class StackWidget : WidgetBase
 
         string folderName = Path.GetFileName(Folder.TrimEnd('\\')) is { Length: > 0 } name ? name : Folder;
         FolderTitle.Text = folderName;
-        PopupTitle.Text = folderName;
+        FilesFlyout.Title = folderName;
         DetailsIcon.Source = newest.Count > 0 ? ShellIcons.GetIcon(newest[0].FullName, 48) : ShellIcons.GetIcon(Folder, 48);
         NewestText.Text = newest.Count > 0 ? newest[0].Name : L.T("Empty");
         ToolTip = newest.Count > 0 ? L.T("{0} · newest: {1}", folderName, newest[0].Name) : folderName;
@@ -166,7 +166,7 @@ public partial class StackWidget : WidgetBase
         FileGrid.Children.Clear();
         if (_files.Count == 0)
         {
-            FileGrid.Children.Add(new TextBlock { Text = L.T("This folder is empty"), Margin = new Thickness(8), Foreground = (Brush)FindResource("TextSecondaryBrush") });
+            FileGrid.Children.Add(WidgetUi.EmptyState("\uE8B7", L.T("This folder is empty")));
             return;
         }
         foreach (var file in _files)

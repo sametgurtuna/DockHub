@@ -13,6 +13,7 @@ public sealed partial class GroupItemView
     {
         if (e.Data.GetDataPresent(DockDragHelper.ItemFormat) ||
             e.Data.GetDataPresent(DockDragHelper.RunningAppFormat) ||
+            e.Data.GetDataPresent(DockDragHelper.NewWidgetFormat) ||
             e.Data.GetDataPresent(DataFormats.FileDrop))
         {
             e.Effects = DragDropEffects.Move;
@@ -26,6 +27,7 @@ public sealed partial class GroupItemView
     {
         if (e.Data.GetDataPresent(DockDragHelper.ItemFormat) ||
             e.Data.GetDataPresent(DockDragHelper.RunningAppFormat) ||
+            e.Data.GetDataPresent(DockDragHelper.NewWidgetFormat) ||
             e.Data.GetDataPresent(DataFormats.FileDrop))
         {
             e.Effects = DragDropEffects.Move;
@@ -63,6 +65,13 @@ public sealed partial class GroupItemView
         {
             e.Handled = true;
             config.AddToGroup(_item.Id, pinItem);
+            RefreshAppearance();
+        }
+        else if (DockDragHelper.NewWidgetItem(e.Data) is { } widget)
+        {
+            // A widget dragged from the gallery goes into the folder.
+            e.Handled = true;
+            config.AddToGroup(_item.Id, widget);
             RefreshAppearance();
         }
         else if (e.Data.GetData(DataFormats.FileDrop) is string[] files)

@@ -174,21 +174,7 @@ public partial class AudioWidget : WidgetBase
         int masterVol = AppServices.Audio.VolumePercent;
         string devName = dev?.Name ?? "Master Audio Output";
 
-        // 1. Header Bar
-        var headerGrid = new Grid { Margin = new Thickness(0, 0, 0, 10) };
-        var titleText = new TextBlock
-        {
-            Text = "Volume Mixer",
-            FontWeight = FontWeights.SemiBold,
-            FontSize = 13.5,
-            VerticalAlignment = VerticalAlignment.Center,
-        };
-        titleText.SetResourceReference(TextBlock.FontFamilyProperty, "DisplayFont");
-        titleText.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimaryBrush");
-        headerGrid.Children.Add(titleText);
-        MixerPanel.Children.Add(headerGrid);
-
-        // 2. Master Device Card (Master Volume Card)
+        // 1. Master Device Card (Master Volume Card)
         var masterCard = new Border
         {
             CornerRadius = new CornerRadius(10),
@@ -277,7 +263,7 @@ public partial class AudioWidget : WidgetBase
         masterCard.Child = masterStack;
         MixerPanel.Children.Add(masterCard);
 
-        // 3. Apps Header
+        // 2. Apps Header
         var sessions = AppServices.Audio.GetAudioSessions();
         var appsHeader = new Grid { Margin = new Thickness(2, 2, 2, 6) };
         appsHeader.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -314,7 +300,7 @@ public partial class AudioWidget : WidgetBase
         }
         MixerPanel.Children.Add(appsHeader);
 
-        // 4. App Audio Sessions List
+        // 3. App Audio Sessions List
         if (sessions.Count == 0)
         {
             _appsScroller = null;

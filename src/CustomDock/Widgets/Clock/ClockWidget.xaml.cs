@@ -146,11 +146,6 @@ public partial class ClockWidget : WidgetBase
         PopupClockZone.Text = GetLocalZoneString();
     }
 
-    private void OnPopupCloseClick(object sender, RoutedEventArgs e)
-    {
-        ClosePopup(ClockPopup);
-    }
-
     private static string GetLocalZoneString()
     {
         var local = TimeZoneInfo.Local;

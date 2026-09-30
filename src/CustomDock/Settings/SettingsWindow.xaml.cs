@@ -6,6 +6,7 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using CustomDock.Core;
 using CustomDock.Native;
+using CustomDock.Services;
 using CustomDock.Shell;
 using CustomDock.Widgets;
 using TrayIcon = ManagedShell.WindowsTray.NotifyIcon;
@@ -16,12 +17,11 @@ public sealed record MonitorOption(string Label, string? Device);
 
 public partial class SettingsWindow : Window
 {
-    private const string DragFormat = "CustomDock.SettingsItemRow";
+    private const string DragFormat = "DockHub.SettingsItemId";
 
     private readonly AppConfig _config = AppServices.Config;
     private readonly ObservableCollection<ItemRow> _rows = new();
     private readonly Dictionary<string, FrameworkElement> _pages;
-    private readonly List<WidgetBase> _previews = new();
     private readonly PreviewHost _previewHost;
     private WidgetBase? _detailPreview;
     private DockItem? _detailSource;
@@ -40,6 +40,7 @@ public partial class SettingsWindow : Window
 
         _pages = new Dictionary<string, FrameworkElement>
         {
+            [SettingsPages.Overview] = OverviewPage,
             ["general"] = GeneralPage,
             ["taskbar"] = TaskbarPage,
             ["appearance"] = AppearancePage,
@@ -65,8 +66,11 @@ public partial class SettingsWindow : Window
         LoadProfiles();
         LoadUpdates();
         LoadTextScale();
+        LoadTopBar();
         LoadLanguages();
+        LoadCrashInfo();
         DockPreview.Bind(_config);
+        OverviewPreview.Bind(_config);
         PreviewKeyDown += OnUndoKey;
         PreviewKeyDown += (_, e) =>
         {
@@ -79,11 +83,16 @@ public partial class SettingsWindow : Window
         };
         ItemList.ItemsSource = _rows;
         LoadItems();
-        NavList.SelectedIndex = 0;
+        BuildNavigation();
+        NavigateTo(SettingsPages.Default.Tag);
 
         _config.ItemsChanged += OnConfigItemsChanged;
         SourceInitialized += (_, _) => ApplyWindowTheme();
-        StateChanged += (_, _) => RootGrid.Margin = WindowState == WindowState.Maximized ? new Thickness(7) : new Thickness(0);
+        StateChanged += (_, _) =>
+        {
+            RootGrid.Margin = WindowState == WindowState.Maximized ? new Thickness(7) : new Thickness(0);
+            QueueGalleryPreviews(); // none while minimized
+        };
         ThemeManager.ThemeChanged += OnThemeChanged;
         Closed += OnClosed;
     }
@@ -93,7 +102,7 @@ public partial class SettingsWindow : Window
         ThemeManager.ThemeChanged -= OnThemeChanged;
         _config.ItemsChanged -= OnConfigItemsChanged;
         _config.PropertyChanged -= OnDisplayConfigChanged;
-        foreach (var preview in _previews) preview.Detach();
+        ReleaseGalleryPreviews();
         if (App.Instance.Hotkeys is { } hotkeys) hotkeys.RegistrationChanged -= RefreshHotkeyStatus;
         ShowDetail(null);
     }
@@ -122,11 +131,13 @@ public partial class SettingsWindow : Window
 
     // ------------------------------------------------------------------ Navigation
 
+    /// <summary>Opens a page by its tag (an unknown tag opens the Overview), optionally selecting a dock item.</summary>
     public void NavigateTo(string page, string? itemId = null)
     {
+        string tag = SettingsPages.Resolve(page).Tag;
         foreach (ListBoxItem item in NavList.Items)
         {
-            if (item.Tag as string != page) continue;
+            if (item.Tag as string != tag) continue;
             NavList.SelectedItem = item;
             break;
         }
@@ -148,7 +159,13 @@ public partial class SettingsWindow : Window
             BuildGallery();
             BuildFeaturedWidgets();
         }
+        // Previews run only while the gallery is shown.
+        QueueGalleryPreviews();
+        if (tag == SettingsPages.Overview) LoadOverview();
         if (tag == "taskbar") LoadTray();
+        if (tag == "appearance") LoadTopBar();
+        if (tag is "about" or "backup") LoadCrashInfo();
+        if (tag == "backup") LoadSync();
     }
 
     // ------------------------------------------------------------------ General
@@ -210,40 +227,11 @@ public partial class SettingsWindow : Window
 
     private void OnReportProblemClick(object sender, RoutedEventArgs e)
     {
-        string language = L.Languages.FirstOrDefault(l => l.Code == L.Code).NativeName is { } name ? $"{name} ({L.Code})" : L.Code;
-        var environment = new IssueEnvironment(
-            AppInfo.Version,
-            WindowsVersionName(),
-            _config.Language == UiLanguage.System ? $"{language}, following Windows" : language,
-            _config.TaskbarMode.ToString(),
-            MonitorHelper.GetAll().Count,
-            ItemDataStore.Flatten(_config.Items).Where(i => i.Kind == DockItemKind.Widget && i.Widget is not null).Select(i => i.Widget!).ToList());
-        try
-        {
-            Process.Start(new ProcessStartInfo(IssueReport.BuildUrl(environment)) { UseShellExecute = true });
-        }
-        catch (System.ComponentModel.Win32Exception ex)
-        {
-            Log.Warn($"Couldn't open the browser for a bug report: {ex.Message}");
-        }
+        ProblemReport.Open();
 
         // The full report stays off the web page: it has window titles and app paths, so the user decides what to paste.
         if (CopyDiagnostics())
             ReportProblemRow.Description = L.T("The diagnostics report is on the clipboard. It lists the titles of open windows and the paths of pinned apps: paste it into the report only if it helps, and remove anything private.");
-    }
-
-    private static string WindowsVersionName()
-    {
-        try
-        {
-            using var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion");
-            return IssueReport.WindowsName(Environment.OSVersion.Version.Build, key?.GetValue("DisplayVersion") as string,
-                key?.GetValue("UBR") is int revision ? revision : 0);
-        }
-        catch (Exception ex) when (ex is System.Security.SecurityException or IOException or UnauthorizedAccessException)
-        {
-            return IssueReport.WindowsName(Environment.OSVersion.Version.Build, null, 0);
-        }
     }
 
     private void OnOpenLinkClick(object sender, RoutedEventArgs e)

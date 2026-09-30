@@ -98,6 +98,19 @@ public class LayoutPresetsTests : IDisposable
     }
 
     [Fact]
+    public void Theme_files_carry_the_widget_style()
+    {
+        using var dir = new TempDir();
+        var path = Path.Combine(dir.Path, "seamless" + ThemeFile.Extension);
+        _service.Config.WidgetStyle = WidgetStyle.Seamless;
+        ThemeFile.Export(_service.Config, path);
+
+        _service.Config.WidgetStyle = WidgetStyle.Cards;
+        Assert.Null(ThemeFile.Import(_service, path));
+        Assert.Equal(WidgetStyle.Seamless, _service.Config.WidgetStyle);
+    }
+
+    [Fact]
     public void Theme_import_does_not_move_the_dock()
     {
         using var dir = new TempDir();

@@ -16,6 +16,11 @@ public sealed partial class AppButton
         switch (mode)
         {
             case AppShortcutMode.Activate:
+                if (_window is { } window)
+                {
+                    AppLauncher.ActivateWindow(window);
+                    break;
+                }
                 if (_group is not { WindowCount: > 0 } && Item is not null) BeginLaunchFeedback();
                 AppLauncher.Activate(Item, _group);
                 break;

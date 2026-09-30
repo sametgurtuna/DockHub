@@ -271,14 +271,8 @@ public partial class BatteryDevicesWidget : WidgetBase
         DeviceList.Children.Clear();
         if (devices.Count == 0)
         {
-            var empty = new TextBlock
-            {
-                Text = L.T("No connected device battery found"),
-                Margin = new Thickness(6, 10, 6, 10),
-                TextWrapping = TextWrapping.Wrap,
-            };
-            empty.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondaryBrush");
-            DeviceList.Children.Add(empty);
+            DeviceList.Children.Add(WidgetUi.EmptyState("\uE83F", L.T("No connected device battery found"),
+                L.T("Turn on a Bluetooth headset, mouse, keyboard or controller, or plug in its receiver."), L.T("Refresh"), AppServices.DeviceBattery.Refresh));
             return;
         }
 

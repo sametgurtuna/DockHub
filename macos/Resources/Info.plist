@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleName</key><string>DockHub</string>
+  <key>CFBundleDisplayName</key><string>DockHub</string>
+  <key>CFBundleExecutable</key><string>DockHub</string>
+  <key>CFBundleIdentifier</key><string>com.dockhub.mac</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>CFBundleShortVersionString</key><string>1.0.0</string>
+  <key>CFBundleVersion</key><string>1</string>
+  <key>LSMinimumSystemVersion</key><string>15.0</string>
+  <!-- Dock'ta ikon ve menu cubugu gostermez: bir dock uygulamasi icin dogru davranis -->
+  <key>LSUIElement</key><true/>
+  <key>NSHighResolutionCapable</key><true/>
+  <!-- Arayuz metinleri Strings_*.json'dan (Localizer.swift); bu liste sistem pencerelerinin
+       (Ac/Kaydet paneli gibi) dilini secmesi icin. -->
+  <key>CFBundleDevelopmentRegion</key><string>en</string>
+  <key>CFBundleLocalizations</key>
+  <array><string>en</string><string>tr</string><string>de</string><string>es</string></array>
+  <!-- ag-geolocation: hava durumu widget'i icin, olmadan konum istegi reddedilir -->
+  <key>NSLocationWhenInUseUsageDescription</key>
+  <string>The weather widget uses your location to show the forecast where you are.</string>
+</dict>
+</plist>

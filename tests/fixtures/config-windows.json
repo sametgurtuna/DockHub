@@ -1,0 +1,220 @@
+{
+  "version": 2,
+  "taskbarMode": "ShowBoth",
+  "hideOnFullscreen": false,
+  "startWithWindows": false,
+  "explorerPinMenu": false,
+  "showStartButton": false,
+  "showSearchButton": false,
+  "showTaskViewButton": true,
+  "showRunningApps": false,
+  "combineButtons": "Never",
+  "showTray": false,
+  "showClock": false,
+  "clockShowDate": false,
+  "clockShowSeconds": true,
+  "showDesktopButton": false,
+  "showNetworkIcon": false,
+  "showVolumeIcon": false,
+  "showBatteryIcon": false,
+  "showKeyboardLayout": false,
+  "microphoneIcon": "Always",
+  "showNotificationIndicator": false,
+  "showDesktopIndicator": false,
+  "runningAppsAllDesktops": true,
+  "previewPeek": false,
+  "searchButtonAction": "Launcher",
+  "launcherFileSearch": false,
+  "pinnedTrayIcons": [
+    "{7820AE78-23E3-4229-82C1-E41CB67D5B9C}"
+  ],
+  "knownTrayIcons": [
+    "{7820AE78-23E3-4229-82C1-E41CB67D5B9C}",
+    "C:\\Program Files\\Tool\\tool.exe"
+  ],
+  "edge": "Left",
+  "monitorDevice": "\\\\.\\DISPLAY2",
+  "showOnAllDisplays": true,
+  "runningAppsOnOwnDisplay": false,
+  "autoHide": true,
+  "theme": "System",
+  "backdrop": "Transparent",
+  "tintOpacity": 0.3,
+  "size": "Large",
+  "displaySizes": {
+    "\\\\.\\DISPLAY1": "Medium"
+  },
+  "layout": "Attached",
+  "widthMode": "Fit",
+  "alignment": "Start",
+  "edgeMargin": 12,
+  "hoverEffect": false,
+  "runningIndicator": "Dots",
+  "alignWidgetWidths": false,
+  "widgetStyle": "Seamless",
+  "topBar": {
+    "enabled": true,
+    "edge": "Right",
+    "size": "Medium",
+    "layout": "Floating",
+    "backdrop": "Acrylic",
+    "autoHide": true,
+    "showClock": false
+  },
+  "textScale": 1.25,
+  "customPresets": [
+    {
+      "id": "5d1e8a0c4f",
+      "name": "Work",
+      "appearance": {
+        "Theme": "Light",
+        "Size": "Medium",
+        "WidgetStyle": "Cards"
+      },
+      "widgets": [
+        {
+          "widget": "clock",
+          "variant": "digital"
+        },
+        {
+          "widget": "weather",
+          "variant": null
+        }
+      ]
+    }
+  ],
+  "removedWidgetSettings": {
+    "weather": {
+      "city": "Ankara",
+      "units": "metric",
+      "days": 3
+    }
+  },
+  "smartAutoHide": true,
+  "motion": "Reduced",
+  "language": "Turkish",
+  "checkForUpdates": false,
+  "includePrereleases": true,
+  "winNumberHotkeys": false,
+  "hotkeys": {
+    "launcher": "Alt+Space",
+    "edit-dock": ""
+  },
+  "syncFolder": "C:\\Users\\me\\OneDrive\\DockHub",
+  "syncDeviceId": "3f9c1a2b7d",
+  "syncAppliedAt": "2026-09-30T10:15:00Z",
+  "welcomeShown": true,
+  "debugLogging": true,
+  "profiles": [
+    {
+      "id": "p1a2b3c4d5",
+      "name": "Office",
+      "items": [
+        {
+          "id": "pa1",
+          "kind": "App",
+          "path": "C:\\Windows\\explorer.exe"
+        },
+        {
+          "id": "pw1",
+          "kind": "Widget",
+          "widget": "calendar"
+        }
+      ],
+      "appearance": {
+        "Edge": "Bottom",
+        "Size": "Small",
+        "WidgetStyle": "Cards",
+        "TopBar": {
+          "enabled": false,
+          "edge": "Top",
+          "size": "Small",
+          "layout": "Attached",
+          "backdrop": null,
+          "autoHide": false,
+          "showClock": true
+        }
+      },
+      "autoDisplayCount": 2,
+      "autoApp": "steam",
+      "autoTimeFrom": "09:00",
+      "autoTimeTo": "17:30",
+      "autoWeekdaysOnly": true
+    },
+    {
+      "id": "p6e7f8a9b0",
+      "name": "Home",
+      "items": null,
+      "appearance": null,
+      "autoDisplayCount": null
+    }
+  ],
+  "activeProfileId": "p6e7f8a9b0",
+  "items": [
+    {
+      "id": "a1",
+      "kind": "App",
+      "path": "C:\\Windows\\explorer.exe",
+      "arguments": "/e,::{20D04FE0-3AEA-1069-A2D8-08002B30309D}",
+      "name": "This PC"
+    },
+    {
+      "id": "w1",
+      "kind": "Widget",
+      "widget": "weather",
+      "variant": "condition",
+      "settings": {
+        "city": "Ankara",
+        "latitude": 39.93,
+        "nested": {
+          "list": [
+            1,
+            2.5,
+            true,
+            null,
+            "text"
+          ]
+        }
+      },
+      "pinnedEnd": true,
+      "display": "\\\\.\\DISPLAY2",
+      "collapseWhenIdle": true
+    },
+    {
+      "id": "w2",
+      "kind": "Widget",
+      "widget": "clock",
+      "surface": "bar"
+    },
+    {
+      "id": "s1",
+      "kind": "Separator"
+    },
+    {
+      "id": "g1",
+      "kind": "Group",
+      "groupName": "AI",
+      "groupAccent": "AccentPurpleBrush",
+      "children": [
+        {
+          "id": "c1",
+          "kind": "App",
+          "path": "shell:AppsFolder\\Claude_pzs8sxrjxfjjc!Claude",
+          "name": "Claude"
+        }
+      ]
+    }
+  ],
+  "widgets": [
+    {
+      "id": "clock",
+      "enabled": true
+    }
+  ],
+  "widgetSettings": {
+    "clock": {
+      "seconds": true
+    }
+  },
+  "reserveSpace": true
+}

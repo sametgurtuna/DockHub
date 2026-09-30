@@ -20,6 +20,8 @@ public partial class App : Application
     private DockWindow? _dock;
     /// <summary>Docks on the other displays (when "Show on all displays" is on), keyed by device name.</summary>
     private readonly Dictionary<string, DockWindow> _secondaryDocks = new(StringComparer.OrdinalIgnoreCase);
+    private DockWindow? _topBar;
+    private TopBarSettings? _topBarSettings;
     private TrayIconManager? _tray;
     private SettingsWindow? _settings;
     private AppPickerWindow? _appPicker;
@@ -100,6 +102,18 @@ public partial class App : Application
         var config = AppServices.Config;
         if (config.DebugLogging) Log.DebugEnabled = true;
         L.Initialize(config.Language);
+
+        // How the last session ended, and restart by Windows if this one crashes.
+        if (!CrashRecovery.Begin(e.Args))
+        {
+            // Windows restarted DockHub after it crashed repeatedly: stop here and leave the taskbar to Windows. Nothing
+            // was started yet, and the full clean-up would also clear the notification.
+            CrashRecovery.NotifyLoop();
+            CrashRecovery.End();
+            _running = false;
+            Shutdown();
+            return;
+        }
         ApplyMotionLevel();
         TextScale.Initialize();
         Controls.WidgetCard.AlignWidths = config.AlignWidgetWidths;
@@ -125,18 +139,19 @@ public partial class App : Application
         AppServices.Reminders.Start();
         ItemDataStore.PurgeOld();
         AppServices.Updates.UpdateAvailable += release => AppServices.Notifications.Show(
-            $"DockHub {release.Version} is available", "Open DockHub settings to see what's new and install it.", "update",
-            new ToastAction("Details", NotificationService.ActionOpenUpdate),
-            new ToastAction("Skip this version", NotificationService.ActionSkipUpdate));
+            L.T("DockHub {0} is available", release.Version), L.T("Open DockHub settings to see what's new and install it."), "update",
+            new ToastAction(L.T("Details"), NotificationService.ActionOpenUpdate),
+            new ToastAction(L.T("Skip this version"), NotificationService.ActionSkipUpdate));
         AppServices.Updates.Start();
+        _ = CheckWidgetUpdatesAsync();
 
         CreateDock();
         ApplyTaskbarMode();
         StartKeyboardShortcuts();
+        // Before the profile rules: a profile a rule switches to at startup is applied in full (theme and all).
+        config.PropertyChanged += OnConfigChanged;
         StartProfileRules();
         UndoToast.Attach(AppServices.ConfigService.History);
-
-        config.PropertyChanged += OnConfigChanged;
         WidgetItemView.SettingsRequested += item => ShowSettings("items", item.Id);
 
         _singleInstance.Listen(Dispatcher, () => ShowSettings(), ExitApplication, ProcessPinRequests, ProcessWidgetPackages);
@@ -148,6 +163,7 @@ public partial class App : Application
             ShowWelcome();
 
         Log.Info($"DockHub started (v{typeof(App).Assembly.GetName().Version}, mode: {config.TaskbarMode}).");
+        CrashRecovery.AfterStartup(Dispatcher);
 
         if (Log.DebugEnabled)
         {
@@ -239,13 +255,81 @@ public partial class App : Application
         }
     }
 
+    /// <summary>Newer versions of the web widgets installed from a link, at most once a day, a minute after startup.</summary>
+    private static async Task CheckWidgetUpdatesAsync()
+    {
+        if (!Widgets.Web.WebWidgetCatalog.Installed.Any(m => Widgets.Web.WidgetSource.Read(m.Folder) is not null)) return;
+        await Task.Delay(TimeSpan.FromMinutes(1));
+        var fresh = await Widgets.Web.WebWidgetUpdates.CheckAsync(Widgets.Web.WebWidgetDownloader.Client);
+        foreach (var update in fresh)
+            AppServices.Notifications.Show(L.T("Widget update: {0}", update.Name), L.T("Version {0} is available (you have {1}).", update.Version, update.InstalledVersion),
+                "widget-update-" + update.Id, new ToastAction(L.T("Open the gallery"), NotificationService.ActionOpenGallery));
+    }
+
     private void CreateDock()
     {
-        _dock = new DockWindow(AppServices.Config, _shell!);
+        _dock = new DockWindow(AppServices.Config, new ConfigDockSurface(AppServices.Config, DockRole.Main), _shell!);
         _dock.ContentRendered += OnFirstDockFrame;
         _dock.Start();
         SyncSecondaryDocks();
+        WatchTopBar();
+        SyncTopBar();
         SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
+        if (AppServices.Config.SyncFolder is not null) AppServices.Sync.Start();
+    }
+
+    /// <summary>Follows the top bar's on/off switch (also when a profile brings other bar settings).</summary>
+    private void WatchTopBar()
+    {
+        if (_topBarSettings is not null) _topBarSettings.PropertyChanged -= OnTopBarChanged;
+        _topBarSettings = AppServices.Config.TopBar;
+        _topBarSettings.PropertyChanged += OnTopBarChanged;
+    }
+
+    private void OnTopBarChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(TopBarSettings.Enabled)) SyncTopBar();
+    }
+
+    /// <summary>Opens or closes the top bar's window; the docks then show or give back the bar's widgets.</summary>
+    private void SyncTopBar()
+    {
+        if (_shell is null || _dock is null || _cleanedUp) return;
+        var config = AppServices.Config;
+        bool wanted = config.TopBar.Enabled;
+        if (wanted == (_topBar is not null)) return;
+
+        if (wanted)
+        {
+            // The docks give up the bar's widgets first, so that no widget is live on two windows at once.
+            DockWindow.MarkBarFailed(false);
+            foreach (var dock in DockWindow.All.ToList()) dock.ApplySettings();
+            BarDockSurface? surface = null;
+            try
+            {
+                surface = new BarDockSurface(config);
+                _topBar = new DockWindow(config, surface, _shell);
+                _topBar.Start();
+                Log.Info("Top bar opened.");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to open the top bar");
+                // Its widgets go back to the main dock; turning the bar off and on tries again.
+                DockWindow.MarkBarFailed(true);
+                try { _topBar?.CloseDock(); } catch (Exception closeError) { Log.Error(closeError, "Failed to close the top bar"); }
+                if (_topBar is null) surface?.Dispose();
+                _topBar = null;
+            }
+        }
+        else
+        {
+            _topBar!.CloseDock();
+            _topBar = null;
+            Log.Info("Top bar closed.");
+        }
+        // The bar's widgets move between the bar and the dock.
+        foreach (var dock in DockWindow.All.ToList()) dock.ApplySettings();
     }
 
     private void OnFirstDockFrame(object? sender, EventArgs e)
@@ -292,10 +376,12 @@ public partial class App : Application
         foreach (var device in wanted.Where(d => !_secondaryDocks.ContainsKey(d)))
         {
             DockWindow? dock = null;
+            ConfigDockSurface? surface = null;
             try
             {
                 DockWindow.MarkDisplayFailed(device, false);
-                dock = new DockWindow(config, _shell, device);
+                surface = new ConfigDockSurface(config, DockRole.Secondary);
+                dock = new DockWindow(config, surface, _shell, device);
                 _secondaryDocks[device] = dock;
                 dock.Start();
                 changed = true;
@@ -307,6 +393,8 @@ public partial class App : Application
                 DockWindow.MarkDisplayFailed(device, true);
                 _secondaryDocks.Remove(device);
                 try { dock?.CloseDock(); } catch (Exception closeError) { Log.Error(closeError, $"Failed to close the dock on {device}"); }
+                // A dock that failed to be built doesn't close; its surface stops listening here.
+                if (dock is null) surface?.Dispose();
                 changed = true;
             }
         }
@@ -345,6 +433,7 @@ public partial class App : Application
         RegisterHotkeyHandler(HotkeyActions.VolumeDown, () => AppServices.Audio.StepVolume(-0.05f));
         RegisterHotkeyHandler(HotkeyActions.ToggleMicrophone, AppServices.Microphone.ToggleMute);
         RegisterHotkeyHandler(HotkeyActions.OpenLauncher, Dock.LauncherWindow.Toggle);
+        RegisterHotkeyHandler(HotkeyActions.EditDock, DockWindow.ToggleEditMainDock);
         _hotkeys = new HotkeyService(config, _hotkeyHandlers);
 
         _winNumbers = new WinNumberHotkeys(DockWindow.InvokeAppShortcut, DockWindow.ShowShortcutNumbers);
@@ -437,6 +526,15 @@ public partial class App : Application
                 break;
             case nameof(AppConfig.PinnedTrayIcons):
                 break;
+            case nameof(AppConfig.SyncFolder):
+                AppServices.Sync.Start();
+                break;
+            case nameof(AppConfig.TopBar):
+                // Replaced by a profile: follow the new switch and settings.
+                WatchTopBar();
+                SyncTopBar();
+                foreach (var dock in DockWindow.All.ToList()) dock.ApplySettings();
+                break;
             case nameof(AppConfig.ShowOnAllDisplays):
             case nameof(AppConfig.MonitorDevice):
                 // Close a secondary dock on the new main display before the main dock moves there.
@@ -444,6 +542,8 @@ public partial class App : Application
                 foreach (var dock in DockWindow.All.ToList()) dock.ApplySettings();
                 break;
             default:
+                // Edge, size, shape and the rest reach each dock through its own surface (DockSurface.Changed).
+                if (e.PropertyName is { } name && ConfigDockSurface.Properties.Contains(name)) break;
                 foreach (var dock in DockWindow.All.ToList()) dock.ApplySettings();
                 break;
         }
@@ -467,11 +567,11 @@ public partial class App : Application
     private bool ConfirmTaskbarModeRestart(TaskbarMode newMode)
     {
         string message = newMode == TaskbarMode.Replace
-            ? "DockHub will restart and hide the Windows taskbar. It comes back whenever DockHub exits."
-            : "DockHub will restart and show the Windows taskbar next to the dock.";
-        return ConfirmDialog.Show("Restart DockHub?", message, "", _settings,
-            new DialogButton("cancel", "Cancel", IsCancel: true),
-            new DialogButton("restart", "Restart", DialogButtonKind.Primary)) == "restart";
+            ? L.T("DockHub will restart and hide the Windows taskbar. It comes back whenever DockHub exits.")
+            : L.T("DockHub will restart and show the Windows taskbar next to the dock.");
+        return ConfirmDialog.Show(L.T("Restart DockHub?"), message, "", _settings,
+            new DialogButton("cancel", L.T("Cancel"), IsCancel: true),
+            new DialogButton("restart", L.T("Restart"), DialogButtonKind.Primary)) == "restart";
     }
 
     public const string InstallWidgetArgument = "--install-widget";
@@ -598,6 +698,7 @@ public partial class App : Application
         }
 
         SafeRestoreTaskbar();
+        CrashRecovery.End();
         try
         {
             _settings?.Close();
@@ -605,8 +706,12 @@ public partial class App : Application
             SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
             foreach (var dock in _secondaryDocks.Values) dock.CloseDock();
             _secondaryDocks.Clear();
+            _topBar?.CloseDock();
+            _topBar = null;
             _dock?.CloseDock();
             AppServices.ConfigService.SaveNow();
+            // A change not shared yet (sync writes two seconds after a change) is shared before DockHub goes.
+            if (AppServices.SyncStarted) AppServices.Sync.Flush();
             if (_shell?.Tray is { } shellTray && _trayIconsChangedHandler is not null)
             {
                 shellTray.TrayIcons.CollectionChanged -= _trayIconsChangedHandler;

@@ -90,7 +90,9 @@ public static class WebWidgetDownloader
             await File.WriteAllBytesAsync(file, await GetBytesAsync(uri, MaxPackageBytes, cancellation), cancellation);
             try
             {
-                return WebWidgetCatalog.Inspect(file, out _, out var packageError) ?? throw new DownloadException(packageError ?? "");
+                var package = WebWidgetCatalog.Inspect(file, out _, out var packageError) ?? throw new DownloadException(packageError ?? "");
+                package.SourceLink = link.Trim();
+                return package;
             }
             finally
             {
@@ -124,7 +126,9 @@ public static class WebWidgetDownloader
             await File.WriteAllBytesAsync(target, await GetBytesAsync(fileUri, MaxFileBytes, cancellation), cancellation);
         }
 
-        return WebWidgetCatalog.Read(folder, out var error) ?? throw new DownloadException(error ?? "");
+        var downloaded = WebWidgetCatalog.Read(folder, out var error) ?? throw new DownloadException(error ?? "");
+        downloaded.SourceLink = link.Trim();
+        return downloaded;
     }
 
     /// <summary>Tries each link in turn; a missing file (404) moves on to the next one.</summary>

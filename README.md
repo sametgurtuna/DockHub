@@ -12,8 +12,9 @@ Start, search, running apps, the system tray and live widgets, all in one floati
 No admin rights. Your original taskbar always comes back.
 
 [![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?style=flat-square&logo=windows11&logoColor=white)](#requirements)
-[![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4?style=flat-square&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
-[![WPF](https://img.shields.io/badge/UI-WPF-4CC2FF?style=flat-square)](#tech-stack)
+[![macOS 15+](https://img.shields.io/badge/macOS-15%2B%20Sequoia-000000?style=flat-square&logo=apple&logoColor=white)](#macos-support)
+[![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?style=flat-square&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![Swift 6](https://img.shields.io/badge/Swift-6.0-F05138?style=flat-square&logo=swift&logoColor=white)](https://swift.org)
 [![Latest release](https://img.shields.io/github/v/release/sametgurtuna/DockHub?style=flat-square&color=4CC2FF&label=release)](https://github.com/sametgurtuna/DockHub/releases/latest)
 [![CI](https://img.shields.io/github/actions/workflow/status/sametgurtuna/DockHub/ci.yml?branch=master&style=flat-square&label=build)](https://github.com/sametgurtuna/DockHub/actions/workflows/ci.yml)
 
@@ -57,13 +58,13 @@ No admin rights. Your original taskbar always comes back.
 ## Highlights
 
 - **Replaces the taskbar, keeps Windows intact.** The Start button opens the real Windows Start menu, and the Windows key, search, notification center and quick settings work exactly as before.
-- **28 widgets, many layouts each.** Clocks, timers, reminders, your calendar, a to-do list with Todoist, clipboard history, a Downloads stack, exchange rates, sticky notes, screenshots, now playing, audio, brightness, Wi-Fi and Bluetooth, CPU, GPU and network monitors, AI usage (Claude Code, Codex, Gemini CLI) and weather. Add the same widget as many times as you like; every copy keeps its own settings.
+- **32 widgets, many layouts each.** Clocks, timers, reminders, your calendar, a to-do list with Todoist, clipboard history, a Downloads stack, exchange rates, stocks, sticky notes, screenshots, now playing, audio, brightness, Wi-Fi and Bluetooth, power mode, Do Not Disturb, CPU, GPU and network monitors, ping, AI usage (Claude Code, Codex, Gemini CLI) and weather. Add the same widget as many times as you like; every copy keeps its own settings.
 - **Every battery at a glance.** Bluetooth headsets, mice, keyboards and controllers, Xbox and PlayStation controllers, and Logitech, Razer, HyperX, SteelSeries and LAMZU receivers, with a warning before one runs flat.
 - **Build your own widgets.** Web widgets in HTML and JavaScript install from a `.dockwidget` file, a link or the community list in the gallery.
 - **Live app buttons.** Hover for a real window thumbnail, right-click for a Jump List, watch badge counts and progress, and drag apps together into a folder.
 - **Fluent to the core.** Blurred glass, Acrylic or solid backgrounds, light and dark themes, and your Windows accent color. Popups, folders and widgets animate with macOS-inspired genie, zoom and fan effects, all at your display's refresh rate.
 - **Any edge, any shape.** Bottom, top, left or right; floating or attached; small, medium or large. On vertical docks, widgets collapse into compact tiles.
-- **Safe by design.** No admin rights. When DockHub exits, crashes, or the session ends, the Windows taskbar and its tray icons come back.
+- **Safe by design.** No admin rights. When DockHub exits, crashes, or the session ends, the Windows taskbar and its tray icons come back. After a crash Windows starts DockHub again, and the next start tells you what happened.
 - **Starts with Windows.** The installer enables autostart by default, and you can turn it off at any time.
 - **In your language.** English, Turkish, German and Spanish.
 - **Keyboard first.** Win+1…9 open and switch dock apps like on the Windows taskbar, a Spotlight-style quick launcher (Win+Alt+Space) finds apps, settings and commands, and every DockHub action can get its own global shortcut.
@@ -101,29 +102,34 @@ No admin rights. Your original taskbar always comes back.
 
 ### Installer (recommended)
 
-1. Download **`DockHub-Setup-<version>-x64.exe`** from the [latest release](https://github.com/sametgurtuna/DockHub/releases/latest).
+1. Download **`DockHub-Setup-<version>-x64.exe`** from the [latest release](https://github.com/sametgurtuna/DockHub/releases/latest) (**`-arm64.exe`** for Windows 11 on ARM, such as Snapdragon laptops).
 2. Run it. DockHub installs for the current user, so no administrator prompt appears.
 3. Keep **"Start DockHub automatically when I sign in to Windows"** checked (the default) to have the dock ready every time Windows starts.
 
 The installer is self-contained. It ships the .NET runtime, so there is nothing else to install. It is available in English, Turkish, German and Spanish.
 
 ### winget
-
+ 
 Once the package is published in the Windows Package Manager repository:
-
+ 
 ```powershell
 winget install SametGurtuna.DockHub
 ```
-
+ 
 **Uninstalling** from *Settings › Apps* closes DockHub, restores the Windows taskbar, and removes the autostart entry, the File Explorer menu command and the `.dockwidget` file type. Your settings in `%AppData%\DockHub` are kept.
+
+### macOS (Apple Silicon & Intel)
+
+1. Download **`DockHub.dmg`** from the [latest release](https://github.com/sametgurtuna/DockHub/releases/latest).
+2. Open the disk image and drag **DockHub** to your **Applications** folder.
+3. Launch DockHub. While running, it can optionally hide the macOS Dock (*Settings › General*) or run alongside it.
 
 ### Requirements
 
-| | |
+| Platform | Requirements |
 |---|---|
-| Operating system | Windows 10 version 1809 (build 17763) or later, x64 |
-| Recommended | Windows 11 22H2 or later (rounded corners, Mica settings window) |
-| Runtime | Bundled with the installer. Running a framework-dependent build requires the [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0). |
+| **Windows** | Windows 10 version 1809 (build 17763) or later, x64; Windows 11 on ARM64. Built-in .NET 10 runtime. |
+| **macOS** | macOS 15.0 (Sequoia) or later; Apple Silicon or Intel Mac. Native Swift 6 + AppKit / SwiftUI. |
 
 ## Features
 
@@ -133,6 +139,10 @@ winget install SametGurtuna.DockHub
 - **The Windows key** works as usual. Start, search, the notification center and quick settings open in Windows' own panels.
 - **Search** and **Task View** buttons, each of which can be toggled. The search button can open Windows Search or DockHub's quick launcher (*Settings › Taskbar › Search button opens*).
 - **Quick launcher** (Win+Alt+Space, or the search button): type to find apps, open windows, DockHub and Windows settings pages, dock commands (auto-hide, mute, lock, new virtual desktop, switch profile...), recent files, quick math (`200*15%`, `sqrt(2)`) and a web search. Enter opens the first result, arrow keys move, Esc closes.
+  - **Files:** files and folders in your user folder, by name or content, from the Windows Search index (AppData is left out). Enter opens one, Ctrl+Enter shows it in its folder. Turn it off in *Settings › Taskbar › Files in the quick launcher*; nothing is searched while Windows Search is turned off.
+  - **Units:** `10 km to mi`, `20 c in f`, `5 GB in MB`, also in Turkish, German and Spanish (`10 km kaç mil`, `10 km in Meilen`, `10 km a millas`). Length, weight, temperature, volume, speed and data sizes; Enter copies the result.
+  - **Currencies:** `100 usd to try`, `50 € in $`, `0.5 btc to eur`, at the same rates as the Exchange rates widget (ECB, CoinGecko for coins).
+  - **Emoji:** type `:` and a name, `:heart` or `:kalp`, in your language or English; Enter copies the emoji.
 - **Virtual desktops.** A number next to Task View shows which desktop you are on; scroll it to switch desktops, right-click to add or close one. *Apps from all desktops* lists windows of every desktop on the dock, and clicking one switches to its desktop.
 - **Running apps**
   - Pinned apps are matched with their open windows, and windows of the same app are grouped into one button.
@@ -143,6 +153,7 @@ winget install SametGurtuna.DockHub
   - Right-click shows the window list, the app's Jump List (recent files and tasks, when the app provides one), plus *Run as administrator*, *Open file location*, *Pin/Unpin* and *Close all windows*.
   - Clicking brings a window to the front, minimizes it, or cycles through the app's windows. Shift+click or middle-click opens a new window.
   - Pin a running app by dragging it into the dock or with the *Pin to DockHub* command.
+  - **One button per window:** set *Settings › Taskbar › Combine app buttons* to *Never*, like Windows' "Combine taskbar buttons: Never". Every window then gets a button of its own with its icon and title (just the icon on a side dock), and an app's windows stay side by side: a pinned app's button becomes its first window's, and its other windows follow right after it. Clicking a window's button brings that window forward or minimizes it, middle-click closes it, and its preview shows that window only. The icons don't grow under the pointer in this mode.
   - **Pin from File Explorer:** right-click an `.exe` or shortcut and choose *Pin to DockHub*. On Windows 11 the command appears under *Show more options* (or Shift+right-click), because the new compact menu only lists commands from packaged apps.
   - **Groups (folders):** drag an app or widget onto another to create a folder. Folders can be renamed, given a custom accent color, and open with a staggered fan animation.
 - **System tray.** App icons live in the dock and receive clicks, right-clicks and hover. Hidden icons sit in the overflow menu, and you choose which icons are always visible. Your Windows tray preferences are imported on first launch.
@@ -150,7 +161,7 @@ winget install SametGurtuna.DockHub
 - **Input language.** With more than one keyboard language installed, a short code (TUR, ENG...) sits next to the tray. Click or scroll it to switch, right-click for the list and language settings.
 - **Microphone.** A microphone icon appears while an app records (like Windows), or always if you prefer; click it to mute or unmute, and give it a global shortcut. It lists which apps use the microphone.
 - **Notifications and Do Not Disturb.** The clock shows how many notifications wait in the notification center, and a moon while Do Not Disturb or Focus is on.
-- **Win+1…9 and Win+0** open, switch to or minimize the dock's first ten apps. Add Shift for a new window, Ctrl+Shift to run as administrator, Alt for the jump list. Hold Win to see the numbers on the dock.
+- **Win+1…9 and Win+0** open, switch to or minimize the dock's first ten apps. Add Shift for a new window, Ctrl+Shift to run as administrator, Alt for the jump list. Hold Win to see the numbers on the dock. With one button per window, the numbers follow the buttons, so each window has its own number.
 
   <img src="docs/images/tray-overflow.jpg" alt="Tray overflow flyout above the dock showing hidden tray icons" width="46%">
 - **Clock.** Clicking it opens the notification center. Its context menu offers quick settings, date and time settings, and seconds and date options. A thin strip at the far end shows the desktop.
@@ -163,21 +174,25 @@ winget install SametGurtuna.DockHub
 - **Shape:** *floating* (inset from the screen edges with rounded corners) or *attached* (a classic taskbar).
 - **Width and alignment:** full width or fit to content; items centered or aligned to the start.
 - **Position:** bottom, top, left or right. On vertical docks, widgets become compact tiles showing an icon or ring with a short value. Clicking a tile opens the full widget in a side panel, and timers, the water tracker and reminders run their main action directly.
-- **Scrolling:** when items don't fit, the mouse wheel scrolls the dock smoothly, the edges fade, and arrow buttons appear.
+- **Scrolling:** when items don't fit, the edge where more items wait fades out. The mouse wheel or touchpad scrolls smoothly and stops where an item begins, so nothing at the leading edge is cut in half; an item you drag to a faded edge scrolls the dock that way.
 - **Auto-hide:** the dock slides off the edge and returns when the pointer reaches it. With *Only hide when a window overlaps*, it stays up over the desktop and small windows and slides away only while the active window covers it.
 - **Profiles:** save your setup as a profile (Work, Gaming, Laptop...) with its own items and look, switch from the dock menu or a shortcut, or let a profile switch in by itself: when a given number of displays is connected, while an app runs (for example `steam` or `cs2`), or during set hours (weekdays only if you like). When the app closes or the hours end, DockHub goes back to the profile you had. Rules live in *Settings › Profiles*.
 - **Open app indicator:** a line that widens for the active app and several windows, one dot per window, or none.
 - **Hide in full screen:** the dock steps aside for games, videos and F11 mode.
+- **Top bar:** a second, thin bar on the main display for widgets and a clock, like the menu bar on a Mac, for example widgets on top and apps below. Turn it on in *Settings › Appearance › Top bar* (or on the Overview), then move widgets there from their right-click menu (*Show on › Top bar*), by dragging them over in edit mode or from the gallery, or in *Settings › Dock items*. It has its own edge (never the dock's), size, shape, backdrop, auto-hide and clock, reserves its own screen space, and steps aside in full screen like the dock. Turning it off brings its widgets back to the dock. Profiles keep the bar; presets and theme files leave it alone.
 - **Multi-monitor and DPI:** choose the monitor for the dock; per-monitor DPI (PerMonitorV2) is supported. With *Show on all displays*, every other display gets a dock too, with its own size; move a widget to one of them from its right-click menu (*Show on*) or in *Settings › Dock items*.
 - **Drag and drop:** reorder apps, widgets and separators on the dock. Dropping an `.exe` or `.lnk` from File Explorer pins it.
+- **Edit mode:** right-click an empty area of the dock (or any widget) and choose **Edit dock**, press the *Edit the dock* shortcut, or use *Settings › Dock items › Edit on the dock*. The items wiggle; drag them to reorder, press **×** to remove one, and drag the handle on a widget's edge to switch it to a narrower or wider layout. The **+** tile at the end adds a widget, a separator or an app. Press **Done**, Esc or Enter, or click outside DockHub (or on another dock) to finish. Everything you changed is one step that *Undo* reverts; leaving without a change leaves no step behind. With the keyboard, the arrow keys move the focus, Ctrl+arrow keys move the item, Delete removes it and + or - resize it. Start, search, the tray and the clock stay put, and with reduced motion the items don't wiggle.
 - **Smooth motion:** scrolling, auto-hide and flyouts use frame-synchronized transitions at your display's refresh rate, including above 60 Hz. Hover highlights fade in, app icons grow slightly under the pointer, new items grow into place, and widget/folder popups open with macOS-style genie, zoom and shrink animations.
 - **Accessibility:** *Settings › Appearance › Animations* reduces motion to short fades (or turns it off), following Windows' animation effects by default. Windows contrast themes are picked up automatically. Screen readers get names and states for every dock item, and *Move focus to the dock* (Win+Alt+T) lets you use the dock with the arrow keys, Enter, Shift+Enter (new window), the menu key and Esc.
-- **Global shortcuts:** show the dock (Ctrl+Alt+D by default), open the quick launcher (Win+Alt+Space), open settings, pin an app, toggle auto-hide, mute the sound or the microphone, change the volume, switch profile, all configurable in *Settings › Keyboard shortcuts*. Shortcuts another app already uses are flagged there.
+- **Global shortcuts:** show the dock (Ctrl+Alt+D by default), open the quick launcher (Win+Alt+Space), open settings, edit the dock, pin an app, toggle auto-hide, mute the sound or the microphone, change the volume, switch profile, all configurable in *Settings › Keyboard shortcuts*. Shortcuts another app already uses are flagged there.
 - **Text size:** *Settings › Appearance › Text size* scales the text of settings, widget panels and menus (System follows Windows' text size).
+- **Widget style:** *Cards* puts every widget on a card of its own; *Seamless* sets widgets right on the dock with a thin line between two of them (sticky notes and the water tracker keep a fainter color). *Settings › Appearance › Widget style*; theme files, saved presets and profiles keep it.
 - **Even widget widths:** widget cards round their width up to a common grid and are at least a tile, a standard card or a wide card wide, depending on the layout, so the dock keeps an even rhythm. The widget sits centered in its card; nothing is cut off (on by default, *Settings › Appearance*).
 - **Theme files:** *Settings › Appearance › Theme file* exports your dock's look (colors, glass, size, shape) to a `.dockhub-theme` file that anyone can import. *Save current layout as a preset* keeps your look and widgets as a preset you can apply again later. Presets and themes never move the dock: the screen edge stays where you put it.
 - **Menus:** context menus and widget panels always open outside the dock, next to the pointer or the item.
-- **Dock menu** (right-click an empty area): Add widget, Pin app, Add separator, Task Manager, Quick settings, Auto-hide, Hide Windows taskbar, Position, Settings, Exit.
+- **Settings window:** a grouped menu (Dock, Widgets, System, About) that opens on an *Overview*: a live preview of your dock, the settings you change most (theme, backdrop, size, edge, widget style), shortcuts to add a widget, edit the dock, undo or switch profile, and the state of updates, backups and profiles. *Ctrl+F* searches every setting and widget.
+- **Dock menu** (right-click an empty area): Undo, Edit dock, Add widget, Pin app, Add separator, Task Manager, Quick settings, Auto-hide, Hide Windows taskbar, Position, Settings, Exit.
 
 ## Widgets
 
@@ -205,6 +220,8 @@ Every widget can be added more than once, and each copy has its own settings. Ch
 | | **GPU** | Numbers, Rings, Bars | Graphics card load and video memory from the Task Manager counters. |
 | | **Brightness** | Slider, Icon only | Scroll to change the brightness of laptop screens and DDC/CI monitors; shows when night light is on. |
 | | **Wi-Fi and Bluetooth** | Buttons, Icon only | Turn Wi-Fi and Bluetooth on or off in one click, like Quick Settings. |
+| | **Ping** | Number, Chart | Round-trip time to 1.1.1.1 (or a server you choose) every 5 seconds, green, orange or red by quality; click for the average, fastest and slowest reply, jitter and packet loss. Pauses while the dock is hidden. |
+| | **Power mode** | Icon only, Buttons | Best power efficiency, Balanced or Best performance in one click (the same setting as *Settings › System › Power*), and whether you run on battery with battery saver on. When your PC doesn't allow the change (another power plan), it shows the mode and opens the power settings. |
 | AI | **AI usage** | Numbers, Rings, Bars | Limits of Claude Code (5-hour and weekly, from its CLI), OpenAI Codex (5-hour and weekly, read from its session logs) or Gemini CLI (requests today against your daily limit). Checked every 5 to 60 minutes. |
 | Weather | **Weather** | Current, Condition, Hourly forecast | [Open-Meteo](https://open-meteo.com/), no API key needed. Uses a city or your Windows location. |
 | Productivity | **Calendar** | Next event, Time until | Your next meeting from any iCal (.ics) link (Google, Outlook...), a **Join** button for Teams, Meet and Zoom, today's agenda and a reminder before events. |
@@ -213,8 +230,10 @@ Every widget can be added more than once, and each copy has its own settings. Ch
 | | **Exchange rates** | Single pair, Several pairs | Daily ECB rates via [Frankfurter](https://frankfurter.dev/) and crypto prices (BTC, ETH, SOL and 16 more) via [CoinGecko](https://www.coingecko.com/), with the change since the previous day and a two-week trend. Mix both in one list, for example `TRY, EUR, BTC`. |
 | | **To do** | List, Count | Today's tasks: a simple list kept on this PC or today's and overdue tasks from [Todoist](https://todoist.com/) (personal API token, stored encrypted). Tick to complete, type to add. |
 | | **Screenshot** | Icon only, Buttons | Opens the Windows snipping overlay, or saves every screen to *Pictures › Screenshots* and copies it, with an optional delay. |
+| | **Stocks** | Single stock, Several stocks | Delayed prices from [Stooq](https://stooq.com/) (no API key) with the change since the previous close and a month's trend. US stocks by symbol (`AAPL, MSFT`), others with their market (`SAP.DE`), indexes with `^` (`^SPX`). Refreshed every 15 minutes while the dock is visible. |
+| | **Do not disturb** | Icon only, Status | Shows whether Do Not Disturb or Focus is on and how many notifications wait. Windows has no public way for apps to switch it, so a click opens the notification center, where the bell does. |
 
-To add a widget, press **+** next to its preview in *Settings › Widget gallery*, or right-click an empty area of the dock and choose **Add widget**. Right-clicking a widget on the dock gives it its own actions, layouts and settings.
+To add a widget, open *Settings › Widget gallery* and press **Add** on its card or drag the card onto the dock (to a spot between items, into a folder, or onto the tray area to pin it to the right edge). Each widget has one card with its layouts to pick from, its width and how many are already on the dock; search by name in any language or filter by category. You can also right-click an empty area of the dock and choose **Add widget**, or press the **+** tile in edit mode. Right-clicking a widget on the dock gives it its own actions, layouts and settings.
 
 <p align="center">
   <img src="docs/images/widget-menu.jpg" alt="Right-click menu of the hydration widget with drink a glass, reset today, appearance and widget settings" width="62%">
@@ -260,6 +279,13 @@ DockHub.exe --restore-taskbar
 - Tray menu › *Restore taskbar*
 - Last resort: restart `explorer.exe` and turn off *Settings › Personalization › Taskbar › Automatically hide the taskbar* in Windows.
 
+### When DockHub crashes
+
+- **Windows starts it again.** DockHub asks Windows Error Reporting to restart it after a crash or a hang. Windows only does this for a process that has run for at least a minute, and never after an update or a restart of the PC.
+- **No endless loop.** If Windows has to restart DockHub a third time within 10 minutes, DockHub stops instead, gives the taskbar back and turns the automatic restart off (a notification says so). Starting DockHub yourself still works; turn the restart back on in *Settings › Backup and troubleshooting*. Ending DockHub in Task Manager does not count as a crash here.
+- **You hear about it.** When the previous session did not end cleanly (a crash, or ending it in Task Manager), the next start shows a notification with *Report a problem* and *Open log*. A PC that restarted in the meantime (shutdown, power loss) is not reported.
+- **The report says where, nothing personal.** DockHub reads what Windows recorded in the Application event log: the faulting module, exception code and offset, the .NET exception type and the first stack frames. Exception messages, file paths and window titles are left out. *Report a problem* adds this to the bug report, and *Settings › About › Last crash* shows it.
+
 > [!IMPORTANT]
 > Windows 11's network, volume and battery icons live inside Explorer, so the dock shows its own equivalents. Reach the quick settings panel by right-clicking the clock or the dock, or with Win+A. Do not run other taskbar replacements (StartAllBack, ExplorerPatcher, RetroBar and similar) at the same time.
 
@@ -268,7 +294,7 @@ DockHub.exe --restore-taskbar
 ### Prerequisites
 
 - Windows 10 1809 or later
-- [.NET 8 SDK](https://dotnet.microsoft.com/download) or newer (.NET 9 and 10 SDKs also build the `net8.0` target)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) or newer
 - Optional: [Inno Setup 6](https://jrsoftware.org/isinfo.php) to build the installer (`winget install JRSoftware.InnoSetup`)
 
 NuGet dependencies are restored automatically:
@@ -285,7 +311,7 @@ dotnet build CustomDock.sln -c Release
 dotnet run --project src/CustomDock -c Release
 ```
 
-You can also open `CustomDock.sln` in Visual Studio 2022 and press F5.
+You can also open `CustomDock.sln` in Visual Studio 2026 and press F5.
 
 ### Running tests
 
@@ -306,10 +332,11 @@ dotnet publish src/CustomDock -c Release -r win-x64 --self-contained false -o pu
 ### Installer
 
 ```powershell
-pwsh installer/build.ps1
+pwsh installer/build.ps1                     # x64
+pwsh installer/build.ps1 -Runtime win-arm64  # ARM64
 ```
 
-The script publishes a self-contained ReadyToRun build to `artifacts/publish/win-x64` and compiles [`installer/DockHub.iss`](installer/DockHub.iss) into `installer/Output/DockHub-Setup-<version>-x64.exe`. The version comes from `src/CustomDock/CustomDock.csproj`.
+The script publishes a self-contained ReadyToRun build to `artifacts/publish/win-x64` (or `win-arm64`) and compiles [`installer/DockHub.iss`](installer/DockHub.iss) into `installer/Output/DockHub-Setup-<version>-x64.exe` (or `-arm64.exe`). The version comes from `src/CustomDock/CustomDock.csproj`. The release workflow builds both, and the updater picks the one for the PC's processor (an ARM64 PC with the x64 build moves to the ARM64 one; releases without an ARM64 setup keep the x64 one).
 
 What the installer does:
 
@@ -331,6 +358,8 @@ What the installer does:
 | `DockHub.exe --install-widget "<file>"` | Asks to install a `.dockwidget` package (used when you open one in File Explorer). Starts the dock if needed. |
 | `DockHub.exe --restore-taskbar` | **Emergency:** restores the Windows taskbar under any circumstances. |
 | `DockHub.exe --startup` | Used by the autostart entry. |
+| `DockHub.exe --restarted-after-crash` | Used by Windows when it restarts DockHub after a crash. |
+| `DockHub.exe --crash-test` | Only with `"debugLogging": true`: crashes on purpose 65 seconds after starting, to try out the restart and the crash notice. |
 
 The `DOCKHUB_HOME` environment variable changes the settings and data folder, which is useful for portable use or testing, for example `set DOCKHUB_HOME=D:\DockTest`.
 
@@ -344,7 +373,7 @@ The `DOCKHUB_HOME` environment variable changes the settings and data folder, wh
 | `%AppData%\DockHub\data\hydration.json` | Daily water counter |
 | `%AppData%\DockHub\data\weather-cache.json` | Latest weather per location, for an instant first paint |
 | `%AppData%\DockHub\data\trash\` | Data of removed widgets (for example sticky notes), kept for 7 days |
-| `%AppData%\DockHub\session.json` | Taskbar restore information (exists only while the taskbar is hidden) |
+| `%AppData%\DockHub\session.json` | Taskbar restore information, whether the last session ended cleanly, recent crashes and the last crash report |
 | `%AppData%\DockHub\pin-requests.txt`, `widget-requests.txt` | Pending pin and widget install requests from File Explorer (temporary) |
 | `%AppData%\DockHub\log.txt` | Log file (rotates at 512 KB) |
 | `%AppData%\DockHub\backups\` | A copy of `config.json` from each of the last 7 days, plus the state saved before an import |
@@ -355,6 +384,7 @@ The `DOCKHUB_HOME` environment variable changes the settings and data folder, wh
 - Files are written to a temporary file first and then moved into place, so an interrupted write never corrupts them.
 - A corrupt `config.json` is backed up as `config.json.corrupt-<date>` and DockHub loads the newest daily backup (and tells you); only without one does it start with defaults.
 - *Settings › Backup and troubleshooting* exports everything (dock, widgets, notes, reminders) to a `.zip` and imports it again.
+- **Sync between PCs:** in *Settings › Backup and troubleshooting*, choose a folder that syncs itself between your PCs (OneDrive, Dropbox, a network share). DockHub writes `DockHub-sync.json` there two seconds after you change something and takes the file when another PC wrote a newer one; the last change wins, and taking another PC's settings is one step that *Undo* reverts. Shared: the look, dock items and widget settings, profiles, presets and shortcuts. Kept on each PC: the display the dock is on and display sizes, the tray, starting with Windows, how the taskbar is replaced, the language, and which display each widget is on. Saved tokens (such as Todoist's, stored encrypted) are never written to the folder. Notes, reminders and other widget data aren't synced. It is off by default, and nothing is written anywhere while it is off.
 - Removing items, deleting folders and applying a layout preset can be undone for a few seconds from the toast next to the dock, from the dock's right-click menu, or with Ctrl+Z in Settings.
 - Settings from the project's previous name (`%AppData%\CustomDock`, `CUSTOMDOCK_HOME`) are migrated automatically on first launch.
 - Version 1 `config.json` files are upgraded to version 2 automatically.
@@ -408,7 +438,7 @@ An app item's `path` can be an `.exe`, an `.lnk` shortcut, any file, or a Store 
 - **Microphone indicator.** DockHub reads which apps use the microphone from the same Windows privacy records as the Windows microphone icon; it never opens the microphone itself.
 - **Notification count.** Read from the Windows notification database of your account (read-only), only while the option is on.
 - **Wi-Fi and Bluetooth widget.** Uses the Windows radio API; if Windows doesn't allow it, the buttons open the matching Settings page instead.
-- **Network.** DockHub itself only contacts `api.open-meteo.com` (weather), `geocoding-api.open-meteo.com` (city search), `api.frankfurter.dev` and, for crypto symbols, `api.coingecko.com` (only with the Exchange rates widget), the calendar links you enter (Calendar widget) and, once a day unless you turn it off, `api.github.com` to look for a newer release. The *AI usage* widget, if you add it, runs your locally installed Claude CLI (`claude -p /usage`) at the interval you choose, and that CLI talks to Anthropic with your own login; for Codex and Gemini CLI it only reads the logs those tools keep in your user folder (`~/.codex/sessions`, `~/.gemini/tmp`). The *To do* widget talks to `api.todoist.com` only when you set it to Todoist, installing a web widget from a link downloads it from that link, and while *Settings › Widget gallery* is open DockHub fetches the community widget list from `raw.githubusercontent.com` (at most once a day). Web widgets reach only the hosts they declare, or a server address you enter in their settings. There is no telemetry.
+- **Network.** DockHub itself only contacts `api.open-meteo.com` (weather), `geocoding-api.open-meteo.com` (city search), `api.frankfurter.dev` and, for crypto symbols, `api.coingecko.com` (only with the Exchange rates widget, or when you convert a currency in the quick launcher), `stooq.com` (only with the Stocks widget), the server the Ping widget pings (1.1.1.1 unless you choose another), the calendar links you enter (Calendar widget) and, once a day unless you turn it off, `api.github.com` to look for a newer release. The *AI usage* widget, if you add it, runs your locally installed Claude CLI (`claude -p /usage`) at the interval you choose, and that CLI talks to Anthropic with your own login; for Codex and Gemini CLI it only reads the logs those tools keep in your user folder (`~/.codex/sessions`, `~/.gemini/tmp`). The *To do* widget talks to `api.todoist.com` only when you set it to Todoist, installing a web widget from a link downloads it from that link, and while *Settings › Widget gallery* is open DockHub fetches the community widget list from `raw.githubusercontent.com` (at most once a day). Web widgets reach only the hosts they declare, or a server address you enter in their settings. There is no telemetry.
 
 ## Project structure
 
@@ -453,6 +483,8 @@ packaging/winget/            winget manifest templates (submitted by .github/wor
 packaging/signing/           Optional code signing of releases (Azure Artifact Signing) and how to set it up
 samples/widgets/             Web widget examples (hello-world, github-stars, github-pulls, github-actions, home-assistant)
                              and index.json, the community list shown in the gallery
+sdk/                         Widget SDK: TypeScript types (types/dockhub.d.ts) and the samples' type check
+tools/dockhub-widget/        Widget developer tool: create, validate and pack (Node.js, no dependencies)
 tools/generate-icon.ps1      Renders Assets/DockHub.ico
 tools/measure-idle.ps1       Idle CPU, memory and start-up measurement
 docs/                        Widget SDK and supported battery devices; images/ holds the README artwork
@@ -463,6 +495,11 @@ docs/                        Widget SDK and supported battery devices; images/ h
 Anyone can build a widget with HTML, CSS and JavaScript, no C# needed. Web widgets run in Microsoft Edge WebView2, follow the dock theme and use a small `window.dockhub` API for settings, storage, notifications and their right-click menu. Each widget only reaches the internet hosts its manifest lists, and users see those permissions before installing a `.dockwidget` package (open the file, or use *Settings › Widget gallery › Install widget…*) or a link (a `manifest.json`, a `.dockwidget` file or a GitHub folder) with *Install from link…*. The gallery also lists community widgets from a list kept in this repository (GitHub pull requests, GitHub Actions, Home Assistant and more) that install with one click; anyone can add one with a pull request.
 
 With `"debugLogging": true`, a widget reloads by itself whenever you save one of its files. See the [widget SDK guide](docs/widget-sdk.md) and the examples in [`samples/widgets`](samples/widgets).
+
+- **SDK 1.0.** The API (`apiVersion` 2) and the manifest format are stable: nothing is removed within DockHub 1.x, and anything deprecated keeps working for at least one more major version.
+- **TypeScript types** in [`sdk/types/dockhub.d.ts`](sdk/types/dockhub.d.ts) give completion and type checks, even in plain JavaScript with `// @ts-check`.
+- **Developer tool:** [`tools/dockhub-widget`](tools/dockhub-widget/dockhub-widget.mjs) (Node.js, no dependencies) creates a widget from a template, checks it the way DockHub does and packs it into a `.dockwidget`.
+- **Updates:** widgets installed from a `manifest.json` or GitHub folder link are checked for a newer `version` once a day. DockHub shows a notification and an **Update** button in the gallery, keeps the widget's settings and data, and asks first when the new version wants more permissions.
 
 ## Writing a widget
 
@@ -587,7 +624,7 @@ No. DockHub installs and runs as a normal user.
 <details>
 <summary><b>Does it send any data?</b></summary>
 
-Only weather and city search requests to Open-Meteo, plus whatever the widgets you add need (exchange rates and crypto prices, your calendar links, Todoist, web widgets' declared hosts) and a daily update check you can turn off. If you add the AI usage widget with Claude Code, your local Claude CLI checks your usage with your own account. There is no DockHub account and no telemetry.
+Only weather and city search requests to Open-Meteo, plus whatever the widgets you add need (exchange rates and crypto prices, stock prices, the Ping widget's server, your calendar links, Todoist, web widgets' declared hosts) and a daily update check you can turn off. If you add the AI usage widget with Claude Code, your local Claude CLI checks your usage with your own account. There is no DockHub account and no telemetry.
 </details>
 
 <details>
@@ -618,5 +655,6 @@ DockHub builds on excellent open source work:
 - The Start menu (`IImmersiveLauncher`), tray icon mouse forwarding and "show desktop" techniques are adapted from [RetroBar](https://github.com/dremin/RetroBar) (Apache-2.0)
 - [Microsoft.Toolkit.Uwp.Notifications](https://github.com/CommunityToolkit/WindowsCommunityToolkit) (MIT)
 - Weather data by [Open-Meteo](https://open-meteo.com/) (CC BY 4.0)
+- Emoji names from the [Unicode CLDR](https://cldr.unicode.org/) ([Unicode License v3](https://www.unicode.org/license.txt)); the emoji list from [Emojibase](https://emojibase.dev/) (MIT)
 
 Windows is a trademark of Microsoft Corporation. DockHub is not affiliated with Microsoft.

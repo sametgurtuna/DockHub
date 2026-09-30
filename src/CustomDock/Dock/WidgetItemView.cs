@@ -19,7 +19,9 @@ public sealed class WidgetItemView : WidgetCard
     private Popup? _flyout;
     private WidgetCard? _flyoutCard;
     private bool _compact;
+    private bool _editing;
     private bool _flyoutInteraction;
+    private bool _flyoutFromKeyboard;
     private DateTime _flyoutClosedAt;
 
     public WidgetItemView(DockItem item, WidgetBase widget, IWidgetHost host)
@@ -64,7 +66,7 @@ public sealed class WidgetItemView : WidgetCard
                 }
             };
         }
-        DockDragHelper.Attach(this, () => new DataObject(DockDragHelper.ItemFormat, item.Id));
+        DockDragHelper.Attach(this, () => DockDragHelper.StringData(DockDragHelper.ItemFormat, item.Id));
         MouseEnter += (_, _) => WindowPreviewWindow.Instance.HidePreview();
         Loaded += OnFirstLoaded;
     }
@@ -96,7 +98,10 @@ public sealed class WidgetItemView : WidgetCard
 
     private bool CollapsedWhileIdle => Item.CollapseWhenIdle && Widget.IsIdle;
 
-    private void UpdateCompactMode() => SetCompactCore(_verticalDock || CollapsedWhileIdle);
+    /// <summary>In edit mode a widget that hides itself (nothing playing) shows as its tile, so it can be moved or removed.</summary>
+    private bool ShownForEditing => _editing && Widget.Visibility != Visibility.Visible;
+
+    private void UpdateCompactMode() => SetCompactCore(_verticalDock || CollapsedWhileIdle || ShownForEditing);
 
     private void OnWidgetIdleChanged() => Dispatcher.BeginInvoke(UpdateCompactMode);
 
@@ -130,10 +135,13 @@ public sealed class WidgetItemView : WidgetCard
         ApplyAppearance();
     }
 
-    private void OnWidgetVisibilityChanged(object? sender, EventArgs e) => Visibility = Widget.Visibility;
+    private void OnWidgetVisibilityChanged(object? sender, EventArgs e) => UpdateVisibility();
 
-    /// <summary>Picks up a changed "Even widget widths" setting.</summary>
-    public void RefreshGrid() => ApplyWidthClass();
+    private void UpdateVisibility()
+    {
+        Visibility = _editing ? Visibility.Visible : Widget.Visibility;
+        UpdateCompactMode();
+    }
 
     /// <summary>
     /// Snaps the card to the grid and gives it its variant's minimum width while "Even widget widths" is on (the card
@@ -155,10 +163,19 @@ public sealed class WidgetItemView : WidgetCard
 
     private void Apply(WidgetCard card, bool compact)
     {
+        // Seamless style: no card on the dock (the panel of a tile keeps its card). A widget with a color of its own
+        // (sticky note, water) keeps it, a little fainter.
+        bool seamless = AppServices.Config.WidgetStyle == WidgetStyle.Seamless && !ReferenceEquals(card, _flyoutCard);
         if (Widget.CardBackground is { } background)
         {
-            card.Background = background;
-            card.BorderBrush = new SolidColorBrush(Color.FromArgb(0x26, 0xFF, 0xFF, 0xFF));
+            card.Background = seamless ? Faded(background) : background;
+            card.BorderBrush = seamless ? Brushes.Transparent : new SolidColorBrush(Color.FromArgb(0x26, 0xFF, 0xFF, 0xFF));
+        }
+        else if (seamless)
+        {
+            // Transparent, not null: the whole card still takes the mouse (drag, menu, hover).
+            card.Background = Brushes.Transparent;
+            card.BorderBrush = Brushes.Transparent;
         }
         else
         {
@@ -168,12 +185,25 @@ public sealed class WidgetItemView : WidgetCard
         card.Padding = compact ? new Thickness(0) : Widget.CardPadding;
     }
 
+    /// <summary>A little fainter, so the colored card sits on the dock; its dark text keeps enough contrast. Contrast themes keep their colors.</summary>
+    private static Brush Faded(Brush brush)
+    {
+        if (SystemParameters.HighContrast) return brush;
+        var faded = brush.CloneCurrentValue();
+        faded.Opacity = brush.Opacity * 0.8;
+        faded.Freeze();
+        return faded;
+    }
+
+    /// <summary>Picks up changed look settings (widget style, even widths).</summary>
+    public void RefreshLook() => ApplyAppearance();
+
     // ------------------------------------------------------------------ Compact mode: click and panel
 
     protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
     {
         base.OnMouseLeftButtonUp(e);
-        if (!_compact || DockDragHelper.JustDragged || e.Handled) return;
+        if (!_compact || DockDragHelper.JustDragged || e.Handled || _editing) return;
         e.Handled = true;
         if (Widget.OnCompactClick()) return;
         if (_flyout?.IsOpen == true || (_flyout is not null && PopupAnimationHelper.IsClosing(_flyout))) CloseFlyout();
@@ -182,24 +212,21 @@ public sealed class WidgetItemView : WidgetCard
 
     private void OpenFlyout()
     {
-        if (_flyout is not null && PopupAnimationHelper.IsClosing(_flyout))
+        if (_flyout is not null && (_flyout.IsOpen || PopupAnimationHelper.IsClosing(_flyout)))
             return;
 
         if (_flyout is null)
         {
             _flyoutCard = new WidgetCard { HoverEnabled = false };
             _flyoutCard.SetResourceReference(StyleProperty, typeof(WidgetCard));
-            var frame = new Border
+            // The shared panel frame around the full widget; it is as wide as the widget's card.
+            var frame = new WidgetFlyout
             {
-                CornerRadius = new CornerRadius(14),
-                Padding = new Thickness(6),
-                BorderThickness = new Thickness(1),
-                Child = _flyoutCard,
-                Margin = new Thickness(8),
-                Effect = new System.Windows.Media.Effects.DropShadowEffect { BlurRadius = 16, ShadowDepth = 3, Opacity = 0.35 },
+                Title = Widget.Descriptor.Name,
+                Padding = new Thickness(8, 8, 8, 6),
+                Width = double.NaN,
+                Content = _flyoutCard,
             };
-            frame.SetResourceReference(Border.BackgroundProperty, "PopupBrush");
-            frame.SetResourceReference(Border.BorderBrushProperty, "PopupBorderBrush");
             _flyout = new Popup
             {
                 Child = frame,
@@ -211,6 +238,8 @@ public sealed class WidgetItemView : WidgetCard
             _flyout.Closed += (_, _) =>
             {
                 _flyoutClosedAt = DateTime.UtcNow;
+                // Keyboard mode goes on at the tile.
+                if (_flyoutFromKeyboard) WidgetFlyoutHost.ReturnFocus(_flyout, _host.Window);
                 if (!_flyoutInteraction) return;
                 _flyoutInteraction = false;
                 _host.EndInteraction();
@@ -227,8 +256,11 @@ public sealed class WidgetItemView : WidgetCard
         PopupPlacement.PlacePopup(_flyout, this, _host.Edge, gap: 2);
         _flyoutInteraction = true;
         _host.BeginInteraction();
+        WidgetFlyoutHost.Attach(_flyout, CloseFlyout);
         GlobalPopupDismissHook.RegisterPopup(_flyout);
         PopupAnimationHelper.AnimateOpen(_flyout, _host.Edge, this);
+        _flyoutFromKeyboard = _host.IsKeyboardNavigating;
+        if (_flyoutFromKeyboard) WidgetFlyoutHost.FocusFirst(_flyout);
     }
 
     private void CloseFlyout()
@@ -239,10 +271,21 @@ public sealed class WidgetItemView : WidgetCard
 
     private void OnContextMenuOpening(object sender, ContextMenuEventArgs e) => BuildContextMenu();
 
+    /// <summary>Edit mode: the panel closes and the widget's own controls stop taking clicks (the card is dragged instead).</summary>
+    public void SetEditing(bool editing)
+    {
+        if (_editing == editing) return;
+        _editing = editing;
+        if (editing) CloseFlyout();
+        Widget.SetEditing(editing);
+        UpdateVisibility();
+    }
+
     /// <summary>Enter on the focused widget: runs its main action or opens its panel (compact), otherwise its menu.</summary>
     public void ActivateFromKeyboard()
     {
         if (!_compact) { OpenContextMenu(); return; }
+        if (_flyout?.IsOpen == true) { CloseFlyout(); return; }
         if (Widget.OnCompactClick()) return;
         OpenFlyout();
     }
@@ -291,13 +334,14 @@ public sealed class WidgetItemView : WidgetCard
         {
             var current = WidgetDisplays.Current(displays, Item);
             menu.Items.Add(DockMenu.Submenu("Show on", "\uE7F4", displays.Select(choice =>
-                DockMenu.Check(choice.Label, ReferenceEquals(choice, current), () => WidgetDisplays.Move(Item, choice.Device)))));
+                DockMenu.Check(choice.Label, ReferenceEquals(choice, current), () => WidgetDisplays.Move(Item, choice)))));
         }
         menu.Items.Add(DockMenu.Check("Pin to right edge", Item.PinnedEnd, () =>
         {
             Item.PinnedEnd = !Item.PinnedEnd;
             AppServices.Config.NotifyItemsChanged();
         }));
+        menu.Items.Add(DockMenu.Item("Edit dock", "\uE70F", () => (Window.GetWindow(this) as DockWindow)?.EnterEditMode()));
         menu.Items.Add(DockMenu.Item("Remove from dock", "\uE77A", () => AppServices.ConfigService.RemoveItem(Item.Id)));
     }
 
@@ -330,7 +374,7 @@ public sealed class SeparatorView : Border
         SetOrientation(vertical);
         ContextMenu = new ContextMenu();
         ContextMenu.Items.Add(DockMenu.Item("Remove separator", "\uE77A", () => AppServices.ConfigService.RemoveItem(item.Id)));
-        DockDragHelper.Attach(this, () => new DataObject(DockDragHelper.ItemFormat, item.Id));
+        DockDragHelper.Attach(this, () => DockDragHelper.StringData(DockDragHelper.ItemFormat, item.Id));
     }
 
     public DockItem? Item { get; }

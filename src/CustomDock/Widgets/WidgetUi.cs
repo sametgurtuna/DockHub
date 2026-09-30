@@ -1,7 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using System.Windows.Media.Effects;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
@@ -119,47 +118,65 @@ internal static class WidgetUi
     }
 
     /// <summary>
-    /// The standard widget flyout (rounded glass card with a shadow), like the popups written in XAML. Add the popup
-    /// to the widget's own panel so it picks up the dock's theme resources.
+    /// A widget panel built in code (<see cref="WidgetFlyout"/> in a popup): add controls to the returned panel. Add
+    /// the popup to the widget's own panel so it picks up the dock's theme resources.
     /// </summary>
-    public static (Popup Popup, StackPanel Content) PopupShell(double width)
+    public static (Popup Popup, WidgetFlyout Flyout, StackPanel Content) Flyout(FlyoutSize size, string? title = null,
+        string? icon = null, object? headerActions = null)
     {
         var content = new StackPanel();
-        var border = new Border
-        {
-            CornerRadius = new CornerRadius(14),
-            Padding = new Thickness(12),
-            BorderThickness = new Thickness(1),
-            Margin = new Thickness(8),
-            Width = width,
-            Child = content,
-            Effect = new DropShadowEffect { BlurRadius = 20, ShadowDepth = 4, Opacity = 0.4, Direction = 270 },
-        };
-        border.SetResourceReference(Border.BackgroundProperty, "PopupBrush");
-        border.SetResourceReference(Border.BorderBrushProperty, "PopupBorderBrush");
+        var flyout = new WidgetFlyout { Size = size, Title = title, Icon = icon, HeaderActions = headerActions, Content = content };
         var popup = new Popup
         {
             StaysOpen = true,
             AllowsTransparency = true,
             PopupAnimation = PopupAnimation.None,
             Placement = PlacementMode.Top,
-            Child = border,
+            Child = flyout,
         };
+        return (popup, flyout, content);
+    }
+
+    /// <summary>A panel without a title (the caller adds its own header), in the size closest to <paramref name="width"/>.</summary>
+    public static (Popup Popup, StackPanel Content) PopupShell(double width)
+    {
+        var (popup, _, content) = Flyout(WidgetFlyoutLayout.SizeFor(width));
         return (popup, content);
     }
 
-    /// <summary>Bold heading row of a flyout, with an optional element on the right.</summary>
-    public static DockPanel PopupHeader(string title, UIElement? right = null)
+    /// <summary>
+    /// What a panel shows when it has nothing to list: an icon, a title, an explanation and, if given, a button that
+    /// does something about it.
+    /// </summary>
+    public static StackPanel EmptyState(string glyph, string title, string? description = null, string? actionText = null, Action? action = null)
     {
-        var panel = new DockPanel { Margin = new Thickness(4, 0, 4, 10) };
-        if (right is not null)
+        var panel = new StackPanel { Margin = new Thickness(12, 14, 12, 10), HorizontalAlignment = HorizontalAlignment.Center };
+        var icon = Glyph(glyph, 22, "TextTertiaryBrush");
+        icon.HorizontalAlignment = HorizontalAlignment.Center;
+        icon.Margin = new Thickness(0, 0, 0, 8);
+        panel.Children.Add(icon);
+        var heading = new TextBlock
         {
-            DockPanel.SetDock(right, System.Windows.Controls.Dock.Right);
-            panel.Children.Add(right);
+            Text = title,
+            FontWeight = FontWeights.SemiBold,
+            FontSize = 12.5,
+            TextAlignment = TextAlignment.Center,
+            TextWrapping = TextWrapping.Wrap,
+        };
+        heading.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimaryBrush");
+        panel.Children.Add(heading);
+        if (!string.IsNullOrEmpty(description))
+        {
+            var text = new TextBlock { Text = description, FontSize = 11.5, TextAlignment = TextAlignment.Center, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 4, 0, 0) };
+            text.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondaryBrush");
+            panel.Children.Add(text);
         }
-        var text = new TextBlock { Text = title, FontWeight = FontWeights.SemiBold, FontSize = 13, VerticalAlignment = VerticalAlignment.Center };
-        text.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimaryBrush");
-        panel.Children.Add(text);
+        if (actionText is not null && action is not null)
+        {
+            var button = new Button { Content = actionText, Padding = new Thickness(12, 4, 12, 4), Margin = new Thickness(0, 10, 0, 0), HorizontalAlignment = HorizontalAlignment.Center };
+            button.Click += (_, _) => action();
+            panel.Children.Add(button);
+        }
         return panel;
     }
 

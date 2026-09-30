@@ -83,9 +83,9 @@ public sealed partial class GroupItemView
             L.T("Remove “{0}”", folder.GroupName ?? L.T("Folder")),
             count == 1 ? L.T("This folder contains 1 item.") : L.T("This folder contains {0} items.", count),
             "", owner,
-            new DialogButton("cancel", "Cancel", IsCancel: true),
-            new DialogButton("delete", "Delete all", DialogButtonKind.Danger),
-            new DialogButton("move", "Move items to dock", DialogButtonKind.Primary));
+            new DialogButton("cancel", L.T("Cancel"), IsCancel: true),
+            new DialogButton("delete", L.T("Delete all"), DialogButtonKind.Danger),
+            new DialogButton("move", L.T("Move items to dock"), DialogButtonKind.Primary));
 
         switch (choice)
         {

@@ -106,8 +106,6 @@ public partial class FocusWidget : WidgetBase
         OpenPopup(EditorPopup, Root);
     }
 
-    private void OnCloseClick(object sender, RoutedEventArgs e) => ClosePopup(EditorPopup);
-
     private void OnSettingsClick(object sender, RoutedEventArgs e)
     {
         ClosePopup(EditorPopup);

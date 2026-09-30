@@ -5,6 +5,7 @@ using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using CustomDock.Controls;
 using CustomDock.Core;
 using CustomDock.Dock;
@@ -170,6 +171,9 @@ public sealed class WebWidget : WidgetBase
             var environment = s_environment ??= await EnvironmentAsync();
             if (!_attached || _web is not null) return; // detached meanwhile, or another start got there first
             web = new WebView2 { DefaultBackgroundColor = System.Drawing.Color.Transparent };
+            // Started while the dock is edited (just added, or reloaded): the hosted window would cover the edit
+            // badges, so it stays hidden until editing ends.
+            if (IsEditing) web.Visibility = Visibility.Hidden;
             _web = web;
             _frame.Child = web;
             await web.EnsureCoreWebView2Async(environment);
@@ -207,6 +211,53 @@ public sealed class WebWidget : WidgetBase
             if (web is not null && !ReferenceEquals(_web, web)) return; // an abandoned start (its view was replaced)
             Log.Error(ex, $"Web widget {_manifest.Id} failed to start");
             ShowError(L.T("This widget couldn't start."));
+        }
+    }
+
+    // ------------------------------------------------------------------ Edit mode
+
+    /// <summary>
+    /// The web view is a window of its own, drawn above anything WPF puts on the card (edit badges, handles), and it
+    /// would take the clicks meant for moving the card. While the dock is edited it is replaced by a picture of itself.
+    /// </summary>
+    protected override void OnEditingChanged(bool editing)
+    {
+        if (editing) _ = ShowSnapshotAsync();
+        else
+        {
+            if (_web is { } web) web.Visibility = Visibility.Visible;
+            _frame.Background = Brushes.Transparent;
+        }
+    }
+
+    private async Task ShowSnapshotAsync()
+    {
+        if (_web is not { } web) return;
+        try
+        {
+            if (web.CoreWebView2 is { } core)
+            {
+                using var stream = new MemoryStream();
+                await core.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Png, stream);
+                if (!IsEditing || !ReferenceEquals(_web, web)) return;
+                stream.Position = 0;
+                var image = new BitmapImage();
+                image.BeginInit();
+                image.CacheOption = BitmapCacheOption.OnLoad;
+                image.StreamSource = stream;
+                image.EndInit();
+                image.Freeze();
+                _frame.Background = new ImageBrush(image) { Stretch = Stretch.Fill };
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Debug($"Web widget {_manifest.Id}: no picture for edit mode ({ex.Message})");
+        }
+        finally
+        {
+            // Hidden keeps the card's size; the hosted window disappears with it.
+            if (IsEditing && ReferenceEquals(_web, web)) web.Visibility = Visibility.Hidden;
         }
     }
 

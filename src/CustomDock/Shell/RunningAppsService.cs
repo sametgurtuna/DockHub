@@ -149,6 +149,19 @@ public sealed class AppGroup : ObservableObject
     }
 }
 
+/// <summary>A taskbar progress bar (ITaskbarList3): its value between 0-1, error (or paused) and indeterminate.</summary>
+public readonly record struct WindowProgress(double Value, bool Error, bool Indeterminate)
+{
+    public static WindowProgress? Of(ApplicationWindow window) => window.ProgressState == TBPFLAG.TBPF_NOPROGRESS
+        ? null
+        : new(Math.Clamp(window.ProgressValue / 65534.0, 0, 1),
+            window.ProgressState == TBPFLAG.TBPF_ERROR || window.ProgressState == TBPFLAG.TBPF_PAUSED,
+            window.ProgressState == TBPFLAG.TBPF_INDETERMINATE);
+
+    public static WindowProgress? Of(AppGroup? group)
+        => group is { HasProgress: true } ? new(group.Progress, group.ProgressError, group.ProgressIndeterminate) : null;
+}
+
 /// <summary>Converts ManagedShell task list into application groups.</summary>
 public sealed class RunningAppsService : IDisposable
 {
@@ -201,6 +214,9 @@ public sealed class RunningAppsService : IDisposable
     /// <summary>Raised when groups are added or removed.</summary>
     public event Action? GroupsChanged;
 
+    /// <summary>Raised when a window opens or closes in an app that was already running (not with <see cref="GroupsChanged"/>).</summary>
+    public event Action? WindowsChanged;
+
     public AppGroup? Find(string key) => _groups.TryGetValue(key, out var group) ? group : null;
 
     private void OnViewChanged(object? sender, NotifyCollectionChangedEventArgs e) => QueueRebuild();
@@ -251,6 +267,7 @@ public sealed class RunningAppsService : IDisposable
 
         var byKey = windows.GroupBy(w => w.Category ?? AppKeys.ForWindow(w)).ToDictionary(g => g.Key, g => g.ToList());
         bool structureChanged = false;
+        bool windowsChanged = false;
 
         foreach (var key in _groups.Keys.Except(byKey.Keys).ToList())
         {
@@ -269,6 +286,7 @@ public sealed class RunningAppsService : IDisposable
                 structureChanged = true;
             }
 
+            if (!group.Windows.SequenceEqual(list)) windowsChanged = true;
             group.Windows.Clear();
             group.Windows.AddRange(list);
             group.Refresh();
@@ -276,6 +294,8 @@ public sealed class RunningAppsService : IDisposable
 
         if (structureChanged)
             GroupsChanged?.Invoke();
+        else if (windowsChanged)
+            WindowsChanged?.Invoke();
     }
 
     public void Dispose()

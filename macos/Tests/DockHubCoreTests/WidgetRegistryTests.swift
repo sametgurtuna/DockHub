@@ -1,3 +1,4 @@
+import Foundation
 import XCTest
 @testable import DockHubCore
 
@@ -71,6 +72,54 @@ final class WidgetRegistryTests: XCTestCase {
             XCTAssertEqual(t.name, ad, id)
             XCTAssertEqual(t.category, kategori, id)
             XCTAssertEqual(t.variants.map(\.name), varyantlar, id)
+        }
+    }
+
+    /// Windows'un kayit defteri kaynagindan okunur (src/CustomDock/Widgets/WidgetRegistry.cs):
+    /// her iki tarafta olan widget'in adi, kategorisi ve Mac'teki varyantlari Windows'takilerle
+    /// ayni sirada ve adla bulunmali. Windows'a yeni widget ya da varyant eklenince Mac kendiliginden
+    /// denetlenir; sabit liste eskimez.
+    func testWindowsKaynagiylaAyni() throws {
+        let source = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("src/CustomDock/Widgets/WidgetRegistry.cs")
+        let text = try String(contentsOf: source, encoding: .utf8)
+        let categories = ["Clocks": "Clocks", "Reminders": "Reminders", "Notes": "Sticky notes", "Media": "Media",
+                          "System": "System", "Weather": "Weather", "AI": "AI", "Productivity": "Productivity"]
+        let blocks = text.components(separatedBy: "new()").dropFirst()
+        var windowsIds = Set<String>()
+        for block in blocks {
+            guard let id = firstMatch(#"Id = "([^"]+)""#, in: block) else { continue }
+            windowsIds.insert(id)
+            guard let mac = WidgetRegistry.find(id) else { continue }
+            XCTAssertEqual(mac.name, firstMatch(#"Name = "([^"]+)""#, in: block), id)
+            let category = firstMatch(#"Category = WidgetCategories\.(\w+)"#, in: block).flatMap { categories[$0] }
+            XCTAssertEqual(mac.category, category, id)
+            let variants = allMatches(#"new WidgetVariant\("([^"]+)", "([^"]+)""#, in: block)
+            let windowsOrder = variants.map(\.0)
+            let macOrder = mac.variants.map(\.id)
+            XCTAssertEqual(macOrder, windowsOrder.filter { macOrder.contains($0) }, "\(id): Mac varyantlari Windows sirasinda olmali")
+            XCTAssertTrue(Set(macOrder).isSubset(of: windowsOrder), "\(id): Windows'ta olmayan varyant")
+            for v in mac.variants {
+                XCTAssertEqual(v.name, variants.first { $0.0 == v.id }?.1, "\(id)/\(v.id)")
+            }
+        }
+        XCTAssertGreaterThan(windowsIds.count, 30, "Windows kayit defteri okunamadi")
+        let macOnly = Set(WidgetRegistry.all.map(\.id)).subtracting(windowsIds)
+        XCTAssertEqual(macOnly, ["battery", "shortcut", "airdrop"], "Mac'e ozgu widget'lar")
+    }
+
+    private func firstMatch(_ pattern: String, in text: String) -> String? {
+        allMatches(pattern, in: text).first?.0
+    }
+
+    private func allMatches(_ pattern: String, in text: String) -> [(String, String)] {
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
+        return regex.matches(in: text, range: NSRange(text.startIndex..., in: text)).map { m in
+            let one = Range(m.range(at: 1), in: text).map { String(text[$0]) } ?? ""
+            let two = m.numberOfRanges > 2 ? (Range(m.range(at: 2), in: text).map { String(text[$0]) } ?? "") : ""
+            return (one, two)
         }
     }
 

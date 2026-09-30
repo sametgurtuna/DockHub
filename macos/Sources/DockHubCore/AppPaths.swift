@@ -25,4 +25,9 @@ public enum AppPaths {
     public static var config: URL { root.appendingPathComponent("config.json") }
     public static var session: URL { root.appendingPathComponent("session.json") }
     public static var logFile: URL { root.appendingPathComponent("dockhub.log") }
+    /// Widget verileri (Windows: AppPaths.DataDir). Dosya adi "<widget>-<oge>.json" (C#: WidgetBase.StateKey).
+    public static var dataDir: URL { root.appendingPathComponent("data") }
+    public static func widgetData(_ widget: String, _ itemId: String) -> URL {
+        dataDir.appendingPathComponent("\(widget)-\(itemId).json")
+    }
 }

@@ -60,6 +60,28 @@ public enum WidgetRegistry {
                          variants: [WidgetVariant("list", "List"),
                                     WidgetVariant("next", "Next"),
                                     WidgetVariant("count", "Count")]),
+        // ---- Productivity (Windows 0.8-1.0)
+        WidgetDefinition(id: "calendar", name: "Calendar", category: "Productivity",
+                         variants: [WidgetVariant("next", "Next event"),
+                                    WidgetVariant("compact", "Time until")]),
+        WidgetDefinition(id: "clipboard", name: "Clipboard history", category: "Productivity",
+                         variants: [WidgetVariant("latest", "Latest item"),
+                                    WidgetVariant("icon", "Icon only")]),
+        WidgetDefinition(id: "stack", name: "Folder stack", category: "Productivity",
+                         variants: [WidgetVariant("stack", "Stack"),
+                                    WidgetVariant("details", "Detailed")]),
+        WidgetDefinition(id: "currency", name: "Exchange rates", category: "Productivity",
+                         variants: [WidgetVariant("single", "Single pair"),
+                                    WidgetVariant("list", "Several pairs")]),
+        WidgetDefinition(id: "stocks", name: "Stocks", category: "Productivity",
+                         variants: [WidgetVariant("single", "Single stock"),
+                                    WidgetVariant("list", "Several stocks")]),
+        WidgetDefinition(id: "todo", name: "To do", category: "Productivity",
+                         variants: [WidgetVariant("list", "List"),
+                                    WidgetVariant("count", "Count")]),
+        WidgetDefinition(id: "screenshot", name: "Screenshot", category: "Productivity",
+                         variants: [WidgetVariant("icon", "Icon only"),
+                                    WidgetVariant("buttons", "Buttons")]),
         // ---- Sticky notes
         WidgetDefinition(id: "notes", name: "Sticky note", category: "Sticky notes",
                          variants: [WidgetVariant("sticky", "Sticky note")]),
@@ -87,6 +109,9 @@ public enum WidgetRegistry {
         WidgetDefinition(id: "battery-devices", name: "Device batteries", category: "System",
                          variants: [WidgetVariant("single", "Single device"),
                                     WidgetVariant("multi", "Multiple devices")]),
+        WidgetDefinition(id: "ping", name: "Ping", category: "System",
+                         variants: [WidgetVariant("number", "Number"),
+                                    WidgetVariant("chart", "Chart")]),
         // ---- Weather
         WidgetDefinition(id: "weather", name: "Weather", category: "Weather",
                          variants: [WidgetVariant("current", "Current"),
@@ -172,6 +197,10 @@ public extension DockItem {
     }
     func numberSetting(_ key: String, default def: Double) -> Double {
         if case .number(let v)? = setting(key) { return v }
+        return def
+    }
+    func stringSetting(_ key: String, default def: String) -> String {
+        if case .string(let v)? = setting(key) { return v }
         return def
     }
     /// Kayitli varyant; yoksa defterdeki ilk varyant.

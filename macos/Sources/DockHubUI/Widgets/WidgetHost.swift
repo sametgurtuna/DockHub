@@ -32,6 +32,14 @@ struct WidgetHost: View {
         case "ai-usage":       AIUsageWidget(item: item, style: style)
         case "shortcut":       ShortcutWidget(item: item, style: style)
         case "airdrop":        AirDropWidget(item: item, style: style)
+        case "calendar":       CalendarWidget(item: item, style: style, model: model)
+        case "clipboard":      ClipboardWidget(item: item, style: style)
+        case "stack":          StackWidget(item: item, style: style, model: model)
+        case "currency":       CurrencyWidget(item: item, style: style, model: model)
+        case "stocks":         StocksWidget(item: item, style: style, model: model)
+        case "todo":           TodoWidget(item: item, style: style, model: model)
+        case "screenshot":     ScreenshotWidget(item: item, style: style, model: model)
+        case "ping":           PingWidget(item: item, style: style, model: model)
         default:       unknown
         }
     }

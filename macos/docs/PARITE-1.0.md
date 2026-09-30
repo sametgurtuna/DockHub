@@ -73,17 +73,17 @@ açılabilmesi (ve Mac'in onu bozmadan geri yazması) 1.0'ın ön koşulu; bu y�
 
 | Widget | Karar | Öncelik | Durum |
 |---|---|---|---|
-| Takvim (iCal bağlantısı) | `var` (aynı iCal ayrıştırma; `EventKit` isteğe bağlı) | P1 | eksik |
-| Pano geçmişi | `var` (`NSPasteboard.changeCount` yoklaması; parola yöneticileri `org.nspasteboard.ConcealedType` ile atlanır) | P1 | eksik |
-| Klasör yığını | `var` | P1 | eksik |
-| Döviz ve kripto | `var` (aynı Frankfurter/CoinGecko) | P1 | eksik |
-| Hisseler (Stooq) | `var` | P1 | eksik |
-| Yapılacaklar (yerel, Todoist) | `var` (anahtar Keychain'de) | P1 | eksik |
-| Ekran görüntüsü | `var` (`screencapture` / `ScreenCaptureKit`) | P1 | eksik |
+| Takvim (iCal bağlantısı) | `var` (aynı iCal ayrıştırma; `EventKit` isteğe bağlı) | P1 | mevcut (Faz 23) |
+| Pano geçmişi | `var` (`NSPasteboard.changeCount` yoklaması; parola yöneticileri `org.nspasteboard.ConcealedType` ile atlanır) | P1 | mevcut (Faz 23) |
+| Klasör yığını | `var` | P1 | mevcut (Faz 23) |
+| Döviz ve kripto | `var` (aynı Frankfurter/CoinGecko) | P1 | mevcut (Faz 23) |
+| Hisseler (Stooq) | `var` | P1 | mevcut (Faz 23) |
+| Yapılacaklar (yerel, Todoist) | `var` (anahtar Keychain'de) | P1 | mevcut (Faz 23) |
+| Ekran görüntüsü | `var` (`screencapture` / `ScreenCaptureKit`) | P1 | mevcut (Faz 23) |
 | Parlaklık | `uyarla`: dahili ekran için genel API yok (DisplayServices özel); harici DDC/CI `IOAVService` özel → yalnızca Sistem Ayarları'nı açar | P2 | eksik |
 | Wi-Fi ve Bluetooth | `uyarla`: Wi-Fi `CoreWLAN` (var), Bluetooth açma/kapatma genel API'de yok | P2 | eksik |
 | GPU | `uyarla`: yük `IOAccelerator` istatistiklerinden (izinsiz, ama sürücüye göre değişir) | P2 | eksik |
-| Ping | `var` (ICMP yerine `NWConnection`/sistem `ping`) | P1 | eksik |
+| Ping | `var` (ICMP yerine `NWConnection`/sistem `ping`) | P1 | mevcut (Faz 23) |
 | Rahatsız etmeyin / Odak | `yok`: Odak durumu genel API'de yok (yalnız kendi uygulamasına `INFocusStatusCenter`) | — | — |
 | Güç modu | `uyarla`: Düşük Güç Modu durumu `ProcessInfo.isLowPowerModeEnabled` (okunur), değiştirmek genel API'de yok | P2 | eksik |
 | Web widget'ları (aynı `.dockwidget`) | `var` (`WKWebView`; Faz 24) | P1 | eksik |

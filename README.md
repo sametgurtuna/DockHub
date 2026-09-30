@@ -12,8 +12,9 @@ Start, search, running apps, the system tray and live widgets, all in one floati
 No admin rights. Your original taskbar always comes back.
 
 [![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?style=flat-square&logo=windows11&logoColor=white)](#requirements)
+[![macOS 15+](https://img.shields.io/badge/macOS-15%2B%20Sequoia-000000?style=flat-square&logo=apple&logoColor=white)](#macos-support)
 [![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?style=flat-square&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
-[![WPF](https://img.shields.io/badge/UI-WPF-4CC2FF?style=flat-square)](#tech-stack)
+[![Swift 6](https://img.shields.io/badge/Swift-6.0-F05138?style=flat-square&logo=swift&logoColor=white)](https://swift.org)
 [![Latest release](https://img.shields.io/github/v/release/sametgurtuna/DockHub?style=flat-square&color=4CC2FF&label=release)](https://github.com/sametgurtuna/DockHub/releases/latest)
 [![CI](https://img.shields.io/github/actions/workflow/status/sametgurtuna/DockHub/ci.yml?branch=master&style=flat-square&label=build)](https://github.com/sametgurtuna/DockHub/actions/workflows/ci.yml)
 
@@ -108,22 +109,27 @@ No admin rights. Your original taskbar always comes back.
 The installer is self-contained. It ships the .NET runtime, so there is nothing else to install. It is available in English, Turkish, German and Spanish.
 
 ### winget
-
+ 
 Once the package is published in the Windows Package Manager repository:
-
+ 
 ```powershell
 winget install SametGurtuna.DockHub
 ```
-
+ 
 **Uninstalling** from *Settings › Apps* closes DockHub, restores the Windows taskbar, and removes the autostart entry, the File Explorer menu command and the `.dockwidget` file type. Your settings in `%AppData%\DockHub` are kept.
+
+### macOS (Apple Silicon & Intel)
+
+1. Download **`DockHub.dmg`** from the [latest release](https://github.com/sametgurtuna/DockHub/releases/latest).
+2. Open the disk image and drag **DockHub** to your **Applications** folder.
+3. Launch DockHub. While running, it can optionally hide the macOS Dock (*Settings › General*) or run alongside it.
 
 ### Requirements
 
-| | |
+| Platform | Requirements |
 |---|---|
-| Operating system | Windows 10 version 1809 (build 17763) or later, x64; Windows 11 on ARM64 (native ARM64 build) |
-| Recommended | Windows 11 22H2 or later (rounded corners, Mica settings window) |
-| Runtime | Bundled with the installer. Running a framework-dependent build requires the [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0). |
+| **Windows** | Windows 10 version 1809 (build 17763) or later, x64; Windows 11 on ARM64. Built-in .NET 10 runtime. |
+| **macOS** | macOS 15.0 (Sequoia) or later; Apple Silicon or Intel Mac. Native Swift 6 + AppKit / SwiftUI. |
 
 ## Features
 

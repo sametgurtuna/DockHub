@@ -4,10 +4,14 @@ import DockHubCore
 
 /// Windows karsiligi: SettingsWindow.xaml "About" sayfasi.
 struct AboutPage: View {
+    @State private var checking = false
+    @State private var statusMessage: String?
+    @State private var availableUpdate: MacRelease?
+
     private var version: String {
         let b = Bundle.main
-        let kisa = b.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "-"
-        let yapi = b.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "-"
+        let kisa = b.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.10.0"
+        let yapi = b.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1"
         return L.t("Version {0}", "\(kisa) (\(yapi))")
     }
 
@@ -26,6 +30,35 @@ struct AboutPage: View {
                 }
                 .padding(.vertical, 6)
             }
+
+            Section(L.t("Updates")) {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 10) {
+                        Button(L.t("Check for updates")) {
+                            checkForUpdates()
+                        }
+                        .disabled(checking)
+
+                        if checking {
+                            ProgressView().controlSize(.small)
+                        }
+                    }
+                    if let statusMessage {
+                        Text(statusMessage).font(.caption).foregroundStyle(.secondary)
+                    }
+                    if let update = availableUpdate {
+                        HStack(spacing: 8) {
+                            if let dmgUrl = update.dmgUrl {
+                                Button(L.t("Download and install")) {
+                                    NSWorkspace.shared.open(dmgUrl)
+                                }
+                            }
+                            Link(L.t("Project"), destination: update.pageUrl)
+                        }
+                    }
+                }
+            }
+
             Section {
                 LabeledContent(L.t("Project")) {
                     Link("github.com/sametgurtuna/DockHub",
@@ -43,5 +76,29 @@ struct AboutPage: View {
             }
         }
         .formStyle(.grouped)
+    }
+
+    private func checkForUpdates() {
+        checking = true
+        statusMessage = nil
+        Task { @MainActor in
+            defer { checking = false }
+            do {
+                if let release = try await UpdateService.shared.checkLatestRelease() {
+                    let current = UpdateService.currentVersion
+                    if UpdateService.compareVersions(release.version, current) > 0 {
+                        availableUpdate = release
+                        statusMessage = String(format: L.t("Version {0}"), release.version)
+                    } else {
+                        availableUpdate = nil
+                        statusMessage = String(format: L.t("DockHub {0} is the latest version."), current)
+                    }
+                } else {
+                    statusMessage = L.t("Update failed")
+                }
+            } catch {
+                statusMessage = L.t("Update failed")
+            }
+        }
     }
 }

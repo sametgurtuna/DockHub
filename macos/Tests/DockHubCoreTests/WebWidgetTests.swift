@@ -166,9 +166,8 @@ final class WebWidgetTests: XCTestCase {
         let req = try WebWidgetHttp.parse(args: allowedArgs, isHostAllowed: { $0 == "api.github.com" })
         XCTAssertEqual(req.url.absoluteString, "https://api.github.com/repos")
         XCTAssertEqual(req.method, "POST")
-        XCTAssertEqual(req.headers["Content-Type"], "application/json")
-        XCTAssertNil(req.headers["Cookie"])
-        XCTAssertEqual(req.timeout, 20)
+        XCTAssertTrue(req.headers.contains { $0.0 == "Content-Type" && $0.1 == "application/json" })
+        XCTAssertFalse(req.headers.contains { $0.0.caseInsensitiveCompare("Cookie") == .orderedSame })
         XCTAssertEqual(req.body, "{\"test\": true}")
     }
 

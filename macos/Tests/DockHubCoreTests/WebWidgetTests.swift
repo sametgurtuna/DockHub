@@ -19,7 +19,7 @@ final class WebWidgetTests: XCTestCase {
         let hello = try WebWidgetCatalog.read(folder: helloWorldDir)
         XCTAssertEqual(hello.id, "dev.dockhub.hello-world")
         XCTAssertEqual(hello.widgetId, "web.dev.dockhub.hello-world")
-        XCTAssertEqual(hello.name, "Hello World")
+        XCTAssertEqual(hello.name, "Hello world")
         XCTAssertEqual(hello.entry, "index.html")
 
         let stars = try WebWidgetCatalog.read(folder: githubStarsDir)

@@ -13,45 +13,60 @@ struct GeneralPage: View {
 
     var body: some View {
         Form {
-            Section("macOS Dock") {
-                Picker("Replace the Dock", selection: store.binding(\.taskbarMode)) {
-                    Text("DockHub").tag(TaskbarMode.replace)
-                    Text("Show both").tag(TaskbarMode.showBoth)
+            Section(L.t("macOS Dock")) {
+                Picker(L.t("Replace the Dock"), selection: store.binding(\.taskbarMode)) {
+                    Text(verbatim: "DockHub").tag(TaskbarMode.replace)
+                    Text(L.t("Show both")).tag(TaskbarMode.showBoth)
                 }
                 .pickerStyle(.segmented)
-                RowNote("DockHub turns on auto-hide for the macOS Dock while it runs and restores your setting when it quits. The macOS Dock still appears when the pointer reaches the screen edge.")
+                RowNote(L.t("DockHub turns on auto-hide for the macOS Dock while it runs and restores your setting when it quits. The macOS Dock still appears when the pointer reaches the screen edge."))
             }
 
-            Section("Display") {
-                Picker("Main display", selection: store.binding(\.monitorDevice)) {
-                    Text("Primary display").tag(String?.none)
+            Section(L.t("Display")) {
+                Picker(L.t("Main display"), selection: store.binding(\.monitorDevice)) {
+                    Text(L.t("Primary display")).tag(String?.none)
                     ForEach(displayNames, id: \.self) { ad in
                         Text(ad).tag(String?.some(ad))
                     }
                 }
-                RowNote("The display the dock appears on.")
+                RowNote(L.t("The display the dock appears on."))
             }
 
-            Section("Maintenance") {
+            Section(L.t("Language")) {
+                Picker(L.t("Interface language"), selection: store.binding(\.language)) {
+                    Text(L.t("System")).tag(UiLanguage.system)
+                    ForEach(L.languages, id: \.code) { info in
+                        Text(verbatim: info.nativeName).tag(info.language)
+                    }
+                }
+                VStack(alignment: .leading, spacing: 6) {
+                    RowNote(L.t("System follows your macOS language. Restart DockHub to switch."))
+                    if L.code(for: store.config.language, systemLanguages: Locale.preferredLanguages) != L.code {
+                        Button(L.t("Restart now")) { Self.restart() }
+                    }
+                }
+            }
+
+            Section(L.t("Maintenance")) {
                 LabeledContent {
                     HStack {
                         if let restored {
-                            Text(restored ? "Restored" : "Nothing to restore").foregroundStyle(.secondary)
+                            Text(restored ? L.t("Restored") : L.t("Nothing to restore")).foregroundStyle(.secondary)
                         }
-                        Button("Restore") { restored = SystemDock.restore() }
+                        Button(L.t("Restore")) { restored = SystemDock.restore() }
                     }
                 } label: {
-                    Text("Restore macOS Dock")
-                    RowNote("Brings back the Dock setting DockHub changed, in case the Dock stays hidden.")
+                    Text(L.t("Restore macOS Dock"))
+                    RowNote(L.t("Brings back the Dock setting DockHub changed, in case the Dock stays hidden."))
                 }
-                LabeledContent("Settings and data folder") {
-                    Button("Open Folder") { NSWorkspace.shared.open(AppPaths.root) }
+                LabeledContent(L.t("Settings and data folder")) {
+                    Button(L.t("Open folder")) { NSWorkspace.shared.open(AppPaths.root) }
                 }
-                LabeledContent("Restart DockHub") {
-                    Button("Restart") { Self.restart() }
+                LabeledContent(L.t("Restart DockHub")) {
+                    Button(L.t("Restart")) { Self.restart() }
                 }
-                LabeledContent("Quit DockHub") {
-                    Button("Quit") { NSApp.terminate(nil) }
+                LabeledContent(L.t("Quit DockHub")) {
+                    Button(L.t("Quit")) { NSApp.terminate(nil) }
                 }
             }
         }

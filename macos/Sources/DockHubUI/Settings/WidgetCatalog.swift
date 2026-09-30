@@ -1,4 +1,5 @@
 import Foundation
+import DockHubCore
 
 /// Galeride widget'larin aciklamasi ve simgesi.
 /// Kayit defterinden (DockHubCore/WidgetRegistry) ayri tutuluyor: defter
@@ -17,26 +18,28 @@ enum WidgetCatalog {
     static let categoryOrder = ["Clocks", "Reminders", "Sticky notes", "Media",
                                 "System", "Weather", "AI", "Extras"]
 
+    /// Aciklama arayuz dilinde (tablodaki Ingilizce metin ceviri anahtari).
     static func info(_ id: String) -> Info {
-        table[id] ?? Info(summary: "", symbol: "square.dashed")
+        guard let info = table[id] else { return Info(summary: "", symbol: "square.dashed") }
+        return Info(summary: L.t(info.summary), symbol: info.symbol)
     }
 
     private static let table: [String: Info] = [
         "clock": Info(summary: "Clock and date. Analog or digital view.", symbol: "clock"),
         "world-clock": Info(summary: "Clocks for different cities.", symbol: "globe"),
-        "stopwatch": Info(summary: "Click to start or stop, right-click to reset.", symbol: "stopwatch"),
-        "focus": Info(summary: "Pomodoro-style focus and break timer; sends a notification when time is up.", symbol: "timer"),
+        "stopwatch": Info(summary: "Click to start/stop, right-click to reset.", symbol: "stopwatch"),
+        "focus": Info(summary: "Pomodoro-style focus and break timer; sends notifications when time expires.", symbol: "timer"),
         "countdown": Info(summary: "Countdown timer; sends a notification when it finishes.", symbol: "hourglass"),
-        "alarm": Info(summary: "Notification at a specific time, optionally every day.", symbol: "alarm"),
-        "time-progress": Info(summary: "Elapsed progress of the day, week, month or year.", symbol: "calendar"),
-        "hydration": Info(summary: "Countdown to the next glass of water and a daily goal. Click to add a glass.", symbol: "drop"),
+        "alarm": Info(summary: "Notification at a specific time (optional daily repeat).", symbol: "alarm"),
+        "time-progress": Info(summary: "Elapsed progress of the day, week, month, or year.", symbol: "calendar"),
+        "hydration": Info(summary: "Countdown to next water reminder and daily goal. Click to add a glass.", symbol: "drop"),
         "reminders": Info(summary: "Daily reminders; shows a notification at the set time.", symbol: "bell"),
         "notes": Info(summary: "A sticky note that saves automatically.", symbol: "note.text"),
         "media": Info(summary: "Track info and controls for Music and Spotify.", symbol: "music.note"),
         "audio": Info(summary: "Switch the output device, adjust the volume and mute.", symbol: "speaker.wave.2"),
         "system": Info(summary: "Live CPU and memory usage.", symbol: "cpu"),
         "network": Info(summary: "Real-time download and upload speeds.", symbol: "network"),
-        "status": Info(summary: "Battery, disk, memory and CPU usage rings.", symbol: "gauge.with.dots.needle.33percent"),
+        "status": Info(summary: "Battery, disk, memory, and CPU usage rings.", symbol: "gauge.with.dots.needle.33percent"),
         "recycle-bin": Info(summary: "The Trash on your dock. Drag files onto it to delete them, click to open.", symbol: "trash"),
         "battery-devices": Info(summary: "Battery levels of connected Bluetooth mice, keyboards and headphones.", symbol: "headphones"),
         "weather": Info(summary: "Current weather from Open-Meteo (no API key required).", symbol: "cloud.sun"),

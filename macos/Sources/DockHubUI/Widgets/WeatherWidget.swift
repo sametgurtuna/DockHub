@@ -25,7 +25,7 @@ public final class WeatherStore: ObservableObject {
     private func yenile() {
         guard let lat, let lon else {
             // UYDURMA DEGER YOK: konum yoksa durum acikca bildirilir.
-            hata = "Location not set"
+            hata = L.t("Location not set")
             return
         }
         Task { @MainActor in
@@ -33,12 +33,12 @@ public final class WeatherStore: ObservableObject {
                 reading = try await WeatherService.fetch(latitude: lat, longitude: lon, place: place)
                 hata = nil
             } catch WeatherError.noLocation {
-                hata = "Location disabled"
+                hata = L.t("Location disabled")
             } catch WeatherError.network(let m) {
-                hata = "No connection"
+                hata = L.t("No connection")
                 Log.error("Hava durumu alinamadi: \(m)")
             } catch {
-                hata = "Failed to get weather data"
+                hata = L.t("Failed to get weather data")
             }
         }
     }
@@ -54,7 +54,7 @@ struct WeatherWidget: View {
     var body: some View {
         Group {
             if let r = store.reading { icerik(r) }
-            else { bilgiYok(store.hata ?? "Loading…") }
+            else { bilgiYok(store.hata ?? L.t("Loading…")) }
         }
         .onAppear {
             let lat = item.setting("latitude").flatMap { if case .number(let v) = $0 { v } else { nil } }
@@ -79,7 +79,7 @@ struct WeatherWidget: View {
                 .symbolRenderingMode(.multicolor)
             if item.effectiveVariant == "conditions" {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(r.description).font(.system(size: style.height * 0.2, weight: .medium))
+                    Text(L.t(r.description)).font(.system(size: style.height * 0.2, weight: .medium))
                     if let p = r.place {
                         Text(p).font(.system(size: style.height * 0.16)).foregroundStyle(.secondary)
                     }

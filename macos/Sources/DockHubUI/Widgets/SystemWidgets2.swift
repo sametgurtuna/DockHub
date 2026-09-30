@@ -199,7 +199,7 @@ struct AudioWidget: View {
                 VStack(alignment: .leading, spacing: 0) {
                     Text("\(Int((store.seviye * 100).rounded()))%")
                         .font(.system(size: style.height * 0.22, weight: .semibold)).monospacedDigit()
-                    Text(aktif?.name ?? "No device")
+                    Text(aktif?.name ?? L.t("No device"))
                         .font(.system(size: style.height * 0.14))
                         .foregroundStyle(.secondary).lineLimit(1)
                         .frame(maxWidth: style.itemHeight * 1.6, alignment: .leading)
@@ -214,7 +214,7 @@ struct AudioWidget: View {
                 }
             }
         }
-        .help(aktif.map { "Output: \($0.name)" } ?? "No output device")
+        .help(aktif.map { L.t("Output: {0}", $0.name) } ?? L.t("No output device"))
     }
 
     private var ikon: String {
@@ -256,7 +256,7 @@ struct DeviceBatteryWidget: View {
             if store.cihazlar.isEmpty {
                 HStack(spacing: 4) {
                     Image(systemName: "keyboard").font(.system(size: style.iconSize * 0.5))
-                    Text("No battery devices").font(.system(size: style.height * 0.16))
+                    Text(L.t("No battery devices")).font(.system(size: style.height * 0.16))
                 }.foregroundStyle(.secondary)
             } else {
                 let g = item.effectiveVariant == "single"

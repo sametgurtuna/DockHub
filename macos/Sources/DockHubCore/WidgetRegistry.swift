@@ -2,17 +2,26 @@ import Foundation
 
 public struct WidgetVariant: Sendable, Identifiable {
     public let id: String
+    /// Ingilizce ad; ayni zamanda ceviri anahtari (Windows'la ayni).
     public let name: String
     public init(_ id: String, _ name: String) { self.id = id; self.name = name }
+
+    /// Arayuz dilindeki ad.
+    public var displayName: String { L.t(name) }
 }
 
 public struct WidgetDefinition: Sendable, Identifiable {
     public let id: String
+    /// Ingilizce ad ve kategori; ayni zamanda ceviri anahtarlari.
     public let name: String
     public let category: String
     public let variants: [WidgetVariant]
 
     public var defaultVariant: String { variants.first?.id ?? "" }
+
+    /// Arayuz dilindeki ad ve kategori.
+    public var displayName: String { L.t(name) }
+    public var displayCategory: String { L.t(category) }
 }
 
 /// Widget kayit defteri. Windows karsiligi: Widgets/WidgetRegistry.cs

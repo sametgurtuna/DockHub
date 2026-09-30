@@ -8,7 +8,7 @@ struct AboutPage: View {
         let b = Bundle.main
         let kisa = b.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "-"
         let yapi = b.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "-"
-        return "Version \(kisa) (\(yapi))"
+        return L.t("Version {0}", "\(kisa) (\(yapi))")
     }
 
     var body: some View {
@@ -18,24 +18,24 @@ struct AboutPage: View {
                     Image(nsImage: NSApp.applicationIconImage)
                         .resizable().frame(width: 64, height: 64)
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("DockHub for macOS").font(.title2.weight(.semibold))
+                        Text(L.t("DockHub for macOS")).font(.title2.weight(.semibold))
                         Text(version).foregroundStyle(.secondary)
-                        Text("A native macOS version of DockHub, the dock for Windows.")
+                        Text(L.t("A native macOS version of DockHub, the dock for Windows."))
                             .foregroundStyle(.secondary)
                     }
                 }
                 .padding(.vertical, 6)
             }
             Section {
-                LabeledContent("Project") {
+                LabeledContent(L.t("Project")) {
                     Link("github.com/sametgurtuna/DockHub",
                          destination: URL(string: "https://github.com/sametgurtuna/DockHub")!)
                 }
-                LabeledContent("Settings file") {
+                LabeledContent(L.t("Settings file")) {
                     HStack {
                         Text((AppPaths.config.path as NSString).abbreviatingWithTildeInPath)
                             .lineLimit(1).truncationMode(.middle).foregroundStyle(.secondary)
-                        Button("Show in Finder") {
+                        Button(L.t("Show in Finder")) {
                             NSWorkspace.shared.activateFileViewerSelecting([AppPaths.config])
                         }
                     }

@@ -40,7 +40,7 @@ struct StopwatchWidget: View {
         }
         .contentShape(Rectangle())
         .onTapGesture { store.toggle(item.id) }
-        .contextMenu { Button("Reset") { store.reset(item.id) } }
+        .contextMenu { Button(L.t("Reset")) { store.reset(item.id) } }
     }
 }
 
@@ -55,7 +55,7 @@ struct CountdownWidget: View {
     private var toplam: TimeInterval { item.numberSetting("minutes", default: 5) * 60 }
     private var etiket: String {
         if case .string(let s)? = item.setting("label") { return s }
-        return "Countdown"
+        return L.t("Countdown")
     }
 
     var body: some View {
@@ -69,7 +69,7 @@ struct CountdownWidget: View {
                     .foregroundStyle(kalan <= 0 ? .orange
                                      : (calisiyor ? Color(nsColor: .controlAccentColor) : .secondary))
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(kalan <= 0 ? "Done" : hhmmss(kalan))
+                    Text(kalan <= 0 ? L.t("Done") : hhmmss(kalan))
                         .font(.system(size: style.height * 0.25, weight: .semibold))
                         .monospacedDigit()
                     Text(etiket)
@@ -82,9 +82,9 @@ struct CountdownWidget: View {
         .onTapGesture {
             let kalan = toplam - store.elapsed(item.id)
             store.toggle(item.id, notifyAfter: kalan,
-                         baslik: etiket, metin: "Countdown finished.")
+                         baslik: etiket, metin: L.t("Countdown finished."))
         }
-        .contextMenu { Button("Reset") { store.reset(item.id) } }
+        .contextMenu { Button(L.t("Reset")) { store.reset(item.id) } }
     }
 }
 
@@ -118,7 +118,7 @@ struct FocusWidget: View {
                     Text(mmss(kalan))
                         .font(.system(size: style.height * 0.25, weight: .semibold))
                         .monospacedDigit()
-                    Text(molada ? "Break" : "Focus")
+                    Text(molada ? L.t("Break") : L.t("Focus"))
                         .font(.system(size: style.height * 0.15))
                         .foregroundStyle(.secondary)
                 }
@@ -128,10 +128,10 @@ struct FocusWidget: View {
         .onTapGesture {
             let (molada, kalan) = asama(store.elapsed(item.id))
             store.toggle(item.id, notifyAfter: kalan,
-                         baslik: molada ? "Break ended" : "Focus session ended",
-                         metin: molada ? "A new focus session is starting." : "Time for a break.")
+                         baslik: molada ? L.t("Break ended") : L.t("Focus session ended"),
+                         metin: molada ? L.t("A new focus session is starting.") : L.t("Time for a break."))
         }
-        .contextMenu { Button("Reset") { store.reset(item.id) } }
+        .contextMenu { Button(L.t("Reset")) { store.reset(item.id) } }
     }
 }
 
@@ -153,7 +153,7 @@ struct AlarmWidget: View {
     }
     private var etiket: String {
         if case .string(let s)? = item.setting("label") { return s }
-        return "Alarm"
+        return L.t("Alarm")
     }
     private var tekrar: Bool { item.boolSetting("repeatDaily", default: true) }
     private var acik: Bool { item.boolSetting("enabled", default: true) }
@@ -168,7 +168,7 @@ struct AlarmWidget: View {
                 Text(String(format: "%02d:%02d", h, m))
                     .font(.system(size: style.height * 0.25, weight: .semibold))
                     .monospacedDigit()
-                Text(acik ? (tekrar ? "Every day · \(etiket)" : etiket) : "Off")
+                Text(acik ? (tekrar ? L.t("Every day") + " · " + etiket : etiket) : L.t("Off"))
                     .font(.system(size: style.height * 0.15))
                     .foregroundStyle(.secondary)
             }
@@ -177,7 +177,7 @@ struct AlarmWidget: View {
             guard acik, !planlandi else { return }
             planlandi = true
             Notifier.planlaSaat(saat: h, dakika: m, tekrar: tekrar,
-                                baslik: etiket, metin: "Alarm is ringing.", id: item.id)
+                                baslik: etiket, metin: L.t("Alarm is ringing."), id: item.id)
         }
     }
 }

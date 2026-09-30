@@ -8,76 +8,76 @@ struct AppearancePage: View {
 
     var body: some View {
         Form {
-            Section("Style") {
-                Picker("Theme", selection: store.binding(\.theme)) {
-                    Text("Dark").tag(ThemePreference.dark)
-                    Text("Light").tag(ThemePreference.light)
-                    Text("System").tag(ThemePreference.system)
+            Section(L.t("Style")) {
+                Picker(L.t("Theme"), selection: store.binding(\.theme)) {
+                    Text(L.t("Dark")).tag(ThemePreference.dark)
+                    Text(L.t("Light")).tag(ThemePreference.light)
+                    Text(L.t("System")).tag(ThemePreference.system)
                 }
                 .pickerStyle(.segmented)
                 VStack(alignment: .leading, spacing: 4) {
-                    Picker("Backdrop", selection: store.binding(\.backdrop)) {
-                        Text("Blur").tag(BackdropKind.blur)
-                        Text("Acrylic").tag(BackdropKind.acrylic)
-                        Text("Transparent").tag(BackdropKind.transparent)
-                        Text("Solid").tag(BackdropKind.solid)
+                    Picker(L.t("Backdrop"), selection: store.binding(\.backdrop)) {
+                        Text(L.t("Blur")).tag(BackdropKind.blur)
+                        Text(L.t("Acrylic")).tag(BackdropKind.acrylic)
+                        Text(L.t("Transparent")).tag(BackdropKind.transparent)
+                        Text(L.t("Solid")).tag(BackdropKind.solid)
                     }
                     .pickerStyle(.segmented)
-                    RowNote("Blur is a frosted glass, Acrylic a lighter material, Transparent has no blur (the desktop shows through), Solid has no transparency.")
+                    RowNote(L.t("Blur is a frosted glass, Acrylic a lighter material, Transparent has no blur (the desktop shows through), Solid has no transparency."))
                 }
                 LabeledContent {
                     CommitSlider(value: store.config.tintOpacity, range: 0...1, step: 0.05,
                                  label: { "\(Int(($0 * 100).rounded()))%" },
                                  commit: { v in store.update { $0.tintOpacity = v } })
                 } label: {
-                    Text("Tint opacity")
-                    RowNote("Color layer over the glass.")
+                    Text(L.t("Tint opacity"))
+                    RowNote(L.t("Color layer over the glass."))
                 }
                 Toggle(isOn: store.binding(\.hoverEffect)) {
-                    Text("Hover effect")
-                    RowNote("App icons grow slightly under the pointer.")
+                    Text(L.t("Hover effect"))
+                    RowNote(L.t("App icons grow slightly under the pointer."))
                 }
             }
 
-            Section("Size and shape") {
-                Picker("Size", selection: store.binding(\.size)) {
-                    Text("Small").tag(DockSize.small)
-                    Text("Medium").tag(DockSize.medium)
-                    Text("Large").tag(DockSize.large)
+            Section(L.t("Size and shape")) {
+                Picker(L.t("Size"), selection: store.binding(\.size)) {
+                    Text(L.t("Small")).tag(DockSize.small)
+                    Text(L.t("Medium")).tag(DockSize.medium)
+                    Text(L.t("Large")).tag(DockSize.large)
                 }
                 .pickerStyle(.segmented)
                 VStack(alignment: .leading, spacing: 4) {
-                    Picker("Shape", selection: store.binding(\.layout)) {
-                        Text("Floating").tag(DockLayout.floating)
-                        Text("Attached").tag(DockLayout.attached)
+                    Picker(L.t("Shape"), selection: store.binding(\.layout)) {
+                        Text(L.t("Floating")).tag(DockLayout.floating)
+                        Text(L.t("Attached")).tag(DockLayout.attached)
                     }
                     .pickerStyle(.segmented)
-                    RowNote("Floating: detached with rounded corners and margins. Attached: sits flush against the screen edge.")
+                    RowNote(L.t("Floating: detached with rounded corners and margins. Attached: sits flush against the screen edge."))
                 }
-                LabeledContent("Edge margin") {
+                LabeledContent(L.t("Edge margin")) {
                     CommitSlider(value: store.config.edgeMargin, range: 0...24, step: 1,
                                  label: { "\(Int($0)) pt" },
                                  commit: { v in store.update { $0.edgeMargin = v } })
                 }
                 .disabled(store.config.layout == .attached)
-                Picker("Width", selection: store.binding(\.widthMode)) {
-                    Text("Full width").tag(DockWidthMode.full)
-                    Text("Fit content").tag(DockWidthMode.fit)
+                Picker(L.t("Width"), selection: store.binding(\.widthMode)) {
+                    Text(L.t("Full width")).tag(DockWidthMode.full)
+                    Text(L.t("Fit content")).tag(DockWidthMode.fit)
                 }
                 .pickerStyle(.segmented)
-                Picker("Item alignment", selection: store.binding(\.alignment)) {
-                    Text("Start").tag(DockAlignment.start)
-                    Text("Center").tag(DockAlignment.center)
+                Picker(L.t("Item alignment"), selection: store.binding(\.alignment)) {
+                    Text(L.t("Start")).tag(DockAlignment.start)
+                    Text(L.t("Center")).tag(DockAlignment.center)
                 }
                 .pickerStyle(.segmented)
             }
 
-            Section("Position") {
-                Picker("Screen edge", selection: store.binding(\.edge)) {
-                    Text("Bottom").tag(DockEdge.bottom)
-                    Text("Top").tag(DockEdge.top)
-                    Text("Left").tag(DockEdge.left)
-                    Text("Right").tag(DockEdge.right)
+            Section(L.t("Position")) {
+                Picker(L.t("Screen edge"), selection: store.binding(\.edge)) {
+                    Text(L.t("Bottom")).tag(DockEdge.bottom)
+                    Text(L.t("Top")).tag(DockEdge.top)
+                    Text(L.t("Left")).tag(DockEdge.left)
+                    Text(L.t("Right")).tag(DockEdge.right)
                 }
                 .pickerStyle(.segmented)
             }

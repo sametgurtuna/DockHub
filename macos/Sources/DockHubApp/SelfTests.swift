@@ -90,13 +90,13 @@ enum SelfTests {
             return nil
         }
         if let menu = menuBul(dock()?.panel.contentView),
-           let i = menu.items.firstIndex(where: { $0.title == "Settings…" }) {
+           let i = menu.items.firstIndex(where: { $0.title == L.t("Settings…") }) {
             menu.performActionForItem(at: i)
             await bekle()
             let w = settings()
             kontrol("menu 'Settings…' pencereyi acar", w?.window?.isVisible == true && w?.page == .general,
                     "menu: \(menu.items.map(\.title).filter { !$0.isEmpty }.joined(separator: " | "))")
-            if let g = menu.items.firstIndex(where: { $0.title == "Add Widget…" }) {
+            if let g = menu.items.firstIndex(where: { $0.title == L.t("Add widget…") }) {
                 menu.performActionForItem(at: g); await bekle()
                 kontrol("menu 'Add Widget…' galeriyi acar", settings()?.page == .gallery, "sayfa=\(settings()?.page.rawValue ?? "-")")
             }

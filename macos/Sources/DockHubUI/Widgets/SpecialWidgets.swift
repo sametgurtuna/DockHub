@@ -38,8 +38,8 @@ struct TrashWidget: View {
                 .scaleEffect(uzerinde ? 1.15 : 1)
             if item.effectiveVariant == "details" {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(!store.state.accessible ? "No access"
-                         : (store.state.isEmpty ? "Empty" : "\(store.state.itemCount) items"))
+                    Text(!store.state.accessible ? L.t("No access")
+                         : (store.state.isEmpty ? L.t("Empty") : L.t("{0} items", store.state.itemCount)))
                         .font(.system(size: style.height * 0.2, weight: .semibold))
                         .foregroundStyle(store.state.accessible ? .primary : .secondary)
                     if store.state.accessible && !store.state.isEmpty {
@@ -67,15 +67,15 @@ struct TrashWidget: View {
             return true
         }
         .contextMenu {
-            Button("Open Trash") { TrashService.open() }
+            Button(L.t("Open Trash")) { TrashService.open() }
             // Bosaltmanin genel API karsiligi yok; kullaniciyi yaniltmamak icin
             // dugme koymuyoruz, Finder'a yonlendiriyoruz.
-            Text("Use Finder to empty the Trash").font(.caption)
+            Text(L.t("Use Finder to empty the Trash")).font(.caption)
         }
         .help(!store.state.accessible
-              ? "Can't read the Trash — System Settings ▸ Privacy & Security ▸ Full Disk Access"
-              : (store.state.isEmpty ? "Trash is empty"
-                 : "\(store.state.itemCount) items · \(boyut(store.state.totalBytes))"))
+              ? L.t("Can't read the Trash. Allow it in System Settings ▸ Privacy & Security ▸ Full Disk Access.")
+              : (store.state.isEmpty ? L.t("Trash is empty")
+                 : L.t("{0} items · {1}", store.state.itemCount, boyut(store.state.totalBytes))))
     }
 
     private func boyut(_ b: UInt64) -> String {
@@ -112,12 +112,12 @@ struct NowPlayingWidget: View {
         Group {
             switch store.sonuc {
             case .calan(let n): calan(n)
-            case .hicbiriCalmiyor: bilgi("music.note", "Not playing")
-            case .izinYok: bilgi("lock", "No Automation permission")
+            case .hicbiriCalmiyor: bilgi("music.note", L.t("Not playing"))
+            case .izinYok: bilgi("lock", L.t("No Automation permission"))
             }
         }
         .onAppear { store.start() }
-        .help("Supports Music and Spotify. Media playing in a browser isn't visible on macOS.")
+        .help(L.t("Supports Music and Spotify. Media playing in a browser isn't visible on macOS."))
     }
 
     private func bilgi(_ ikon: String, _ metin: String) -> some View {
@@ -192,7 +192,7 @@ struct AIUsageWidget: View {
             case .veri(let u):
                 if item.effectiveVariant == "rings" { halkalar(u) } else { cubuklar(u) }
             case .cliYok:
-                bilgi("terminal", "Claude CLI not found")
+                bilgi("terminal", L.t("Claude CLI not found"))
             case .okunamadi(let m):
                 bilgi("exclamationmark.triangle", m)
             }
@@ -209,8 +209,8 @@ struct AIUsageWidget: View {
 
     private func cubuklar(_ u: AIUsage) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            cubuk("5-hour", u.sessionPercent, .orange)
-            cubuk("Weekly", u.weekPercent, .red)
+            cubuk(L.t("5-hour"), u.sessionPercent, .orange)
+            cubuk(L.t("Weekly"), u.weekPercent, .red)
         }
     }
 

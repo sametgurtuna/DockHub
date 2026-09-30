@@ -38,7 +38,7 @@ açılabilmesi (ve Mac'in onu bozmadan geri yazması) 1.0'ın ön koşulu; bu y�
 | Güncelleme denetimi | `UpdateService` | `var` (DMG varlığı; Faz 25) | P1 | eksik |
 | Çökme sonrası yeniden başlatma ve bildirim | `CrashRecovery`, Windows Olay Günlüğü | `uyarla`: `launchd` KeepAlive ile yeniden başlatma; çökme kaydı `~/Library/Logs/DiagnosticReports` (izinsiz okunur) | P2 | eksik |
 | Sorun bildir (GitHub formu) | `IssueReport` | `var` | P2 | eksik |
-| Dört dil (en/tr/de/es) | `Strings_*.json`, `L.T` | `var`: aynı JSON dosyaları paket kaynağı olarak, anahtar İngilizce metin | P1 | eksik (arayüz yalnız İngilizce) |
+| Dört dil (en/tr/de/es) | `Strings_*.json`, `L.T` | `var`: aynı JSON dosyaları paket kaynağı olarak, anahtar İngilizce metin | P1 | mevcut (Faz 23; `Localizer.swift`, CI'da `Scripts/check-translations.py`) |
 
 ## 2. Dock ve görünüm
 

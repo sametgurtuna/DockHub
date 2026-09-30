@@ -17,15 +17,17 @@ struct ItemsPage: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
-                Button { addApps() } label: { Label("Add App…", systemImage: "plus") }
+                Button { addApps() } label: { Label(L.t("Add app…"), systemImage: "plus") }
                     .buttonStyle(.borderedProminent)
-                Button(action: openGallery) { Label("Add Widget…", systemImage: "square.grid.2x2") }
-                Button { store.addSeparator() } label: { Label("Add Separator", systemImage: "minus") }
+                Button(action: openGallery) { Label(L.t("Add widget…"), systemImage: "square.grid.2x2") }
+                Button { store.addSeparator() } label: { Label(L.t("Add separator"), systemImage: "minus") }
                 Button {
                     let n = store.importDockApps()
-                    note = n == 0 ? "All macOS Dock apps are already on the dock." : "Added \(n) app\(n == 1 ? "" : "s") from the macOS Dock."
-                } label: { Label("Import from Dock", systemImage: "square.and.arrow.down") }
-                    .help("Adds the apps pinned to the macOS Dock")
+                    note = n == 0 ? L.t("All macOS Dock apps are already on the dock.")
+                        : n == 1 ? L.t("Added 1 app from the macOS Dock.")
+                        : L.t("Added {0} apps from the macOS Dock.", n)
+                } label: { Label(L.t("Import from Dock"), systemImage: "square.and.arrow.down") }
+                    .help(L.t("Adds the apps pinned to the macOS Dock"))
                 Spacer()
             }
             if let note { Text(note).font(.caption).foregroundStyle(.secondary) }
@@ -38,7 +40,7 @@ struct ItemsPage: View {
                     .onMove { store.moveItems(from: $0, to: $1) }
                 }
                 .contextMenu(forSelectionType: String.self) { ids in
-                    Button("Remove from Dock") { ids.forEach(store.removeItem) }
+                    Button(L.t("Remove from dock")) { ids.forEach(store.removeItem) }
                 }
                 .onDeleteCommand { if let id = selection { remove(id) } }
                 .frame(width: 320)
@@ -50,7 +52,7 @@ struct ItemsPage: View {
                         ItemDetail(item: item, store: store) { remove(item.id) }
                             .id(item.id)
                     } else {
-                        Text("Select an item to view details.")
+                        Text(L.t("Select an item to view details."))
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
@@ -74,14 +76,17 @@ struct ItemsPage: View {
 
     private func addApps() {
         let panel = NSOpenPanel()
-        panel.title = "Add App"
-        panel.prompt = "Add"
+        panel.title = L.t("Add app")
+        panel.prompt = L.t("Add")
         panel.allowedContentTypes = [.application]
         panel.allowsMultipleSelection = true
         panel.directoryURL = URL(fileURLWithPath: "/Applications")
         guard panel.runModal() == .OK else { return }
         let n = store.addApps(panel.urls.map(\.path))
-        if n < panel.urls.count { note = "\(panel.urls.count - n) app(s) were already on the dock." } else { note = nil }
+        let already = panel.urls.count - n
+        note = already == 0 ? nil
+            : already == 1 ? L.t("1 app was already on the dock.")
+            : L.t("{0} apps were already on the dock.", already)
     }
 }
 
@@ -138,10 +143,10 @@ struct ItemIcon: View {
 enum ItemText {
     static func title(_ item: DockItem) -> String {
         switch item.kind {
-        case .app: item.name ?? item.path.map(AppCatalog.displayName(forAppAt:)) ?? "App"
-        case .widget: WidgetRegistry.find(item.widget)?.name ?? "Unknown widget (\(item.widget ?? "-"))"
-        case .separator: "Separator"
-        case .group: item.groupName ?? "Folder"
+        case .app: item.name ?? item.path.map(AppCatalog.displayName(forAppAt:)) ?? L.t("App")
+        case .widget: WidgetRegistry.find(item.widget)?.displayName ?? L.t("Unknown widget ({0})", item.widget ?? "-")
+        case .separator: L.t("Separator")
+        case .group: item.groupName ?? L.t("Folder")
         }
     }
 
@@ -149,10 +154,11 @@ enum ItemText {
         switch item.kind {
         case .app: (item.path as NSString?)?.abbreviatingWithTildeInPath ?? ""
         case .widget:
-            WidgetRegistry.find(item.widget)?.variants.first { $0.id == item.effectiveVariant }?.name
+            WidgetRegistry.find(item.widget)?.variants.first { $0.id == item.effectiveVariant }?.displayName
                 ?? item.effectiveVariant
         case .separator: ""
-        case .group: "\(item.children?.count ?? 0) item\(item.children?.count == 1 ? "" : "s")"
+        case .group:
+            (item.children?.count ?? 0) == 1 ? L.t("1 item") : L.t("{0} items", item.children?.count ?? 0)
         }
     }
 }
@@ -183,7 +189,7 @@ struct ItemDetail: View {
             case .separator: EmptyView()
             }
             Section {
-                Button("Remove from Dock", role: .destructive, action: remove)
+                Button(L.t("Remove from dock"), role: .destructive, action: remove)
             }
         }
         .formStyle(.grouped)
@@ -195,34 +201,34 @@ struct ItemDetail: View {
 
     private var kindText: String {
         switch item.kind {
-        case .app: "App"
+        case .app: L.t("App")
         case .widget: WidgetCatalog.info(item.widget ?? "").summary
-        case .separator: "Separator"
-        case .group: "Folder"
+        case .separator: L.t("Separator")
+        case .group: L.t("Folder")
         }
     }
 
     @ViewBuilder private var appSection: some View {
         Section {
             VStack(alignment: .leading, spacing: 4) {
-                TextField("Display name", text: $name,
+                TextField(L.t("Display name"), text: $name,
                           prompt: Text(item.path.map(AppCatalog.displayName(forAppAt:)) ?? ""))
                     .onSubmit { store.setName(item.id, name) }
-                RowNote("Uses the app name if left empty. Press Return to save.")
+                RowNote(L.t("Uses the app name if left empty. Press Return to save."))
             }
-            LabeledContent("Target") {
+            LabeledContent(L.t("Target")) {
                 HStack {
                     Text((item.path as NSString?)?.abbreviatingWithTildeInPath ?? "-")
                         .lineLimit(1).truncationMode(.middle).foregroundStyle(.secondary)
-                    Button("Show in Finder") {
+                    Button(L.t("Show in Finder")) {
                         if let p = item.path { NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: p)]) }
                     }
                 }
             }
             VStack(alignment: .leading, spacing: 4) {
-                TextField("Launch arguments", text: $arguments, prompt: Text("none"))
+                TextField(L.t("Launch arguments"), text: $arguments, prompt: Text(L.t("none")))
                     .onSubmit { store.setArguments(item.id, arguments) }
-                RowNote("Passed to the app when DockHub launches it. Press Return to save.")
+                RowNote(L.t("Passed to the app when DockHub launches it. Press Return to save."))
             }
         }
     }
@@ -231,18 +237,18 @@ struct ItemDetail: View {
         if let tanim = WidgetRegistry.find(item.widget) {
             Section {
                 if tanim.variants.count > 1 {
-                    Picker("Layout", selection: Binding(get: { item.effectiveVariant },
+                    Picker(L.t("Layout"), selection: Binding(get: { item.effectiveVariant },
                                                         set: { store.setVariant(item.id, $0) })) {
-                        ForEach(tanim.variants) { Text($0.name).tag($0.id) }
+                        ForEach(tanim.variants) { Text($0.displayName).tag($0.id) }
                     }
-                    RowNote("Appearance of the widget on the dock.")
+                    RowNote(L.t("Appearance of the widget on the dock."))
                 } else {
-                    LabeledContent("Layout", value: tanim.variants.first?.name ?? "-")
+                    LabeledContent(L.t("Layout"), value: tanim.variants.first?.displayName ?? "-")
                 }
             }
         } else {
             Section {
-                RowNote("This widget is not available on macOS. It stays in the configuration so the file still works on Windows.")
+                RowNote(L.t("This widget is not available on macOS. It stays in the configuration so the file still works on Windows."))
             }
         }
     }
@@ -250,8 +256,8 @@ struct ItemDetail: View {
     @ViewBuilder private var groupSection: some View {
         Section {
             VStack(alignment: .leading, spacing: 4) {
-                TextField("Name", text: $name).onSubmit { store.setGroupName(item.id, name) }
-                RowNote("Press Return to save.")
+                TextField(L.t("Name"), text: $name).onSubmit { store.setGroupName(item.id, name) }
+                RowNote(L.t("Press Return to save."))
             }
             ForEach(item.children ?? []) { child in
                 HStack(spacing: 8) {
@@ -259,7 +265,7 @@ struct ItemDetail: View {
                     Text(ItemText.title(child))
                 }
             }
-            RowNote("Opening folders on the dock and moving items in and out of them are not available on macOS yet.")
+            RowNote(L.t("Opening folders on the dock and moving items in and out of them are not available on macOS yet."))
         }
     }
 }

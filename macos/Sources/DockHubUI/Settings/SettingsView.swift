@@ -12,20 +12,20 @@ public enum SettingsPage: String, CaseIterable, Identifiable, Sendable {
 
     var title: String {
         switch self {
-        case .general: "General"
-        case .appearance: "Appearance"
-        case .items: "Dock Items"
-        case .gallery: "Widget Gallery"
-        case .about: "About"
+        case .general: L.t("General")
+        case .appearance: L.t("Appearance")
+        case .items: L.t("Dock items")
+        case .gallery: L.t("Widget gallery")
+        case .about: L.t("About")
         }
     }
 
     var subtitle: String {
         switch self {
-        case .general: "macOS Dock, display and maintenance."
-        case .appearance: "Style, size, shape and position of the dock."
-        case .items: "Apps, widgets and separators, in the order they appear on the dock."
-        case .gallery: "Pick a widget and a layout, then add it to the dock. Every copy keeps its own settings."
+        case .general: L.t("macOS Dock, display, language and maintenance.")
+        case .appearance: L.t("Style, size, shape and position of the dock.")
+        case .items: L.t("Apps, widgets and separators, in the order they appear on the dock.")
+        case .gallery: L.t("Pick a widget and a layout, then add it to the dock. Every copy keeps its own settings.")
         case .about: ""
         }
     }
@@ -86,7 +86,7 @@ public final class SettingsWindowController: NSWindowController {
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 940, height: 660),
                               styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
                               backing: .buffered, defer: false)
-        window.title = "DockHub Settings"
+        window.title = L.t("DockHub Settings")
         window.isReleasedWhenClosed = false
         window.minSize = NSSize(width: 840, height: 560)
         window.toolbarStyle = .unified

@@ -29,6 +29,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         configService = service
         Log.info("Yapilandirma: \(service.url.path)")
 
+        // Arayuz dili: arayuz kurulmadan once, bir kez (Windows: L.Initialize).
+        L.load(service.config.language)
+        Log.info("Arayuz dili: \(L.code)")
+
         // Ilk calistirmada dock bos olmasin: var olan varsayilan uygulamalar eklenir.
         if service.config.items.isEmpty {
             let defaults = DefaultItems.build()

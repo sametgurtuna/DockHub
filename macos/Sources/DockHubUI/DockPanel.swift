@@ -127,14 +127,14 @@ public final class DockPanel {
         // Dock menusu. Tam wf-dock-menu (sabitleme, ayirici, konum, otomatik
         // gizleme) ayri gorev; burada ayarlara giden yol ve cikis var.
         let menu = NSMenu()
-        let widget = NSMenuItem(title: "Add Widget…", action: #selector(MenuActions.openGallery), keyEquivalent: "")
+        let widget = NSMenuItem(title: L.t("Add widget…"), action: #selector(MenuActions.openGallery), keyEquivalent: "")
         widget.target = menuActions
         menu.addItem(widget)
-        let settings = NSMenuItem(title: "Settings…", action: #selector(MenuActions.openGeneral), keyEquivalent: ",")
+        let settings = NSMenuItem(title: L.t("Settings…"), action: #selector(MenuActions.openGeneral), keyEquivalent: ",")
         settings.target = menuActions
         menu.addItem(settings)
         menu.addItem(.separator())
-        let quit = NSMenuItem(title: "Quit DockHub",
+        let quit = NSMenuItem(title: L.t("Quit DockHub"),
                               action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         quit.target = NSApp
         menu.addItem(quit)

@@ -30,7 +30,7 @@ struct ShortcutWidget: View {
                 .foregroundStyle(renk)
                 .symbolEffect(.pulse, isActive: durum == .calisiyor)
             VStack(alignment: .leading, spacing: 0) {
-                Text(ad ?? "No shortcut selected")
+                Text(ad ?? L.t("No shortcut selected"))
                     .font(.system(size: style.height * 0.2, weight: .medium))
                     .lineLimit(1)
                 if case .hata(let m) = durum {
@@ -42,7 +42,7 @@ struct ShortcutWidget: View {
         }
         .contentShape(Rectangle())
         .onTapGesture { calistir() }
-        .help(ad.map { "Click to run \($0)" } ?? "Set a shortcut name in the widget settings")
+        .help(ad.map { L.t("Click to run {0}", $0) } ?? L.t("Set a shortcut name in the widget settings"))
     }
 
     private var gosterilenIkon: String {
@@ -62,16 +62,16 @@ struct ShortcutWidget: View {
     }
 
     private func calistir() {
-        guard let ad else { durum = .hata("no name"); return }
-        guard ShortcutsService.kullanilabilir else { durum = .hata("Shortcuts unavailable"); return }
+        guard let ad else { durum = .hata(L.t("No shortcut selected")); return }
+        guard ShortcutsService.kullanilabilir else { durum = .hata(L.t("Shortcuts unavailable")); return }
         durum = .calisiyor
         Task.detached {
             let s = ShortcutsService.run(ad)
             await MainActor.run {
                 switch s {
                 case .calisti:      durum = .bitti
-                case .bulunamadi:   durum = .hata("CLI not found")
-                case .zamanAsimi:   durum = .hata("timed out")
+                case .bulunamadi:   durum = .hata(L.t("Shortcuts unavailable"))
+                case .zamanAsimi:   durum = .hata(L.t("Timed out"))
                 case .hata(let m):  durum = .hata(String(m.prefix(30)))
                 }
             }
@@ -97,7 +97,7 @@ struct AirDropWidget: View {
                 .foregroundStyle(uzerinde ? Color(nsColor: .controlAccentColor) : .primary)
                 .scaleEffect(uzerinde ? 1.15 : 1)
             if item.effectiveVariant != "icon" {
-                Text(mesaj ?? "AirDrop")
+                Text(mesaj ?? L.t("AirDrop"))
                     .font(.system(size: style.height * 0.18))
                     .foregroundStyle(mesaj == nil ? .secondary : .primary)
                     .lineLimit(1)
@@ -108,7 +108,7 @@ struct AirDropWidget: View {
             Task { @MainActor in gonder(providers) }
             return true
         }
-        .help("Drop files, photos or links here; you choose the recipient")
+        .help(L.t("Drop files, photos or links here; you choose the recipient"))
     }
 
     private func gonder(_ providers: [NSItemProvider]) {
@@ -124,8 +124,8 @@ struct AirDropWidget: View {
         grup.notify(queue: .main) {
             guard !urls.isEmpty else { return }
             mesaj = AirDropService.send(urls)
-                ? "Sending \(urls.count) file(s)"
-                : "AirDrop is unavailable"
+                ? (urls.count == 1 ? L.t("Sending 1 file") : L.t("Sending {0} files", urls.count))
+                : L.t("AirDrop is unavailable")
             Task { @MainActor in
                 try? await Task.sleep(for: .seconds(4))
                 mesaj = nil

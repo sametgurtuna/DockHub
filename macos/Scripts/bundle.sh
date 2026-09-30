@@ -14,6 +14,8 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/DockHub"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
+# Arayuz cevirileri: Windows'la ayni dosyalar (DockHubCore/Localizer.swift).
+cp ../src/CustomDock/Resources/Strings_*.json "$APP/Contents/Resources/"
 
 # Ad-hoc imza: ucretsiz, Apple ID gerektirmez. Gercek Developer ID icin
 # Xcode'a Apple ID ile giris gerekir (bkz. docs/IMZALAMA.md).

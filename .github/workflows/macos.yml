@@ -38,6 +38,10 @@ jobs:
       - name: Test
         run: swift test
 
+      # Every text of the Mac interface has a translation in the shared Strings_tr/de/es.json.
+      - name: Translations
+        run: python3 Scripts/check-translations.py
+
       # The settings file must stay readable by both DockHubs: the keys the Mac writes against Windows' AppConfig.
       # (WindowsConfigTests above also reads and rewrites tests/fixtures/config-windows.json, a file Windows wrote.)
       - name: Config schema

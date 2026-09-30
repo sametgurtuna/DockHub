@@ -38,7 +38,7 @@ struct BatteryWidget: View {
     private var yok: some View {
         HStack(spacing: 4) {
             Image(systemName: "powerplug.fill")
-            Text("No battery").font(.system(size: style.height * 0.18))
+            Text(L.t("No battery")).font(.system(size: style.height * 0.18))
         }
         .foregroundStyle(.secondary)
     }
@@ -87,6 +87,6 @@ struct BatteryWidget: View {
     }
 
     private func sure(_ m: Int) -> String {
-        m >= 60 ? "\(m / 60)sa \(m % 60)dk" : "\(m)dk"
+        m >= 60 ? L.t("{0} h {1} min", m / 60, m % 60) : L.t("{0} min", m)
     }
 }

@@ -20,7 +20,7 @@ struct GalleryPage: View {
             VStack(alignment: .leading, spacing: 22) {
                 ForEach(groups, id: \.0) { category, defs in
                     VStack(alignment: .leading, spacing: 10) {
-                        Text(category).font(.headline)
+                        Text(L.t(category)).font(.headline)
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 280), spacing: 12, alignment: .top)],
                                   alignment: .leading, spacing: 12) {
                             ForEach(defs) { def in card(def) }
@@ -44,24 +44,24 @@ struct GalleryPage: View {
                 .background(RoundedRectangle(cornerRadius: 10).fill(Color.accentColor.opacity(0.12)))
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
-                    Text(def.name).font(.body.weight(.semibold))
+                    Text(def.displayName).font(.body.weight(.semibold))
                     if count > 0 {
-                        Text("On dock: \(count)").font(.caption2).foregroundStyle(.secondary)
+                        Text(L.t("On the dock ×{0}", count)).font(.caption2).foregroundStyle(.secondary)
                     }
                 }
                 Text(info.summary).font(.caption).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: 8) {
                     if def.variants.count > 1 {
-                        Picker("Layout", selection: Binding(get: { variant }, set: { chosen[def.id] = $0 })) {
-                            ForEach(def.variants) { Text($0.name).tag($0.id) }
+                        Picker(L.t("Layout"), selection: Binding(get: { variant }, set: { chosen[def.id] = $0 })) {
+                            ForEach(def.variants) { Text($0.displayName).tag($0.id) }
                         }
                         .labelsHidden()
                         .fixedSize()
                     }
                     Spacer()
                     if justAdded == def.id {
-                        Label("Added", systemImage: "checkmark").font(.caption).foregroundStyle(.green)
+                        Label(L.t("Added"), systemImage: "checkmark").font(.caption).foregroundStyle(.green)
                     }
                     Button {
                         store.addWidget(def.id, variant: variant)
@@ -71,7 +71,7 @@ struct GalleryPage: View {
                             if justAdded == def.id { justAdded = nil }
                         }
                     } label: { Image(systemName: "plus") }
-                    .help("Add \(def.name) to the dock")
+                    .help(L.t("Add {0} to the dock", def.displayName))
                 }
             }
         }

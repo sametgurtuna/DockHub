@@ -28,7 +28,7 @@ struct WorldClockWidget: View {
         if list.isEmpty {
             HStack(spacing: 4) {
                 Image(systemName: "globe")
-                Text("No cities added").font(.system(size: style.height * 0.17))
+                Text(L.t("No cities added")).font(.system(size: style.height * 0.17))
             }.foregroundStyle(.secondary)
         } else {
             TimelineView(.periodic(from: .now, by: 30)) { ctx in
@@ -99,10 +99,10 @@ struct TimeProgressWidget: View {
 
     private var etiket: String {
         switch scope {
-        case "week": "Week"
-        case "month": "Month"
-        case "year": "Year"
-        default: "Day"
+        case "week": L.t("Week")
+        case "month": L.t("Month")
+        case "year": L.t("Year")
+        default: L.t("Day")
         }
     }
 

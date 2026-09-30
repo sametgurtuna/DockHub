@@ -47,7 +47,7 @@ public struct WeatherReading: Sendable {
         case 85, 86:       "Snow showers"
         case 95:           "Thunderstorm"
         case 96, 99:       "Thunderstorm with hail"
-        default:           "—"
+        default:           "-"
         }
     }
 }

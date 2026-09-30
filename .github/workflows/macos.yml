@@ -48,3 +48,10 @@ jobs:
         run: |
           DOCKHUB_SCHEMA_OUT="$RUNNER_TEMP/config.json" swift test --filter ConfigSchemaDumpTests
           python3 Scripts/compare-config-schema.py "$RUNNER_TEMP/config.json"
+
+      - name: Package DMG
+        run: |
+          chmod +x Scripts/*.sh
+          ./Scripts/package-dmg.sh debug
+          test -f .build/DockHub.dmg
+

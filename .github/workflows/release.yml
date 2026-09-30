@@ -133,3 +133,44 @@ jobs:
             installer/Output/DockHub-Setup-${{ env.VERSION }}-x64.exe
             installer/Output/DockHub-Setup-${{ env.VERSION }}-arm64.exe
             installer/Output/SHA256SUMS.txt
+
+  macos:
+    runs-on: macos-15
+    defaults:
+      run:
+        working-directory: macos
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version
+        run: |
+          TAG="${{ github.ref_name }}"
+          VERSION="${TAG#v}"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Build release
+        run: swift build -c release
+
+      - name: Package DMG
+        env:
+          APPLE_DEVELOPER_ID: ${{ secrets.APPLE_DEVELOPER_ID }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          chmod +x Scripts/*.sh
+          ./Scripts/package-dmg.sh release
+          cp .build/DockHub.dmg ".build/DockHub-${{ env.VERSION }}.dmg"
+
+      - name: Checksum
+        run: |
+          shasum -a 256 ".build/DockHub-${{ env.VERSION }}.dmg" > ".build/DockHub-${{ env.VERSION }}.dmg.sha256"
+
+      - name: Draft release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          files: |
+            macos/.build/DockHub-${{ env.VERSION }}.dmg
+            macos/.build/DockHub-${{ env.VERSION }}.dmg.sha256
+

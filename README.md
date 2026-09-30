@@ -713,6 +713,12 @@ Bug reports, widget ideas and pull requests are welcome. Please open an [issue](
 
 This repository does not include a license file yet. Until one is added, all rights are reserved by the author.
 
+### Special thanks
+
+- Special thanks to [@farukolmez22](https://github.com/farukolmez22) for invaluable support, testing, and contributions toward native macOS support.
+
+### Open source credits
+
 DockHub builds on excellent open source work:
 
 - [ManagedShell](https://github.com/cairoshell/ManagedShell) (Apache-2.0)

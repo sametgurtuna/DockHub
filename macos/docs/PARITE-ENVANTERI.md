@@ -11,6 +11,9 @@ Bu belgedeki 32 kararın hiçbiri değişmedi. Kaynak dosyalardaki farkların ç
 Türkçeden İngilizceye çeviri. Davranış değişiklikleri ilgili bölümlerin altında
 **v0.6.1 notu** olarak işaretlendi.
 
+**1.0 için devamı:** Windows v0.7.0–1.0 arasında gelen 44 yetenek ve macOS 1.0 kapsamı (P1) ayrı belgede:
+[PARITE-1.0.md](PARITE-1.0.md).
+
 ## Ölçütler
 
 Sınıflandırma iki kayıtlı ölçüte dayanır:
